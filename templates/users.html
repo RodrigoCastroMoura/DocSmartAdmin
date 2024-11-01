@@ -2,7 +2,15 @@
 
 {% block content %}
 <div class="page-container">
-    <h2><i data-feather="users"></i> Users</h2>
+    <div class="header-actions">
+        <h2><i data-feather="users"></i> Users</h2>
+        {% if current_user.role == 'admin' %}
+        <button class="action-btn primary" onclick="showAddUserModal()">
+            <i data-feather="plus"></i> Add User
+        </button>
+        {% endif %}
+    </div>
+    
     <div class="content-grid">
         <div class="users-table">
             <table>
@@ -17,24 +25,32 @@
                     </tr>
                 </thead>
                 <tbody>
-                    {% for i in range(5) %}
+                    {% for user in users %}
                     <tr>
                         <td>
                             <div class="user-cell">
-                                <div class="user-avatar">JD</div>
-                                <span>John Doe {{ i + 1 }}</span>
+                                <div class="user-avatar">{{ user.username[:2].upper() }}</div>
+                                <span>{{ user.username }}</span>
                             </div>
                         </td>
-                        <td>user{{ i + 1 }}@example.com</td>
-                        <td>{% if i == 0 %}Admin{% else %}User{% endif %}</td>
-                        <td>Department {{ (i % 3) + 1 }}</td>
-                        <td><span class="status-badge {% if i % 2 == 0 %}active{% else %}inactive{% endif %}">
-                            {% if i % 2 == 0 %}Active{% else %}Inactive{% endif %}
-                        </span></td>
+                        <td>{{ user.email }}</td>
+                        <td>{{ user.role.capitalize() }}</td>
+                        <td>{{ user.department.name if user.department else 'N/A' }}</td>
+                        <td>
+                            <span class="status-badge {% if user.status %}active{% else %}inactive{% endif %}">
+                                {% if user.status %}Active{% else %}Inactive{% endif %}
+                            </span>
+                        </td>
                         <td>
                             <div class="table-actions">
-                                <button class="action-btn"><i data-feather="edit-2"></i></button>
-                                <button class="action-btn danger"><i data-feather="trash-2"></i></button>
+                                {% if current_user.role == 'admin' and user.id != current_user.id %}
+                                <button class="action-btn" onclick="showEditUserModal({{ user.id }})">
+                                    <i data-feather="edit-2"></i>
+                                </button>
+                                <button class="action-btn danger" onclick="deleteUser({{ user.id }})">
+                                    <i data-feather="trash-2"></i>
+                                </button>
+                                {% endif %}
                             </div>
                         </td>
                     </tr>
@@ -45,93 +61,228 @@
     </div>
 </div>
 
-<style>
-.page-container {
-    padding: 2rem;
-}
+<!-- Add User Modal -->
+<div id="addUserModal" class="modal">
+    <div class="modal-content">
+        <h3>Add New User</h3>
+        <form id="addUserForm" onsubmit="return addUser(event)">
+            <div class="form-group">
+                <label for="username">Username</label>
+                <input type="text" id="username" name="username" required>
+            </div>
+            <div class="form-group">
+                <label for="email">Email</label>
+                <input type="email" id="email" name="email" required>
+            </div>
+            <div class="form-group">
+                <label for="password">Password</label>
+                <input type="password" id="password" name="password" required>
+            </div>
+            <div class="form-group">
+                <label for="department">Department</label>
+                <select id="department" name="department_id">
+                    <option value="">Select Department</option>
+                    {% for dept in departments %}
+                    <option value="{{ dept.id }}">{{ dept.name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="role">Role</label>
+                <select id="role" name="role">
+                    <option value="user">User</option>
+                    <option value="admin">Admin</option>
+                </select>
+            </div>
+            <div class="modal-actions">
+                <button type="button" class="action-btn" onclick="hideModal('addUserModal')">Cancel</button>
+                <button type="submit" class="action-btn primary">Add User</button>
+            </div>
+        </form>
+    </div>
+</div>
 
-.page-container h2 {
+<!-- Edit User Modal -->
+<div id="editUserModal" class="modal">
+    <div class="modal-content">
+        <h3>Edit User</h3>
+        <form id="editUserForm" onsubmit="return updateUser(event)">
+            <input type="hidden" id="editUserId">
+            <div class="form-group">
+                <label for="editUsername">Username</label>
+                <input type="text" id="editUsername" name="username" required>
+            </div>
+            <div class="form-group">
+                <label for="editEmail">Email</label>
+                <input type="email" id="editEmail" name="email" required>
+            </div>
+            <div class="form-group">
+                <label for="editPassword">New Password (leave blank to keep current)</label>
+                <input type="password" id="editPassword" name="password">
+            </div>
+            <div class="form-group">
+                <label for="editDepartment">Department</label>
+                <select id="editDepartment" name="department_id">
+                    <option value="">Select Department</option>
+                    {% for dept in departments %}
+                    <option value="{{ dept.id }}">{{ dept.name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="editRole">Role</label>
+                <select id="editRole" name="role">
+                    <option value="user">User</option>
+                    <option value="admin">Admin</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="editStatus">Status</label>
+                <select id="editStatus" name="status">
+                    <option value="1">Active</option>
+                    <option value="0">Inactive</option>
+                </select>
+            </div>
+            <div class="modal-actions">
+                <button type="button" class="action-btn" onclick="hideModal('editUserModal')">Cancel</button>
+                <button type="submit" class="action-btn primary">Update User</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<style>
+.header-actions {
     display: flex;
+    justify-content: space-between;
     align-items: center;
-    gap: 0.5rem;
     margin-bottom: 2rem;
 }
 
-.content-grid {
-    background-color: var(--bg-secondary);
-    border-radius: 8px;
-    padding: 1.5rem;
-    overflow-x: auto;
+.form-group {
+    margin-bottom: 1rem;
 }
 
-table {
-    width: 100%;
-    border-collapse: collapse;
-}
-
-th, td {
-    padding: 1rem;
-    text-align: left;
-    border-bottom: 1px solid var(--border-color);
-}
-
-th {
+.form-group label {
+    display: block;
+    margin-bottom: 0.5rem;
     color: var(--text-secondary);
-    font-weight: 500;
 }
 
-.user-cell {
-    display: flex;
-    align-items: center;
-    gap: 0.75rem;
-}
-
-.user-avatar {
-    width: 32px;
-    height: 32px;
-    background-color: var(--accent-color);
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 0.875rem;
-}
-
-.status-badge {
-    padding: 0.25rem 0.5rem;
-    border-radius: 4px;
-    font-size: 0.875rem;
-}
-
-.status-badge.active {
-    background-color: var(--success-color);
-}
-
-.status-badge.inactive {
-    background-color: var(--danger-color);
-}
-
-.table-actions {
-    display: flex;
-    gap: 0.5rem;
-}
-
-.action-btn {
-    background: none;
-    border: none;
-    color: var(--text-primary);
-    cursor: pointer;
+.form-group input,
+.form-group select {
+    width: 100%;
     padding: 0.5rem;
-    border-radius: 4px;
-    transition: background-color 0.2s;
-}
-
-.action-btn:hover {
+    border: 1px solid var(--border-color);
     background-color: var(--bg-tertiary);
+    color: var(--text-primary);
+    border-radius: 4px;
 }
 
-.action-btn.danger:hover {
-    background-color: var(--danger-color);
+.modal-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 1rem;
+    margin-top: 1.5rem;
+}
+
+.action-btn.primary {
+    background-color: var(--accent-color);
+    color: white;
+    padding: 0.5rem 1rem;
+}
+
+.action-btn.primary:hover {
+    background-color: var(--accent-hover);
 }
 </style>
+
+<script>
+function showAddUserModal() {
+    document.getElementById('addUserModal').style.display = 'block';
+}
+
+function showEditUserModal(userId) {
+    // Fetch user data and populate form
+    fetch(`/users/${userId}`)
+        .then(response => response.json())
+        .then(user => {
+            document.getElementById('editUserId').value = user.id;
+            document.getElementById('editUsername').value = user.username;
+            document.getElementById('editEmail').value = user.email;
+            document.getElementById('editDepartment').value = user.department_id || '';
+            document.getElementById('editRole').value = user.role;
+            document.getElementById('editStatus').value = user.status ? '1' : '0';
+            document.getElementById('editUserModal').style.display = 'block';
+        });
+}
+
+function hideModal(modalId) {
+    document.getElementById(modalId).style.display = 'none';
+}
+
+function addUser(event) {
+    event.preventDefault();
+    const formData = new FormData(event.target);
+    
+    fetch('/users/add', {
+        method: 'POST',
+        body: formData
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.error) {
+            alert(data.error);
+        } else {
+            hideModal('addUserModal');
+            location.reload();
+        }
+    });
+    return false;
+}
+
+function updateUser(event) {
+    event.preventDefault();
+    const userId = document.getElementById('editUserId').value;
+    const formData = new FormData(event.target);
+    const data = {};
+    formData.forEach((value, key) => {
+        if (value) data[key] = value;
+    });
+    
+    fetch(`/users/${userId}`, {
+        method: 'PUT',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(data)
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.error) {
+            alert(data.error);
+        } else {
+            hideModal('editUserModal');
+            location.reload();
+        }
+    });
+    return false;
+}
+
+function deleteUser(userId) {
+    if (!confirm('Are you sure you want to delete this user?')) return;
+    
+    fetch(`/users/${userId}`, {
+        method: 'DELETE'
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.error) {
+            alert(data.error);
+        } else {
+            location.reload();
+        }
+    });
+}
+</script>
 {% endblock %}
