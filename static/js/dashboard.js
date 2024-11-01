@@ -23,6 +23,42 @@ document.addEventListener('DOMContentLoaded', function() {
         element.removeAttribute('disabled');
     }
 
+    // API Response Handler
+    async function handleApiResponse(response, successCallback, errorCallback) {
+        try {
+            if (response.ok) {
+                const data = await response.json().catch(() => ({}));
+                if (successCallback) await successCallback(data);
+                return true;
+            } else {
+                const error = await response.json().catch(() => ({ error: 'An error occurred' }));
+                showErrorMessage(error.error || 'Operation failed');
+                if (errorCallback) await errorCallback(error);
+                return false;
+            }
+        } catch (error) {
+            showErrorMessage('An unexpected error occurred');
+            if (errorCallback) await errorCallback(error);
+            return false;
+        }
+    }
+
+    // Error Message Display
+    function showErrorMessage(message) {
+        const errorDiv = document.createElement('div');
+        errorDiv.className = 'error-toast';
+        errorDiv.textContent = message;
+        document.body.appendChild(errorDiv);
+
+        setTimeout(() => {
+            errorDiv.classList.add('show');
+            setTimeout(() => {
+                errorDiv.classList.remove('show');
+                setTimeout(() => errorDiv.remove(), 300);
+            }, 3000);
+        }, 100);
+    }
+
     // Modal functionality
     window.showModal = function(modalId) {
         const modal = document.getElementById(modalId);
@@ -45,7 +81,9 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
 
-    // Make loading functions globally available
+    // Make functions globally available
     window.showLoading = showLoading;
     window.hideLoading = hideLoading;
+    window.handleApiResponse = handleApiResponse;
+    window.showErrorMessage = showErrorMessage;
 });
