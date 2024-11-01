@@ -23,7 +23,7 @@
                 </thead>
                 <tbody id="usersTableBody">
                     {% for user in users %}
-                    <tr>
+                    <tr data-id="{{ user.id }}">
                         <td>
                             <div class="user-cell">
                                 <div class="user-avatar">{{ user.name[:2].upper() }}</div>
@@ -154,7 +154,7 @@
 
 <script src="{{ url_for('static', filename='js/validation.js') }}"></script>
 <script>
-// Setup form validation
+// Form validation setup with improved rules
 setupFormValidation('addUserForm', {
     'userName': [
         ValidationRules.required,
@@ -168,6 +168,9 @@ setupFormValidation('addUserForm', {
     'userCPF': [
         ValidationRules.required,
         ValidationRules.minLength(11)
+    ],
+    'userRole': [
+        ValidationRules.required
     ]
 });
 
@@ -184,32 +187,71 @@ setupFormValidation('editUserForm', {
     'editUserCPF': [
         ValidationRules.required,
         ValidationRules.minLength(11)
+    ],
+    'editUserRole': [
+        ValidationRules.required
+    ],
+    'editUserStatus': [
+        ValidationRules.required
     ]
 });
 
+// Improved loadUsers function with proper error handling
 async function loadUsers() {
     const contentDiv = document.getElementById('usersContent');
-    if (!contentDiv) return;
+    const tableBody = document.getElementById('usersTableBody');
+    if (!contentDiv || !tableBody) {
+        console.error('Required DOM elements not found');
+        return;
+    }
     
     showLoading(contentDiv);
+    
     try {
-        const response = await fetch('/api/users');
+        const response = await fetch('/api/users', {
+            headers: {
+                'Accept': 'application/json'
+            }
+        });
+
         if (!response.ok) {
-            throw new Error('Failed to fetch users');
+            const errorData = await response.json().catch(() => ({}));
+            throw new Error(errorData.error || `Failed to fetch users: ${response.status}`);
         }
-        const data = await response.json();
-        document.getElementById('usersTableBody').innerHTML = generateUsersHTML(data);
+
+        let data;
+        try {
+            data = await response.json();
+        } catch (parseError) {
+            console.error('JSON parsing error:', parseError);
+            throw new Error('Invalid response format from server');
+        }
+
+        if (!Array.isArray(data)) {
+            throw new Error('Invalid data format: expected an array of users');
+        }
+
+        tableBody.innerHTML = generateUsersHTML(data);
         feather.replace();
     } catch (error) {
         console.error('Error loading users:', error);
-        showErrorMessage('Failed to load users');
+        showErrorMessage(error.message || 'Failed to load users');
+        tableBody.innerHTML = `
+            <tr>
+                <td colspan="6" class="no-data">
+                    <i data-feather="alert-circle"></i>
+                    <p>Error loading users: ${error.message || 'Unknown error'}</p>
+                </td>
+            </tr>`;
+        feather.replace();
     } finally {
         hideLoading(contentDiv);
     }
 }
 
+// Improved HTML generation with safety checks
 function generateUsersHTML(users) {
-    if (!users || users.length === 0) {
+    if (!Array.isArray(users) || users.length === 0) {
         return `
             <tr>
                 <td colspan="6" class="no-data">
@@ -219,36 +261,51 @@ function generateUsersHTML(users) {
             </tr>`;
     }
 
-    return users.map(user => `
-        <tr>
-            <td>
-                <div class="user-cell">
-                    <div class="user-avatar">${user.name.slice(0, 2).toUpperCase()}</div>
-                    <span>${user.name}</span>
-                </div>
-            </td>
-            <td>${user.email}</td>
-            <td>${user.role}</td>
-            <td>${user.department || ''}</td>
-            <td>
-                <span class="status-badge ${user.status === 'active' ? 'active' : 'inactive'}">
-                    ${user.status ? user.status.charAt(0).toUpperCase() + user.status.slice(1) : 'Unknown'}
-                </span>
-            </td>
-            <td>
-                <div class="table-actions">
-                    <button class="action-btn" onclick='showEditUserModal("${user.id}", ${JSON.stringify(user)})'>
-                        <i data-feather="edit-2"></i>
-                    </button>
-                    <button class="action-btn danger" onclick='deleteUser("${user.id}")'>
-                        <i data-feather="trash-2"></i>
-                    </button>
-                </div>
-            </td>
-        </tr>
-    `).join('');
+    return users.map(user => {
+        // Sanitize user data
+        const sanitizedUser = {
+            id: String(user.id || ''),
+            name: String(user.name || ''),
+            email: String(user.email || ''),
+            role: String(user.role || ''),
+            department: String(user.department || ''),
+            status: String(user.status || 'inactive'),
+            department_id: String(user.department_id || ''),
+            cpf: String(user.cpf || ''),
+            phone: String(user.phone || '')
+        };
+
+        return `
+            <tr data-id="${sanitizedUser.id}">
+                <td>
+                    <div class="user-cell">
+                        <div class="user-avatar">${sanitizedUser.name.slice(0, 2).toUpperCase()}</div>
+                        <span>${sanitizedUser.name}</span>
+                    </div>
+                </td>
+                <td>${sanitizedUser.email}</td>
+                <td>${sanitizedUser.role}</td>
+                <td>${sanitizedUser.department}</td>
+                <td>
+                    <span class="status-badge ${sanitizedUser.status === 'active' ? 'active' : 'inactive'}">
+                        ${sanitizedUser.status.charAt(0).toUpperCase() + sanitizedUser.status.slice(1)}
+                    </span>
+                </td>
+                <td>
+                    <div class="table-actions">
+                        <button class="action-btn" onclick='showEditUserModal("${sanitizedUser.id}", ${JSON.stringify(sanitizedUser)})'>
+                            <i data-feather="edit-2"></i>
+                        </button>
+                        <button class="action-btn danger" onclick='deleteUser("${sanitizedUser.id}")'>
+                            <i data-feather="trash-2"></i>
+                        </button>
+                    </div>
+                </td>
+            </tr>`;
+    }).join('');
 }
 
+// Improved create user function with better error handling
 async function createUser(event) {
     event.preventDefault();
     const form = event.target;
@@ -267,26 +324,36 @@ async function createUser(event) {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
+                'Accept': 'application/json'
             },
             body: JSON.stringify(data)
         });
 
         if (!response.ok) {
-            const errorData = await response.json();
+            const errorData = await response.json().catch(() => ({}));
             throw new Error(errorData.error || 'Failed to create user');
+        }
+
+        try {
+            await response.json();
+        } catch (parseError) {
+            console.error('JSON parsing error:', parseError);
+            throw new Error('Invalid response format from server');
         }
 
         hideModal('addUserModal');
         form.reset();
         await loadUsers();
+        showErrorMessage('User created successfully', 'success');
     } catch (error) {
         console.error('Error creating user:', error);
-        showErrorMessage(error.message);
+        showErrorMessage(error.message || 'Failed to create user');
     } finally {
         hideLoading(submitButton);
     }
 }
 
+// Improved update user function
 async function updateUser(event) {
     event.preventDefault();
     const form = event.target;
@@ -297,6 +364,11 @@ async function updateUser(event) {
     }
     
     const id = document.getElementById('editUserId').value;
+    if (!id) {
+        showErrorMessage('Invalid user ID');
+        return;
+    }
+
     const formData = new FormData(form);
     const data = Object.fromEntries(formData);
     showLoading(submitButton);
@@ -306,26 +378,41 @@ async function updateUser(event) {
             method: 'PUT',
             headers: {
                 'Content-Type': 'application/json',
+                'Accept': 'application/json'
             },
             body: JSON.stringify(data)
         });
 
         if (!response.ok) {
-            const errorData = await response.json();
+            const errorData = await response.json().catch(() => ({}));
             throw new Error(errorData.error || 'Failed to update user');
+        }
+
+        try {
+            await response.json();
+        } catch (parseError) {
+            console.error('JSON parsing error:', parseError);
+            throw new Error('Invalid response format from server');
         }
 
         hideModal('editUserModal');
         await loadUsers();
+        showErrorMessage('User updated successfully', 'success');
     } catch (error) {
         console.error('Error updating user:', error);
-        showErrorMessage(error.message);
+        showErrorMessage(error.message || 'Failed to update user');
     } finally {
         hideLoading(submitButton);
     }
 }
 
+// Improved delete user function
 async function deleteUser(id) {
+    if (!id || typeof id !== 'string') {
+        showErrorMessage('Invalid user ID');
+        return;
+    }
+
     if (!confirm('Are you sure you want to delete this user?')) {
         return;
     }
@@ -337,17 +424,22 @@ async function deleteUser(id) {
 
     try {
         const response = await fetch(`/api/users/${id}`, {
-            method: 'DELETE'
+            method: 'DELETE',
+            headers: {
+                'Accept': 'application/json'
+            }
         });
 
         if (!response.ok) {
-            throw new Error('Failed to delete user');
+            const errorData = await response.json().catch(() => ({}));
+            throw new Error(errorData.error || 'Failed to delete user');
         }
 
         await loadUsers();
+        showErrorMessage('User deleted successfully', 'success');
     } catch (error) {
         console.error('Error deleting user:', error);
-        showErrorMessage(error.message);
+        showErrorMessage(error.message || 'Failed to delete user');
     } finally {
         if (row) {
             hideLoading(row);
@@ -355,44 +447,89 @@ async function deleteUser(id) {
     }
 }
 
+// Improved modal functions
 function showModal(modalId) {
-    const modal = document.getElementById(modalId);
-    if (modal) {
+    try {
+        const modal = document.getElementById(modalId);
+        if (!modal) {
+            console.error(`Modal not found: ${modalId}`);
+            return;
+        }
         modal.style.display = 'block';
+    } catch (error) {
+        console.error('Error showing modal:', error);
     }
 }
 
 function hideModal(modalId) {
-    const modal = document.getElementById(modalId);
-    if (modal) {
+    try {
+        const modal = document.getElementById(modalId);
+        if (!modal) {
+            console.error(`Modal not found: ${modalId}`);
+            return;
+        }
         modal.style.display = 'none';
+    } catch (error) {
+        console.error('Error hiding modal:', error);
     }
 }
 
 function showAddUserModal() {
-    const form = document.getElementById('addUserForm');
-    if (form) {
-        form.reset();
+    try {
+        const form = document.getElementById('addUserForm');
+        if (form) {
+            form.reset();
+        }
+        showModal('addUserModal');
+    } catch (error) {
+        console.error('Error showing add user modal:', error);
+        showErrorMessage('Failed to open add user form');
     }
-    showModal('addUserModal');
 }
 
 function showEditUserModal(id, user) {
-    if (!user) return;
-    
-    document.getElementById('editUserId').value = id;
-    document.getElementById('editUserName').value = user.name;
-    document.getElementById('editUserEmail').value = user.email;
-    document.getElementById('editUserCPF').value = user.cpf;
-    document.getElementById('editUserPhone').value = user.phone || '';
-    document.getElementById('editUserDepartment').value = user.department_id || '';
-    document.getElementById('editUserRole').value = user.role;
-    document.getElementById('editUserStatus').value = user.status;
-    showModal('editUserModal');
+    try {
+        if (!id || !user) {
+            throw new Error('Invalid user data');
+        }
+
+        const form = document.getElementById('editUserForm');
+        if (!form) {
+            throw new Error('Edit form not found');
+        }
+
+        document.getElementById('editUserId').value = id;
+        document.getElementById('editUserName').value = user.name || '';
+        document.getElementById('editUserEmail').value = user.email || '';
+        document.getElementById('editUserCPF').value = user.cpf || '';
+        document.getElementById('editUserPhone').value = user.phone || '';
+        document.getElementById('editUserDepartment').value = user.department_id || '';
+        document.getElementById('editUserRole').value = user.role || 'user';
+        document.getElementById('editUserStatus').value = user.status || 'active';
+        
+        showModal('editUserModal');
+    } catch (error) {
+        console.error('Error showing edit user modal:', error);
+        showErrorMessage('Failed to load user data for editing');
+    }
 }
 
 // Initialize users list when page loads
-document.addEventListener('DOMContentLoaded', loadUsers);
+document.addEventListener('DOMContentLoaded', () => {
+    try {
+        loadUsers();
+    } catch (error) {
+        console.error('Error initializing users page:', error);
+        showErrorMessage('Failed to initialize users page');
+    }
+});
+
+// Global error handler for unhandled promise rejections
+window.addEventListener('unhandledrejection', function(event) {
+    console.error('Unhandled promise rejection:', event.reason);
+    showErrorMessage('An unexpected error occurred. Please try again.');
+    event.preventDefault();
+});
 </script>
 
 <style>
@@ -502,6 +639,10 @@ th {
     border-radius: 4px;
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
     z-index: 100;
+}
+
+.success-toast {
+    background-color: var(--success-color);
 }
 </style>
 {% endblock %}
