@@ -2,112 +2,24 @@
 
 {% block content %}
 <div class="page-container">
-    <div class="page-header">
-        <h2><i data-feather="grid"></i> Categories</h2>
-        {% if current_user.role == 'admin' %}
-        <button class="action-btn primary" onclick="showModal('addCategoryModal')">
-            <i data-feather="plus"></i> Add Category
-        </button>
-        {% endif %}
-    </div>
-    
+    <h2><i data-feather="grid"></i> Categories</h2>
     <div class="content-grid">
         <div class="categories-list">
-            {% for category in categories %}
-            <div class="category-card" data-id="{{ category.id }}">
+            {% for i in range(6) %}
+            <div class="category-card">
                 <div class="category-icon">
                     <i data-feather="folder"></i>
                 </div>
                 <div class="category-info">
-                    <h3>{{ category.name }}</h3>
-                    <p>{{ category.documents|length }} documents</p>
+                    <h3>Category {{ i + 1 }}</h3>
+                    <p>{{ (i + 1) * 12 }} items</p>
                 </div>
-                {% if current_user.role == 'admin' %}
                 <div class="category-actions">
-                    <button class="action-btn" onclick="showModal('viewCategoryModal', {{ category.id }})">
-                        <i data-feather="eye"></i>
-                    </button>
-                    <button class="action-btn" onclick="showModal('editCategoryModal', {{ category.id }})">
-                        <i data-feather="edit-2"></i>
-                    </button>
-                    <button class="action-btn danger" onclick="confirmDelete({{ category.id }})">
-                        <i data-feather="trash-2"></i>
-                    </button>
+                    <button class="action-btn"><i data-feather="edit"></i></button>
+                    <button class="action-btn danger"><i data-feather="trash-2"></i></button>
                 </div>
-                {% endif %}
             </div>
             {% endfor %}
-        </div>
-    </div>
-</div>
-
-<!-- Add Category Modal -->
-<div id="addCategoryModal" class="modal">
-    <div class="modal-content">
-        <h3>Add New Category</h3>
-        <form id="addCategoryForm">
-            <div class="form-group">
-                <label for="name">Category Name</label>
-                <input type="text" id="name" name="name" required>
-            </div>
-            <div class="form-group">
-                <label for="description">Description</label>
-                <textarea id="description" name="description" rows="3"></textarea>
-            </div>
-            <div class="form-actions">
-                <button type="button" class="action-btn" onclick="hideModal('addCategoryModal')">Cancel</button>
-                <button type="submit" class="action-btn primary">Add Category</button>
-            </div>
-        </form>
-    </div>
-</div>
-
-<!-- Edit Category Modal -->
-<div id="editCategoryModal" class="modal">
-    <div class="modal-content">
-        <h3>Edit Category</h3>
-        <form id="editCategoryForm">
-            <input type="hidden" id="editCategoryId">
-            <div class="form-group">
-                <label for="editName">Category Name</label>
-                <input type="text" id="editName" name="name" required>
-            </div>
-            <div class="form-group">
-                <label for="editDescription">Description</label>
-                <textarea id="editDescription" name="description" rows="3"></textarea>
-            </div>
-            <div class="form-actions">
-                <button type="button" class="action-btn" onclick="hideModal('editCategoryModal')">Cancel</button>
-                <button type="submit" class="action-btn primary">Update Category</button>
-            </div>
-        </form>
-    </div>
-</div>
-
-<!-- View Category Modal -->
-<div id="viewCategoryModal" class="modal">
-    <div class="modal-content">
-        <h3>Category Details</h3>
-        <div id="categoryDetails">
-            <div class="detail-group">
-                <label>Category Name</label>
-                <p id="viewName"></p>
-            </div>
-            <div class="detail-group">
-                <label>Description</label>
-                <p id="viewDescription"></p>
-            </div>
-            <div class="detail-group">
-                <label>Created On</label>
-                <p id="viewCreatedAt"></p>
-            </div>
-            <div class="detail-group">
-                <label>Total Documents</label>
-                <p id="viewTotalDocuments"></p>
-            </div>
-        </div>
-        <div class="form-actions">
-            <button type="button" class="action-btn" onclick="hideModal('viewCategoryModal')">Close</button>
         </div>
     </div>
 </div>
@@ -117,17 +29,11 @@
     padding: 2rem;
 }
 
-.page-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 2rem;
-}
-
-.page-header h2 {
+.page-container h2 {
     display: flex;
     align-items: center;
     gap: 0.5rem;
+    margin-bottom: 2rem;
 }
 
 .content-grid {
@@ -175,178 +81,22 @@
     gap: 0.5rem;
 }
 
-.form-group {
-    margin-bottom: 1.5rem;
-}
-
-.form-group label {
-    display: block;
-    margin-bottom: 0.5rem;
-    color: var(--text-secondary);
-}
-
-.form-group input,
-.form-group textarea {
-    width: 100%;
-    padding: 0.75rem;
-    background-color: var(--bg-tertiary);
-    border: 1px solid var(--border-color);
-    border-radius: 4px;
+.action-btn {
+    background: none;
+    border: none;
     color: var(--text-primary);
-}
-
-.form-group input:focus,
-.form-group textarea:focus {
-    outline: none;
-    border-color: var(--accent-color);
-}
-
-.form-actions {
-    display: flex;
-    justify-content: flex-end;
-    gap: 1rem;
-    margin-top: 2rem;
-}
-
-.detail-group {
-    margin-bottom: 1.5rem;
-}
-
-.detail-group label {
-    display: block;
-    color: var(--text-secondary);
-    margin-bottom: 0.5rem;
-}
-
-.detail-group p {
-    padding: 0.75rem;
-    background-color: var(--bg-tertiary);
+    cursor: pointer;
+    padding: 0.5rem;
     border-radius: 4px;
+    transition: background-color 0.2s;
+}
+
+.action-btn:hover {
+    background-color: var(--bg-secondary);
+}
+
+.action-btn.danger:hover {
+    background-color: var(--danger-color);
 }
 </style>
-
-<script>
-document.addEventListener('DOMContentLoaded', function() {
-    // Add Category Form Submission
-    document.getElementById('addCategoryForm').addEventListener('submit', async function(e) {
-        e.preventDefault();
-        
-        const formData = {
-            name: document.getElementById('name').value,
-            description: document.getElementById('description').value
-        };
-        
-        try {
-            const response = await fetch('/categories/add', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify(formData)
-            });
-            
-            const data = await response.json();
-            if (response.ok) {
-                hideModal('addCategoryModal');
-                location.reload();
-            } else {
-                alert(data.error);
-            }
-        } catch (error) {
-            console.error('Error:', error);
-            alert('An error occurred while adding the category');
-        }
-    });
-    
-    // Edit Category Form Submission
-    document.getElementById('editCategoryForm').addEventListener('submit', async function(e) {
-        e.preventDefault();
-        
-        const categoryId = document.getElementById('editCategoryId').value;
-        const formData = {
-            name: document.getElementById('editName').value,
-            description: document.getElementById('editDescription').value
-        };
-        
-        try {
-            const response = await fetch(`/categories/${categoryId}`, {
-                method: 'PUT',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify(formData)
-            });
-            
-            const data = await response.json();
-            if (response.ok) {
-                hideModal('editCategoryModal');
-                location.reload();
-            } else {
-                alert(data.error);
-            }
-        } catch (error) {
-            console.error('Error:', error);
-            alert('An error occurred while updating the category');
-        }
-    });
-});
-
-async function showModal(modalId, categoryId = null) {
-    const modal = document.getElementById(modalId);
-    modal.style.display = 'block';
-    
-    if (categoryId && (modalId === 'editCategoryModal' || modalId === 'viewCategoryModal')) {
-        try {
-            const category = document.querySelector(`.category-card[data-id="${categoryId}"]`);
-            const name = category.querySelector('h3').textContent;
-            const documentsCount = category.querySelector('.category-info p').textContent.split(' ')[0];
-            
-            if (modalId === 'editCategoryModal') {
-                document.getElementById('editCategoryId').value = categoryId;
-                document.getElementById('editName').value = name;
-                // You would typically fetch the full category details from the server here
-            } else {
-                document.getElementById('viewName').textContent = name;
-                document.getElementById('viewTotalDocuments').textContent = documentsCount;
-                // You would typically fetch and display more details here
-            }
-        } catch (error) {
-            console.error('Error:', error);
-            alert('An error occurred while loading category details');
-        }
-    }
-}
-
-function hideModal(modalId) {
-    const modal = document.getElementById(modalId);
-    modal.style.display = 'none';
-    
-    // Reset forms when closing modals
-    if (modalId === 'addCategoryModal') {
-        document.getElementById('addCategoryForm').reset();
-    } else if (modalId === 'editCategoryModal') {
-        document.getElementById('editCategoryForm').reset();
-    }
-}
-
-async function confirmDelete(categoryId) {
-    if (confirm('Are you sure you want to delete this category?')) {
-        try {
-            const response = await fetch(`/categories/${categoryId}`, {
-                method: 'DELETE'
-            });
-            
-            const data = await response.json();
-            if (response.ok) {
-                location.reload();
-            } else {
-                alert(data.error);
-            }
-        } catch (error) {
-            console.error('Error:', error);
-            alert('An error occurred while deleting the category');
-        }
-    }
-}
-</script>
 {% endblock %}

@@ -1,18 +1,12 @@
 from flask import Flask, render_template, redirect, url_for, request, flash
 from flask_login import LoginManager, login_user, login_required, logout_user, current_user
-from models import db, User, Department, Category, Document
+from models import db, User
 import os
-from datetime import datetime
 
 app = Flask(__name__)
 app.secret_key = os.urandom(24)
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///admin.db'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-app.config['UPLOAD_FOLDER'] = 'uploads'
-
-# Ensure upload directory exists
-if not os.path.exists(app.config['UPLOAD_FOLDER']):
-    os.makedirs(app.config['UPLOAD_FOLDER'])
 
 # Initialize database and create tables
 db.init_app(app)
@@ -26,8 +20,7 @@ with app.app_context():
             print("Creating default admin user...")
             admin = User(
                 username='Admin',
-                email='admin@example.com',
-                role='admin'
+                email='admin@example.com'
             )
             admin.set_password('admin123')
             db.session.add(admin)
@@ -48,7 +41,6 @@ login_manager.login_view = 'login'
 def load_user(user_id):
     return User.query.get(int(user_id))
 
-# Authentication routes
 @app.route('/')
 def index():
     if current_user.is_authenticated:
@@ -86,52 +78,27 @@ def logout():
     logout_user()
     return redirect(url_for('login'))
 
-# Dashboard route
 @app.route('/dashboard')
 @login_required
 def dashboard():
-    stats = {
-        'total_users': User.query.count(),
-        'total_documents': Document.query.count(),
-        'total_departments': Department.query.count(),
-        'total_categories': Category.query.count()
-    }
-    return render_template('dashboard.html', stats=stats)
+    return render_template('dashboard.html')
 
-# Department routes
 @app.route('/departments')
 @login_required
 def departments():
-    departments = Department.query.all()
-    return render_template('departments.html', departments=departments)
+    return render_template('departments.html')
 
-# Category routes
 @app.route('/categories')
 @login_required
 def categories():
-    categories = Category.query.all()
-    return render_template('categories.html', categories=categories)
+    return render_template('categories.html')
 
-# Document routes
 @app.route('/documents')
 @login_required
 def documents():
-    documents = Document.query.all()
-    categories = Category.query.all()
-    departments = Department.query.all()
-    return render_template('documents.html', 
-                         documents=documents,
-                         categories=categories,
-                         departments=departments)
+    return render_template('documents.html')
 
-# User routes
 @app.route('/users')
 @login_required
 def users():
-    if not current_user.role == 'admin':
-        flash('Unauthorized access', 'error')
-        return redirect(url_for('dashboard'))
-    
-    users = User.query.all()
-    departments = Department.query.all()
-    return render_template('users.html', users=users, departments=departments)
+    return render_template('users.html')
