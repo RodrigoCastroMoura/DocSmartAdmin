@@ -2,39 +2,83 @@
 
 {% block content %}
 <div class="page-container">
-    <h2><i data-feather="briefcase"></i> Departments</h2>
+    <div class="page-header">
+        <h2><i data-feather="briefcase"></i> Departments</h2>
+        <button class="action-btn primary" onclick="showModal('createDepartmentModal')">
+            <i data-feather="plus"></i> Add Department
+        </button>
+    </div>
+    
     <div class="content-grid">
         <div class="departments-grid">
-            {% for i in range(6) %}
-            <div class="department-card">
+            {% for department in departments %}
+            <div class="department-card" data-id="{{ department.id }}">
                 <div class="department-header">
                     <i data-feather="briefcase"></i>
-                    <h3>Department {{ i + 1 }}</h3>
+                    <h3>{{ department.name }}</h3>
                 </div>
                 <div class="department-stats">
                     <div class="stat">
                         <i data-feather="users"></i>
                         <div class="stat-info">
                             <span>Members</span>
-                            <p>{{ (i + 1) * 5 }}</p>
+                            <p>{{ department.member_count|default(0) }}</p>
                         </div>
                     </div>
                     <div class="stat">
                         <i data-feather="file-text"></i>
                         <div class="stat-info">
                             <span>Documents</span>
-                            <p>{{ (i + 1) * 12 }}</p>
+                            <p>{{ department.document_count|default(0) }}</p>
                         </div>
                     </div>
                 </div>
                 <div class="department-actions">
-                    <button class="action-btn primary">View Details</button>
-                    <button class="action-btn"><i data-feather="edit-2"></i></button>
-                    <button class="action-btn danger"><i data-feather="trash-2"></i></button>
+                    <button class="action-btn" onclick="showEditModal('{{ department.id }}', '{{ department.name }}')">
+                        <i data-feather="edit-2"></i>
+                    </button>
+                    <button class="action-btn danger" onclick="deleteDepartment('{{ department.id }}')">
+                        <i data-feather="trash-2"></i>
+                    </button>
                 </div>
             </div>
             {% endfor %}
         </div>
+    </div>
+</div>
+
+<!-- Create Department Modal -->
+<div id="createDepartmentModal" class="modal">
+    <div class="modal-content">
+        <h3>Create New Department</h3>
+        <form id="createDepartmentForm" onsubmit="createDepartment(event)">
+            <div class="form-group">
+                <label for="departmentName">Department Name</label>
+                <input type="text" id="departmentName" name="name" required>
+            </div>
+            <div class="modal-actions">
+                <button type="button" class="action-btn" onclick="hideModal('createDepartmentModal')">Cancel</button>
+                <button type="submit" class="action-btn primary">Create</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Edit Department Modal -->
+<div id="editDepartmentModal" class="modal">
+    <div class="modal-content">
+        <h3>Edit Department</h3>
+        <form id="editDepartmentForm" onsubmit="updateDepartment(event)">
+            <input type="hidden" id="editDepartmentId">
+            <div class="form-group">
+                <label for="editDepartmentName">Department Name</label>
+                <input type="text" id="editDepartmentName" name="name" required>
+            </div>
+            <div class="modal-actions">
+                <button type="button" class="action-btn" onclick="hideModal('editDepartmentModal')">Cancel</button>
+                <button type="submit" class="action-btn primary">Update</button>
+            </div>
+        </form>
     </div>
 </div>
 
@@ -43,11 +87,17 @@
     padding: 2rem;
 }
 
-.page-container h2 {
+.page-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 2rem;
+}
+
+.page-header h2 {
     display: flex;
     align-items: center;
     gap: 0.5rem;
-    margin-bottom: 2rem;
 }
 
 .content-grid {
@@ -115,6 +165,34 @@
     justify-content: flex-end;
 }
 
+/* Form Styles */
+.form-group {
+    margin-bottom: 1.5rem;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 0.5rem;
+    color: var(--text-secondary);
+}
+
+.form-group input {
+    width: 100%;
+    padding: 0.75rem;
+    background-color: var(--bg-tertiary);
+    border: 1px solid var(--border-color);
+    border-radius: 6px;
+    color: var(--text-primary);
+}
+
+.modal-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 1rem;
+    margin-top: 2rem;
+}
+
+/* Button Styles */
 .action-btn {
     background: none;
     border: none;
@@ -123,6 +201,9 @@
     padding: 0.5rem;
     border-radius: 4px;
     transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
 }
 
 .action-btn.primary {
@@ -142,4 +223,112 @@
     background-color: var(--danger-color);
 }
 </style>
+
+<script>
+// CRUD Operations
+async function createDepartment(event) {
+    event.preventDefault();
+    const form = event.target;
+    const name = form.querySelector('#departmentName').value;
+    
+    try {
+        const response = await fetch('/departments/create', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ name })
+        });
+        
+        if (response.ok) {
+            window.location.reload();
+        } else {
+            alert('Error creating department');
+        }
+    } catch (error) {
+        console.error('Error:', error);
+        alert('Error creating department');
+    }
+}
+
+async function updateDepartment(event) {
+    event.preventDefault();
+    const form = event.target;
+    const id = form.querySelector('#editDepartmentId').value;
+    const name = form.querySelector('#editDepartmentName').value;
+    
+    try {
+        const response = await fetch(`/departments/${id}`, {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ name })
+        });
+        
+        if (response.ok) {
+            window.location.reload();
+        } else {
+            alert('Error updating department');
+        }
+    } catch (error) {
+        console.error('Error:', error);
+        alert('Error updating department');
+    }
+}
+
+async function deleteDepartment(id) {
+    if (!confirm('Are you sure you want to delete this department?')) {
+        return;
+    }
+    
+    try {
+        const response = await fetch(`/departments/${id}`, {
+            method: 'DELETE'
+        });
+        
+        if (response.ok) {
+            const card = document.querySelector(`.department-card[data-id="${id}"]`);
+            card.remove();
+        } else {
+            alert('Error deleting department');
+        }
+    } catch (error) {
+        console.error('Error:', error);
+        alert('Error deleting department');
+    }
+}
+
+// Modal Functions
+function showModal(modalId) {
+    const modal = document.getElementById(modalId);
+    if (modal) {
+        modal.style.display = 'block';
+    }
+}
+
+function hideModal(modalId) {
+    const modal = document.getElementById(modalId);
+    if (modal) {
+        modal.style.display = 'none';
+    }
+}
+
+function showEditModal(id, name) {
+    const modal = document.getElementById('editDepartmentModal');
+    const form = document.getElementById('editDepartmentForm');
+    
+    form.querySelector('#editDepartmentId').value = id;
+    form.querySelector('#editDepartmentName').value = name;
+    
+    modal.style.display = 'block';
+}
+
+// Close modals when clicking outside
+window.addEventListener('click', function(event) {
+    if (event.target.classList.contains('modal')) {
+        event.target.style.display = 'none';
+    }
+});
+</script>
 {% endblock %}
