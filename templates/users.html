@@ -1,0 +1,137 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="page-container">
+    <h2><i data-feather="users"></i> Users</h2>
+    <div class="content-grid">
+        <div class="users-table">
+            <table>
+                <thead>
+                    <tr>
+                        <th>User</th>
+                        <th>Email</th>
+                        <th>Role</th>
+                        <th>Department</th>
+                        <th>Status</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for i in range(5) %}
+                    <tr>
+                        <td>
+                            <div class="user-cell">
+                                <div class="user-avatar">JD</div>
+                                <span>John Doe {{ i + 1 }}</span>
+                            </div>
+                        </td>
+                        <td>user{{ i + 1 }}@example.com</td>
+                        <td>{% if i == 0 %}Admin{% else %}User{% endif %}</td>
+                        <td>Department {{ (i % 3) + 1 }}</td>
+                        <td><span class="status-badge {% if i % 2 == 0 %}active{% else %}inactive{% endif %}">
+                            {% if i % 2 == 0 %}Active{% else %}Inactive{% endif %}
+                        </span></td>
+                        <td>
+                            <div class="table-actions">
+                                <button class="action-btn"><i data-feather="edit-2"></i></button>
+                                <button class="action-btn danger"><i data-feather="trash-2"></i></button>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<style>
+.page-container {
+    padding: 2rem;
+}
+
+.page-container h2 {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-bottom: 2rem;
+}
+
+.content-grid {
+    background-color: var(--bg-secondary);
+    border-radius: 8px;
+    padding: 1.5rem;
+    overflow-x: auto;
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+th, td {
+    padding: 1rem;
+    text-align: left;
+    border-bottom: 1px solid var(--border-color);
+}
+
+th {
+    color: var(--text-secondary);
+    font-weight: 500;
+}
+
+.user-cell {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.user-avatar {
+    width: 32px;
+    height: 32px;
+    background-color: var(--accent-color);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.875rem;
+}
+
+.status-badge {
+    padding: 0.25rem 0.5rem;
+    border-radius: 4px;
+    font-size: 0.875rem;
+}
+
+.status-badge.active {
+    background-color: var(--success-color);
+}
+
+.status-badge.inactive {
+    background-color: var(--danger-color);
+}
+
+.table-actions {
+    display: flex;
+    gap: 0.5rem;
+}
+
+.action-btn {
+    background: none;
+    border: none;
+    color: var(--text-primary);
+    cursor: pointer;
+    padding: 0.5rem;
+    border-radius: 4px;
+    transition: background-color 0.2s;
+}
+
+.action-btn:hover {
+    background-color: var(--bg-tertiary);
+}
+
+.action-btn.danger:hover {
+    background-color: var(--danger-color);
+}
+</style>
+{% endblock %}
