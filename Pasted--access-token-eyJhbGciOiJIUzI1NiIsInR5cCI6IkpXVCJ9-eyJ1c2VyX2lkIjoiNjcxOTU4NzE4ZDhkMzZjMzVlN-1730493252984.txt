@@ -1,0 +1,35 @@
+{
+  "access_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX2lkIjoiNjcxOTU4NzE4ZDhkMzZjMzVlNmM3YzVmIiwiZW1haWwiOiJyb2RyaWdvLmNhc3Ryby5tb3VyYUBnbWFpbC5jb20iLCJyb2xlIjoiYWRtaW4iLCJwZXJtaXNzaW9ucyI6WyJkb2N1bWVudF9yZWFkIiwiZG9jdW1lbnRfd3JpdGUiLCJkb2N1bWVudF91cGRhdGUiLCJkb2N1bWVudF9kZWxldGUiLCJjYXRlZ29yeV9yZWFkIiwiY2F0ZWdvcnlfd3JpdGUiLCJjYXRlZ29yeV91cGRhdGUiLCJjYXRlZ29yeV9kZWxldGUiLCJkZXBhcnRtZW50X3JlYWQiLCJkZXBhcnRtZW50X3dyaXRlIiwiZGVwYXJ0bWVudF91cGRhdGUiLCJkZXBhcnRtZW50X2RlbGV0ZSIsInVzZXJfcmVhZCIsInVzZXJfd3JpdGUiLCJ1c2VyX3VwZGF0ZSIsInVzZXJfZGVsZXRlIiwiY29tcGFueV9yZWFkIiwiY29tcGFueV93cml0ZSIsImNvbXBhbnlfdXBkYXRlIiwiY29tcGFueV9kZWxldGUiXSwiY29tcGFueV9pZCI6IjY3MTk1ODcwOGQ4ZDM2YzM1ZTZjN2M1ZSIsImV4cCI6MTczMDQ5NjA4MSwiaWF0IjoxNzMwNDkyNDgxLCJ0eXBlIjoiYWNjZXNzIiwianRpIjoiNmQxODNiNTdlYmY5MDllYyJ9.TnBM-c3QomrONNiBylXOtludBjByY669j_JffTbwjMs",
+  "refresh_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX2lkIjoiNjcxOTU4NzE4ZDhkMzZjMzVlNmM3YzVmIiwiZW1haWwiOiJyb2RyaWdvLmNhc3Ryby5tb3VyYUBnbWFpbC5jb20iLCJyb2xlIjoiYWRtaW4iLCJwZXJtaXNzaW9ucyI6WyJkb2N1bWVudF9yZWFkIiwiZG9jdW1lbnRfd3JpdGUiLCJkb2N1bWVudF91cGRhdGUiLCJkb2N1bWVudF9kZWxldGUiLCJjYXRlZ29yeV9yZWFkIiwiY2F0ZWdvcnlfd3JpdGUiLCJjYXRlZ29yeV91cGRhdGUiLCJjYXRlZ29yeV9kZWxldGUiLCJkZXBhcnRtZW50X3JlYWQiLCJkZXBhcnRtZW50X3dyaXRlIiwiZGVwYXJ0bWVudF91cGRhdGUiLCJkZXBhcnRtZW50X2RlbGV0ZSIsInVzZXJfcmVhZCIsInVzZXJfd3JpdGUiLCJ1c2VyX3VwZGF0ZSIsInVzZXJfZGVsZXRlIiwiY29tcGFueV9yZWFkIiwiY29tcGFueV93cml0ZSIsImNvbXBhbnlfdXBkYXRlIiwiY29tcGFueV9kZWxldGUiXSwiY29tcGFueV9pZCI6IjY3MTk1ODcwOGQ4ZDM2YzM1ZTZjN2M1ZSIsImV4cCI6MTczMTA5NzI4MSwiaWF0IjoxNzMwNDkyNDgxLCJ0eXBlIjoicmVmcmVzaCIsImp0aSI6ImZiMGMyZTMzMjE3MTUwZmUifQ.9j6EhzKFpqoV-q0w_pf7X7g7irTTFuAMC2NG0EpSxrI",
+  "token_type": "Bearer",
+  "expires_in": 3600,
+  "user": {
+    "id": "671958718d8d36c35e6c7c5f",
+    "name": "Rodrigo Aparecido",
+    "email": "rodrigo.castro.moura@gmail.com",
+    "role": "admin",
+    "permissions": [
+      "document_read",
+      "document_write",
+      "document_update",
+      "document_delete",
+      "category_read",
+      "category_write",
+      "category_update",
+      "category_delete",
+      "department_read",
+      "department_write",
+      "department_update",
+      "department_delete",
+      "user_read",
+      "user_write",
+      "user_update",
+      "user_delete",
+      "company_read",
+      "company_write",
+      "company_update",
+      "company_delete"
+    ],
+    "company_id": "671958708d8d36c35e6c7c5e"
+  }
+}
