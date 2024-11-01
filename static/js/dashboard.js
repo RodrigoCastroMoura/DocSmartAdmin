@@ -1,6 +1,6 @@
 document.addEventListener('DOMContentLoaded', function() {
     // Initialize loading states
-    function showLoading(element) {
+    window.showLoading = function(element) {
         if (!element) return;
         const loadingDiv = document.createElement('div');
         loadingDiv.className = 'loading-indicator';
@@ -13,7 +13,7 @@ document.addEventListener('DOMContentLoaded', function() {
         element.setAttribute('disabled', 'true');
     }
 
-    function hideLoading(element) {
+    window.hideLoading = function(element) {
         if (!element) return;
         const loadingIndicator = element.querySelector('.loading-indicator');
         if (loadingIndicator) {
@@ -23,54 +23,87 @@ document.addEventListener('DOMContentLoaded', function() {
         element.removeAttribute('disabled');
     }
 
-    // API Response Handler
-    async function handleApiResponse(response, successCallback, errorCallback) {
+    // API Response Handler with improved error handling
+    window.handleApiResponse = async function(response, successCallback, errorCallback) {
         try {
+            let data;
+            try {
+                data = await response.json();
+            } catch (e) {
+                data = {};
+            }
+
             if (response.ok) {
-                const data = await response.json().catch(() => ({}));
-                if (successCallback) await successCallback(data);
+                if (successCallback) {
+                    await successCallback(data);
+                }
                 return true;
             } else {
-                const error = await response.json().catch(() => ({ error: 'An error occurred' }));
-                showErrorMessage(error.error || 'Operation failed');
-                if (errorCallback) await errorCallback(error);
+                const errorMessage = data.error || 'Operation failed';
+                showErrorMessage(errorMessage);
+                if (errorCallback) {
+                    await errorCallback(data);
+                }
                 return false;
             }
         } catch (error) {
+            console.error('API response handling error:', error);
             showErrorMessage('An unexpected error occurred');
-            if (errorCallback) await errorCallback(error);
+            if (errorCallback) {
+                await errorCallback(error);
+            }
             return false;
         }
     }
 
-    // Error Message Display
-    function showErrorMessage(message) {
+    // Error Message Display with improved visibility
+    window.showErrorMessage = function(message) {
+        const existingToast = document.querySelector('.error-toast');
+        if (existingToast) {
+            existingToast.remove();
+        }
+
         const errorDiv = document.createElement('div');
         errorDiv.className = 'error-toast';
         errorDiv.textContent = message;
         document.body.appendChild(errorDiv);
 
-        setTimeout(() => {
-            errorDiv.classList.add('show');
-            setTimeout(() => {
-                errorDiv.classList.remove('show');
-                setTimeout(() => errorDiv.remove(), 300);
-            }, 3000);
-        }, 100);
+        // Use RAF to ensure DOM update before animation
+        requestAnimationFrame(() => {
+            requestAnimationFrame(() => {
+                errorDiv.classList.add('show');
+                setTimeout(() => {
+                    errorDiv.classList.remove('show');
+                    setTimeout(() => errorDiv.remove(), 300);
+                }, 3000);
+            });
+        });
     }
 
-    // Modal functionality
+    // Modal functionality with error handling
     window.showModal = function(modalId) {
-        const modal = document.getElementById(modalId);
-        if (modal) {
-            modal.style.display = 'block';
+        try {
+            const modal = document.getElementById(modalId);
+            if (modal) {
+                modal.style.display = 'block';
+            } else {
+                console.error(`Modal with id ${modalId} not found`);
+            }
+        } catch (error) {
+            console.error('Error showing modal:', error);
         }
     }
 
     window.hideModal = function(modalId) {
-        const modal = document.getElementById(modalId);
-        if (modal) {
-            modal.style.display = 'none';
+        try {
+            const modal = document.getElementById(modalId);
+            if (modal) {
+                modal.style.display = 'none';
+            } else {
+                console.error(`Modal with id ${modalId} not found`);
+            }
+        } catch (error) {
+            console.error('Error hiding modal:', error);
         }
     }
 
@@ -81,9 +114,19 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
 
-    // Make functions globally available
-    window.showLoading = showLoading;
-    window.hideLoading = hideLoading;
-    window.handleApiResponse = handleApiResponse;
-    window.showErrorMessage = showErrorMessage;
+    // Global error handler for fetch operations
+    window.addEventListener('unhandledrejection', function(event) {
+        console.error('Unhandled promise rejection:', event.reason);
+        showErrorMessage('An unexpected error occurred. Please try again.');
+        event.preventDefault();
+    });
+
+    // Network status monitoring
+    window.addEventListener('online', function() {
+        showErrorMessage('Connection restored');
+    });
+
+    window.addEventListener('offline', function() {
+        showErrorMessage('No internet connection');
+    });
 });
