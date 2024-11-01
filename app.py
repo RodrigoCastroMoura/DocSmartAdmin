@@ -99,6 +99,118 @@ def logout():
 def dashboard():
     return render_template('dashboard.html')
 
+# Categories CRUD routes
+@app.route('/categories')
+@login_required
+def categories():
+    try:
+        headers = get_auth_headers()
+        company_id = session.get('company_id')
+        if not company_id:
+            flash('Company ID not found', 'error')
+            return render_template('categories.html', categories=[], departments=[])
+
+        # Get categories
+        response = requests.get(
+            f"{CATEGORIES_URL}/companies/{company_id}/categories",
+            headers=headers
+        )
+        categories_data = response.json() if response.status_code == 200 else []
+
+        # Get departments for the form
+        departments_response = requests.get(
+            f"{DEPARTMENTS_URL}/companies/{company_id}/departments",
+            headers=headers
+        )
+        departments = departments_response.json() if departments_response.status_code == 200 else []
+
+        return render_template('categories.html', categories=categories_data, departments=departments)
+    except Exception as e:
+        print(f"Error fetching categories: {e}")
+        flash('Error loading categories', 'error')
+        return render_template('categories.html', categories=[], departments=[])
+
+@app.route('/api/categories', methods=['GET', 'POST'])
+@login_required
+def categories_api():
+    headers = get_auth_headers()
+    company_id = session.get('company_id')
+    
+    if not company_id:
+        return jsonify({'error': 'Company ID not found'}), 400
+    
+    if request.method == 'GET':
+        try:
+            response = requests.get(
+                f"{CATEGORIES_URL}/companies/{company_id}/categories",
+                headers=headers
+            )
+            if response.status_code == 200:
+                return jsonify(response.json()), 200
+            return jsonify({'error': 'Failed to fetch categories'}), response.status_code
+        except Exception as e:
+            print(f"Error fetching categories: {e}")
+            return jsonify({'error': 'Failed to fetch categories'}), 500
+    
+    elif request.method == 'POST':
+        try:
+            data = request.json
+            if not data:
+                return jsonify({'error': 'Invalid request data'}), 400
+                
+            data['company_id'] = company_id
+            response = requests.post(CATEGORIES_URL, headers=headers, json=data)
+            
+            if response.status_code == 201:
+                return jsonify(response.json()), 201
+            return jsonify({'error': 'Failed to create category'}), response.status_code
+        except Exception as e:
+            print(f"Error creating category: {e}")
+            return jsonify({'error': 'Failed to create category'}), 500
+
+@app.route('/api/categories/<category_id>', methods=['PUT', 'DELETE'])
+@login_required
+def category_detail_api(category_id):
+    headers = get_auth_headers()
+    company_id = session.get('company_id')
+
+    if not company_id:
+        return jsonify({'error': 'Company ID not found'}), 400
+    
+    if request.method == 'PUT':
+        try:
+            data = request.json
+            if not data:
+                return jsonify({'error': 'Invalid request data'}), 400
+                
+            data['company_id'] = company_id
+            response = requests.put(
+                f"{CATEGORIES_URL}/{category_id}",
+                headers=headers,
+                json=data
+            )
+            
+            if response.status_code == 200:
+                return jsonify(response.json()), 200
+            return jsonify({'error': 'Failed to update category'}), response.status_code
+        except Exception as e:
+            print(f"Error updating category: {e}")
+            return jsonify({'error': 'Failed to update category'}), 500
+            
+    elif request.method == 'DELETE':
+        try:
+            response = requests.delete(
+                f"{CATEGORIES_URL}/{category_id}",
+                headers=headers
+            )
+            
+            if response.status_code == 204:
+                return '', 204
+            return jsonify({'error': 'Failed to delete category'}), response.status_code
+        except Exception as e:
+            print(f"Error deleting category: {e}")
+            return jsonify({'error': 'Failed to delete category'}), 500
+
 # Departments CRUD routes
 @app.route('/departments')
 @login_required
@@ -213,26 +325,37 @@ def users():
             flash('Company ID not found', 'error')
             return render_template('users.html', users=[], departments=[])
 
-        response = requests.get(
-            f"{USERS_URL}/companies/{company_id}/users",
-            headers=headers
-        )
-        
-        if response.status_code == 200:
+        # Get users with proper error handling
+        try:
+            response = requests.get(
+                f"{USERS_URL}/companies/{company_id}/users",
+                headers=headers
+            )
+            if not response.ok:
+                raise Exception(f"Failed to fetch users: {response.status_code}")
             users_data = response.json()
-            # Get departments for the select options
+        except Exception as e:
+            print(f"Error fetching users: {e}")
+            flash('Error loading users', 'error')
+            users_data = []
+
+        # Get departments with proper error handling
+        try:
             departments_response = requests.get(
                 f"{DEPARTMENTS_URL}/companies/{company_id}/departments",
                 headers=headers
             )
-            departments = departments_response.json() if departments_response.status_code == 200 else []
-            return render_template('users.html', users=users_data, departments=departments)
-        else:
-            flash('Error loading users', 'error')
-            return render_template('users.html', users=[], departments=[])
+            if not departments_response.ok:
+                raise Exception(f"Failed to fetch departments: {departments_response.status_code}")
+            departments = departments_response.json()
+        except Exception as e:
+            print(f"Error fetching departments: {e}")
+            departments = []
+
+        return render_template('users.html', users=users_data, departments=departments)
     except Exception as e:
-        print(f"Error fetching users: {e}")
-        flash('Error loading users', 'error')
+        print(f"Error in users route: {e}")
+        flash('Error loading page', 'error')
         return render_template('users.html', users=[], departments=[])
 
 @app.route('/api/users', methods=['GET', 'POST'])
@@ -255,7 +378,7 @@ def user_api():
             return jsonify({'error': 'Failed to fetch users'}), response.status_code
         except Exception as e:
             print(f"Error fetching users: {e}")
-            return jsonify({'error': 'Failed to fetch users'}), 500
+            return jsonify({'error': str(e)}), 500
     
     elif request.method == 'POST':
         try:
@@ -268,10 +391,11 @@ def user_api():
             
             if response.status_code == 201:
                 return jsonify(response.json()), 201
-            return jsonify({'error': 'Failed to create user'}), response.status_code
+            error_data = response.json() if response.content else {'error': 'Unknown error occurred'}
+            return jsonify(error_data), response.status_code
         except Exception as e:
             print(f"Error creating user: {e}")
-            return jsonify({'error': 'Failed to create user'}), 500
+            return jsonify({'error': str(e)}), 500
 
 @app.route('/api/users/<user_id>', methods=['PUT', 'DELETE'])
 @login_required
@@ -297,10 +421,11 @@ def user_detail_api(user_id):
             
             if response.status_code == 200:
                 return jsonify(response.json()), 200
-            return jsonify({'error': 'Failed to update user'}), response.status_code
+            error_data = response.json() if response.content else {'error': 'Unknown error occurred'}
+            return jsonify(error_data), response.status_code
         except Exception as e:
             print(f"Error updating user: {e}")
-            return jsonify({'error': 'Failed to update user'}), 500
+            return jsonify({'error': str(e)}), 500
             
     elif request.method == 'DELETE':
         try:
@@ -311,10 +436,11 @@ def user_detail_api(user_id):
             
             if response.status_code == 204:
                 return '', 204
-            return jsonify({'error': 'Failed to delete user'}), response.status_code
+            error_data = response.json() if response.content else {'error': 'Unknown error occurred'}
+            return jsonify(error_data), response.status_code
         except Exception as e:
             print(f"Error deleting user: {e}")
-            return jsonify({'error': 'Failed to delete user'}), 500
+            return jsonify({'error': str(e)}), 500
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000, debug=True)
