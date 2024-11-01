@@ -56,9 +56,13 @@ function validateField(input, rules) {
     return true;
 }
 
-// Validate entire form
+// Validate entire form with null/undefined check
 function validateForm(form, validationConfig) {
     let isValid = true;
+    
+    if (!validationConfig || typeof validationConfig !== 'object') {
+        return true;
+    }
     
     for (const [fieldId, rules] of Object.entries(validationConfig)) {
         const field = form.querySelector(`#${fieldId}`);
@@ -73,7 +77,7 @@ function validateForm(form, validationConfig) {
 // Add real-time validation to form
 function setupFormValidation(formId, validationConfig) {
     const form = document.getElementById(formId);
-    if (!form) return;
+    if (!form || !validationConfig) return;
     
     // Add validation styles
     const style = document.createElement('style');
@@ -107,3 +111,11 @@ function setupFormValidation(formId, validationConfig) {
         }
     });
 }
+
+// Add global error handling for unhandled promise rejections
+window.addEventListener('unhandledrejection', function(event) {
+    console.error('Unhandled promise rejection:', event.reason);
+    if (window.showErrorMessage) {
+        window.showErrorMessage('An unexpected error occurred. Please try again.');
+    }
+});
