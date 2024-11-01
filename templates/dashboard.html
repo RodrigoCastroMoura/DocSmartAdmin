@@ -1,0 +1,74 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="dashboard-grid">
+    <section class="content-section">
+        <h2>Overview</h2>
+        <div class="stats-grid">
+            <div class="stat-card">
+                <i data-feather="users"></i>
+                <div class="stat-info">
+                    <h3>Total Users</h3>
+                    <p>1,234</p>
+                </div>
+            </div>
+            <div class="stat-card">
+                <i data-feather="file-text"></i>
+                <div class="stat-info">
+                    <h3>Documents</h3>
+                    <p>567</p>
+                </div>
+            </div>
+            <div class="stat-card">
+                <i data-feather="briefcase"></i>
+                <div class="stat-info">
+                    <h3>Departments</h3>
+                    <p>12</p>
+                </div>
+            </div>
+            <div class="stat-card">
+                <i data-feather="grid"></i>
+                <div class="stat-info">
+                    <h3>Categories</h3>
+                    <p>45</p>
+                </div>
+            </div>
+        </div>
+    </section>
+</div>
+
+<style>
+.dashboard-grid {
+    display: grid;
+    gap: 1.5rem;
+    padding: 1rem;
+}
+
+.stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    gap: 1rem;
+    margin-top: 1rem;
+}
+
+.stat-card {
+    background-color: var(--bg-secondary);
+    padding: 1.5rem;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.stat-info h3 {
+    color: var(--text-secondary);
+    font-size: 0.875rem;
+    margin-bottom: 0.25rem;
+}
+
+.stat-info p {
+    font-size: 1.5rem;
+    font-weight: bold;
+}
+</style>
+{% endblock %}
