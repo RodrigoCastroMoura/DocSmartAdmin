@@ -72,6 +72,7 @@ def login():
                 session['access_token'] = data['access_token']
                 session['refresh_token'] = data['refresh_token']
                 session['user'] = data['user']
+                session['company_id'] = data['user'].get('company_id')
                 return redirect(url_for('dashboard'))
             else:
                 flash('Invalid credentials', 'error')
@@ -104,7 +105,15 @@ def dashboard():
 def departments():
     try:
         headers = get_auth_headers()
-        response = requests.get(DEPARTMENTS_URL, headers=headers)
+        company_id = session.get('company_id')
+        if not company_id:
+            flash('Company ID not found', 'error')
+            return render_template('departments.html', departments=[])
+
+        response = requests.get(
+            f"{DEPARTMENTS_URL}/companies/{company_id}/departments",
+            headers=headers
+        )
         departments_data = response.json() if response.status_code == 200 else []
         return render_template('departments.html', departments=departments_data)
     except Exception as e:
@@ -116,10 +125,17 @@ def departments():
 @login_required
 def department_api():
     headers = get_auth_headers()
+    company_id = session.get('company_id')
+    
+    if not company_id:
+        return jsonify({'error': 'Company ID not found'}), 400
     
     if request.method == 'GET':
         try:
-            response = requests.get(DEPARTMENTS_URL, headers=headers)
+            response = requests.get(
+                f"{DEPARTMENTS_URL}/companies/{company_id}/departments",
+                headers=headers
+            )
             return jsonify(response.json()), response.status_code
         except Exception as e:
             print(f"Error fetching departments: {e}")
@@ -127,7 +143,9 @@ def department_api():
     
     elif request.method == 'POST':
         try:
-            response = requests.post(DEPARTMENTS_URL, headers=headers, json=request.json)
+            data = request.json
+            data['company_id'] = company_id
+            response = requests.post(DEPARTMENTS_URL, headers=headers, json=data)
             return jsonify(response.json()), response.status_code
         except Exception as e:
             print(f"Error creating department: {e}")
@@ -137,10 +155,20 @@ def department_api():
 @login_required
 def department_detail_api(department_id):
     headers = get_auth_headers()
+    company_id = session.get('company_id')
+    
+    if not company_id:
+        return jsonify({'error': 'Company ID not found'}), 400
     
     if request.method == 'PUT':
         try:
-            response = requests.put(f"{DEPARTMENTS_URL}/{department_id}", headers=headers, json=request.json)
+            data = request.json
+            data['company_id'] = company_id
+            response = requests.put(
+                f"{DEPARTMENTS_URL}/{department_id}",
+                headers=headers,
+                json=data
+            )
             return jsonify(response.json()), response.status_code
         except Exception as e:
             print(f"Error updating department: {e}")
@@ -148,7 +176,10 @@ def department_detail_api(department_id):
             
     elif request.method == 'DELETE':
         try:
-            response = requests.delete(f"{DEPARTMENTS_URL}/{department_id}", headers=headers)
+            response = requests.delete(
+                f"{DEPARTMENTS_URL}/{department_id}",
+                headers=headers
+            )
             return '', response.status_code
         except Exception as e:
             print(f"Error deleting department: {e}")
@@ -160,7 +191,15 @@ def department_detail_api(department_id):
 def categories():
     try:
         headers = get_auth_headers()
-        response = requests.get(CATEGORIES_URL, headers=headers)
+        company_id = session.get('company_id')
+        if not company_id:
+            flash('Company ID not found', 'error')
+            return render_template('categories.html', categories=[])
+
+        response = requests.get(
+            f"{CATEGORIES_URL}/companies/{company_id}/categories",
+            headers=headers
+        )
         categories_data = response.json() if response.status_code == 200 else []
         return render_template('categories.html', categories=categories_data)
     except Exception as e:
@@ -172,10 +211,17 @@ def categories():
 @login_required
 def category_api():
     headers = get_auth_headers()
+    company_id = session.get('company_id')
+
+    if not company_id:
+        return jsonify({'error': 'Company ID not found'}), 400
     
     if request.method == 'GET':
         try:
-            response = requests.get(CATEGORIES_URL, headers=headers)
+            response = requests.get(
+                f"{CATEGORIES_URL}/companies/{company_id}/categories",
+                headers=headers
+            )
             return jsonify(response.json()), response.status_code
         except Exception as e:
             print(f"Error fetching categories: {e}")
@@ -183,7 +229,9 @@ def category_api():
     
     elif request.method == 'POST':
         try:
-            response = requests.post(CATEGORIES_URL, headers=headers, json=request.json)
+            data = request.json
+            data['company_id'] = company_id
+            response = requests.post(CATEGORIES_URL, headers=headers, json=data)
             return jsonify(response.json()), response.status_code
         except Exception as e:
             print(f"Error creating category: {e}")
@@ -193,10 +241,20 @@ def category_api():
 @login_required
 def category_detail_api(category_id):
     headers = get_auth_headers()
+    company_id = session.get('company_id')
+
+    if not company_id:
+        return jsonify({'error': 'Company ID not found'}), 400
     
     if request.method == 'PUT':
         try:
-            response = requests.put(f"{CATEGORIES_URL}/{category_id}", headers=headers, json=request.json)
+            data = request.json
+            data['company_id'] = company_id
+            response = requests.put(
+                f"{CATEGORIES_URL}/{category_id}",
+                headers=headers,
+                json=data
+            )
             return jsonify(response.json()), response.status_code
         except Exception as e:
             print(f"Error updating category: {e}")
@@ -204,7 +262,10 @@ def category_detail_api(category_id):
             
     elif request.method == 'DELETE':
         try:
-            response = requests.delete(f"{CATEGORIES_URL}/{category_id}", headers=headers)
+            response = requests.delete(
+                f"{CATEGORIES_URL}/{category_id}",
+                headers=headers
+            )
             return '', response.status_code
         except Exception as e:
             print(f"Error deleting category: {e}")
@@ -216,7 +277,15 @@ def category_detail_api(category_id):
 def documents():
     try:
         headers = get_auth_headers()
-        response = requests.get(DOCUMENTS_URL, headers=headers)
+        company_id = session.get('company_id')
+        if not company_id:
+            flash('Company ID not found', 'error')
+            return render_template('documents.html', documents=[])
+
+        response = requests.get(
+            f"{DOCUMENTS_URL}/companies/{company_id}/documents",
+            headers=headers
+        )
         documents_data = response.json() if response.status_code == 200 else []
         return render_template('documents.html', documents=documents_data)
     except Exception as e:
@@ -229,12 +298,17 @@ def documents():
 def create_document():
     try:
         headers = get_auth_headers()
+        company_id = session.get('company_id')
+        if not company_id:
+            return jsonify({'error': 'Company ID not found'}), 400
+
         files = {'file': (request.files['file'].filename, request.files['file'])}
         data = {
             'name': request.form['name'],
             'type': request.form['type'],
             'department_id': request.form['department_id'],
-            'category_id': request.form['category_id']
+            'category_id': request.form['category_id'],
+            'company_id': company_id
         }
         response = requests.post(DOCUMENTS_URL, headers=headers, data=data, files=files)
         return jsonify(response.json()), response.status_code
@@ -246,10 +320,20 @@ def create_document():
 @login_required
 def document_detail_api(document_id):
     headers = get_auth_headers()
+    company_id = session.get('company_id')
+
+    if not company_id:
+        return jsonify({'error': 'Company ID not found'}), 400
     
     if request.method == 'PUT':
         try:
-            response = requests.put(f"{DOCUMENTS_URL}/{document_id}", headers=headers, json=request.json)
+            data = request.json
+            data['company_id'] = company_id
+            response = requests.put(
+                f"{DOCUMENTS_URL}/{document_id}",
+                headers=headers,
+                json=data
+            )
             return jsonify(response.json()), response.status_code
         except Exception as e:
             print(f"Error updating document: {e}")
@@ -257,7 +341,10 @@ def document_detail_api(document_id):
             
     elif request.method == 'DELETE':
         try:
-            response = requests.delete(f"{DOCUMENTS_URL}/{document_id}", headers=headers)
+            response = requests.delete(
+                f"{DOCUMENTS_URL}/{document_id}",
+                headers=headers
+            )
             return '', response.status_code
         except Exception as e:
             print(f"Error deleting document: {e}")
@@ -289,7 +376,15 @@ def download_document(document_id):
 def users():
     try:
         headers = get_auth_headers()
-        response = requests.get(USERS_URL, headers=headers)
+        company_id = session.get('company_id')
+        if not company_id:
+            flash('Company ID not found', 'error')
+            return render_template('users.html', users=[])
+
+        response = requests.get(
+            f"{USERS_URL}/companies/{company_id}/users",
+            headers=headers
+        )
         users_data = response.json() if response.status_code == 200 else []
         return render_template('users.html', users=users_data)
     except Exception as e:
@@ -301,10 +396,17 @@ def users():
 @login_required
 def user_api():
     headers = get_auth_headers()
+    company_id = session.get('company_id')
+
+    if not company_id:
+        return jsonify({'error': 'Company ID not found'}), 400
     
     if request.method == 'GET':
         try:
-            response = requests.get(USERS_URL, headers=headers)
+            response = requests.get(
+                f"{USERS_URL}/companies/{company_id}/users",
+                headers=headers
+            )
             return jsonify(response.json()), response.status_code
         except Exception as e:
             print(f"Error fetching users: {e}")
@@ -312,7 +414,9 @@ def user_api():
     
     elif request.method == 'POST':
         try:
-            response = requests.post(USERS_URL, headers=headers, json=request.json)
+            data = request.json
+            data['company_id'] = company_id
+            response = requests.post(USERS_URL, headers=headers, json=data)
             return jsonify(response.json()), response.status_code
         except Exception as e:
             print(f"Error creating user: {e}")
@@ -322,10 +426,20 @@ def user_api():
 @login_required
 def user_detail_api(user_id):
     headers = get_auth_headers()
+    company_id = session.get('company_id')
+
+    if not company_id:
+        return jsonify({'error': 'Company ID not found'}), 400
     
     if request.method == 'PUT':
         try:
-            response = requests.put(f"{USERS_URL}/{user_id}", headers=headers, json=request.json)
+            data = request.json
+            data['company_id'] = company_id
+            response = requests.put(
+                f"{USERS_URL}/{user_id}",
+                headers=headers,
+                json=data
+            )
             return jsonify(response.json()), response.status_code
         except Exception as e:
             print(f"Error updating user: {e}")
@@ -333,7 +447,10 @@ def user_detail_api(user_id):
             
     elif request.method == 'DELETE':
         try:
-            response = requests.delete(f"{USERS_URL}/{user_id}", headers=headers)
+            response = requests.delete(
+                f"{USERS_URL}/{user_id}",
+                headers=headers
+            )
             return '', response.status_code
         except Exception as e:
             print(f"Error deleting user: {e}")

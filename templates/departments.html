@@ -22,14 +22,14 @@
                             <i data-feather="users"></i>
                             <div class="stat-info">
                                 <span>Members</span>
-                                <p>{{ department.member_count }}</p>
+                                <p>{{ department.member_count|default(0) }}</p>
                             </div>
                         </div>
                         <div class="stat">
                             <i data-feather="file-text"></i>
                             <div class="stat-info">
                                 <span>Documents</span>
-                                <p>{{ department.document_count }}</p>
+                                <p>{{ department.document_count|default(0) }}</p>
                             </div>
                         </div>
                     </div>
@@ -89,7 +89,102 @@
 </div>
 
 <style>
-/* ... existing styles ... */
+.page-container {
+    padding: 2rem;
+}
+
+.header-actions {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 2rem;
+}
+
+.header-actions h2 {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.content-grid {
+    background-color: var(--bg-secondary);
+    border-radius: 8px;
+    padding: 1.5rem;
+}
+
+.departments-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 1rem;
+}
+
+.department-card {
+    background-color: var(--bg-tertiary);
+    border-radius: 6px;
+    padding: 1.5rem;
+    transition: transform 0.2s;
+}
+
+.department-card:hover {
+    transform: translateY(-2px);
+}
+
+.department-header {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    margin-bottom: 1rem;
+}
+
+.department-header i {
+    padding: 0.75rem;
+    background-color: var(--accent-color);
+    border-radius: 6px;
+}
+
+.department-stats {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1rem;
+    margin: 1rem 0;
+}
+
+.stat {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.stat i {
+    color: var(--text-secondary);
+}
+
+.stat-info span {
+    font-size: 0.875rem;
+    color: var(--text-secondary);
+}
+
+.stat-info p {
+    font-weight: 500;
+}
+
+.department-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 0.5rem;
+    margin-top: 1rem;
+}
+
+.no-data {
+    text-align: center;
+    padding: 2rem;
+    color: var(--text-secondary);
+}
+
+.no-data i {
+    font-size: 3rem;
+    margin-bottom: 1rem;
+}
 </style>
 
 <script src="{{ url_for('static', filename='js/validation.js') }}"></script>
