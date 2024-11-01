@@ -1,22 +1,37 @@
 document.addEventListener('DOMContentLoaded', function() {
     // Initialize loading states
     function showLoading(element) {
+        if (!element) return;
+        const loadingDiv = document.createElement('div');
+        loadingDiv.className = 'loading-indicator';
+        loadingDiv.innerHTML = `
+            <div class="spinner"></div>
+            <span>Loading...</span>
+        `;
         element.classList.add('loading');
+        element.appendChild(loadingDiv);
+        element.setAttribute('disabled', 'true');
     }
 
     function hideLoading(element) {
+        if (!element) return;
+        const loadingIndicator = element.querySelector('.loading-indicator');
+        if (loadingIndicator) {
+            loadingIndicator.remove();
+        }
         element.classList.remove('loading');
+        element.removeAttribute('disabled');
     }
 
     // Modal functionality
-    function showModal(modalId) {
+    window.showModal = function(modalId) {
         const modal = document.getElementById(modalId);
         if (modal) {
             modal.style.display = 'block';
         }
     }
 
-    function hideModal(modalId) {
+    window.hideModal = function(modalId) {
         const modal = document.getElementById(modalId);
         if (modal) {
             modal.style.display = 'none';
@@ -30,12 +45,7 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
 
-    // Simulate loading states for dynamic content
-    const contentSections = document.querySelectorAll('.content-section');
-    contentSections.forEach(section => {
-        showLoading(section);
-        setTimeout(() => {
-            hideLoading(section);
-        }, 1000);
-    });
+    // Make loading functions globally available
+    window.showLoading = showLoading;
+    window.hideLoading = hideLoading;
 });

@@ -8,7 +8,7 @@
             <i data-feather="plus"></i> Add Department
         </button>
     </div>
-    <div class="content-grid">
+    <div class="content-grid" id="departmentsContent">
         <div class="departments-grid">
             {% if departments %}
                 {% for department in departments %}
@@ -189,7 +189,6 @@
 
 <script src="{{ url_for('static', filename='js/validation.js') }}"></script>
 <script>
-// Show/Hide Modals
 function showModal(modalId) {
     document.getElementById(modalId).style.display = 'block';
 }
@@ -209,7 +208,6 @@ function showEditDepartmentModal(id, name) {
     showModal('editDepartmentModal');
 }
 
-// Setup form validation
 setupFormValidation('addDepartmentForm', {
     'departmentName': [
         ValidationRules.required,
@@ -226,22 +224,17 @@ setupFormValidation('editDepartmentForm', {
     ]
 });
 
-// CRUD Operations with validation
 async function createDepartment(event) {
     event.preventDefault();
     const form = event.target;
+    const submitButton = form.querySelector('button[type="submit"]');
     
-    if (!validateForm(form, {
-        'departmentName': [
-            ValidationRules.required,
-            ValidationRules.minLength(3),
-            ValidationRules.maxLength(50)
-        ]
-    })) {
+    if (!validateForm(form)) {
         return;
     }
     
     const name = form.name.value;
+    showLoading(submitButton);
 
     try {
         const response = await fetch('/api/departments', {
@@ -254,6 +247,8 @@ async function createDepartment(event) {
 
         if (response.ok) {
             hideModal('addDepartmentModal');
+            const contentDiv = document.getElementById('departmentsContent');
+            showLoading(contentDiv);
             window.location.reload();
         } else {
             const data = await response.json();
@@ -261,25 +256,23 @@ async function createDepartment(event) {
         }
     } catch (error) {
         alert('Failed to create department');
+    } finally {
+        hideLoading(submitButton);
     }
 }
 
 async function updateDepartment(event) {
     event.preventDefault();
     const form = event.target;
+    const submitButton = form.querySelector('button[type="submit"]');
     
-    if (!validateForm(form, {
-        'editDepartmentName': [
-            ValidationRules.required,
-            ValidationRules.minLength(3),
-            ValidationRules.maxLength(50)
-        ]
-    })) {
+    if (!validateForm(form)) {
         return;
     }
     
     const id = document.getElementById('editDepartmentId').value;
     const name = document.getElementById('editDepartmentName').value;
+    showLoading(submitButton);
 
     try {
         const response = await fetch(`/api/departments/${id}`, {
@@ -292,6 +285,8 @@ async function updateDepartment(event) {
 
         if (response.ok) {
             hideModal('editDepartmentModal');
+            const contentDiv = document.getElementById('departmentsContent');
+            showLoading(contentDiv);
             window.location.reload();
         } else {
             const data = await response.json();
@@ -299,6 +294,8 @@ async function updateDepartment(event) {
         }
     } catch (error) {
         alert('Failed to update department');
+    } finally {
+        hideLoading(submitButton);
     }
 }
 
@@ -307,12 +304,17 @@ async function deleteDepartment(id) {
         return;
     }
 
+    const card = document.querySelector(`.department-card[data-id="${id}"]`);
+    showLoading(card);
+
     try {
         const response = await fetch(`/api/departments/${id}`, {
             method: 'DELETE'
         });
 
         if (response.ok) {
+            const contentDiv = document.getElementById('departmentsContent');
+            showLoading(contentDiv);
             window.location.reload();
         } else {
             const data = await response.json();
@@ -320,6 +322,8 @@ async function deleteDepartment(id) {
         }
     } catch (error) {
         alert('Failed to delete department');
+    } finally {
+        hideLoading(card);
     }
 }
 </script>
