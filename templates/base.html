@@ -53,9 +53,15 @@
                     <button class="notifications">
                         <i data-feather="bell"></i>
                     </button>
-                    <div class="user-profile">
-                        <span>Admin User</span>
+                    <div class="user-profile" onclick="toggleDropdown()">
+                        <span>{{ session.get('user', {}).get('name', 'Admin User') }}</span>
                         <i data-feather="user"></i>
+                        <div class="dropdown-menu">
+                            <a href="{{ url_for('logout') }}" class="dropdown-item">
+                                <i data-feather="log-out"></i>
+                                <span>Logout</span>
+                            </a>
+                        </div>
                     </div>
                 </div>
             </header>
@@ -70,6 +76,63 @@
     <script src="{{ url_for('static', filename='js/dashboard.js') }}"></script>
     <script>
         feather.replace();
+
+        function toggleDropdown() {
+            const dropdown = document.querySelector('.dropdown-menu');
+            dropdown.classList.toggle('show');
+
+            // Close dropdown when clicking outside
+            document.addEventListener('click', function closeDropdown(e) {
+                if (!e.target.closest('.user-profile')) {
+                    dropdown.classList.remove('show');
+                    document.removeEventListener('click', closeDropdown);
+                }
+            });
+        }
     </script>
+
+    <style>
+        .user-profile {
+            position: relative;
+            cursor: pointer;
+        }
+
+        .dropdown-menu {
+            display: none;
+            position: absolute;
+            top: 100%;
+            right: 0;
+            background-color: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            padding: 0.5rem;
+            margin-top: 0.5rem;
+            min-width: 150px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+        }
+
+        .dropdown-menu.show {
+            display: block;
+        }
+
+        .dropdown-item {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.5rem;
+            color: var(--text-primary);
+            text-decoration: none;
+            border-radius: 4px;
+            transition: background-color 0.2s;
+        }
+
+        .dropdown-item:hover {
+            background-color: var(--bg-tertiary);
+        }
+
+        .dropdown-item i {
+            color: var(--danger-color);
+        }
+    </style>
 </body>
 </html>
