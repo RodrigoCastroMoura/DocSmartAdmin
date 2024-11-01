@@ -2,25 +2,76 @@
 
 {% block content %}
 <div class="page-container">
-    <h2><i data-feather="grid"></i> Categories</h2>
+    <div class="header-actions">
+        <h2><i data-feather="grid"></i> Categories</h2>
+        <button class="action-btn primary" onclick="showAddCategoryModal()">
+            <i data-feather="plus"></i> Add Category
+        </button>
+    </div>
     <div class="content-grid">
         <div class="categories-list">
-            {% for i in range(6) %}
-            <div class="category-card">
-                <div class="category-icon">
-                    <i data-feather="folder"></i>
+            {% if categories %}
+                {% for category in categories %}
+                <div class="category-card" data-id="{{ category.id }}">
+                    <div class="category-icon">
+                        <i data-feather="folder"></i>
+                    </div>
+                    <div class="category-info">
+                        <h3>{{ category.name }}</h3>
+                        <p>{{ category.document_count }} items</p>
+                    </div>
+                    <div class="category-actions">
+                        <button class="action-btn" onclick="showEditCategoryModal('{{ category.id }}', '{{ category.name }}')">
+                            <i data-feather="edit-2"></i>
+                        </button>
+                        <button class="action-btn danger" onclick="deleteCategory('{{ category.id }}')">
+                            <i data-feather="trash-2"></i>
+                        </button>
+                    </div>
                 </div>
-                <div class="category-info">
-                    <h3>Category {{ i + 1 }}</h3>
-                    <p>{{ (i + 1) * 12 }} items</p>
+                {% endfor %}
+            {% else %}
+                <div class="no-data">
+                    <i data-feather="inbox"></i>
+                    <p>No categories found</p>
                 </div>
-                <div class="category-actions">
-                    <button class="action-btn"><i data-feather="edit"></i></button>
-                    <button class="action-btn danger"><i data-feather="trash-2"></i></button>
-                </div>
-            </div>
-            {% endfor %}
+            {% endif %}
         </div>
+    </div>
+</div>
+
+<!-- Add Category Modal -->
+<div id="addCategoryModal" class="modal">
+    <div class="modal-content">
+        <h3>Add Category</h3>
+        <form id="addCategoryForm" onsubmit="createCategory(event)">
+            <div class="form-group">
+                <label for="categoryName">Category Name</label>
+                <input type="text" id="categoryName" name="name" required>
+            </div>
+            <div class="modal-actions">
+                <button type="button" class="action-btn" onclick="hideModal('addCategoryModal')">Cancel</button>
+                <button type="submit" class="action-btn primary">Add</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Edit Category Modal -->
+<div id="editCategoryModal" class="modal">
+    <div class="modal-content">
+        <h3>Edit Category</h3>
+        <form id="editCategoryForm" onsubmit="updateCategory(event)">
+            <input type="hidden" id="editCategoryId">
+            <div class="form-group">
+                <label for="editCategoryName">Category Name</label>
+                <input type="text" id="editCategoryName" name="name" required>
+            </div>
+            <div class="modal-actions">
+                <button type="button" class="action-btn" onclick="hideModal('editCategoryModal')">Cancel</button>
+                <button type="submit" class="action-btn primary">Update</button>
+            </div>
+        </form>
     </div>
 </div>
 
@@ -29,11 +80,17 @@
     padding: 2rem;
 }
 
-.page-container h2 {
+.header-actions {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 2rem;
+}
+
+.header-actions h2 {
     display: flex;
     align-items: center;
     gap: 0.5rem;
-    margin-bottom: 2rem;
 }
 
 .content-grid {
@@ -81,22 +138,141 @@
     gap: 0.5rem;
 }
 
-.action-btn {
-    background: none;
+.no-data {
+    text-align: center;
+    padding: 2rem;
+    color: var(--text-secondary);
+}
+
+.no-data i {
+    font-size: 3rem;
+    margin-bottom: 1rem;
+}
+
+.modal-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 1rem;
+    margin-top: 2rem;
+}
+
+.form-group {
+    margin-bottom: 1rem;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 0.5rem;
+    color: var(--text-secondary);
+}
+
+.form-group input {
+    width: 100%;
+    padding: 0.75rem;
+    background-color: var(--bg-tertiary);
     border: none;
-    color: var(--text-primary);
-    cursor: pointer;
-    padding: 0.5rem;
     border-radius: 4px;
-    transition: background-color 0.2s;
+    color: var(--text-primary);
 }
 
-.action-btn:hover {
-    background-color: var(--bg-secondary);
-}
-
-.action-btn.danger:hover {
-    background-color: var(--danger-color);
+.form-group input:focus {
+    outline: 2px solid var(--accent-color);
 }
 </style>
+
+<script>
+// Show/Hide Modals
+function showModal(modalId) {
+    document.getElementById(modalId).style.display = 'block';
+}
+
+function hideModal(modalId) {
+    document.getElementById(modalId).style.display = 'none';
+}
+
+function showAddCategoryModal() {
+    document.getElementById('addCategoryForm').reset();
+    showModal('addCategoryModal');
+}
+
+function showEditCategoryModal(id, name) {
+    document.getElementById('editCategoryId').value = id;
+    document.getElementById('editCategoryName').value = name;
+    showModal('editCategoryModal');
+}
+
+// CRUD Operations
+async function createCategory(event) {
+    event.preventDefault();
+    const form = event.target;
+    const name = form.name.value;
+
+    try {
+        const response = await fetch('/api/categories', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ name })
+        });
+
+        if (response.ok) {
+            hideModal('addCategoryModal');
+            window.location.reload();
+        } else {
+            const data = await response.json();
+            alert(data.error || 'Failed to create category');
+        }
+    } catch (error) {
+        alert('Failed to create category');
+    }
+}
+
+async function updateCategory(event) {
+    event.preventDefault();
+    const id = document.getElementById('editCategoryId').value;
+    const name = document.getElementById('editCategoryName').value;
+
+    try {
+        const response = await fetch(`/api/categories/${id}`, {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ name })
+        });
+
+        if (response.ok) {
+            hideModal('editCategoryModal');
+            window.location.reload();
+        } else {
+            const data = await response.json();
+            alert(data.error || 'Failed to update category');
+        }
+    } catch (error) {
+        alert('Failed to update category');
+    }
+}
+
+async function deleteCategory(id) {
+    if (!confirm('Are you sure you want to delete this category?')) {
+        return;
+    }
+
+    try {
+        const response = await fetch(`/api/categories/${id}`, {
+            method: 'DELETE'
+        });
+
+        if (response.ok) {
+            window.location.reload();
+        } else {
+            const data = await response.json();
+            alert(data.error || 'Failed to delete category');
+        }
+    } catch (error) {
+        alert('Failed to delete category');
+    }
+}
+</script>
 {% endblock %}
