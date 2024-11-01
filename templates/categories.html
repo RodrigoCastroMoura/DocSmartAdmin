@@ -9,19 +9,23 @@
         </button>
     </div>
     <div class="content-grid" id="categoriesContent">
-        <div class="categories-list">
+        <div class="categories-grid">
             {% if categories %}
                 {% for category in categories %}
                 <div class="category-card" data-id="{{ category.id }}">
-                    <div class="category-icon">
+                    <div class="category-header">
                         <i data-feather="folder"></i>
+                        <h3>{{ category.name }}</h3>
                     </div>
                     <div class="category-info">
-                        <h3>{{ category.name }}</h3>
-                        <p>{{ category.document_count }} items</p>
+                        <div class="department-badge">
+                            <i data-feather="briefcase"></i>
+                            <span>{{ category.department_name|default('No Department') }}</span>
+                        </div>
+                        <p>{{ category.document_count|default(0) }} documents</p>
                     </div>
                     <div class="category-actions">
-                        <button class="action-btn" onclick="showEditCategoryModal('{{ category.id }}', '{{ category.name }}')">
+                        <button class="action-btn" onclick="showEditCategoryModal('{{ category.id }}', {{ category|tojson|safe }})">
                             <i data-feather="edit-2"></i>
                         </button>
                         <button class="action-btn danger" onclick="deleteCategory('{{ category.id }}')">
@@ -49,6 +53,15 @@
                 <label for="categoryName">Category Name</label>
                 <input type="text" id="categoryName" name="name" required>
             </div>
+            <div class="form-group">
+                <label for="categoryDepartment">Department</label>
+                <select id="categoryDepartment" name="department_id" required>
+                    <option value="">Select Department</option>
+                    {% for dept in departments %}
+                    <option value="{{ dept.id }}">{{ dept.name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
             <div class="modal-actions">
                 <button type="button" class="action-btn" onclick="hideModal('addCategoryModal')">Cancel</button>
                 <button type="submit" class="action-btn primary">Add</button>
@@ -67,6 +80,15 @@
                 <label for="editCategoryName">Category Name</label>
                 <input type="text" id="editCategoryName" name="name" required>
             </div>
+            <div class="form-group">
+                <label for="editCategoryDepartment">Department</label>
+                <select id="editCategoryDepartment" name="department_id" required>
+                    <option value="">Select Department</option>
+                    {% for dept in departments %}
+                    <option value="{{ dept.id }}">{{ dept.name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
             <div class="modal-actions">
                 <button type="button" class="action-btn" onclick="hideModal('editCategoryModal')">Cancel</button>
                 <button type="submit" class="action-btn primary">Update</button>
@@ -82,6 +104,9 @@ setupFormValidation('addCategoryForm', {
         ValidationRules.required,
         ValidationRules.minLength(3),
         ValidationRules.maxLength(50)
+    ],
+    'categoryDepartment': [
+        ValidationRules.required
     ]
 });
 
@@ -90,6 +115,9 @@ setupFormValidation('editCategoryForm', {
         ValidationRules.required,
         ValidationRules.minLength(3),
         ValidationRules.maxLength(50)
+    ],
+    'editCategoryDepartment': [
+        ValidationRules.required
     ]
 });
 
@@ -111,7 +139,7 @@ async function loadCategories() {
 function generateCategoriesHTML(categories) {
     if (!categories || categories.length === 0) {
         return `
-            <div class="categories-list">
+            <div class="categories-grid">
                 <div class="no-data">
                     <i data-feather="inbox"></i>
                     <p>No categories found</p>
@@ -121,15 +149,19 @@ function generateCategoriesHTML(categories) {
 
     const categoriesHTML = categories.map(category => `
         <div class="category-card" data-id="${category.id}">
-            <div class="category-icon">
+            <div class="category-header">
                 <i data-feather="folder"></i>
+                <h3>${category.name}</h3>
             </div>
             <div class="category-info">
-                <h3>${category.name}</h3>
-                <p>${category.document_count || 0} items</p>
+                <div class="department-badge">
+                    <i data-feather="briefcase"></i>
+                    <span>${category.department_name || 'No Department'}</span>
+                </div>
+                <p>${category.document_count || 0} documents</p>
             </div>
             <div class="category-actions">
-                <button class="action-btn" onclick="showEditCategoryModal('${category.id}', '${category.name}')">
+                <button class="action-btn" onclick='showEditCategoryModal("${category.id}", ${JSON.stringify(category)})'>
                     <i data-feather="edit-2"></i>
                 </button>
                 <button class="action-btn danger" onclick="deleteCategory('${category.id}')">
@@ -139,7 +171,7 @@ function generateCategoriesHTML(categories) {
         </div>
     `).join('');
 
-    return `<div class="categories-list">${categoriesHTML}</div>`;
+    return `<div class="categories-grid">${categoriesHTML}</div>`;
 }
 
 async function createCategory(event) {
@@ -151,7 +183,8 @@ async function createCategory(event) {
         return;
     }
     
-    const name = form.name.value;
+    const formData = new FormData(form);
+    const data = Object.fromEntries(formData);
     showLoading(submitButton);
 
     try {
@@ -160,7 +193,7 @@ async function createCategory(event) {
             headers: {
                 'Content-Type': 'application/json',
             },
-            body: JSON.stringify({ name })
+            body: JSON.stringify(data)
         });
 
         await handleApiResponse(response, async () => {
@@ -183,7 +216,8 @@ async function updateCategory(event) {
     }
     
     const id = document.getElementById('editCategoryId').value;
-    const name = document.getElementById('editCategoryName').value;
+    const formData = new FormData(form);
+    const data = Object.fromEntries(formData);
     showLoading(submitButton);
 
     try {
@@ -192,7 +226,7 @@ async function updateCategory(event) {
             headers: {
                 'Content-Type': 'application/json',
             },
-            body: JSON.stringify({ name })
+            body: JSON.stringify(data)
         });
 
         await handleApiResponse(response, async () => {
@@ -238,10 +272,103 @@ function showAddCategoryModal() {
     showModal('addCategoryModal');
 }
 
-function showEditCategoryModal(id, name) {
+function showEditCategoryModal(id, category) {
     document.getElementById('editCategoryId').value = id;
-    document.getElementById('editCategoryName').value = name;
+    document.getElementById('editCategoryName').value = category.name;
+    document.getElementById('editCategoryDepartment').value = category.department_id;
     showModal('editCategoryModal');
 }
+
+// Initialize categories list when page loads
+document.addEventListener('DOMContentLoaded', loadCategories);
 </script>
+
+<style>
+.categories-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 1rem;
+}
+
+.category-card {
+    background-color: var(--bg-tertiary);
+    border-radius: 8px;
+    padding: 1.5rem;
+    transition: transform 0.2s;
+}
+
+.category-card:hover {
+    transform: translateY(-2px);
+}
+
+.category-header {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    margin-bottom: 1rem;
+}
+
+.category-header i {
+    padding: 0.75rem;
+    background-color: var(--accent-color);
+    border-radius: 6px;
+}
+
+.category-info {
+    margin: 1rem 0;
+}
+
+.department-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.25rem 0.75rem;
+    background-color: var(--bg-secondary);
+    border-radius: 4px;
+    font-size: 0.875rem;
+    color: var(--text-secondary);
+    margin-bottom: 0.5rem;
+}
+
+.category-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 0.5rem;
+    margin-top: 1rem;
+}
+
+.page-container {
+    padding: 2rem;
+}
+
+.header-actions {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 2rem;
+}
+
+.header-actions h2 {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.content-grid {
+    background-color: var(--bg-secondary);
+    border-radius: 8px;
+    padding: 1.5rem;
+}
+
+.no-data {
+    text-align: center;
+    padding: 2rem;
+    color: var(--text-secondary);
+}
+
+.no-data i {
+    font-size: 3rem;
+    margin-bottom: 1rem;
+}
+</style>
 {% endblock %}

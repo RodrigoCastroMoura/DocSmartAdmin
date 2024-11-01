@@ -196,16 +196,27 @@ def categories():
             flash('Company ID not found', 'error')
             return render_template('categories.html', categories=[])
 
-        response = requests.get(
+        # Get departments for the dropdown
+        departments_response = requests.get(
+            f"{DEPARTMENTS_URL}/companies/{company_id}/departments",
+            headers=headers
+        )
+        departments = departments_response.json() if departments_response.status_code == 200 else []
+
+        # Get categories
+        categories_response = requests.get(
             f"{CATEGORIES_URL}/companies/{company_id}/categories",
             headers=headers
         )
-        categories_data = response.json() if response.status_code == 200 else []
-        return render_template('categories.html', categories=categories_data)
+        categories_data = categories_response.json() if categories_response.status_code == 200 else []
+        
+        return render_template('categories.html', 
+                             categories=categories_data,
+                             departments=departments)
     except Exception as e:
-        print(f"Error fetching categories: {e}")
+        print(f"Error loading categories: {e}")
         flash('Error loading categories', 'error')
-        return render_template('categories.html', categories=[])
+        return render_template('categories.html', categories=[], departments=[])
 
 @app.route('/api/categories', methods=['GET', 'POST'])
 @login_required
