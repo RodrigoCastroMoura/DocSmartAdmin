@@ -110,24 +110,35 @@ def categories():
             flash('Company ID not found', 'error')
             return render_template('categories.html', categories=[], departments=[])
 
-        # Get categories
-        response = requests.get(
-            f"{CATEGORIES_URL}/companies/{company_id}/categories",
-            headers=headers
-        )
-        categories_data = response.json() if response.status_code == 200 else []
+        try:
+            response = requests.get(
+                f"{CATEGORIES_URL}/companies/{company_id}/categories",
+                headers=headers
+            )
+            if not response.ok:
+                raise Exception(f"Failed to fetch categories: {response.status_code}")
+            categories_data = response.json()
+        except Exception as e:
+            print(f"Error fetching categories: {e}")
+            flash('Error loading categories', 'error')
+            categories_data = []
 
-        # Get departments for the form
-        departments_response = requests.get(
-            f"{DEPARTMENTS_URL}/companies/{company_id}/departments",
-            headers=headers
-        )
-        departments = departments_response.json() if departments_response.status_code == 200 else []
+        try:
+            departments_response = requests.get(
+                f"{DEPARTMENTS_URL}/companies/{company_id}/departments",
+                headers=headers
+            )
+            if not departments_response.ok:
+                raise Exception(f"Failed to fetch departments: {departments_response.status_code}")
+            departments = departments_response.json()
+        except Exception as e:
+            print(f"Error fetching departments: {e}")
+            departments = []
 
         return render_template('categories.html', categories=categories_data, departments=departments)
     except Exception as e:
-        print(f"Error fetching categories: {e}")
-        flash('Error loading categories', 'error')
+        print(f"Error in categories route: {e}")
+        flash('Error loading page', 'error')
         return render_template('categories.html', categories=[], departments=[])
 
 @app.route('/api/categories', methods=['GET', 'POST'])
@@ -147,10 +158,11 @@ def categories_api():
             )
             if response.status_code == 200:
                 return jsonify(response.json()), 200
-            return jsonify({'error': 'Failed to fetch categories'}), response.status_code
+            error_data = response.json() if response.content else {'error': 'Failed to fetch categories'}
+            return jsonify(error_data), response.status_code
         except Exception as e:
             print(f"Error fetching categories: {e}")
-            return jsonify({'error': 'Failed to fetch categories'}), 500
+            return jsonify({'error': str(e)}), 500
     
     elif request.method == 'POST':
         try:
@@ -163,10 +175,11 @@ def categories_api():
             
             if response.status_code == 201:
                 return jsonify(response.json()), 201
-            return jsonify({'error': 'Failed to create category'}), response.status_code
+            error_data = response.json() if response.content else {'error': 'Unknown error occurred'}
+            return jsonify(error_data), response.status_code
         except Exception as e:
             print(f"Error creating category: {e}")
-            return jsonify({'error': 'Failed to create category'}), 500
+            return jsonify({'error': str(e)}), 500
 
 @app.route('/api/categories/<category_id>', methods=['PUT', 'DELETE'])
 @login_required
@@ -192,10 +205,11 @@ def category_detail_api(category_id):
             
             if response.status_code == 200:
                 return jsonify(response.json()), 200
-            return jsonify({'error': 'Failed to update category'}), response.status_code
+            error_data = response.json() if response.content else {'error': 'Unknown error occurred'}
+            return jsonify(error_data), response.status_code
         except Exception as e:
             print(f"Error updating category: {e}")
-            return jsonify({'error': 'Failed to update category'}), 500
+            return jsonify({'error': str(e)}), 500
             
     elif request.method == 'DELETE':
         try:
@@ -206,10 +220,11 @@ def category_detail_api(category_id):
             
             if response.status_code == 204:
                 return '', 204
-            return jsonify({'error': 'Failed to delete category'}), response.status_code
+            error_data = response.json() if response.content else {'error': 'Unknown error occurred'}
+            return jsonify(error_data), response.status_code
         except Exception as e:
             print(f"Error deleting category: {e}")
-            return jsonify({'error': 'Failed to delete category'}), 500
+            return jsonify({'error': str(e)}), 500
 
 # Departments CRUD routes
 @app.route('/departments')
@@ -222,15 +237,23 @@ def departments():
             flash('Company ID not found', 'error')
             return render_template('departments.html', departments=[])
 
-        response = requests.get(
-            f"{DEPARTMENTS_URL}/companies/{company_id}/departments",
-            headers=headers
-        )
-        departments_data = response.json() if response.status_code == 200 else []
+        try:
+            response = requests.get(
+                f"{DEPARTMENTS_URL}/companies/{company_id}/departments",
+                headers=headers
+            )
+            if not response.ok:
+                raise Exception(f"Failed to fetch departments: {response.status_code}")
+            departments_data = response.json()
+        except Exception as e:
+            print(f"Error fetching departments: {e}")
+            flash('Error loading departments', 'error')
+            departments_data = []
+
         return render_template('departments.html', departments=departments_data)
     except Exception as e:
-        print(f"Error fetching departments: {e}")
-        flash('Error loading departments', 'error')
+        print(f"Error in departments route: {e}")
+        flash('Error loading page', 'error')
         return render_template('departments.html', departments=[])
 
 @app.route('/api/departments', methods=['GET', 'POST'])
@@ -250,10 +273,11 @@ def departments_api():
             )
             if response.status_code == 200:
                 return jsonify(response.json()), 200
-            return jsonify({'error': 'Failed to fetch departments'}), response.status_code
+            error_data = response.json() if response.content else {'error': 'Failed to fetch departments'}
+            return jsonify(error_data), response.status_code
         except Exception as e:
             print(f"Error fetching departments: {e}")
-            return jsonify({'error': 'Failed to fetch departments'}), 500
+            return jsonify({'error': str(e)}), 500
     
     elif request.method == 'POST':
         try:
@@ -266,10 +290,11 @@ def departments_api():
             
             if response.status_code == 201:
                 return jsonify(response.json()), 201
-            return jsonify({'error': 'Failed to create department'}), response.status_code
+            error_data = response.json() if response.content else {'error': 'Unknown error occurred'}
+            return jsonify(error_data), response.status_code
         except Exception as e:
             print(f"Error creating department: {e}")
-            return jsonify({'error': 'Failed to create department'}), 500
+            return jsonify({'error': str(e)}), 500
 
 @app.route('/api/departments/<department_id>', methods=['PUT', 'DELETE'])
 @login_required
@@ -295,10 +320,11 @@ def department_detail_api(department_id):
             
             if response.status_code == 200:
                 return jsonify(response.json()), 200
-            return jsonify({'error': 'Failed to update department'}), response.status_code
+            error_data = response.json() if response.content else {'error': 'Unknown error occurred'}
+            return jsonify(error_data), response.status_code
         except Exception as e:
             print(f"Error updating department: {e}")
-            return jsonify({'error': 'Failed to update department'}), 500
+            return jsonify({'error': str(e)}), 500
             
     elif request.method == 'DELETE':
         try:
@@ -309,12 +335,13 @@ def department_detail_api(department_id):
             
             if response.status_code == 204:
                 return '', 204
-            return jsonify({'error': 'Failed to delete department'}), response.status_code
+            error_data = response.json() if response.content else {'error': 'Unknown error occurred'}
+            return jsonify(error_data), response.status_code
         except Exception as e:
             print(f"Error deleting department: {e}")
-            return jsonify({'error': 'Failed to delete department'}), 500
+            return jsonify({'error': str(e)}), 500
 
-# Users CRUD routes
+# Users CRUD routes with multi-tenant support and improved error handling
 @app.route('/users')
 @login_required
 def users():
@@ -325,7 +352,6 @@ def users():
             flash('Company ID not found', 'error')
             return render_template('users.html', users=[], departments=[])
 
-        # Get users with proper error handling
         try:
             response = requests.get(
                 f"{USERS_URL}/companies/{company_id}/users",
@@ -339,7 +365,6 @@ def users():
             flash('Error loading users', 'error')
             users_data = []
 
-        # Get departments with proper error handling
         try:
             departments_response = requests.get(
                 f"{DEPARTMENTS_URL}/companies/{company_id}/departments",
@@ -360,7 +385,7 @@ def users():
 
 @app.route('/api/users', methods=['GET', 'POST'])
 @login_required
-def user_api():
+def users_api():
     headers = get_auth_headers()
     company_id = session.get('company_id')
 
@@ -375,7 +400,8 @@ def user_api():
             )
             if response.status_code == 200:
                 return jsonify(response.json()), 200
-            return jsonify({'error': 'Failed to fetch users'}), response.status_code
+            error_data = response.json() if response.content else {'error': 'Failed to fetch users'}
+            return jsonify(error_data), response.status_code
         except Exception as e:
             print(f"Error fetching users: {e}")
             return jsonify({'error': str(e)}), 500
@@ -441,6 +467,60 @@ def user_detail_api(user_id):
         except Exception as e:
             print(f"Error deleting user: {e}")
             return jsonify({'error': str(e)}), 500
+
+# Documents CRUD routes
+@app.route('/documents')
+@login_required
+def documents():
+    try:
+        headers = get_auth_headers()
+        company_id = session.get('company_id')
+        if not company_id:
+            flash('Company ID not found', 'error')
+            return render_template('documents.html', documents=[], departments=[], categories=[])
+
+        try:
+            response = requests.get(
+                f"{DOCUMENTS_URL}/companies/{company_id}/documents",
+                headers=headers
+            )
+            if not response.ok:
+                raise Exception(f"Failed to fetch documents: {response.status_code}")
+            documents_data = response.json()
+        except Exception as e:
+            print(f"Error fetching documents: {e}")
+            flash('Error loading documents', 'error')
+            documents_data = []
+
+        try:
+            departments_response = requests.get(
+                f"{DEPARTMENTS_URL}/companies/{company_id}/departments",
+                headers=headers
+            )
+            if not departments_response.ok:
+                raise Exception(f"Failed to fetch departments: {departments_response.status_code}")
+            departments = departments_response.json()
+        except Exception as e:
+            print(f"Error fetching departments: {e}")
+            departments = []
+
+        try:
+            categories_response = requests.get(
+                f"{CATEGORIES_URL}/companies/{company_id}/categories",
+                headers=headers
+            )
+            if not categories_response.ok:
+                raise Exception(f"Failed to fetch categories: {categories_response.status_code}")
+            categories = categories_response.json()
+        except Exception as e:
+            print(f"Error fetching categories: {e}")
+            categories = []
+
+        return render_template('documents.html', documents=documents_data, departments=departments, categories=categories)
+    except Exception as e:
+        print(f"Error in documents route: {e}")
+        flash('Error loading page', 'error')
+        return render_template('documents.html', documents=[], departments=[], categories=[])
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000, debug=True)
