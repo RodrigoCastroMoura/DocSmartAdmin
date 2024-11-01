@@ -26,10 +26,10 @@
             {% endwith %}
             <form class="login-form" action="{{ url_for('login') }}" method="POST">
                 <div class="form-group">
-                    <label for="identifier">Identifier</label>
+                    <label for="email">Email</label>
                     <div class="input-group">
-                        <i data-feather="user"></i>
-                        <input type="text" id="identifier" name="identifier" placeholder="Enter your identifier" required>
+                        <i data-feather="mail"></i>
+                        <input type="email" id="email" name="email" placeholder="Enter your email" required>
                     </div>
                 </div>
                 <div class="form-group">
