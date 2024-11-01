@@ -2,7 +2,14 @@
 
 {% block content %}
 <div class="page-container">
-    <h2><i data-feather="users"></i> Users</h2>
+    <div class="page-header">
+        <h2><i data-feather="users"></i> Users</h2>
+        {% if current_user.role == 'admin' %}
+        <button class="action-btn primary" onclick="showModal('addUserModal')">
+            <i data-feather="plus"></i> Add User
+        </button>
+        {% endif %}
+    </div>
     <div class="content-grid">
         <div class="users-table">
             <table>
@@ -17,24 +24,30 @@
                     </tr>
                 </thead>
                 <tbody>
-                    {% for i in range(5) %}
+                    {% for user in users %}
                     <tr>
                         <td>
                             <div class="user-cell">
-                                <div class="user-avatar">JD</div>
-                                <span>John Doe {{ i + 1 }}</span>
+                                <div class="user-avatar">{{ user.username[:2].upper() }}</div>
+                                <span>{{ user.username }}</span>
                             </div>
                         </td>
-                        <td>user{{ i + 1 }}@example.com</td>
-                        <td>{% if i == 0 %}Admin{% else %}User{% endif %}</td>
-                        <td>Department {{ (i % 3) + 1 }}</td>
-                        <td><span class="status-badge {% if i % 2 == 0 %}active{% else %}inactive{% endif %}">
-                            {% if i % 2 == 0 %}Active{% else %}Inactive{% endif %}
+                        <td>{{ user.email }}</td>
+                        <td>{{ user.role }}</td>
+                        <td>{{ user.department.name if user.department else 'N/A' }}</td>
+                        <td><span class="status-badge {% if user.status %}active{% else %}inactive{% endif %}">
+                            {% if user.status %}Active{% else %}Inactive{% endif %}
                         </span></td>
                         <td>
                             <div class="table-actions">
-                                <button class="action-btn"><i data-feather="edit-2"></i></button>
-                                <button class="action-btn danger"><i data-feather="trash-2"></i></button>
+                                <button class="action-btn" onclick="showModal('editUserModal', {{ user.id }})">
+                                    <i data-feather="edit-2"></i>
+                                </button>
+                                {% if user.id != current_user.id %}
+                                <button class="action-btn danger" onclick="confirmDelete({{ user.id }})">
+                                    <i data-feather="trash-2"></i>
+                                </button>
+                                {% endif %}
                             </div>
                         </td>
                     </tr>
@@ -45,16 +58,117 @@
     </div>
 </div>
 
+<!-- Add User Modal -->
+<div id="addUserModal" class="modal">
+    <div class="modal-content">
+        <h3>Add New User</h3>
+        <form id="addUserForm">
+            <div class="form-group">
+                <label for="username">Username</label>
+                <input type="text" id="username" name="username" required>
+            </div>
+            <div class="form-group">
+                <label for="email">Email</label>
+                <input type="email" id="email" name="email" required>
+            </div>
+            <div class="form-group">
+                <label for="password">Password</label>
+                <input type="password" id="password" name="password" required>
+            </div>
+            <div class="form-group">
+                <label for="department">Department</label>
+                <select id="department" name="department_id">
+                    <option value="">Select a department</option>
+                    {% for department in departments %}
+                    <option value="{{ department.id }}">{{ department.name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="role">Role</label>
+                <select id="role" name="role" required>
+                    <option value="user">User</option>
+                    <option value="admin">Admin</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>
+                    <input type="checkbox" id="status" name="status" checked>
+                    Active Account
+                </label>
+            </div>
+            <div class="form-actions">
+                <button type="button" class="action-btn" onclick="hideModal('addUserModal')">Cancel</button>
+                <button type="submit" class="action-btn primary">Add User</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Edit User Modal -->
+<div id="editUserModal" class="modal">
+    <div class="modal-content">
+        <h3>Edit User</h3>
+        <form id="editUserForm">
+            <input type="hidden" id="editUserId">
+            <div class="form-group">
+                <label for="editUsername">Username</label>
+                <input type="text" id="editUsername" name="username" required>
+            </div>
+            <div class="form-group">
+                <label for="editEmail">Email</label>
+                <input type="email" id="editEmail" name="email" required>
+            </div>
+            <div class="form-group">
+                <label for="editPassword">New Password (leave blank to keep current)</label>
+                <input type="password" id="editPassword" name="password">
+            </div>
+            <div class="form-group">
+                <label for="editDepartment">Department</label>
+                <select id="editDepartment" name="department_id">
+                    <option value="">Select a department</option>
+                    {% for department in departments %}
+                    <option value="{{ department.id }}">{{ department.name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="editRole">Role</label>
+                <select id="editRole" name="role" required>
+                    <option value="user">User</option>
+                    <option value="admin">Admin</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>
+                    <input type="checkbox" id="editStatus" name="status">
+                    Active Account
+                </label>
+            </div>
+            <div class="form-actions">
+                <button type="button" class="action-btn" onclick="hideModal('editUserModal')">Cancel</button>
+                <button type="submit" class="action-btn primary">Update User</button>
+            </div>
+        </form>
+    </div>
+</div>
+
 <style>
 .page-container {
     padding: 2rem;
 }
 
-.page-container h2 {
+.page-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 2rem;
+}
+
+.page-header h2 {
     display: flex;
     align-items: center;
     gap: 0.5rem;
-    margin-bottom: 2rem;
 }
 
 .content-grid {
@@ -116,22 +230,177 @@ th {
     gap: 0.5rem;
 }
 
-.action-btn {
-    background: none;
-    border: none;
-    color: var(--text-primary);
-    cursor: pointer;
-    padding: 0.5rem;
-    border-radius: 4px;
-    transition: background-color 0.2s;
+.form-group {
+    margin-bottom: 1.5rem;
 }
 
-.action-btn:hover {
+.form-group label {
+    display: block;
+    margin-bottom: 0.5rem;
+    color: var(--text-secondary);
+}
+
+.form-group input[type="text"],
+.form-group input[type="email"],
+.form-group input[type="password"],
+.form-group select {
+    width: 100%;
+    padding: 0.75rem;
     background-color: var(--bg-tertiary);
+    border: 1px solid var(--border-color);
+    border-radius: 4px;
+    color: var(--text-primary);
 }
 
-.action-btn.danger:hover {
-    background-color: var(--danger-color);
+.form-group input:focus,
+.form-group select:focus {
+    outline: none;
+    border-color: var(--accent-color);
+}
+
+.form-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 1rem;
+    margin-top: 2rem;
 }
 </style>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Add User Form Submission
+    document.getElementById('addUserForm').addEventListener('submit', async function(e) {
+        e.preventDefault();
+        
+        const formData = {
+            username: document.getElementById('username').value,
+            email: document.getElementById('email').value,
+            password: document.getElementById('password').value,
+            department_id: document.getElementById('department').value || null,
+            role: document.getElementById('role').value,
+            status: document.getElementById('status').checked
+        };
+        
+        try {
+            const response = await fetch('/users/add', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(formData)
+            });
+            
+            const data = await response.json();
+            if (response.ok) {
+                hideModal('addUserModal');
+                location.reload();
+            } else {
+                alert(data.error);
+            }
+        } catch (error) {
+            console.error('Error:', error);
+            alert('An error occurred while adding the user');
+        }
+    });
+    
+    // Edit User Form Submission
+    document.getElementById('editUserForm').addEventListener('submit', async function(e) {
+        e.preventDefault();
+        
+        const userId = document.getElementById('editUserId').value;
+        const formData = {
+            username: document.getElementById('editUsername').value,
+            email: document.getElementById('editEmail').value,
+            password: document.getElementById('editPassword').value,
+            department_id: document.getElementById('editDepartment').value || null,
+            role: document.getElementById('editRole').value,
+            status: document.getElementById('editStatus').checked
+        };
+        
+        // Remove password if it's empty
+        if (!formData.password) {
+            delete formData.password;
+        }
+        
+        try {
+            const response = await fetch(`/users/${userId}`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(formData)
+            });
+            
+            const data = await response.json();
+            if (response.ok) {
+                hideModal('editUserModal');
+                location.reload();
+            } else {
+                alert(data.error);
+            }
+        } catch (error) {
+            console.error('Error:', error);
+            alert('An error occurred while updating the user');
+        }
+    });
+});
+
+async function showModal(modalId, userId = null) {
+    const modal = document.getElementById(modalId);
+    modal.style.display = 'block';
+    
+    if (userId && modalId === 'editUserModal') {
+        try {
+            const response = await fetch(`/users/${userId}`);
+            const data = await response.json();
+            
+            if (response.ok) {
+                document.getElementById('editUserId').value = userId;
+                document.getElementById('editUsername').value = data.username;
+                document.getElementById('editEmail').value = data.email;
+                document.getElementById('editDepartment').value = data.department_id || '';
+                document.getElementById('editRole').value = data.role;
+                document.getElementById('editStatus').checked = data.status;
+            } else {
+                alert(data.error);
+            }
+        } catch (error) {
+            console.error('Error:', error);
+            alert('An error occurred while loading user details');
+        }
+    }
+}
+
+function hideModal(modalId) {
+    const modal = document.getElementById(modalId);
+    modal.style.display = 'none';
+    
+    // Reset forms when closing modals
+    if (modalId === 'addUserModal') {
+        document.getElementById('addUserForm').reset();
+    } else if (modalId === 'editUserModal') {
+        document.getElementById('editUserForm').reset();
+    }
+}
+
+async function confirmDelete(userId) {
+    if (confirm('Are you sure you want to delete this user?')) {
+        try {
+            const response = await fetch(`/users/${userId}`, {
+                method: 'DELETE'
+            });
+            
+            const data = await response.json();
+            if (response.ok) {
+                location.reload();
+            } else {
+                alert(data.error);
+            }
+        } catch (error) {
+            console.error('Error:', error);
+            alert('An error occurred while deleting the user');
+        }
+    }
+}
+</script>
 {% endblock %}

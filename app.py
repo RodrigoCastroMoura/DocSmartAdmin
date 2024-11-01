@@ -114,6 +114,9 @@ def add_department():
     
     try:
         data = request.get_json()
+        if not data.get('name'):
+            return jsonify({'error': 'Department name is required'}), 400
+            
         department = Department(
             name=data['name'],
             description=data.get('description', '')
@@ -134,6 +137,9 @@ def update_department(id):
     department = Department.query.get_or_404(id)
     try:
         data = request.get_json()
+        if not data.get('name'):
+            return jsonify({'error': 'Department name is required'}), 400
+            
         department.name = data.get('name', department.name)
         department.description = data.get('description', department.description)
         db.session.commit()
@@ -150,6 +156,11 @@ def delete_department(id):
     
     department = Department.query.get_or_404(id)
     try:
+        if len(department.users) > 0:
+            return jsonify({'error': 'Cannot delete department with associated users'}), 400
+        if len(department.documents) > 0:
+            return jsonify({'error': 'Cannot delete department with associated documents'}), 400
+            
         db.session.delete(department)
         db.session.commit()
         return jsonify({'message': 'Department deleted successfully'})
@@ -172,6 +183,9 @@ def add_category():
     
     try:
         data = request.get_json()
+        if not data.get('name'):
+            return jsonify({'error': 'Category name is required'}), 400
+            
         category = Category(
             name=data['name'],
             description=data.get('description', '')
@@ -192,6 +206,9 @@ def update_category(id):
     category = Category.query.get_or_404(id)
     try:
         data = request.get_json()
+        if not data.get('name'):
+            return jsonify({'error': 'Category name is required'}), 400
+            
         category.name = data.get('name', category.name)
         category.description = data.get('description', category.description)
         db.session.commit()
@@ -208,6 +225,9 @@ def delete_category(id):
     
     category = Category.query.get_or_404(id)
     try:
+        if len(category.documents) > 0:
+            return jsonify({'error': 'Cannot delete category with associated documents'}), 400
+            
         db.session.delete(category)
         db.session.commit()
         return jsonify({'message': 'Category deleted successfully'})
@@ -237,6 +257,9 @@ def add_document():
         file = request.files['file']
         if file.filename == '':
             return jsonify({'error': 'No file selected'}), 400
+            
+        if not request.form.get('title'):
+            return jsonify({'error': 'Document title is required'}), 400
         
         filename = secure_filename(file.filename)
         file_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
@@ -257,6 +280,8 @@ def add_document():
         return jsonify({'message': 'Document uploaded successfully', 'id': document.id})
     except Exception as e:
         db.session.rollback()
+        if os.path.exists(file_path):
+            os.remove(file_path)
         return jsonify({'error': str(e)}), 400
 
 @app.route('/documents/<int:id>', methods=['PUT'])
@@ -268,6 +293,9 @@ def update_document(id):
     
     try:
         data = request.get_json()
+        if not data.get('title'):
+            return jsonify({'error': 'Document title is required'}), 400
+            
         document.title = data.get('title', document.title)
         document.description = data.get('description', document.description)
         document.department_id = data.get('department_id', document.department_id)
@@ -308,6 +336,21 @@ def users():
     departments = Department.query.all()
     return render_template('users.html', users=users, departments=departments)
 
+@app.route('/users/<int:id>', methods=['GET'])
+@login_required
+def get_user(id):
+    if not current_user.role == 'admin':
+        return jsonify({'error': 'Unauthorized'}), 403
+        
+    user = User.query.get_or_404(id)
+    return jsonify({
+        'username': user.username,
+        'email': user.email,
+        'department_id': user.department_id,
+        'role': user.role,
+        'status': user.status
+    })
+
 @app.route('/users/add', methods=['POST'])
 @login_required
 def add_user():
@@ -316,6 +359,17 @@ def add_user():
     
     try:
         data = request.get_json()
+        if not data.get('username'):
+            return jsonify({'error': 'Username is required'}), 400
+        if not data.get('email'):
+            return jsonify({'error': 'Email is required'}), 400
+        if not data.get('password'):
+            return jsonify({'error': 'Password is required'}), 400
+            
+        # Check if email already exists
+        if User.query.filter_by(email=data['email']).first():
+            return jsonify({'error': 'Email already exists'}), 400
+            
         user = User(
             username=data['username'],
             email=data['email'],
@@ -340,9 +394,19 @@ def update_user(id):
     user = User.query.get_or_404(id)
     try:
         data = request.get_json()
+        if not data.get('username'):
+            return jsonify({'error': 'Username is required'}), 400
+        if not data.get('email'):
+            return jsonify({'error': 'Email is required'}), 400
+            
+        # Check if email already exists and it's not the same user
+        existing_user = User.query.filter_by(email=data['email']).first()
+        if existing_user and existing_user.id != id:
+            return jsonify({'error': 'Email already exists'}), 400
+            
         user.username = data.get('username', user.username)
         user.email = data.get('email', user.email)
-        user.department_id = data.get('department_id', user.department_id)
+        user.department_id = data.get('department_id')
         user.role = data.get('role', user.role)
         user.status = data.get('status', user.status)
         
@@ -366,6 +430,10 @@ def delete_user(id):
     
     user = User.query.get_or_404(id)
     try:
+        # Check if user has associated documents
+        if len(user.documents) > 0:
+            return jsonify({'error': 'Cannot delete user with associated documents'}), 400
+            
         db.session.delete(user)
         db.session.commit()
         return jsonify({'message': 'User deleted successfully'})
