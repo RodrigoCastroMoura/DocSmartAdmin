@@ -6,7 +6,12 @@
     <title>Admin Dashboard</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/main.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/dashboard.css') }}">
+    <!-- Load Feather Icons first -->
     <script src="https://unpkg.com/feather-icons"></script>
+    <!-- Load validation.js before any other scripts -->
+    <script src="{{ url_for('static', filename='js/validation.js') }}"></script>
+    <!-- Load dashboard.js which contains common utilities -->
+    <script src="{{ url_for('static', filename='js/dashboard.js') }}"></script>
 </head>
 <body>
     <div class="dashboard-container">
@@ -72,9 +77,10 @@
         </main>
     </div>
 
+    <!-- Load sidebar.js after DOM is ready -->
     <script src="{{ url_for('static', filename='js/sidebar.js') }}"></script>
-    <script src="{{ url_for('static', filename='js/dashboard.js') }}"></script>
     <script>
+        // Initialize Feather icons
         feather.replace();
 
         function toggleDropdown() {
@@ -89,6 +95,28 @@
                 }
             });
         }
+
+        // Global error handler for unhandled promise rejections
+        window.addEventListener('unhandledrejection', function(event) {
+            console.error('Unhandled promise rejection:', event.reason);
+            if (window.showErrorMessage) {
+                window.showErrorMessage('An unexpected error occurred. Please try again.');
+            }
+            event.preventDefault();
+        });
+
+        // Network status monitoring
+        window.addEventListener('online', function() {
+            if (window.showErrorMessage) {
+                window.showErrorMessage('Connection restored');
+            }
+        });
+
+        window.addEventListener('offline', function() {
+            if (window.showErrorMessage) {
+                window.showErrorMessage('No internet connection');
+            }
+        });
     </script>
 
     <style>
