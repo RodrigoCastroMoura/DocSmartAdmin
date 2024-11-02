@@ -99,6 +99,21 @@ def logout():
 def dashboard():
     return render_template('dashboard.html')
 
+@app.route('/departments')
+@login_required
+def departments():
+    return render_template('departments.html', departments=[])
+
+@app.route('/categories')
+@login_required
+def categories():
+    return render_template('categories.html', categories=[], departments=[])
+
+@app.route('/documents')
+@login_required
+def documents():
+    return render_template('documents.html', documents=[])
+
 # Users CRUD routes
 @app.route('/users')
 @login_required
@@ -116,16 +131,14 @@ def user_api():
     
     if request.method == 'GET':
         try:
-            params = {
-                'company_id': company_id,
-                'page': request.args.get('page', 1),
-                'per_page': request.args.get('per_page', 10)
-            }
-            response = requests.get(USERS_URL, headers=headers, params=params)
+            response = requests.get(
+                f"{USERS_URL}?company_id={company_id}",
+                headers=headers
+            )
             return jsonify(response.json()), response.status_code
         except Exception as e:
             print(f"Error fetching users: {e}")
-            return jsonify({'error': str(e)}), 500
+            return jsonify({'error': 'Failed to fetch users'}), 500
     
     elif request.method == 'POST':
         try:
@@ -135,7 +148,7 @@ def user_api():
             return jsonify(response.json()), response.status_code
         except Exception as e:
             print(f"Error creating user: {e}")
-            return jsonify({'error': str(e)}), 500
+            return jsonify({'error': 'Failed to create user'}), 500
 
 @app.route('/api/users/<user_id>', methods=['PUT', 'DELETE'])
 @login_required
@@ -158,7 +171,7 @@ def user_detail_api(user_id):
             return jsonify(response.json()), response.status_code
         except Exception as e:
             print(f"Error updating user: {e}")
-            return jsonify({'error': str(e)}), 500
+            return jsonify({'error': 'Failed to update user'}), 500
             
     elif request.method == 'DELETE':
         try:
@@ -171,7 +184,7 @@ def user_detail_api(user_id):
             return jsonify({'error': 'Failed to delete user'}), response.status_code
         except Exception as e:
             print(f"Error deleting user: {e}")
-            return jsonify({'error': str(e)}), 500
+            return jsonify({'error': 'Failed to delete user'}), 500
 
 if __name__ == '__main__':
     app.run(host="0.0.0.0", port=5000, debug=True)
