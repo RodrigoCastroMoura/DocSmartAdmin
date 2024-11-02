@@ -16,14 +16,13 @@
                         <th>User</th>
                         <th>Email</th>
                         <th>Role</th>
-                        <th>Department</th>
                         <th>Status</th>
                         <th>Actions</th>
                     </tr>
                 </thead>
                 <tbody id="usersTableBody">
                     {% for user in users %}
-                    <tr>
+                    <tr data-id="{{ user.id }}">
                         <td>
                             <div class="user-cell">
                                 <div class="user-avatar">{{ user.name[:2].upper() }}</div>
@@ -32,9 +31,8 @@
                         </td>
                         <td>{{ user.email }}</td>
                         <td>{{ user.role }}</td>
-                        <td>{{ user.department }}</td>
-                        <td><span class="status-badge {% if user.active %}active{% else %}inactive{% endif %}">
-                            {% if user.active %}Active{% else %}Inactive{% endif %}
+                        <td><span class="status-badge {% if user.status == 'active' %}active{% else %}inactive{% endif %}">
+                            {{ user.status|title }}
                         </span></td>
                         <td>
                             <div class="table-actions">
@@ -68,8 +66,16 @@
                 <input type="email" id="userEmail" name="email" required>
             </div>
             <div class="form-group">
-                <label for="userDepartment">Department</label>
-                <select id="userDepartment" name="department_id" required></select>
+                <label for="userCPF">CPF</label>
+                <input type="text" id="userCPF" name="cpf" required pattern="\d{11}" title="CPF must contain 11 digits">
+            </div>
+            <div class="form-group">
+                <label for="userPhone">Phone</label>
+                <input type="tel" id="userPhone" name="phone">
+            </div>
+            <div class="form-group">
+                <label for="userPassword">Password</label>
+                <input type="password" id="userPassword" name="password" required>
             </div>
             <div class="form-group">
                 <label for="userRole">Role</label>
@@ -101,8 +107,12 @@
                 <input type="email" id="editUserEmail" name="email" required>
             </div>
             <div class="form-group">
-                <label for="editUserDepartment">Department</label>
-                <select id="editUserDepartment" name="department_id" required></select>
+                <label for="editUserCPF">CPF</label>
+                <input type="text" id="editUserCPF" name="cpf" required pattern="\d{11}" title="CPF must contain 11 digits">
+            </div>
+            <div class="form-group">
+                <label for="editUserPhone">Phone</label>
+                <input type="tel" id="editUserPhone" name="phone">
             </div>
             <div class="form-group">
                 <label for="editUserRole">Role</label>
@@ -131,6 +141,14 @@ setupFormValidation('addUserForm', {
     'userEmail': [
         ValidationRules.required,
         ValidationRules.email
+    ],
+    'userCPF': [
+        ValidationRules.required,
+        (value) => /^\d{11}$/.test(value) ? '' : 'CPF must contain exactly 11 digits'
+    ],
+    'userPassword': [
+        ValidationRules.required,
+        ValidationRules.minLength(6)
     ]
 });
 
@@ -143,19 +161,31 @@ setupFormValidation('editUserForm', {
     'editUserEmail': [
         ValidationRules.required,
         ValidationRules.email
+    ],
+    'editUserCPF': [
+        ValidationRules.required,
+        (value) => /^\d{11}$/.test(value) ? '' : 'CPF must contain exactly 11 digits'
     ]
 });
 
 async function loadUsers() {
     const contentDiv = document.getElementById('usersContent');
+    if (!contentDiv) return;
+    
     showLoading(contentDiv);
-
     try {
         const response = await fetch('/api/users');
-        await handleApiResponse(response, async (data) => {
-            document.getElementById('usersTableBody').innerHTML = generateUsersHTML(data);
-            feather.replace();
-        });
+        if (!response.ok) {
+            const error = await response.json();
+            throw new Error(error.error || 'Failed to fetch users');
+        }
+        
+        const users = await response.json();
+        document.getElementById('usersTableBody').innerHTML = generateUsersHTML(users);
+        feather.replace();
+    } catch (error) {
+        console.error('Error loading users:', error);
+        showErrorMessage(error.message);
     } finally {
         hideLoading(contentDiv);
     }
@@ -165,7 +195,7 @@ function generateUsersHTML(users) {
     if (!users || users.length === 0) {
         return `
             <tr>
-                <td colspan="6" class="no-data">
+                <td colspan="5" class="no-data">
                     <i data-feather="inbox"></i>
                     <p>No users found</p>
                 </td>
@@ -173,7 +203,7 @@ function generateUsersHTML(users) {
     }
 
     return users.map(user => `
-        <tr>
+        <tr data-id="${user.id}">
             <td>
                 <div class="user-cell">
                     <div class="user-avatar">${user.name.slice(0, 2).toUpperCase()}</div>
@@ -182,10 +212,9 @@ function generateUsersHTML(users) {
             </td>
             <td>${user.email}</td>
             <td>${user.role}</td>
-            <td>${user.department || ''}</td>
             <td>
-                <span class="status-badge ${user.active ? 'active' : 'inactive'}">
-                    ${user.active ? 'Active' : 'Inactive'}
+                <span class="status-badge ${user.status === 'active' ? 'active' : 'inactive'}">
+                    ${user.status ? user.status.charAt(0).toUpperCase() + user.status.slice(1) : 'N/A'}
                 </span>
             </td>
             <td>
@@ -200,25 +229,6 @@ function generateUsersHTML(users) {
             </td>
         </tr>
     `).join('');
-}
-
-// Fetch departments for dropdowns
-async function fetchDepartments() {
-    try {
-        const response = await fetch('/api/departments');
-        await handleApiResponse(response, async (departments) => {
-            const departmentSelects = ['userDepartment', 'editUserDepartment'];
-            
-            departmentSelects.forEach(selectId => {
-                const select = document.getElementById(selectId);
-                select.innerHTML = departments.map(dept => 
-                    `<option value="${dept.id}">${dept.name}</option>`
-                ).join('');
-            });
-        });
-    } catch (error) {
-        showErrorMessage('Error fetching departments');
-    }
 }
 
 async function createUser(event) {
@@ -243,11 +253,17 @@ async function createUser(event) {
             body: JSON.stringify(data)
         });
 
-        await handleApiResponse(response, async () => {
-            hideModal('addUserModal');
-            form.reset();
-            await loadUsers();
-        });
+        if (!response.ok) {
+            const error = await response.json();
+            throw new Error(error.error || 'Failed to create user');
+        }
+
+        hideModal('addUserModal');
+        form.reset();
+        await loadUsers();
+    } catch (error) {
+        console.error('Error creating user:', error);
+        showErrorMessage(error.message);
     } finally {
         hideLoading(submitButton);
     }
@@ -276,10 +292,16 @@ async function updateUser(event) {
             body: JSON.stringify(data)
         });
 
-        await handleApiResponse(response, async () => {
-            hideModal('editUserModal');
-            await loadUsers();
-        });
+        if (!response.ok) {
+            const error = await response.json();
+            throw new Error(error.error || 'Failed to update user');
+        }
+
+        hideModal('editUserModal');
+        await loadUsers();
+    } catch (error) {
+        console.error('Error updating user:', error);
+        showErrorMessage(error.message);
     } finally {
         hideLoading(submitButton);
     }
@@ -298,9 +320,15 @@ async function deleteUser(id) {
             method: 'DELETE'
         });
 
-        await handleApiResponse(response, async () => {
-            await loadUsers();
-        });
+        if (!response.ok) {
+            const error = await response.json();
+            throw new Error(error.error || 'Failed to delete user');
+        }
+
+        await loadUsers();
+    } catch (error) {
+        console.error('Error deleting user:', error);
+        showErrorMessage(error.message);
     } finally {
         hideLoading(row);
     }
@@ -308,9 +336,6 @@ async function deleteUser(id) {
 
 function showModal(modalId) {
     document.getElementById(modalId).style.display = 'block';
-    if (modalId === 'addUserModal' || modalId === 'editUserModal') {
-        fetchDepartments();
-    }
 }
 
 function hideModal(modalId) {
@@ -326,10 +351,14 @@ function showEditUserModal(id, user) {
     document.getElementById('editUserId').value = id;
     document.getElementById('editUserName').value = user.name;
     document.getElementById('editUserEmail').value = user.email;
-    document.getElementById('editUserDepartment').value = user.department_id;
+    document.getElementById('editUserCPF').value = user.cpf || '';
+    document.getElementById('editUserPhone').value = user.phone || '';
     document.getElementById('editUserRole').value = user.role;
     showModal('editUserModal');
 }
+
+// Initialize users list when page loads
+document.addEventListener('DOMContentLoaded', loadUsers);
 </script>
 
 <style>
@@ -357,9 +386,15 @@ function showEditUserModal(id, user) {
     overflow-x: auto;
 }
 
+.users-table {
+    width: 100%;
+    overflow-x: auto;
+}
+
 table {
     width: 100%;
     border-collapse: collapse;
+    min-width: 800px;
 }
 
 th, td {
@@ -418,6 +453,35 @@ th {
 .no-data i {
     font-size: 3rem;
     margin-bottom: 1rem;
+}
+
+.loading {
+    position: relative;
+    pointer-events: none;
+}
+
+.loading::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background-color: rgba(0, 0, 0, 0.5);
+    border-radius: inherit;
+}
+
+@media (max-width: 768px) {
+    .page-container {
+        padding: 1rem;
+    }
+    
+    th, td {
+        padding: 0.75rem;
+    }
+    
+    .user-avatar {
+        width: 28px;
+        height: 28px;
+        font-size: 0.75rem;
+    }
 }
 </style>
 {% endblock %}
