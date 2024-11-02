@@ -114,7 +114,11 @@ def departments():
             f"{DEPARTMENTS_URL}/companies/{company_id}/departments",
             headers=headers
         )
-        departments_data = response.json() if response.status_code == 200 else []
+        if response.status_code == 200:
+            departments_data = response.json()
+        else:
+            departments_data = []
+            flash('Error loading departments', 'error')
         return render_template('departments.html', departments=departments_data)
     except Exception as e:
         print(f"Error fetching departments: {e}")
@@ -136,7 +140,9 @@ def department_api():
                 f"{DEPARTMENTS_URL}/companies/{company_id}/departments",
                 headers=headers
             )
-            return jsonify(response.json()), response.status_code
+            if response.status_code == 200:
+                return jsonify(response.json()), 200
+            return jsonify({'error': 'Failed to fetch departments'}), response.status_code
         except Exception as e:
             print(f"Error fetching departments: {e}")
             return jsonify({'error': 'Failed to fetch departments'}), 500
@@ -146,7 +152,9 @@ def department_api():
             data = request.json
             data['company_id'] = company_id
             response = requests.post(DEPARTMENTS_URL, headers=headers, json=data)
-            return jsonify(response.json()), response.status_code
+            if response.status_code == 201:
+                return jsonify(response.json()), 201
+            return jsonify({'error': 'Failed to create department'}), response.status_code
         except Exception as e:
             print(f"Error creating department: {e}")
             return jsonify({'error': 'Failed to create department'}), 500
@@ -169,7 +177,9 @@ def department_detail_api(department_id):
                 headers=headers,
                 json=data
             )
-            return jsonify(response.json()), response.status_code
+            if response.status_code == 200:
+                return jsonify(response.json()), 200
+            return jsonify({'error': 'Failed to update department'}), response.status_code
         except Exception as e:
             print(f"Error updating department: {e}")
             return jsonify({'error': 'Failed to update department'}), 500
@@ -180,7 +190,9 @@ def department_detail_api(department_id):
                 f"{DEPARTMENTS_URL}/{department_id}",
                 headers=headers
             )
-            return '', response.status_code
+            if response.status_code == 204:
+                return '', 204
+            return jsonify({'error': 'Failed to delete department'}), response.status_code
         except Exception as e:
             print(f"Error deleting department: {e}")
             return jsonify({'error': 'Failed to delete department'}), 500
@@ -233,7 +245,9 @@ def category_api():
                 f"{CATEGORIES_URL}/companies/{company_id}/categories",
                 headers=headers
             )
-            return jsonify(response.json()), response.status_code
+            if response.status_code == 200:
+                return jsonify(response.json()), 200
+            return jsonify({'error': 'Failed to fetch categories'}), response.status_code
         except Exception as e:
             print(f"Error fetching categories: {e}")
             return jsonify({'error': 'Failed to fetch categories'}), 500
@@ -243,7 +257,9 @@ def category_api():
             data = request.json
             data['company_id'] = company_id
             response = requests.post(CATEGORIES_URL, headers=headers, json=data)
-            return jsonify(response.json()), response.status_code
+            if response.status_code == 201:
+                return jsonify(response.json()), 201
+            return jsonify({'error': 'Failed to create category'}), response.status_code
         except Exception as e:
             print(f"Error creating category: {e}")
             return jsonify({'error': 'Failed to create category'}), 500
@@ -266,7 +282,9 @@ def category_detail_api(category_id):
                 headers=headers,
                 json=data
             )
-            return jsonify(response.json()), response.status_code
+            if response.status_code == 200:
+                return jsonify(response.json()), 200
+            return jsonify({'error': 'Failed to update category'}), response.status_code
         except Exception as e:
             print(f"Error updating category: {e}")
             return jsonify({'error': 'Failed to update category'}), 500
@@ -277,7 +295,9 @@ def category_detail_api(category_id):
                 f"{CATEGORIES_URL}/{category_id}",
                 headers=headers
             )
-            return '', response.status_code
+            if response.status_code == 204:
+                return '', 204
+            return jsonify({'error': 'Failed to delete category'}), response.status_code
         except Exception as e:
             print(f"Error deleting category: {e}")
             return jsonify({'error': 'Failed to delete category'}), 500
@@ -297,7 +317,11 @@ def documents():
             f"{DOCUMENTS_URL}/companies/{company_id}/documents",
             headers=headers
         )
-        documents_data = response.json() if response.status_code == 200 else []
+        if response.status_code == 200:
+            documents_data = response.json()
+        else:
+            documents_data = []
+            flash('Error loading documents', 'error')
         return render_template('documents.html', documents=documents_data)
     except Exception as e:
         print(f"Error fetching documents: {e}")
@@ -322,7 +346,9 @@ def create_document():
             'company_id': company_id
         }
         response = requests.post(DOCUMENTS_URL, headers=headers, data=data, files=files)
-        return jsonify(response.json()), response.status_code
+        if response.status_code == 201:
+            return jsonify(response.json()), 201
+        return jsonify({'error': 'Failed to create document'}), response.status_code
     except Exception as e:
         print(f"Error creating document: {e}")
         return jsonify({'error': 'Failed to create document'}), 500
@@ -345,7 +371,9 @@ def document_detail_api(document_id):
                 headers=headers,
                 json=data
             )
-            return jsonify(response.json()), response.status_code
+            if response.status_code == 200:
+                return jsonify(response.json()), 200
+            return jsonify({'error': 'Failed to update document'}), response.status_code
         except Exception as e:
             print(f"Error updating document: {e}")
             return jsonify({'error': 'Failed to update document'}), 500
@@ -356,7 +384,9 @@ def document_detail_api(document_id):
                 f"{DOCUMENTS_URL}/{document_id}",
                 headers=headers
             )
-            return '', response.status_code
+            if response.status_code == 204:
+                return '', 204
+            return jsonify({'error': 'Failed to delete document'}), response.status_code
         except Exception as e:
             print(f"Error deleting document: {e}")
             return jsonify({'error': 'Failed to delete document'}), 500
@@ -376,7 +406,7 @@ def download_document(document_id):
                 as_attachment=True,
                 mimetype=response.headers.get('Content-Type')
             )
-        return '', response.status_code
+        return jsonify({'error': 'Failed to download document'}), response.status_code
     except Exception as e:
         print(f"Error downloading document: {e}")
         return jsonify({'error': 'Failed to download document'}), 500
@@ -396,7 +426,11 @@ def users():
             f"{USERS_URL}/companies/{company_id}/users",
             headers=headers
         )
-        users_data = response.json() if response.status_code == 200 else []
+        if response.status_code == 200:
+            users_data = response.json()
+        else:
+            users_data = []
+            flash('Error loading users', 'error')
         return render_template('users.html', users=users_data)
     except Exception as e:
         print(f"Error fetching users: {e}")
@@ -418,7 +452,9 @@ def user_api():
                 f"{USERS_URL}/companies/{company_id}/users",
                 headers=headers
             )
-            return jsonify(response.json()), response.status_code
+            if response.status_code == 200:
+                return jsonify(response.json()), 200
+            return jsonify({'error': 'Failed to fetch users'}), response.status_code
         except Exception as e:
             print(f"Error fetching users: {e}")
             return jsonify({'error': 'Failed to fetch users'}), 500
@@ -428,7 +464,9 @@ def user_api():
             data = request.json
             data['company_id'] = company_id
             response = requests.post(USERS_URL, headers=headers, json=data)
-            return jsonify(response.json()), response.status_code
+            if response.status_code == 201:
+                return jsonify(response.json()), 201
+            return jsonify({'error': 'Failed to create user'}), response.status_code
         except Exception as e:
             print(f"Error creating user: {e}")
             return jsonify({'error': 'Failed to create user'}), 500
@@ -451,7 +489,9 @@ def user_detail_api(user_id):
                 headers=headers,
                 json=data
             )
-            return jsonify(response.json()), response.status_code
+            if response.status_code == 200:
+                return jsonify(response.json()), 200
+            return jsonify({'error': 'Failed to update user'}), response.status_code
         except Exception as e:
             print(f"Error updating user: {e}")
             return jsonify({'error': 'Failed to update user'}), 500
@@ -462,7 +502,9 @@ def user_detail_api(user_id):
                 f"{USERS_URL}/{user_id}",
                 headers=headers
             )
-            return '', response.status_code
+            if response.status_code == 204:
+                return '', 204
+            return jsonify({'error': 'Failed to delete user'}), response.status_code
         except Exception as e:
             print(f"Error deleting user: {e}")
             return jsonify({'error': 'Failed to delete user'}), 500
