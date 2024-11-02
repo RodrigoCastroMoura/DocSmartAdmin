@@ -12,6 +12,15 @@ const ValidationRules = {
     match: (matchId, message) => (value) => {
         const matchElement = document.getElementById(matchId);
         return matchElement.value === value ? '' : message;
+    },
+    cpf: (value) => {
+        const cpfRegex = /^\d{11}$/;
+        return cpfRegex.test(value) ? '' : 'Please enter a valid CPF (11 digits)';
+    },
+    phone: (value) => {
+        if (!value) return ''; // Phone is optional
+        const phoneRegex = /^\d{10,11}$/;
+        return phoneRegex.test(value) ? '' : 'Please enter a valid phone number';
     }
 };
 
@@ -111,11 +120,3 @@ function setupFormValidation(formId, validationConfig) {
         }
     });
 }
-
-// Add global error handling for unhandled promise rejections
-window.addEventListener('unhandledrejection', function(event) {
-    console.error('Unhandled promise rejection:', event.reason);
-    if (window.showErrorMessage) {
-        window.showErrorMessage('An unexpected error occurred. Please try again.');
-    }
-});

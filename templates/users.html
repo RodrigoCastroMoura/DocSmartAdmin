@@ -131,7 +131,7 @@
 
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    // Setup form validation
+    // Setup form validations
     setupFormValidation('addUserForm', {
         'userName': [
             ValidationRules.required,
@@ -179,14 +179,15 @@ async function loadUsers() {
     try {
         const response = await fetch('/api/users');
         if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status}`);
+            throw new Error(`Failed to fetch users: ${response.status}`);
         }
-        const users = await response.json();
+        const data = await response.json();
+        const users = data.users || [];
         document.getElementById('usersTableBody').innerHTML = generateUsersHTML(users);
         feather.replace();
     } catch (error) {
         console.error('Error loading users:', error);
-        showErrorMessage('Failed to load users');
+        showErrorMessage('Unable to load users. Please try again later.');
     } finally {
         hideLoading(contentDiv);
     }
@@ -223,7 +224,7 @@ function generateUsersHTML(users) {
                     <button class="action-btn" onclick='showEditUserModal("${user.id}", ${JSON.stringify(user)})'>
                         <i data-feather="edit-2"></i>
                     </button>
-                    <button class="action-btn danger" onclick='deleteUser("${user.id}")'>
+                    <button class="action-btn danger" onclick="deleteUser('${user.id}')">
                         <i data-feather="trash-2"></i>
                     </button>
                 </div>
@@ -255,15 +256,17 @@ async function createUser(event) {
         });
 
         if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status}`);
+            const errorData = await response.json();
+            throw new Error(errorData.error || 'Failed to create user');
         }
 
         hideModal('addUserModal');
         form.reset();
         await loadUsers();
+        showErrorMessage('User created successfully', 'success');
     } catch (error) {
         console.error('Error creating user:', error);
-        showErrorMessage('Failed to create user');
+        showErrorMessage(error.message);
     } finally {
         hideLoading(submitButton);
     }
@@ -293,21 +296,23 @@ async function updateUser(event) {
         });
 
         if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status}`);
+            const errorData = await response.json();
+            throw new Error(errorData.error || 'Failed to update user');
         }
 
         hideModal('editUserModal');
         await loadUsers();
+        showErrorMessage('User updated successfully', 'success');
     } catch (error) {
         console.error('Error updating user:', error);
-        showErrorMessage('Failed to update user');
+        showErrorMessage(error.message);
     } finally {
         hideLoading(submitButton);
     }
 }
 
 async function deleteUser(id) {
-    if (!confirm('Are you sure you want to delete this user?')) {
+    if (!confirm('Are you sure you want to delete this user? This action cannot be undone.')) {
         return;
     }
 
@@ -320,13 +325,14 @@ async function deleteUser(id) {
         });
 
         if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status}`);
+            throw new Error('Failed to delete user');
         }
 
         await loadUsers();
+        showErrorMessage('User deleted successfully', 'success');
     } catch (error) {
         console.error('Error deleting user:', error);
-        showErrorMessage('Failed to delete user');
+        showErrorMessage('Unable to delete user. Please try again.');
     } finally {
         hideLoading(row);
     }
@@ -349,6 +355,50 @@ function showEditUserModal(id, user) {
 </script>
 
 <style>
+.page-container {
+    padding: 2rem;
+}
+
+.header-actions {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 2rem;
+}
+
+.header-actions h2 {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.content-grid {
+    background-color: var(--bg-secondary);
+    border-radius: 8px;
+    padding: 1.5rem;
+}
+
+.users-table {
+    width: 100%;
+    overflow-x: auto;
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+th, td {
+    padding: 1rem;
+    text-align: left;
+    border-bottom: 1px solid var(--border-color);
+}
+
+th {
+    color: var(--text-secondary);
+    font-weight: 500;
+}
+
 .user-cell {
     display: flex;
     align-items: center;
@@ -368,9 +418,11 @@ function showEditUserModal(id, user) {
 }
 
 .status-badge {
-    padding: 0.25rem 0.5rem;
+    padding: 0.25rem 0.75rem;
     border-radius: 4px;
     font-size: 0.875rem;
+    font-weight: 500;
+    display: inline-block;
 }
 
 .status-badge.active {
@@ -397,27 +449,19 @@ function showEditUserModal(id, user) {
 .no-data i {
     font-size: 3rem;
     margin-bottom: 1rem;
+    opacity: 0.5;
 }
 
-.users-table {
-    width: 100%;
-    overflow-x: auto;
+.modal-content {
+    max-width: 500px;
+    margin: 2rem auto;
 }
 
-table {
-    width: 100%;
-    border-collapse: collapse;
-}
-
-th, td {
-    padding: 1rem;
-    text-align: left;
-    border-bottom: 1px solid var(--border-color);
-}
-
-th {
-    color: var(--text-secondary);
-    font-weight: 500;
+.modal-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 1rem;
+    margin-top: 2rem;
 }
 </style>
 {% endblock %}
