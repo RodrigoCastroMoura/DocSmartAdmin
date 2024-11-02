@@ -1,0 +1,57 @@
+curl --location --request POST 'https://document-manager-api-rodrigocastromo.replit.app/api/users' \
+--header 'Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX2lkIjoiNjcxOTU4NzE4ZDhkMzZjMzVlNmM3YzVmIiwiZW1haWwiOiJyb2RyaWdvLmNhc3Ryby5tb3VyYUBnbWFpbC5jb20iLCJyb2xlIjoiYWRtaW4iLCJwZXJtaXNzaW9ucyI6WyJkb2N1bWVudF9yZWFkIiwiZG9jdW1lbnRfd3JpdGUiLCJkb2N1bWVudF91cGRhdGUiLCJkb2N1bWVudF9kZWxldGUiLCJjYXRlZ29yeV9yZWFkIiwiY2F0ZWdvcnlfd3JpdGUiLCJjYXRlZ29yeV91cGRhdGUiLCJjYXRlZ29yeV9kZWxldGUiLCJkZXBhcnRtZW50X3JlYWQiLCJkZXBhcnRtZW50X3dyaXRlIiwiZGVwYXJ0bWVudF91cGRhdGUiLCJkZXBhcnRtZW50X2RlbGV0ZSIsInVzZXJfcmVhZCIsInVzZXJfd3JpdGUiLCJ1c2VyX3VwZGF0ZSIsInVzZXJfZGVsZXRlIiwiY29tcGFueV9yZWFkIiwiY29tcGFueV93cml0ZSIsImNvbXBhbnlfdXBkYXRlIiwiY29tcGFueV9kZWxldGUiXSwiY29tcGFueV9pZCI6IjY3MTk1ODcwOGQ4ZDM2YzM1ZTZjN2M1ZSIsImV4cCI6MTczMDU1MDg1NSwiaWF0IjoxNzMwNTQ3MjU1LCJ0eXBlIjoiYWNjZXNzIiwianRpIjoiOTkzYjhhMGQxZDQzZTQ2ZCJ9.L-HmMW2PcvCmf1VVlsXi5a9wb4uHVGCWRYG52_6dKgc' \
+--header 'Content-Type: application/json' \
+--data-raw '{
+    "name": "John Doe",
+    "cpf": "55737513017",
+    "email": "john.doe@example.com",
+    "phone": "1234567890",
+    "password": "SecurePass@123", 
+    "role": "user",
+    "company_id": "671958708d8d36c35e6c7c5e"
+  }'
+  
+curl --location --request GET 'https://document-manager-api-rodrigocastromo.replit.app/api/documents/companies/671958708d8d36c35e6c7c5e/documents' \
+--header 'Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX2lkIjoiNjcxOTU4NzE4ZDhkMzZjMzVlNmM3YzVmIiwiZW1haWwiOiJyb2RyaWdvLmNhc3Ryby5tb3VyYUBnbWFpbC5jb20iLCJyb2xlIjoiYWRtaW4iLCJwZXJtaXNzaW9ucyI6WyJkb2N1bWVudF9yZWFkIiwiZG9jdW1lbnRfd3JpdGUiLCJkb2N1bWVudF91cGRhdGUiLCJkb2N1bWVudF9kZWxldGUiLCJjYXRlZ29yeV9yZWFkIiwiY2F0ZWdvcnlfd3JpdGUiLCJjYXRlZ29yeV91cGRhdGUiLCJjYXRlZ29yeV9kZWxldGUiLCJkZXBhcnRtZW50X3JlYWQiLCJkZXBhcnRtZW50X3dyaXRlIiwiZGVwYXJ0bWVudF91cGRhdGUiLCJkZXBhcnRtZW50X2RlbGV0ZSIsInVzZXJfcmVhZCIsInVzZXJfd3JpdGUiLCJ1c2VyX3VwZGF0ZSIsInVzZXJfZGVsZXRlIiwiY29tcGFueV9yZWFkIiwiY29tcGFueV93cml0ZSIsImNvbXBhbnlfdXBkYXRlIiwiY29tcGFueV9kZWxldGUiXSwiY29tcGFueV9pZCI6IjY3MTk1ODcwOGQ4ZDM2YzM1ZTZjN2M1ZSIsImV4cCI6MTczMDU1MTY0NywiaWF0IjoxNzMwNTQ4MDQ3LCJ0eXBlIjoiYWNjZXNzIiwianRpIjoiMWIzMzM4OWQzY2QzMDgwOCJ9.64ECY_s2Gxtvw_SUIJxYJQ8EOdts407YwW3K3DOD688'
+response : {
+    "documents": [
+        {
+            "id": "671ebab60d79b6fbf7bbcd2d",
+            "name": "RodrigoApCastroMoura.docx",
+            "titulo": null,
+            "url": "https://storage.googleapis.com/docsmart-37bba.appspot.com/671eaf9b7dd82546449be496/671eb79d0d79b6fbf7bbcd2b/RodrigoApCastroMoura.docx",
+            "category_id": "671eb79d0d79b6fbf7bbcd2b",
+            "user_id": "671958718d8d36c35e6c7c5f",
+            "view_count": 0,
+            "download_count": 0,
+            "created_at": "2024-10-27T22:12:06.178000",
+            "created_by": "671958718d8d36c35e6c7c5f",
+            "updated_at": "2024-10-27T22:12:06.178000",
+            "updated_by": "671958718d8d36c35e6c7c5f"
+        }
+    ],
+    "total": 1,
+    "page": 1,
+    "per_page": 10,
+    "total_pages": 1
+}
+
+curl -X 'DELETE' \
+  'https://document-manager-api-rodrigocastromo.replit.app/api/users/671f9fca6d244366db70fc2b' \
+  -H 'accept: application/json' \
+  -H 'Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX2lkIjoiNjcxOTU4NzE4ZDhkMzZjMzVlNmM3YzVmIiwiZW1haWwiOiJyb2RyaWdvLmNhc3Ryby5tb3VyYUBnbWFpbC5jb20iLCJyb2xlIjoiYWRtaW4iLCJwZXJtaXNzaW9ucyI6WyJkb2N1bWVudF9yZWFkIiwiZG9jdW1lbnRfd3JpdGUiLCJkb2N1bWVudF91cGRhdGUiLCJkb2N1bWVudF9kZWxldGUiLCJjYXRlZ29yeV9yZWFkIiwiY2F0ZWdvcnlfd3JpdGUiLCJjYXRlZ29yeV91cGRhdGUiLCJjYXRlZ29yeV9kZWxldGUiLCJkZXBhcnRtZW50X3JlYWQiLCJkZXBhcnRtZW50X3dyaXRlIiwiZGVwYXJ0bWVudF91cGRhdGUiLCJkZXBhcnRtZW50X2RlbGV0ZSIsInVzZXJfcmVhZCIsInVzZXJfd3JpdGUiLCJ1c2VyX3VwZGF0ZSIsInVzZXJfZGVsZXRlIiwiY29tcGFueV9yZWFkIiwiY29tcGFueV93cml0ZSIsImNvbXBhbnlfdXBkYXRlIiwiY29tcGFueV9kZWxldGUiXSwiY29tcGFueV9pZCI6IjY3MTk1ODcwOGQ4ZDM2YzM1ZTZjN2M1ZSIsImV4cCI6MTczMDI1NTY3OSwiaWF0IjoxNzMwMjUyMDc5LCJ0eXBlIjoiYWNjZXNzIiwianRpIjoiZjIxMDJjMTMwMzI2ODQ1ZCJ9.uFVSP0f0p6BGNGZRZGuMdVb9llyG5YzTFtGC0CbPAic'
+  
+  curl -X 'PUT' \
+  'https://document-manager-api-rodrigocastromo.replit.app/api/users/curl%20-X%20'\''DELETE'\''%20%5C%20%20%20'\''https%3A%2F%2Fdocument-manager-api-rodrigocastromo.replit.app%2Fapi%2Fusers%2F671f9fca6d244366db70fc2b'\''%20%5C%20%20%20-H%20'\''accept%3A%20application%2Fjson'\''%20%5C%20%20%20-H%20'\''Authorization%3A%20Bearer%20eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX2lkIjoiNjcxOTU4NzE4ZDhkMzZjMzVlNmM3YzVmIiwiZW1haWwiOiJyb2RyaWdvLmNhc3Ryby5tb3VyYUBnbWFpbC5jb20iLCJyb2xlIjoiYWRtaW4iLCJwZXJtaXNzaW9ucyI6WyJkb2N1bWVudF9yZWFkIiwiZG9jdW1lbnRfd3JpdGUiLCJkb2N1bWVudF91cGRhdGUiLCJkb2N1bWVudF9kZWxldGUiLCJjYXRlZ29yeV9yZWFkIiwiY2F0ZWdvcnlfd3JpdGUiLCJjYXRlZ29yeV91cGRhdGUiLCJjYXRlZ29yeV9kZWxldGUiLCJkZXBhcnRtZW50X3JlYWQiLCJkZXBhcnRtZW50X3dyaXRlIiwiZGVwYXJ0bWVudF91cGRhdGUiLCJkZXBhcnRtZW50X2RlbGV0ZSIsInVzZXJfcmVhZCIsInVzZXJfd3JpdGUiLCJ1c2VyX3VwZGF0ZSIsInVzZXJfZGVsZXRlIiwiY29tcGFueV9yZWFkIiwiY29tcGFueV93cml0ZSIsImNvbXBhbnlfdXBkYXRlIiwiY29tcGFueV9kZWxldGUiXSwiY29tcGFueV9pZCI6IjY3MTk1ODcwOGQ4ZDM2YzM1ZTZjN2M1ZSIsImV4cCI6MTczMDI1NTY3OSwiaWF0IjoxNzMwMjUyMDc5LCJ0eXBlIjoiYWNjZXNzIiwianRpIjoiZjIxMDJjMTMwMzI2ODQ1ZCJ9.uFVSP0f0p6BGNGZRZGuMdVb9llyG5YzTFtGC0CbPAic'\''' \
+  -H 'accept: application/json' \
+  -H 'Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX2lkIjoiNjcxOTU4NzE4ZDhkMzZjMzVlNmM3YzVmIiwiZW1haWwiOiJyb2RyaWdvLmNhc3Ryby5tb3VyYUBnbWFpbC5jb20iLCJyb2xlIjoiYWRtaW4iLCJwZXJtaXNzaW9ucyI6WyJkb2N1bWVudF9yZWFkIiwiZG9jdW1lbnRfd3JpdGUiLCJkb2N1bWVudF91cGRhdGUiLCJkb2N1bWVudF9kZWxldGUiLCJjYXRlZ29yeV9yZWFkIiwiY2F0ZWdvcnlfd3JpdGUiLCJjYXRlZ29yeV91cGRhdGUiLCJjYXRlZ29yeV9kZWxldGUiLCJkZXBhcnRtZW50X3JlYWQiLCJkZXBhcnRtZW50X3dyaXRlIiwiZGVwYXJ0bWVudF91cGRhdGUiLCJkZXBhcnRtZW50X2RlbGV0ZSIsInVzZXJfcmVhZCIsInVzZXJfd3JpdGUiLCJ1c2VyX3VwZGF0ZSIsInVzZXJfZGVsZXRlIiwiY29tcGFueV9yZWFkIiwiY29tcGFueV93cml0ZSIsImNvbXBhbnlfdXBkYXRlIiwiY29tcGFueV9kZWxldGUiXSwiY29tcGFueV9pZCI6IjY3MTk1ODcwOGQ4ZDM2YzM1ZTZjN2M1ZSIsImV4cCI6MTczMDI1NTY3OSwiaWF0IjoxNzMwMjUyMDc5LCJ0eXBlIjoiYWNjZXNzIiwianRpIjoiZjIxMDJjMTMwMzI2ODQ1ZCJ9.uFVSP0f0p6BGNGZRZGuMdVb9llyG5YzTFtGC0CbPAic' \
+  -H 'Content-Type: application/json' \
+  -d '{
+  "name": "string",
+  "email": "string",
+  "cpf": "string",
+  "phone": "string",
+  "role": "string",
+  "status": "active",
+  "company_id": "string"
+}'
