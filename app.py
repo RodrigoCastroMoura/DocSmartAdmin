@@ -120,6 +120,138 @@ def documents():
 def users():
     return render_template('users.html', users=[])
 
+@app.route('/api/departments', methods=['GET', 'POST'])
+@login_required
+def department_api():
+    headers = get_auth_headers()
+    company_id = session.get('company_id')
+    
+    if not company_id:
+        return jsonify({'error': 'Company ID not found'}), 400
+    
+    if request.method == 'GET':
+        try:
+            response = requests.get(
+                f"{DEPARTMENTS_URL}/companies/{company_id}/departments",
+                headers=headers
+            )
+            return jsonify(response.json()), response.status_code
+        except Exception as e:
+            print(f"Error fetching departments: {e}")
+            return jsonify({'error': str(e)}), 500
+            
+    elif request.method == 'POST':
+        try:
+            data = request.json
+            data['company_id'] = company_id
+            response = requests.post(DEPARTMENTS_URL, headers=headers, json=data)
+            return jsonify(response.json()), response.status_code
+        except Exception as e:
+            print(f"Error creating department: {e}")
+            return jsonify({'error': str(e)}), 500
+
+@app.route('/api/departments/<department_id>', methods=['PUT', 'DELETE'])
+@login_required
+def department_detail_api(department_id):
+    headers = get_auth_headers()
+    company_id = session.get('company_id')
+    
+    if not company_id:
+        return jsonify({'error': 'Company ID not found'}), 400
+    
+    if request.method == 'PUT':
+        try:
+            data = request.json
+            data['company_id'] = company_id
+            response = requests.put(
+                f"{DEPARTMENTS_URL}/{department_id}",
+                headers=headers,
+                json=data
+            )
+            return jsonify(response.json()), response.status_code
+        except Exception as e:
+            print(f"Error updating department: {e}")
+            return jsonify({'error': str(e)}), 500
+            
+    elif request.method == 'DELETE':
+        try:
+            response = requests.delete(
+                f"{DEPARTMENTS_URL}/{department_id}",
+                headers=headers
+            )
+            if response.status_code == 204:
+                return '', 204
+            return jsonify({'error': 'Failed to delete department'}), response.status_code
+        except Exception as e:
+            print(f"Error deleting department: {e}")
+            return jsonify({'error': str(e)}), 500
+
+@app.route('/api/categories', methods=['GET', 'POST'])
+@login_required
+def category_api():
+    headers = get_auth_headers()
+    company_id = session.get('company_id')
+    
+    if not company_id:
+        return jsonify({'error': 'Company ID not found'}), 400
+    
+    if request.method == 'GET':
+        try:
+            response = requests.get(
+                f"{CATEGORIES_URL}/companies/{company_id}/categories",
+                headers=headers
+            )
+            return jsonify(response.json()), response.status_code
+        except Exception as e:
+            print(f"Error fetching categories: {e}")
+            return jsonify({'error': str(e)}), 500
+            
+    elif request.method == 'POST':
+        try:
+            data = request.json
+            data['company_id'] = company_id
+            response = requests.post(CATEGORIES_URL, headers=headers, json=data)
+            return jsonify(response.json()), response.status_code
+        except Exception as e:
+            print(f"Error creating category: {e}")
+            return jsonify({'error': str(e)}), 500
+
+@app.route('/api/categories/<category_id>', methods=['PUT', 'DELETE'])
+@login_required
+def category_detail_api(category_id):
+    headers = get_auth_headers()
+    company_id = session.get('company_id')
+    
+    if not company_id:
+        return jsonify({'error': 'Company ID not found'}), 400
+    
+    if request.method == 'PUT':
+        try:
+            data = request.json
+            data['company_id'] = company_id
+            response = requests.put(
+                f"{CATEGORIES_URL}/{category_id}",
+                headers=headers,
+                json=data
+            )
+            return jsonify(response.json()), response.status_code
+        except Exception as e:
+            print(f"Error updating category: {e}")
+            return jsonify({'error': str(e)}), 500
+            
+    elif request.method == 'DELETE':
+        try:
+            response = requests.delete(
+                f"{CATEGORIES_URL}/{category_id}",
+                headers=headers
+            )
+            if response.status_code == 204:
+                return '', 204
+            return jsonify({'error': 'Failed to delete category'}), response.status_code
+        except Exception as e:
+            print(f"Error deleting category: {e}")
+            return jsonify({'error': str(e)}), 500
+
 @app.route('/api/users', methods=['GET', 'POST'])
 @login_required
 def user_api():
