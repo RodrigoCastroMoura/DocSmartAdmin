@@ -59,38 +59,24 @@
     <div class="modal-content">
         <h3>Add User</h3>
         <form id="addUserForm" onsubmit="createUser(event)">
-            <div class="form-row">
-                <div class="form-group">
-                    <label for="userName">Name</label>
-                    <input type="text" id="userName" name="name" required>
-                </div>
-                <div class="form-group">
-                    <label for="userEmail">Email</label>
-                    <input type="email" id="userEmail" name="email" required>
-                </div>
+            <div class="form-group">
+                <label for="userName">Name</label>
+                <input type="text" id="userName" name="name" required>
             </div>
-            <div class="form-row">
-                <div class="form-group">
-                    <label for="userPassword">Password</label>
-                    <input type="password" id="userPassword" name="password" required>
-                </div>
-                <div class="form-group">
-                    <label for="userConfirmPassword">Confirm Password</label>
-                    <input type="password" id="userConfirmPassword" name="confirm_password" required>
-                </div>
+            <div class="form-group">
+                <label for="userEmail">Email</label>
+                <input type="email" id="userEmail" name="email" required>
             </div>
-            <div class="form-row">
-                <div class="form-group">
-                    <label for="userDepartment">Department</label>
-                    <select id="userDepartment" name="department_id" required></select>
-                </div>
-                <div class="form-group">
-                    <label for="userRole">Role</label>
-                    <select id="userRole" name="role" required>
-                        <option value="user">User</option>
-                        <option value="admin">Admin</option>
-                    </select>
-                </div>
+            <div class="form-group">
+                <label for="userDepartment">Department</label>
+                <select id="userDepartment" name="department_id" required></select>
+            </div>
+            <div class="form-group">
+                <label for="userRole">Role</label>
+                <select id="userRole" name="role" required>
+                    <option value="user">User</option>
+                    <option value="admin">Admin</option>
+                </select>
             </div>
             <div class="modal-actions">
                 <button type="button" class="action-btn" onclick="hideModal('addUserModal')">Cancel</button>
@@ -106,39 +92,24 @@
         <h3>Edit User</h3>
         <form id="editUserForm" onsubmit="updateUser(event)">
             <input type="hidden" id="editUserId">
-            <div class="form-row">
-                <div class="form-group">
-                    <label for="editUserName">Name</label>
-                    <input type="text" id="editUserName" name="name" required>
-                </div>
-                <div class="form-group">
-                    <label for="editUserEmail">Email</label>
-                    <input type="email" id="editUserEmail" name="email" required>
-                </div>
+            <div class="form-group">
+                <label for="editUserName">Name</label>
+                <input type="text" id="editUserName" name="name" required>
             </div>
-            <div class="form-row">
-                <div class="form-group">
-                    <label for="editUserPassword">Password</label>
-                    <input type="password" id="editUserPassword" name="password">
-                    <small class="help-text">Leave blank to keep current password</small>
-                </div>
-                <div class="form-group">
-                    <label for="editUserConfirmPassword">Confirm Password</label>
-                    <input type="password" id="editUserConfirmPassword" name="confirm_password">
-                </div>
+            <div class="form-group">
+                <label for="editUserEmail">Email</label>
+                <input type="email" id="editUserEmail" name="email" required>
             </div>
-            <div class="form-row">
-                <div class="form-group">
-                    <label for="editUserDepartment">Department</label>
-                    <select id="editUserDepartment" name="department_id" required></select>
-                </div>
-                <div class="form-group">
-                    <label for="editUserRole">Role</label>
-                    <select id="editUserRole" name="role" required>
-                        <option value="user">User</option>
-                        <option value="admin">Admin</option>
-                    </select>
-                </div>
+            <div class="form-group">
+                <label for="editUserDepartment">Department</label>
+                <select id="editUserDepartment" name="department_id" required></select>
+            </div>
+            <div class="form-group">
+                <label for="editUserRole">Role</label>
+                <select id="editUserRole" name="role" required>
+                    <option value="user">User</option>
+                    <option value="admin">Admin</option>
+                </select>
             </div>
             <div class="modal-actions">
                 <button type="button" class="action-btn" onclick="hideModal('editUserModal')">Cancel</button>
@@ -160,14 +131,6 @@ setupFormValidation('addUserForm', {
     'userEmail': [
         ValidationRules.required,
         ValidationRules.email
-    ],
-    'userPassword': [
-        ValidationRules.required,
-        ValidationRules.minLength(6)
-    ],
-    'userConfirmPassword': [
-        ValidationRules.required,
-        ValidationRules.match('userPassword', 'Passwords must match')
     ]
 });
 
@@ -180,9 +143,6 @@ setupFormValidation('editUserForm', {
     'editUserEmail': [
         ValidationRules.required,
         ValidationRules.email
-    ],
-    'editUserConfirmPassword': [
-        ValidationRules.match('editUserPassword', 'Passwords must match')
     ]
 });
 
@@ -192,15 +152,10 @@ async function loadUsers() {
 
     try {
         const response = await fetch('/api/users');
-        if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status}`);
-        }
-        const data = await response.json();
-        document.getElementById('usersTableBody').innerHTML = generateUsersHTML(data);
-        feather.replace();
-    } catch (error) {
-        console.error('Error loading users:', error);
-        showErrorMessage('Failed to load users');
+        await handleApiResponse(response, async (data) => {
+            document.getElementById('usersTableBody').innerHTML = generateUsersHTML(data);
+            feather.replace();
+        });
     } finally {
         hideLoading(contentDiv);
     }
@@ -247,23 +202,21 @@ function generateUsersHTML(users) {
     `).join('');
 }
 
+// Fetch departments for dropdowns
 async function fetchDepartments() {
     try {
         const response = await fetch('/api/departments');
-        if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status}`);
-        }
-        const departments = await response.json();
-        const departmentSelects = ['userDepartment', 'editUserDepartment'];
-        
-        departmentSelects.forEach(selectId => {
-            const select = document.getElementById(selectId);
-            select.innerHTML = departments.map(dept => 
-                `<option value="${dept.id}">${dept.name}</option>`
-            ).join('');
+        await handleApiResponse(response, async (departments) => {
+            const departmentSelects = ['userDepartment', 'editUserDepartment'];
+            
+            departmentSelects.forEach(selectId => {
+                const select = document.getElementById(selectId);
+                select.innerHTML = departments.map(dept => 
+                    `<option value="${dept.id}">${dept.name}</option>`
+                ).join('');
+            });
         });
     } catch (error) {
-        console.error('Error fetching departments:', error);
         showErrorMessage('Error fetching departments');
     }
 }
@@ -279,10 +232,6 @@ async function createUser(event) {
     
     const formData = new FormData(form);
     const data = Object.fromEntries(formData);
-    
-    // Remove confirm password from data
-    delete data.confirm_password;
-    
     showLoading(submitButton);
 
     try {
@@ -294,16 +243,11 @@ async function createUser(event) {
             body: JSON.stringify(data)
         });
 
-        if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status}`);
-        }
-
-        hideModal('addUserModal');
-        form.reset();
-        await loadUsers();
-    } catch (error) {
-        console.error('Error creating user:', error);
-        showErrorMessage('Failed to create user');
+        await handleApiResponse(response, async () => {
+            hideModal('addUserModal');
+            form.reset();
+            await loadUsers();
+        });
     } finally {
         hideLoading(submitButton);
     }
@@ -321,15 +265,6 @@ async function updateUser(event) {
     const id = document.getElementById('editUserId').value;
     const formData = new FormData(form);
     const data = Object.fromEntries(formData);
-    
-    // Remove confirm password from data
-    delete data.confirm_password;
-    
-    // Remove password if empty
-    if (!data.password) {
-        delete data.password;
-    }
-    
     showLoading(submitButton);
 
     try {
@@ -341,15 +276,10 @@ async function updateUser(event) {
             body: JSON.stringify(data)
         });
 
-        if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status}`);
-        }
-
-        hideModal('editUserModal');
-        await loadUsers();
-    } catch (error) {
-        console.error('Error updating user:', error);
-        showErrorMessage('Failed to update user');
+        await handleApiResponse(response, async () => {
+            hideModal('editUserModal');
+            await loadUsers();
+        });
     } finally {
         hideLoading(submitButton);
     }
@@ -368,14 +298,9 @@ async function deleteUser(id) {
             method: 'DELETE'
         });
 
-        if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status}`);
-        }
-
-        await loadUsers();
-    } catch (error) {
-        console.error('Error deleting user:', error);
-        showErrorMessage('Failed to delete user');
+        await handleApiResponse(response, async () => {
+            await loadUsers();
+        });
     } finally {
         hideLoading(row);
     }
@@ -390,10 +315,6 @@ function showModal(modalId) {
 
 function hideModal(modalId) {
     document.getElementById(modalId).style.display = 'none';
-    const form = document.getElementById(modalId === 'addUserModal' ? 'addUserForm' : 'editUserForm');
-    if (form) {
-        form.reset();
-    }
 }
 
 function showAddUserModal() {
@@ -407,33 +328,11 @@ function showEditUserModal(id, user) {
     document.getElementById('editUserEmail').value = user.email;
     document.getElementById('editUserDepartment').value = user.department_id;
     document.getElementById('editUserRole').value = user.role;
-    
-    // Clear password fields
-    document.getElementById('editUserPassword').value = '';
-    document.getElementById('editUserConfirmPassword').value = '';
-    
     showModal('editUserModal');
 }
-
-// Initialize users list when page loads
-document.addEventListener('DOMContentLoaded', loadUsers);
 </script>
 
 <style>
-.form-row {
-    display: grid;
-    grid-template-columns: repeat(2, 1fr);
-    gap: 1rem;
-    margin-bottom: 1rem;
-}
-
-.help-text {
-    display: block;
-    font-size: 0.75rem;
-    color: var(--text-secondary);
-    margin-top: 0.25rem;
-}
-
 .page-container {
     padding: 2rem;
 }
@@ -519,10 +418,6 @@ th {
 .no-data i {
     font-size: 3rem;
     margin-bottom: 1rem;
-}
-
-.modal-content {
-    max-width: 600px;
 }
 </style>
 {% endblock %}
