@@ -16,7 +16,6 @@
                         <th>User</th>
                         <th>Email</th>
                         <th>Role</th>
-                        <th>Department</th>
                         <th>Status</th>
                         <th>Actions</th>
                     </tr>
@@ -32,7 +31,6 @@
                         </td>
                         <td>{{ user.email }}</td>
                         <td>{{ user.role }}</td>
-                        <td>{{ user.department }}</td>
                         <td><span class="status-badge {% if user.status == 'active' %}active{% else %}inactive{% endif %}">
                             {{ user.status|title }}
                         </span></td>
@@ -76,15 +74,6 @@
                 <input type="text" id="userPhone" name="phone">
             </div>
             <div class="form-group">
-                <label for="userDepartment">Department</label>
-                <select id="userDepartment" name="department_id">
-                    <option value="">Select Department</option>
-                    {% for dept in departments %}
-                    <option value="{{ dept.id }}">{{ dept.name }}</option>
-                    {% endfor %}
-                </select>
-            </div>
-            <div class="form-group">
                 <label for="userRole">Role</label>
                 <select id="userRole" name="role" required>
                     <option value="user">User</option>
@@ -120,15 +109,6 @@
             <div class="form-group">
                 <label for="editUserPhone">Phone</label>
                 <input type="text" id="editUserPhone" name="phone">
-            </div>
-            <div class="form-group">
-                <label for="editUserDepartment">Department</label>
-                <select id="editUserDepartment" name="department_id">
-                    <option value="">Select Department</option>
-                    {% for dept in departments %}
-                    <option value="{{ dept.id }}">{{ dept.name }}</option>
-                    {% endfor %}
-                </select>
             </div>
             <div class="form-group">
                 <label for="editUserRole">Role</label>
@@ -201,7 +181,31 @@ setupFormValidation('editUserForm', {
     ]
 });
 
-// API call with retry logic
+// Error message display with improved visibility
+function showErrorMessage(message, type = 'error') {
+    const existingToast = document.querySelector('.toast');
+    if (existingToast) {
+        existingToast.remove();
+    }
+
+    const toast = document.createElement('div');
+    toast.className = `toast ${type}`;
+    toast.setAttribute('role', 'alert');
+    toast.textContent = message;
+    document.body.appendChild(toast);
+
+    requestAnimationFrame(() => {
+        requestAnimationFrame(() => {
+            toast.classList.add('show');
+            setTimeout(() => {
+                toast.classList.remove('show');
+                setTimeout(() => toast.remove(), 300);
+            }, 3000);
+        });
+    });
+}
+
+// API call with improved error handling and retry logic
 async function makeApiCall(url, options = {}, retries = MAX_RETRIES) {
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), REQUEST_TIMEOUT);
@@ -216,14 +220,14 @@ async function makeApiCall(url, options = {}, retries = MAX_RETRIES) {
             }
         });
 
-        const contentType = response.headers.get('content-type');
         let data;
+        const contentType = response.headers.get('content-type');
         
         try {
             if (contentType && contentType.includes('application/json')) {
                 data = await response.json();
             } else {
-                data = await response.text();
+                throw new Error('Invalid response format: expected JSON');
             }
         } catch (parseError) {
             console.error('Error parsing response:', parseError);
@@ -260,14 +264,17 @@ function showLoadingState(element) {
     element.classList.add('loading');
     element.setAttribute('aria-busy', 'true');
     
+    const loadingSpinner = document.createElement('div');
+    loadingSpinner.className = 'loading-spinner';
+    
     if (element.tagName === 'BUTTON') {
         const originalContent = element.innerHTML;
         element.dataset.originalContent = originalContent;
-        element.innerHTML = '<div class="loading-spinner"></div> Loading...';
+        element.innerHTML = '';
+        element.appendChild(loadingSpinner);
+        element.appendChild(document.createTextNode(' Loading...'));
         element.disabled = true;
     } else {
-        const loadingSpinner = document.createElement('div');
-        loadingSpinner.className = 'loading-spinner';
         element.appendChild(loadingSpinner);
     }
 }
@@ -288,31 +295,6 @@ function hideLoadingState(element) {
     }
 }
 
-// Error message display with animation
-function showErrorMessage(message, type = 'error') {
-    const existingToast = document.querySelector('.toast');
-    if (existingToast) {
-        existingToast.remove();
-    }
-
-    const toast = document.createElement('div');
-    toast.className = `toast ${type}`;
-    toast.setAttribute('role', 'alert');
-    toast.textContent = message;
-    document.body.appendChild(toast);
-    
-    // Use RAF for smooth animation
-    requestAnimationFrame(() => {
-        requestAnimationFrame(() => {
-            toast.classList.add('show');
-            setTimeout(() => {
-                toast.classList.remove('show');
-                setTimeout(() => toast.remove(), 300);
-            }, 3000);
-        });
-    });
-}
-
 // Load users with improved error handling
 async function loadUsers() {
     const contentDiv = document.getElementById('usersContent');
@@ -321,20 +303,19 @@ async function loadUsers() {
     showLoadingState(contentDiv);
     
     try {
-        const data = await makeApiCall('/api/users');
-        
-        if (!Array.isArray(data)) {
+        const response = await makeApiCall('/api/users');
+        if (!Array.isArray(response)) {
             throw new Error('Invalid response format: expected an array of users');
         }
         
-        tableBody.innerHTML = generateUsersHTML(data);
+        tableBody.innerHTML = generateUsersHTML(response);
         feather.replace();
     } catch (error) {
         console.error('Error loading users:', error);
-        showErrorMessage(error.message || 'Failed to load users');
+        showErrorMessage(error.message);
         tableBody.innerHTML = `
             <tr>
-                <td colspan="6" class="error-state">
+                <td colspan="5" class="error-state">
                     <i data-feather="alert-circle"></i>
                     <p>Failed to load users</p>
                 </td>
@@ -381,7 +362,7 @@ async function createUser(event) {
         showErrorMessage('User created successfully', 'success');
     } catch (error) {
         console.error('Error creating user:', error);
-        showErrorMessage(error.message || 'Failed to create user');
+        showErrorMessage(error.message);
     } finally {
         hideLoadingState(submitButton);
     }
@@ -428,7 +409,7 @@ async function updateUser(event) {
         showErrorMessage('User updated successfully', 'success');
     } catch (error) {
         console.error('Error updating user:', error);
-        showErrorMessage(error.message || 'Failed to update user');
+        showErrorMessage(error.message);
     } finally {
         hideLoadingState(submitButton);
     }
@@ -457,7 +438,7 @@ async function deleteUser(id) {
         showErrorMessage('User deleted successfully', 'success');
     } catch (error) {
         console.error('Error deleting user:', error);
-        showErrorMessage(error.message || 'Failed to delete user');
+        showErrorMessage(error.message);
     } finally {
         hideLoadingState(row);
     }
@@ -468,7 +449,7 @@ function generateUsersHTML(users) {
     if (!Array.isArray(users) || users.length === 0) {
         return `
             <tr>
-                <td colspan="6" class="no-data">
+                <td colspan="5" class="no-data">
                     <i data-feather="inbox"></i>
                     <p>No users found</p>
                 </td>
@@ -482,11 +463,7 @@ function generateUsersHTML(users) {
             name: String(user.name || '').replace(/[<>'"]/g, ''),
             email: String(user.email || '').replace(/[<>'"]/g, ''),
             role: String(user.role || '').replace(/[<>'"]/g, ''),
-            department: String(user.department || '').replace(/[<>'"]/g, ''),
-            status: String(user.status || 'inactive').replace(/[<>'"]/g, ''),
-            department_id: String(user.department_id || '').replace(/[<>'"]/g, ''),
-            cpf: String(user.cpf || '').replace(/[<>'"]/g, ''),
-            phone: String(user.phone || '').replace(/[<>'"]/g, '')
+            status: String(user.status || 'inactive').replace(/[<>'"]/g, '')
         };
 
         return `
@@ -499,7 +476,6 @@ function generateUsersHTML(users) {
                 </td>
                 <td>${sanitizedUser.email}</td>
                 <td>${sanitizedUser.role}</td>
-                <td>${sanitizedUser.department}</td>
                 <td>
                     <span class="status-badge ${sanitizedUser.status === 'active' ? 'active' : 'inactive'}">
                         ${sanitizedUser.status.charAt(0).toUpperCase() + sanitizedUser.status.slice(1)}
@@ -550,7 +526,6 @@ function showEditUserModal(id, userData) {
     document.getElementById('editUserEmail').value = userData.email || '';
     document.getElementById('editUserCPF').value = userData.cpf || '';
     document.getElementById('editUserPhone').value = userData.phone || '';
-    document.getElementById('editUserDepartment').value = userData.department_id || '';
     document.getElementById('editUserRole').value = userData.role || 'user';
     document.getElementById('editUserStatus').value = userData.status || 'active';
     
@@ -560,100 +535,22 @@ function showEditUserModal(id, userData) {
 // Initialize users list when page loads
 document.addEventListener('DOMContentLoaded', loadUsers);
 
-// Global error handler for unhandled promise rejections
-window.addEventListener('unhandledrejection', function(event) {
-    event.preventDefault();
-    console.error('Unhandled promise rejection:', event.reason);
-    showErrorMessage('An unexpected error occurred. Please try again.');
-});
-
 // Close modals when clicking outside
 window.addEventListener('click', function(event) {
     if (event.target.classList.contains('modal')) {
         event.target.style.display = 'none';
     }
 });
+
+// Global error handler for unhandled promise rejections
+window.addEventListener('unhandledrejection', function(event) {
+    event.preventDefault();
+    console.error('Unhandled promise rejection:', event.reason);
+    showErrorMessage('An unexpected error occurred. Please try again.');
+});
 </script>
 
 <style>
-.error-state {
-    text-align: center;
-    padding: 2rem;
-    color: var(--text-secondary);
-}
-
-.error-state i {
-    font-size: 2rem;
-    margin-bottom: 1rem;
-    color: var(--danger-color);
-}
-
-.toast {
-    position: fixed;
-    bottom: 2rem;
-    left: 50%;
-    transform: translateX(-50%) translateY(100%);
-    background-color: var(--danger-color);
-    color: white;
-    padding: 0.75rem 1.5rem;
-    border-radius: 4px;
-    z-index: 1000;
-    opacity: 0;
-    transition: all 0.3s ease;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
-}
-
-.toast.success {
-    background-color: var(--success-color);
-}
-
-.toast.show {
-    transform: translateX(-50%) translateY(0);
-    opacity: 1;
-}
-
-.loading {
-    position: relative;
-    pointer-events: none;
-    opacity: 0.7;
-}
-
-.loading-spinner {
-    width: 20px;
-    height: 20px;
-    border: 2px solid var(--accent-color);
-    border-top-color: transparent;
-    border-radius: 50%;
-    animation: spin 1s linear infinite;
-    margin: 0 auto;
-}
-
-@keyframes spin {
-    to {
-        transform: rotate(360deg);
-    }
-}
-
-tr.loading td {
-    position: relative;
-}
-
-tr.loading td:first-child::after {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background: rgba(0, 0, 0, 0.1);
-}
-
-button.loading {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.5rem;
-}
-
 .users-table {
     width: 100%;
     overflow-x: auto;
@@ -718,6 +615,113 @@ th {
 .table-actions {
     display: flex;
     gap: 0.5rem;
+}
+
+.error-state {
+    text-align: center;
+    padding: 2rem;
+    color: var(--text-secondary);
+}
+
+.error-state i {
+    font-size: 2rem;
+    margin-bottom: 1rem;
+    color: var(--danger-color);
+}
+
+.page-container {
+    padding: 2rem;
+}
+
+.header-actions {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 2rem;
+}
+
+.header-actions h2 {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.content-grid {
+    background-color: var(--bg-secondary);
+    border-radius: 8px;
+    padding: 1.5rem;
+}
+
+.loading {
+    position: relative;
+    pointer-events: none;
+    opacity: 0.7;
+}
+
+.loading-spinner {
+    width: 20px;
+    height: 20px;
+    border: 2px solid var(--accent-color);
+    border-top-color: transparent;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+    display: inline-block;
+    vertical-align: middle;
+}
+
+@keyframes spin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+tr.loading td {
+    position: relative;
+}
+
+tr.loading td:first-child::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.1);
+}
+
+.toast {
+    position: fixed;
+    bottom: 2rem;
+    left: 50%;
+    transform: translateX(-50%) translateY(100%);
+    background-color: var(--danger-color);
+    color: white;
+    padding: 0.75rem 1.5rem;
+    border-radius: 4px;
+    z-index: 1000;
+    opacity: 0;
+    transition: all 0.3s ease;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+}
+
+.toast.success {
+    background-color: var(--success-color);
+}
+
+.toast.show {
+    transform: translateX(-50%) translateY(0);
+    opacity: 1;
+}
+
+.no-data {
+    text-align: center;
+    padding: 2rem;
+    color: var(--text-secondary);
+}
+
+.no-data i {
+    font-size: 3rem;
+    margin-bottom: 1rem;
 }
 </style>
 {% endblock %}
