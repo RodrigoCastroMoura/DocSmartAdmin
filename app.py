@@ -103,6 +103,11 @@ def logout():
 def dashboard():
     return render_template('dashboard.html')
 
+@app.route('/departments')
+@login_required
+def departments():
+    return render_template('departments.html', departments=[])
+
 # Users CRUD routes
 @app.route('/users')
 @login_required
@@ -115,8 +120,10 @@ def users():
             return render_template('users.html', users=[])
 
         response = requests.get(
-            f"{USERS_URL}/companies/{company_id}/users",
-            headers=headers
+            f"{USERS_URL}",
+            params={'company_id': company_id},
+            headers=headers,
+            timeout=10
         )
         
         if response.status_code == 200:
@@ -127,6 +134,9 @@ def users():
             users_data = []
             
         return render_template('users.html', users=users_data)
+    except requests.Timeout:
+        flash('Request timed out while loading users', 'error')
+        return render_template('users.html', users=[])
     except requests.RequestException as e:
         print(f"Network error fetching users: {e}")
         flash('Network error while loading users', 'error')
@@ -148,9 +158,10 @@ def user_api():
     if request.method == 'GET':
         try:
             response = requests.get(
-                f"{USERS_URL}/companies/{company_id}/users",
+                f"{USERS_URL}",
+                params={'company_id': company_id},
                 headers=headers,
-                timeout=10  # Add timeout
+                timeout=10
             )
             
             if response.status_code == 200:
@@ -240,6 +251,7 @@ def user_detail_api(user_id):
             response = requests.delete(
                 f"{USERS_URL}/{user_id}",
                 headers=headers,
+                params={'company_id': company_id},
                 timeout=10
             )
             
