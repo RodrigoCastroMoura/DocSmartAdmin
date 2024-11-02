@@ -108,6 +108,16 @@ def dashboard():
 def departments():
     return render_template('departments.html', departments=[])
 
+@app.route('/categories')
+@login_required
+def categories():
+    return render_template('categories.html', categories=[], departments=[])
+
+@app.route('/documents')
+@login_required
+def documents():
+    return render_template('documents.html', documents=[])
+
 # Users CRUD routes
 @app.route('/users')
 @login_required
@@ -120,7 +130,7 @@ def users():
             return render_template('users.html', users=[])
 
         response = requests.get(
-            f"{USERS_URL}",
+            USERS_URL,
             params={'company_id': company_id},
             headers=headers,
             timeout=10
@@ -158,7 +168,7 @@ def user_api():
     if request.method == 'GET':
         try:
             response = requests.get(
-                f"{USERS_URL}",
+                USERS_URL,
                 params={'company_id': company_id},
                 headers=headers,
                 timeout=10
