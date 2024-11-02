@@ -150,13 +150,30 @@ setupFormValidation('editUserForm', {
 async function loadUsers() {
     const contentDiv = document.getElementById('usersContent');
     try {
-        window.showLoading(contentDiv);  // Use window.showLoading
-        const response = await fetch('/api/users');
+        window.showLoading(contentDiv);
+        const response = await fetch('/api/users', {
+            headers: {
+                'Accept': 'application/json',
+                'Content-Type': 'application/json'
+            }
+        });
+
         if (!response.ok) {
-            const errorData = await response.json();
-            throw new Error(errorData.error || 'Failed to load users');
+            let errorMessage = 'Failed to load users';
+            try {
+                const errorData = await response.json();
+                errorMessage = errorData.error || errorMessage;
+            } catch (e) {
+                console.error('Error parsing error response:', e);
+            }
+            throw new Error(errorMessage);
         }
+
         const data = await response.json();
+        if (!data || !Array.isArray(data)) {
+            throw new Error('Invalid response format from server');
+        }
+
         document.getElementById('usersTableBody').innerHTML = generateUsersHTML(data);
         feather.replace();
     } catch (error) {
@@ -166,17 +183,17 @@ async function loadUsers() {
             <tr>
                 <td colspan="6" class="no-data">
                     <i data-feather="alert-circle"></i>
-                    <p>Error loading users. Please try again.</p>
+                    <p>${error.message || 'Error loading users. Please try again.'}</p>
                 </td>
             </tr>`;
         feather.replace();
     } finally {
-        window.hideLoading(contentDiv);  // Use window.hideLoading
+        window.hideLoading(contentDiv);
     }
 }
 
 function generateUsersHTML(users) {
-    if (!users || users.length === 0) {
+    if (!Array.isArray(users) || users.length === 0) {
         return `
             <tr>
                 <td colspan="6" class="no-data">
@@ -186,34 +203,42 @@ function generateUsersHTML(users) {
             </tr>`;
     }
 
-    return users.map(user => `
-        <tr data-id="${user.id}">
-            <td>
-                <div class="user-cell">
-                    <div class="user-avatar">${user.name?.slice(0, 2).toUpperCase()}</div>
-                    <span>${user.name}</span>
-                </div>
-            </td>
-            <td>${user.email}</td>
-            <td>${user.role}</td>
-            <td>${user.department || ''}</td>
-            <td>
-                <span class="status-badge ${user.active ? 'active' : 'inactive'}">
-                    ${user.active ? 'Active' : 'Inactive'}
-                </span>
-            </td>
-            <td>
-                <div class="table-actions">
-                    <button class="action-btn" onclick='showEditUserModal("${user.id}", ${JSON.stringify(user)})'>
-                        <i data-feather="edit-2"></i>
-                    </button>
-                    <button class="action-btn danger" onclick="deleteUser('${user.id}')">
-                        <i data-feather="trash-2"></i>
-                    </button>
-                </div>
-            </td>
-        </tr>
-    `).join('');
+    return users.map(user => {
+        const name = user.name || 'Unnamed User';
+        const email = user.email || 'No email';
+        const role = user.role || 'No role';
+        const department = user.department || 'No department';
+        const active = Boolean(user.active);
+        
+        return `
+            <tr data-id="${user.id}">
+                <td>
+                    <div class="user-cell">
+                        <div class="user-avatar">${name.slice(0, 2).toUpperCase()}</div>
+                        <span>${name}</span>
+                    </div>
+                </td>
+                <td>${email}</td>
+                <td>${role}</td>
+                <td>${department}</td>
+                <td>
+                    <span class="status-badge ${active ? 'active' : 'inactive'}">
+                        ${active ? 'Active' : 'Inactive'}
+                    </span>
+                </td>
+                <td>
+                    <div class="table-actions">
+                        <button class="action-btn" onclick='showEditUserModal("${user.id}", ${JSON.stringify(user)})'>
+                            <i data-feather="edit-2"></i>
+                        </button>
+                        <button class="action-btn danger" onclick="deleteUser('${user.id}')">
+                            <i data-feather="trash-2"></i>
+                        </button>
+                    </div>
+                </td>
+            </tr>
+        `;
+    }).join('');
 }
 
 async function createUser(event) {
@@ -234,6 +259,7 @@ async function createUser(event) {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
+                'Accept': 'application/json'
             },
             body: JSON.stringify(data)
         });
@@ -247,6 +273,7 @@ async function createUser(event) {
         hideModal('addUserModal');
         form.reset();
         await loadUsers();
+        showSuccessMessage('User created successfully');
     } catch (error) {
         console.error('Error creating user:', error);
         showErrorMessage(error.message || 'Failed to create user');
@@ -274,6 +301,7 @@ async function updateUser(event) {
             method: 'PUT',
             headers: {
                 'Content-Type': 'application/json',
+                'Accept': 'application/json'
             },
             body: JSON.stringify(data)
         });
@@ -286,6 +314,7 @@ async function updateUser(event) {
         await response.json();
         hideModal('editUserModal');
         await loadUsers();
+        showSuccessMessage('User updated successfully');
     } catch (error) {
         console.error('Error updating user:', error);
         showErrorMessage(error.message || 'Failed to update user');
@@ -304,15 +333,25 @@ async function deleteUser(id) {
 
     try {
         const response = await fetch(`/api/users/${id}`, {
-            method: 'DELETE'
+            method: 'DELETE',
+            headers: {
+                'Accept': 'application/json'
+            }
         });
 
         if (!response.ok) {
-            const errorData = await response.json();
-            throw new Error(errorData.error || 'Failed to delete user');
+            let errorMessage = 'Failed to delete user';
+            try {
+                const errorData = await response.json();
+                errorMessage = errorData.error || errorMessage;
+            } catch (e) {
+                console.error('Error parsing error response:', e);
+            }
+            throw new Error(errorMessage);
         }
 
         await loadUsers();
+        showSuccessMessage('User deleted successfully');
     } catch (error) {
         console.error('Error deleting user:', error);
         showErrorMessage(error.message || 'Failed to delete user');
@@ -323,7 +362,12 @@ async function deleteUser(id) {
 
 async function fetchDepartments() {
     try {
-        const response = await fetch('/api/departments');
+        const response = await fetch('/api/departments', {
+            headers: {
+                'Accept': 'application/json'
+            }
+        });
+
         if (!response.ok) {
             const errorData = await response.json();
             throw new Error(errorData.error || 'Failed to fetch departments');
@@ -334,9 +378,10 @@ async function fetchDepartments() {
         
         departmentSelects.forEach(selectId => {
             const select = document.getElementById(selectId);
-            select.innerHTML = departments.map(dept => 
-                `<option value="${dept.id}">${dept.name}</option>`
-            ).join('');
+            select.innerHTML = `<option value="">Select Department</option>` + 
+                departments.map(dept => 
+                    `<option value="${dept.id}">${dept.name}</option>`
+                ).join('');
         });
     } catch (error) {
         console.error('Error fetching departments:', error);
@@ -362,10 +407,10 @@ function showAddUserModal() {
 
 function showEditUserModal(id, user) {
     document.getElementById('editUserId').value = id;
-    document.getElementById('editUserName').value = user.name;
-    document.getElementById('editUserEmail').value = user.email;
-    document.getElementById('editUserDepartment').value = user.department_id;
-    document.getElementById('editUserRole').value = user.role;
+    document.getElementById('editUserName').value = user.name || '';
+    document.getElementById('editUserEmail').value = user.email || '';
+    document.getElementById('editUserDepartment').value = user.department_id || '';
+    document.getElementById('editUserRole').value = user.role || 'user';
     showModal('editUserModal');
 }
 

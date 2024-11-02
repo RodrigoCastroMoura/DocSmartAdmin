@@ -42,8 +42,16 @@ def login_required(f):
 def get_auth_headers():
     return {
         'Authorization': f'Bearer {session["access_token"]}',
-        'Content-Type': 'application/json'
+        'Content-Type': 'application/json',
+        'Accept': 'application/json'
     }
+
+def handle_api_error(response, default_message='An error occurred'):
+    try:
+        error_data = response.json()
+        return error_data.get('error', default_message)
+    except:
+        return default_message
 
 @app.route('/')
 def index():
@@ -78,7 +86,7 @@ def login():
                 session['company_id'] = data['user'].get('company_id')
                 return redirect(url_for('dashboard'))
             else:
-                error_msg = response.json().get('error', 'Invalid credentials')
+                error_msg = handle_api_error(response, 'Invalid credentials')
                 flash(error_msg, 'error')
         except Exception as e:
             print(f"Login error: {e}")
@@ -118,43 +126,10 @@ def categories():
 def documents():
     return render_template('documents.html', documents=[])
 
-# Users CRUD routes
 @app.route('/users')
 @login_required
 def users():
-    try:
-        headers = get_auth_headers()
-        company_id = session.get('company_id')
-        if not company_id:
-            flash('Company ID not found', 'error')
-            return render_template('users.html', users=[])
-
-        response = requests.get(
-            USERS_URL,
-            params={'company_id': company_id},
-            headers=headers,
-            timeout=10
-        )
-        
-        if response.status_code == 200:
-            users_data = response.json()
-        else:
-            error_msg = response.json().get('error', 'Failed to fetch users')
-            flash(error_msg, 'error')
-            users_data = []
-            
-        return render_template('users.html', users=users_data)
-    except requests.Timeout:
-        flash('Request timed out while loading users', 'error')
-        return render_template('users.html', users=[])
-    except requests.RequestException as e:
-        print(f"Network error fetching users: {e}")
-        flash('Network error while loading users', 'error')
-        return render_template('users.html', users=[])
-    except Exception as e:
-        print(f"Error fetching users: {e}")
-        flash('Error loading users', 'error')
-        return render_template('users.html', users=[])
+    return render_template('users.html', users=[])
 
 @app.route('/api/users', methods=['GET', 'POST'])
 @login_required
@@ -168,8 +143,7 @@ def user_api():
     if request.method == 'GET':
         try:
             response = requests.get(
-                USERS_URL,
-                params={'company_id': company_id},
+                f"{USERS_URL}/companies/{company_id}/users",
                 headers=headers,
                 timeout=10
             )
@@ -177,7 +151,7 @@ def user_api():
             if response.status_code == 200:
                 return jsonify(response.json()), 200
             else:
-                error_msg = response.json().get('error', 'Failed to fetch users')
+                error_msg = handle_api_error(response, 'Failed to fetch users')
                 return jsonify({'error': error_msg}), response.status_code
                 
         except requests.Timeout:
@@ -206,7 +180,7 @@ def user_api():
             if response.status_code in [200, 201]:
                 return jsonify(response.json()), response.status_code
             else:
-                error_msg = response.json().get('error', 'Failed to create user')
+                error_msg = handle_api_error(response, 'Failed to create user')
                 return jsonify({'error': error_msg}), response.status_code
                 
         except requests.Timeout:
@@ -244,7 +218,7 @@ def user_detail_api(user_id):
             if response.status_code == 200:
                 return jsonify(response.json()), 200
             else:
-                error_msg = response.json().get('error', 'Failed to update user')
+                error_msg = handle_api_error(response, 'Failed to update user')
                 return jsonify({'error': error_msg}), response.status_code
                 
         except requests.Timeout:
@@ -266,9 +240,9 @@ def user_detail_api(user_id):
             )
             
             if response.status_code in [200, 204]:
-                return '', response.status_code
+                return '', 204
             else:
-                error_msg = response.json().get('error', 'Failed to delete user')
+                error_msg = handle_api_error(response, 'Failed to delete user')
                 return jsonify({'error': error_msg}), response.status_code
                 
         except requests.Timeout:
@@ -279,6 +253,37 @@ def user_detail_api(user_id):
         except Exception as e:
             print(f"Error deleting user: {e}")
             return jsonify({'error': 'Internal server error'}), 500
+
+@app.route('/api/departments', methods=['GET'])
+@login_required
+def department_api():
+    headers = get_auth_headers()
+    company_id = session.get('company_id')
+
+    if not company_id:
+        return jsonify({'error': 'Company ID not found'}), 400
+    
+    try:
+        response = requests.get(
+            f"{DEPARTMENTS_URL}/companies/{company_id}/departments",
+            headers=headers,
+            timeout=10
+        )
+        
+        if response.status_code == 200:
+            return jsonify(response.json()), 200
+        else:
+            error_msg = handle_api_error(response, 'Failed to fetch departments')
+            return jsonify({'error': error_msg}), response.status_code
+            
+    except requests.Timeout:
+        return jsonify({'error': 'Request timed out'}), 504
+    except requests.RequestException as e:
+        print(f"Network error fetching departments: {e}")
+        return jsonify({'error': 'Network error occurred'}), 503
+    except Exception as e:
+        print(f"Error fetching departments: {e}")
+        return jsonify({'error': 'Internal server error'}), 500
 
 if __name__ == '__main__':
     app.run(host="0.0.0.0", port=5000, debug=True)
