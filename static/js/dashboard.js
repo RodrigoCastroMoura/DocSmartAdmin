@@ -6,7 +6,7 @@ document.addEventListener('DOMContentLoaded', function() {
         loadingDiv.className = 'loading-indicator';
         loadingDiv.innerHTML = `
             <div class="spinner"></div>
-            <span>Carregando...</span>
+            <span>Loading...</span>
         `;
         element.classList.add('loading');
         element.appendChild(loadingDiv);
@@ -39,7 +39,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 }
                 return true;
             } else {
-                const errorMessage = data.error || 'Operação falhou';
+                const errorMessage = data.error || 'Operation failed';
                 showErrorMessage(errorMessage);
                 if (errorCallback) {
                     await errorCallback(data);
@@ -47,8 +47,8 @@ document.addEventListener('DOMContentLoaded', function() {
                 return false;
             }
         } catch (error) {
-            console.error('Erro ao processar resposta da API:', error);
-            showErrorMessage('Ocorreu um erro inesperado');
+            console.error('API response handling error:', error);
+            showErrorMessage('An unexpected error occurred');
             if (errorCallback) {
                 await errorCallback(error);
             }
@@ -87,10 +87,10 @@ document.addEventListener('DOMContentLoaded', function() {
             if (modal) {
                 modal.style.display = 'block';
             } else {
-                console.error(`Modal com id ${modalId} não encontrado`);
+                console.error(`Modal with id ${modalId} not found`);
             }
         } catch (error) {
-            console.error('Erro ao exibir modal:', error);
+            console.error('Error showing modal:', error);
         }
     }
 
@@ -100,10 +100,10 @@ document.addEventListener('DOMContentLoaded', function() {
             if (modal) {
                 modal.style.display = 'none';
             } else {
-                console.error(`Modal com id ${modalId} não encontrado`);
+                console.error(`Modal with id ${modalId} not found`);
             }
         } catch (error) {
-            console.error('Erro ao esconder modal:', error);
+            console.error('Error hiding modal:', error);
         }
     }
 
@@ -116,17 +116,17 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Global error handler for fetch operations
     window.addEventListener('unhandledrejection', function(event) {
-        console.error('Erro não tratado:', event.reason);
-        showErrorMessage('Ocorreu um erro inesperado. Por favor, tente novamente.');
+        console.error('Unhandled promise rejection:', event.reason);
+        showErrorMessage('An unexpected error occurred. Please try again.');
         event.preventDefault();
     });
 
     // Network status monitoring
     window.addEventListener('online', function() {
-        showErrorMessage('Conexão restaurada');
+        showErrorMessage('Connection restored');
     });
 
     window.addEventListener('offline', function() {
-        showErrorMessage('Sem conexão com a internet');
+        showErrorMessage('No internet connection');
     });
 });
