@@ -4,14 +4,9 @@
 <div class="page-container">
     <div class="header-actions">
         <h2><i data-feather="users"></i> Users</h2>
-        <div class="button-group">
-            <button class="action-btn" onclick="loadUsers()">
-                <i data-feather="refresh-cw"></i> Load Users
-            </button>
-            <button class="action-btn primary" onclick="showAddUserModal()">
-                <i data-feather="plus"></i> Add User
-            </button>
-        </div>
+        <button class="action-btn primary" onclick="showAddUserModal()">
+            <i data-feather="plus"></i> Add User
+        </button>
     </div>
     <div class="content-grid" id="usersContent">
         <div class="users-table">
@@ -21,17 +16,38 @@
                         <th>User</th>
                         <th>Email</th>
                         <th>Role</th>
+                        <th>Department</th>
                         <th>Status</th>
                         <th>Actions</th>
                     </tr>
                 </thead>
                 <tbody id="usersTableBody">
+                    {% for user in users %}
                     <tr>
-                        <td colspan="5" class="no-data">
-                            <i data-feather="inbox"></i>
-                            <p>Click 'Load Users' to view the list</p>
+                        <td>
+                            <div class="user-cell">
+                                <div class="user-avatar">{{ user.name[:2].upper() }}</div>
+                                <span>{{ user.name }}</span>
+                            </div>
+                        </td>
+                        <td>{{ user.email }}</td>
+                        <td>{{ user.role }}</td>
+                        <td>{{ user.department }}</td>
+                        <td><span class="status-badge {% if user.active %}active{% else %}inactive{% endif %}">
+                            {% if user.active %}Active{% else %}Inactive{% endif %}
+                        </span></td>
+                        <td>
+                            <div class="table-actions">
+                                <button class="action-btn" onclick="showEditUserModal('{{ user.id }}', {{ user|tojson|safe }})">
+                                    <i data-feather="edit-2"></i>
+                                </button>
+                                <button class="action-btn danger" onclick="deleteUser('{{ user.id }}')">
+                                    <i data-feather="trash-2"></i>
+                                </button>
+                            </div>
                         </td>
                     </tr>
+                    {% endfor %}
                 </tbody>
             </table>
         </div>
@@ -52,16 +68,8 @@
                 <input type="email" id="userEmail" name="email" required>
             </div>
             <div class="form-group">
-                <label for="userPassword">Password</label>
-                <input type="password" id="userPassword" name="password" required>
-            </div>
-            <div class="form-group">
-                <label for="userCPF">CPF</label>
-                <input type="text" id="userCPF" name="cpf" required>
-            </div>
-            <div class="form-group">
-                <label for="userPhone">Phone</label>
-                <input type="text" id="userPhone" name="phone">
+                <label for="userDepartment">Department</label>
+                <select id="userDepartment" name="department_id" required></select>
             </div>
             <div class="form-group">
                 <label for="userRole">Role</label>
@@ -93,25 +101,14 @@
                 <input type="email" id="editUserEmail" name="email" required>
             </div>
             <div class="form-group">
-                <label for="editUserCPF">CPF</label>
-                <input type="text" id="editUserCPF" name="cpf" required>
-            </div>
-            <div class="form-group">
-                <label for="editUserPhone">Phone</label>
-                <input type="text" id="editUserPhone" name="phone">
+                <label for="editUserDepartment">Department</label>
+                <select id="editUserDepartment" name="department_id" required></select>
             </div>
             <div class="form-group">
                 <label for="editUserRole">Role</label>
                 <select id="editUserRole" name="role" required>
                     <option value="user">User</option>
                     <option value="admin">Admin</option>
-                </select>
-            </div>
-            <div class="form-group">
-                <label for="editUserStatus">Status</label>
-                <select id="editUserStatus" name="status" required>
-                    <option value="active">Active</option>
-                    <option value="inactive">Inactive</option>
                 </select>
             </div>
             <div class="modal-actions">
@@ -124,7 +121,7 @@
 
 <script src="{{ url_for('static', filename='js/validation.js') }}"></script>
 <script>
-// Form validation setup
+// Setup form validation
 setupFormValidation('addUserForm', {
     'userName': [
         ValidationRules.required,
@@ -134,16 +131,6 @@ setupFormValidation('addUserForm', {
     'userEmail': [
         ValidationRules.required,
         ValidationRules.email
-    ],
-    'userPassword': [
-        ValidationRules.required
-    ],
-    'userCPF': [
-        ValidationRules.required,
-        ValidationRules.minLength(11)
-    ],
-    'userRole': [
-        ValidationRules.required
     ]
 });
 
@@ -156,45 +143,81 @@ setupFormValidation('editUserForm', {
     'editUserEmail': [
         ValidationRules.required,
         ValidationRules.email
-    ],
-    'editUserCPF': [
-        ValidationRules.required,
-        ValidationRules.minLength(11)
-    ],
-    'editUserRole': [
-        ValidationRules.required
-    ],
-    'editUserStatus': [
-        ValidationRules.required
     ]
 });
 
 async function loadUsers() {
     const contentDiv = document.getElementById('usersContent');
-    const tableBody = document.getElementById('usersTableBody');
     showLoading(contentDiv);
 
     try {
-        const companyId = sessionStorage.getItem('company_id');
-        if (!companyId) {
-            throw new Error('Company ID not found');
-        }
-
         const response = await fetch('/api/users');
-        if (!response.ok) {
-            const data = await response.json().catch(() => ({}));
-            throw new Error(data.error || `Failed to fetch users: ${response.status}`);
-        }
-        
-        const data = await response.json();
-        tableBody.innerHTML = generateUsersHTML(data.users || []);
-        feather.replace();
-    } catch (error) {
-        console.error('Error loading users:', error);
-        showErrorMessage(error.message || 'Failed to load users');
-        tableBody.innerHTML = '<tr><td colspan="5" class="error-state">Failed to load users</td></tr>';
+        await handleApiResponse(response, async (data) => {
+            document.getElementById('usersTableBody').innerHTML = generateUsersHTML(data);
+            feather.replace();
+        });
     } finally {
         hideLoading(contentDiv);
+    }
+}
+
+function generateUsersHTML(users) {
+    if (!users || users.length === 0) {
+        return `
+            <tr>
+                <td colspan="6" class="no-data">
+                    <i data-feather="inbox"></i>
+                    <p>No users found</p>
+                </td>
+            </tr>`;
+    }
+
+    return users.map(user => `
+        <tr>
+            <td>
+                <div class="user-cell">
+                    <div class="user-avatar">${user.name.slice(0, 2).toUpperCase()}</div>
+                    <span>${user.name}</span>
+                </div>
+            </td>
+            <td>${user.email}</td>
+            <td>${user.role}</td>
+            <td>${user.department || ''}</td>
+            <td>
+                <span class="status-badge ${user.active ? 'active' : 'inactive'}">
+                    ${user.active ? 'Active' : 'Inactive'}
+                </span>
+            </td>
+            <td>
+                <div class="table-actions">
+                    <button class="action-btn" onclick='showEditUserModal("${user.id}", ${JSON.stringify(user)})'>
+                        <i data-feather="edit-2"></i>
+                    </button>
+                    <button class="action-btn danger" onclick='deleteUser("${user.id}")'>
+                        <i data-feather="trash-2"></i>
+                    </button>
+                </div>
+            </td>
+        </tr>
+    `).join('');
+}
+
+// Fetch departments for dropdowns
+async function fetchDepartments() {
+    try {
+        const response = await fetch('/api/departments');
+        await handleApiResponse(response, async (departments) => {
+            const departmentSelects = ['userDepartment', 'editUserDepartment'];
+            
+            departmentSelects.forEach(selectId => {
+                const select = document.getElementById(selectId);
+                select.innerHTML = departments.map(dept => 
+                    `<option value="${dept.id}">${dept.name}</option>`
+                ).join('');
+            });
+        });
+    } catch (error) {
+        showErrorMessage('Error fetching departments');
     }
 }
 
@@ -206,38 +229,27 @@ async function createUser(event) {
     if (!validateForm(form)) {
         return;
     }
-
-    showLoading(submitButton.closest('.modal-content'));
+    
+    const formData = new FormData(form);
+    const data = Object.fromEntries(formData);
+    showLoading(submitButton);
 
     try {
-        const formData = new FormData(form);
-        const data = {
-            ...Object.fromEntries(formData),
-            company_id: sessionStorage.getItem('company_id')
-        };
-
         const response = await fetch('/api/users', {
             method: 'POST',
             headers: {
-                'Content-Type': 'application/json'
+                'Content-Type': 'application/json',
             },
             body: JSON.stringify(data)
         });
 
-        const responseData = await response.json();
-        if (!response.ok) {
-            throw new Error(responseData.error || 'Failed to create user');
-        }
-
-        hideModal('addUserModal');
-        form.reset();
-        await loadUsers();
-        showErrorMessage('User created successfully', 'success');
-    } catch (error) {
-        console.error('Error creating user:', error);
-        showErrorMessage(error.message);
+        await handleApiResponse(response, async () => {
+            hideModal('addUserModal');
+            form.reset();
+            await loadUsers();
+        });
     } finally {
-        hideLoading(submitButton.closest('.modal-content'));
+        hideLoading(submitButton);
     }
 }
 
@@ -251,41 +263,25 @@ async function updateUser(event) {
     }
     
     const id = document.getElementById('editUserId').value;
-    if (!id) {
-        showErrorMessage('Invalid user ID');
-        return;
-    }
-    
-    showLoading(submitButton.closest('.modal-content'));
+    const formData = new FormData(form);
+    const data = Object.fromEntries(formData);
+    showLoading(submitButton);
 
     try {
-        const formData = new FormData(form);
-        const data = {
-            ...Object.fromEntries(formData),
-            company_id: sessionStorage.getItem('company_id')
-        };
-        
         const response = await fetch(`/api/users/${id}`, {
             method: 'PUT',
             headers: {
-                'Content-Type': 'application/json'
+                'Content-Type': 'application/json',
             },
             body: JSON.stringify(data)
         });
 
-        const responseData = await response.json();
-        if (!response.ok) {
-            throw new Error(responseData.error || 'Failed to update user');
-        }
-
-        hideModal('editUserModal');
-        await loadUsers();
-        showErrorMessage('User updated successfully', 'success');
-    } catch (error) {
-        console.error('Error updating user:', error);
-        showErrorMessage(error.message);
+        await handleApiResponse(response, async () => {
+            hideModal('editUserModal');
+            await loadUsers();
+        });
     } finally {
-        hideLoading(submitButton.closest('.modal-content'));
+        hideLoading(submitButton);
     }
 }
 
@@ -302,89 +298,23 @@ async function deleteUser(id) {
             method: 'DELETE'
         });
 
-        if (!response.ok) {
-            const data = await response.json().catch(() => ({}));
-            throw new Error(data.error || 'Failed to delete user');
-        }
-
-        await loadUsers();
-        showErrorMessage('User deleted successfully', 'success');
-    } catch (error) {
-        console.error('Error deleting user:', error);
-        showErrorMessage(error.message);
+        await handleApiResponse(response, async () => {
+            await loadUsers();
+        });
     } finally {
         hideLoading(row);
     }
 }
 
-function generateUsersHTML(users) {
-    if (!Array.isArray(users) || users.length === 0) {
-        return `
-            <tr>
-                <td colspan="5" class="no-data">
-                    <i data-feather="inbox"></i>
-                    <p>No users found</p>
-                </td>
-            </tr>`;
-    }
-
-    return users.map(user => {
-        const sanitizedUser = {
-            id: String(user.id || '').replace(/[<>'"]/g, ''),
-            name: String(user.name || '').replace(/[<>'"]/g, ''),
-            email: String(user.email || '').replace(/[<>'"]/g, ''),
-            role: String(user.role || '').replace(/[<>'"]/g, ''),
-            status: String(user.status || 'inactive').replace(/[<>'"]/g, ''),
-            cpf: String(user.cpf || '').replace(/[<>'"]/g, ''),
-            phone: String(user.phone || '').replace(/[<>'"]/g, '')
-        };
-
-        return `
-            <tr data-id="${sanitizedUser.id}">
-                <td>
-                    <div class="user-cell">
-                        <div class="user-avatar">${sanitizedUser.name.slice(0, 2).toUpperCase()}</div>
-                        <span>${sanitizedUser.name}</span>
-                    </div>
-                </td>
-                <td>${sanitizedUser.email}</td>
-                <td>${sanitizedUser.role}</td>
-                <td>
-                    <span class="status-badge ${sanitizedUser.status === 'active' ? 'active' : 'inactive'}">
-                        ${sanitizedUser.status.charAt(0).toUpperCase() + sanitizedUser.status.slice(1)}
-                    </span>
-                </td>
-                <td>
-                    <div class="table-actions">
-                        <button class="action-btn" onclick='showEditUserModal("${sanitizedUser.id}", ${JSON.stringify(sanitizedUser)})'>
-                            <i data-feather="edit-2"></i>
-                        </button>
-                        <button class="action-btn danger" onclick="deleteUser('${sanitizedUser.id}')">
-                            <i data-feather="trash-2"></i>
-                        </button>
-                    </div>
-                </td>
-            </tr>`;
-    }).join('');
-}
-
 function showModal(modalId) {
     document.getElementById(modalId).style.display = 'block';
+    if (modalId === 'addUserModal' || modalId === 'editUserModal') {
+        fetchDepartments();
+    }
 }
 
 function hideModal(modalId) {
     document.getElementById(modalId).style.display = 'none';
-}
-
-function showEditUserModal(id, userData) {
-    document.getElementById('editUserId').value = id;
-    document.getElementById('editUserName').value = userData.name;
-    document.getElementById('editUserEmail').value = userData.email;
-    document.getElementById('editUserCPF').value = userData.cpf;
-    document.getElementById('editUserPhone').value = userData.phone || '';
-    document.getElementById('editUserRole').value = userData.role;
-    document.getElementById('editUserStatus').value = userData.status;
-    showModal('editUserModal');
 }
 
 function showAddUserModal() {
@@ -392,73 +322,86 @@ function showAddUserModal() {
     showModal('addUserModal');
 }
 
-// Store company_id in sessionStorage when user logs in
-document.addEventListener('DOMContentLoaded', function() {
-    const company_id = '{{ session.get("company_id", "") }}';
-    if (company_id) {
-        sessionStorage.setItem('company_id', company_id);
-    }
-});
+function showEditUserModal(id, user) {
+    document.getElementById('editUserId').value = id;
+    document.getElementById('editUserName').value = user.name;
+    document.getElementById('editUserEmail').value = user.email;
+    document.getElementById('editUserDepartment').value = user.department_id;
+    document.getElementById('editUserRole').value = user.role;
+    showModal('editUserModal');
+}
 </script>
 
 <style>
-.users-table {
-    width: 100%;
+.page-container {
+    padding: 2rem;
+}
+
+.header-actions {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 2rem;
+}
+
+.header-actions h2 {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.content-grid {
+    background-color: var(--bg-secondary);
+    border-radius: 8px;
+    padding: 1.5rem;
     overflow-x: auto;
 }
 
-.users-table table {
+table {
     width: 100%;
     border-collapse: collapse;
 }
 
-.users-table th,
-.users-table td {
+th, td {
     padding: 1rem;
     text-align: left;
     border-bottom: 1px solid var(--border-color);
 }
 
-.users-table th {
-    font-weight: 500;
+th {
     color: var(--text-secondary);
-    background-color: var(--bg-tertiary);
+    font-weight: 500;
 }
 
 .user-cell {
     display: flex;
     align-items: center;
-    gap: 1rem;
+    gap: 0.75rem;
 }
 
 .user-avatar {
-    width: 40px;
-    height: 40px;
+    width: 32px;
+    height: 32px;
     background-color: var(--accent-color);
     border-radius: 50%;
     display: flex;
     align-items: center;
     justify-content: center;
-    color: white;
-    font-weight: 500;
+    font-size: 0.875rem;
 }
 
 .status-badge {
-    display: inline-block;
-    padding: 0.25rem 0.75rem;
-    border-radius: 9999px;
+    padding: 0.25rem 0.5rem;
+    border-radius: 4px;
     font-size: 0.875rem;
-    background-color: var(--bg-tertiary);
 }
 
 .status-badge.active {
     background-color: var(--success-color);
-    color: white;
 }
 
 .status-badge.inactive {
     background-color: var(--danger-color);
-    color: white;
 }
 
 .table-actions {
@@ -466,21 +409,14 @@ document.addEventListener('DOMContentLoaded', function() {
     gap: 0.5rem;
 }
 
-.button-group {
-    display: flex;
-    gap: 1rem;
-}
-
-.no-data,
-.error-state {
+.no-data {
     text-align: center;
     padding: 2rem;
     color: var(--text-secondary);
 }
 
-.no-data i,
-.error-state i {
-    font-size: 2rem;
+.no-data i {
+    font-size: 3rem;
     margin-bottom: 1rem;
 }
 </style>
