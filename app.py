@@ -99,6 +99,21 @@ def logout():
 def dashboard():
     return render_template('dashboard.html')
 
+@app.route('/departments')
+@login_required
+def departments():
+    return render_template('departments.html', departments=[])
+
+@app.route('/categories')
+@login_required
+def categories():
+    return render_template('categories.html', categories=[])
+
+@app.route('/documents')
+@login_required
+def documents():
+    return render_template('documents.html', documents=[])
+
 # Users CRUD routes with multi-tenant support
 @app.route('/users')
 @login_required

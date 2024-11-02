@@ -29,7 +29,7 @@
                     <tr>
                         <td colspan="5" class="no-data">
                             <i data-feather="inbox"></i>
-                            <p>No users loaded</p>
+                            <p>Click 'Load Users' to view the list</p>
                         </td>
                     </tr>
                 </tbody>
@@ -169,7 +169,6 @@ setupFormValidation('editUserForm', {
     ]
 });
 
-// Load users with improved error handling
 async function loadUsers() {
     const contentDiv = document.getElementById('usersContent');
     const tableBody = document.getElementById('usersTableBody');
@@ -181,25 +180,24 @@ async function loadUsers() {
             throw new Error('Company ID not found');
         }
 
-        const response = await fetch(`/api/users?company_id=${companyId}`);
-        const data = await response.json();
-        
+        const response = await fetch('/api/users');
         if (!response.ok) {
+            const data = await response.json().catch(() => ({}));
             throw new Error(data.error || `Failed to fetch users: ${response.status}`);
         }
-
+        
+        const data = await response.json();
         tableBody.innerHTML = generateUsersHTML(data.users || []);
         feather.replace();
     } catch (error) {
         console.error('Error loading users:', error);
-        showErrorMessage(error.message);
+        showErrorMessage(error.message || 'Failed to load users');
         tableBody.innerHTML = '<tr><td colspan="5" class="error-state">Failed to load users</td></tr>';
     } finally {
         hideLoading(contentDiv);
     }
 }
 
-// Create user with improved error handling
 async function createUser(event) {
     event.preventDefault();
     const form = event.target;
@@ -243,7 +241,6 @@ async function createUser(event) {
     }
 }
 
-// Update user with improved error handling
 async function updateUser(event) {
     event.preventDefault();
     const form = event.target;
@@ -292,7 +289,6 @@ async function updateUser(event) {
     }
 }
 
-// Delete user with improved error handling
 async function deleteUser(id) {
     if (!confirm('Are you sure you want to delete this user?')) {
         return;
@@ -307,7 +303,8 @@ async function deleteUser(id) {
         });
 
         if (!response.ok) {
-            throw new Error('Failed to delete user');
+            const data = await response.json().catch(() => ({}));
+            throw new Error(data.error || 'Failed to delete user');
         }
 
         await loadUsers();
@@ -320,7 +317,6 @@ async function deleteUser(id) {
     }
 }
 
-// Helper functions
 function generateUsersHTML(users) {
     if (!Array.isArray(users) || users.length === 0) {
         return `
@@ -396,13 +392,6 @@ function showAddUserModal() {
     showModal('addUserModal');
 }
 
-// Error boundary for unhandled rejections
-window.addEventListener('unhandledrejection', function(event) {
-    event.preventDefault();
-    console.error('Unhandled promise rejection:', event.reason);
-    showErrorMessage('An unexpected error occurred');
-});
-
 // Store company_id in sessionStorage when user logs in
 document.addEventListener('DOMContentLoaded', function() {
     const company_id = '{{ session.get("company_id", "") }}';
@@ -413,39 +402,6 @@ document.addEventListener('DOMContentLoaded', function() {
 </script>
 
 <style>
-.loading-overlay {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: rgba(0, 0, 0, 0.5);
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    z-index: 9999;
-}
-
-.loading-overlay .spinner {
-    width: 40px;
-    height: 40px;
-    border: 3px solid var(--accent-color);
-    border-top-color: transparent;
-    border-radius: 50%;
-    animation: spin 1s linear infinite;
-}
-
-.loading-overlay span {
-    color: var(--text-primary);
-    margin-top: 1rem;
-}
-
-.button-group {
-    display: flex;
-    gap: 1rem;
-}
-
 .users-table {
     width: 100%;
     overflow-x: auto;
@@ -510,22 +466,22 @@ document.addEventListener('DOMContentLoaded', function() {
     gap: 0.5rem;
 }
 
-.no-data {
-    text-align: center;
-    padding: 2rem;
-    color: var(--text-secondary);
+.button-group {
+    display: flex;
+    gap: 1rem;
 }
 
+.no-data,
 .error-state {
     text-align: center;
     padding: 2rem;
     color: var(--text-secondary);
 }
 
-@keyframes spin {
-    to {
-        transform: rotate(360deg);
-    }
+.no-data i,
+.error-state i {
+    font-size: 2rem;
+    margin-bottom: 1rem;
 }
 </style>
 {% endblock %}
