@@ -1,5 +1,5 @@
 // Form validation utilities
-const ValidationRules = {
+window.ValidationRules = window.ValidationRules || {
     required: (value) => value && value.trim() !== '' ? '' : 'This field is required',
     email: (value) => {
         const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -65,7 +65,7 @@ function validateField(input, rules) {
     return true;
 }
 
-// Validate entire form with null/undefined check
+// Validate entire form
 function validateForm(form, validationConfig) {
     let isValid = true;
     
@@ -84,25 +84,9 @@ function validateForm(form, validationConfig) {
 }
 
 // Add real-time validation to form
-function setupFormValidation(formId, validationConfig) {
+window.setupFormValidation = function(formId, validationConfig) {
     const form = document.getElementById(formId);
     if (!form || !validationConfig) return;
-    
-    // Add validation styles
-    const style = document.createElement('style');
-    style.textContent = `
-        .error-message {
-            color: var(--danger-color);
-            font-size: 0.875rem;
-            margin-top: 0.25rem;
-        }
-        
-        .form-group input.error,
-        .form-group select.error {
-            border: 1px solid var(--danger-color);
-        }
-    `;
-    document.head.appendChild(style);
     
     // Add real-time validation
     for (const [fieldId, rules] of Object.entries(validationConfig)) {
@@ -119,4 +103,4 @@ function setupFormValidation(formId, validationConfig) {
             event.preventDefault();
         }
     });
-}
+};

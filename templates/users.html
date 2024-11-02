@@ -131,40 +131,46 @@
 
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    // Setup form validations
+    // Setup form validations using window.ValidationRules
     setupFormValidation('addUserForm', {
         'userName': [
-            ValidationRules.required,
-            ValidationRules.minLength(3),
-            ValidationRules.maxLength(50)
+            window.ValidationRules.required,
+            window.ValidationRules.minLength(3),
+            window.ValidationRules.maxLength(50)
         ],
         'userEmail': [
-            ValidationRules.required,
-            ValidationRules.email
+            window.ValidationRules.required,
+            window.ValidationRules.email
         ],
         'userCPF': [
-            ValidationRules.required,
-            ValidationRules.minLength(11)
+            window.ValidationRules.required,
+            window.ValidationRules.cpf
+        ],
+        'userPhone': [
+            window.ValidationRules.phone
         ],
         'userPassword': [
-            ValidationRules.required,
-            ValidationRules.minLength(6)
+            window.ValidationRules.required,
+            window.ValidationRules.minLength(6)
         ]
     });
 
     setupFormValidation('editUserForm', {
         'editUserName': [
-            ValidationRules.required,
-            ValidationRules.minLength(3),
-            ValidationRules.maxLength(50)
+            window.ValidationRules.required,
+            window.ValidationRules.minLength(3),
+            window.ValidationRules.maxLength(50)
         ],
         'editUserEmail': [
-            ValidationRules.required,
-            ValidationRules.email
+            window.ValidationRules.required,
+            window.ValidationRules.email
         ],
         'editUserCPF': [
-            ValidationRules.required,
-            ValidationRules.minLength(11)
+            window.ValidationRules.required,
+            window.ValidationRules.cpf
+        ],
+        'editUserPhone': [
+            window.ValidationRules.phone
         ]
     });
 

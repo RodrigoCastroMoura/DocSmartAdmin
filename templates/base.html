@@ -95,28 +95,6 @@
                 }
             });
         }
-
-        // Global error handler for unhandled promise rejections
-        window.addEventListener('unhandledrejection', function(event) {
-            console.error('Unhandled promise rejection:', event.reason);
-            if (window.showErrorMessage) {
-                window.showErrorMessage('An unexpected error occurred. Please try again.');
-            }
-            event.preventDefault();
-        });
-
-        // Network status monitoring
-        window.addEventListener('online', function() {
-            if (window.showErrorMessage) {
-                window.showErrorMessage('Connection restored');
-            }
-        });
-
-        window.addEventListener('offline', function() {
-            if (window.showErrorMessage) {
-                window.showErrorMessage('No internet connection');
-            }
-        });
     </script>
 
     <style>
