@@ -99,248 +99,6 @@ def logout():
 def dashboard():
     return render_template('dashboard.html')
 
-# Categories CRUD routes
-@app.route('/categories')
-@login_required
-def categories():
-    try:
-        headers = get_auth_headers()
-        company_id = session.get('company_id')
-        if not company_id:
-            flash('Company ID not found', 'error')
-            return render_template('categories.html', categories=[], departments=[])
-
-        try:
-            response = requests.get(
-                f"{CATEGORIES_URL}/companies/{company_id}/categories",
-                headers=headers
-            )
-            if not response.ok:
-                raise Exception(f"Failed to fetch categories: {response.status_code}")
-            categories_data = response.json()
-        except Exception as e:
-            print(f"Error fetching categories: {e}")
-            flash('Error loading categories', 'error')
-            categories_data = []
-
-        try:
-            departments_response = requests.get(
-                f"{DEPARTMENTS_URL}/companies/{company_id}/departments",
-                headers=headers
-            )
-            if not departments_response.ok:
-                raise Exception(f"Failed to fetch departments: {departments_response.status_code}")
-            departments = departments_response.json()
-        except Exception as e:
-            print(f"Error fetching departments: {e}")
-            departments = []
-
-        return render_template('categories.html', categories=categories_data, departments=departments)
-    except Exception as e:
-        print(f"Error in categories route: {e}")
-        flash('Error loading page', 'error')
-        return render_template('categories.html', categories=[], departments=[])
-
-@app.route('/api/categories', methods=['GET', 'POST'])
-@login_required
-def categories_api():
-    headers = get_auth_headers()
-    company_id = session.get('company_id')
-    
-    if not company_id:
-        return jsonify({'error': 'Company ID not found'}), 400
-    
-    if request.method == 'GET':
-        try:
-            response = requests.get(
-                f"{CATEGORIES_URL}/companies/{company_id}/categories",
-                headers=headers
-            )
-            if response.status_code == 200:
-                return jsonify(response.json()), 200
-            error_data = response.json() if response.content else {'error': 'Failed to fetch categories'}
-            return jsonify(error_data), response.status_code
-        except Exception as e:
-            print(f"Error fetching categories: {e}")
-            return jsonify({'error': str(e)}), 500
-    
-    elif request.method == 'POST':
-        try:
-            data = request.json
-            if not data:
-                return jsonify({'error': 'Invalid request data'}), 400
-                
-            data['company_id'] = company_id
-            response = requests.post(CATEGORIES_URL, headers=headers, json=data)
-            
-            if response.status_code == 201:
-                return jsonify(response.json()), 201
-            error_data = response.json() if response.content else {'error': 'Unknown error occurred'}
-            return jsonify(error_data), response.status_code
-        except Exception as e:
-            print(f"Error creating category: {e}")
-            return jsonify({'error': str(e)}), 500
-
-@app.route('/api/categories/<category_id>', methods=['PUT', 'DELETE'])
-@login_required
-def category_detail_api(category_id):
-    headers = get_auth_headers()
-    company_id = session.get('company_id')
-
-    if not company_id:
-        return jsonify({'error': 'Company ID not found'}), 400
-    
-    if request.method == 'PUT':
-        try:
-            data = request.json
-            if not data:
-                return jsonify({'error': 'Invalid request data'}), 400
-                
-            data['company_id'] = company_id
-            response = requests.put(
-                f"{CATEGORIES_URL}/{category_id}",
-                headers=headers,
-                json=data
-            )
-            
-            if response.status_code == 200:
-                return jsonify(response.json()), 200
-            error_data = response.json() if response.content else {'error': 'Unknown error occurred'}
-            return jsonify(error_data), response.status_code
-        except Exception as e:
-            print(f"Error updating category: {e}")
-            return jsonify({'error': str(e)}), 500
-            
-    elif request.method == 'DELETE':
-        try:
-            response = requests.delete(
-                f"{CATEGORIES_URL}/{category_id}",
-                headers=headers
-            )
-            
-            if response.status_code == 204:
-                return '', 204
-            error_data = response.json() if response.content else {'error': 'Unknown error occurred'}
-            return jsonify(error_data), response.status_code
-        except Exception as e:
-            print(f"Error deleting category: {e}")
-            return jsonify({'error': str(e)}), 500
-
-# Departments CRUD routes
-@app.route('/departments')
-@login_required
-def departments():
-    try:
-        headers = get_auth_headers()
-        company_id = session.get('company_id')
-        if not company_id:
-            flash('Company ID not found', 'error')
-            return render_template('departments.html', departments=[])
-
-        try:
-            response = requests.get(
-                f"{DEPARTMENTS_URL}/companies/{company_id}/departments",
-                headers=headers
-            )
-            if not response.ok:
-                raise Exception(f"Failed to fetch departments: {response.status_code}")
-            departments_data = response.json()
-        except Exception as e:
-            print(f"Error fetching departments: {e}")
-            flash('Error loading departments', 'error')
-            departments_data = []
-
-        return render_template('departments.html', departments=departments_data)
-    except Exception as e:
-        print(f"Error in departments route: {e}")
-        flash('Error loading page', 'error')
-        return render_template('departments.html', departments=[])
-
-@app.route('/api/departments', methods=['GET', 'POST'])
-@login_required
-def departments_api():
-    headers = get_auth_headers()
-    company_id = session.get('company_id')
-    
-    if not company_id:
-        return jsonify({'error': 'Company ID not found'}), 400
-    
-    if request.method == 'GET':
-        try:
-            response = requests.get(
-                f"{DEPARTMENTS_URL}/companies/{company_id}/departments",
-                headers=headers
-            )
-            if response.status_code == 200:
-                return jsonify(response.json()), 200
-            error_data = response.json() if response.content else {'error': 'Failed to fetch departments'}
-            return jsonify(error_data), response.status_code
-        except Exception as e:
-            print(f"Error fetching departments: {e}")
-            return jsonify({'error': str(e)}), 500
-    
-    elif request.method == 'POST':
-        try:
-            data = request.json
-            if not data:
-                return jsonify({'error': 'Invalid request data'}), 400
-                
-            data['company_id'] = company_id
-            response = requests.post(DEPARTMENTS_URL, headers=headers, json=data)
-            
-            if response.status_code == 201:
-                return jsonify(response.json()), 201
-            error_data = response.json() if response.content else {'error': 'Unknown error occurred'}
-            return jsonify(error_data), response.status_code
-        except Exception as e:
-            print(f"Error creating department: {e}")
-            return jsonify({'error': str(e)}), 500
-
-@app.route('/api/departments/<department_id>', methods=['PUT', 'DELETE'])
-@login_required
-def department_detail_api(department_id):
-    headers = get_auth_headers()
-    company_id = session.get('company_id')
-
-    if not company_id:
-        return jsonify({'error': 'Company ID not found'}), 400
-    
-    if request.method == 'PUT':
-        try:
-            data = request.json
-            if not data:
-                return jsonify({'error': 'Invalid request data'}), 400
-                
-            data['company_id'] = company_id
-            response = requests.put(
-                f"{DEPARTMENTS_URL}/{department_id}",
-                headers=headers,
-                json=data
-            )
-            
-            if response.status_code == 200:
-                return jsonify(response.json()), 200
-            error_data = response.json() if response.content else {'error': 'Unknown error occurred'}
-            return jsonify(error_data), response.status_code
-        except Exception as e:
-            print(f"Error updating department: {e}")
-            return jsonify({'error': str(e)}), 500
-            
-    elif request.method == 'DELETE':
-        try:
-            response = requests.delete(
-                f"{DEPARTMENTS_URL}/{department_id}",
-                headers=headers
-            )
-            
-            if response.status_code == 204:
-                return '', 204
-            error_data = response.json() if response.content else {'error': 'Unknown error occurred'}
-            return jsonify(error_data), response.status_code
-        except Exception as e:
-            print(f"Error deleting department: {e}")
-            return jsonify({'error': str(e)}), 500
-
 # Users CRUD routes with multi-tenant support and improved error handling
 @app.route('/users')
 @login_required
@@ -353,13 +111,13 @@ def users():
             return render_template('users.html', users=[], departments=[])
 
         try:
-            response = requests.get(
+            users_response = requests.get(
                 f"{USERS_URL}/companies/{company_id}/users",
                 headers=headers
             )
-            if not response.ok:
-                raise Exception(f"Failed to fetch users: {response.status_code}")
-            users_data = response.json()
+            if not users_response.ok:
+                raise Exception(f"Failed to fetch users: {users_response.status_code}")
+            users_data = users_response.json()
         except Exception as e:
             print(f"Error fetching users: {e}")
             flash('Error loading users', 'error')
@@ -468,7 +226,75 @@ def user_detail_api(user_id):
             print(f"Error deleting user: {e}")
             return jsonify({'error': str(e)}), 500
 
-# Documents CRUD routes
+# Departments routes with multi-tenant support
+@app.route('/departments')
+@login_required
+def departments():
+    try:
+        headers = get_auth_headers()
+        company_id = session.get('company_id')
+        if not company_id:
+            flash('Company ID not found', 'error')
+            return render_template('departments.html', departments=[])
+
+        response = requests.get(
+            f"{DEPARTMENTS_URL}/companies/{company_id}/departments",
+            headers=headers
+        )
+        if response.ok:
+            departments_data = response.json()
+        else:
+            flash('Error loading departments', 'error')
+            departments_data = []
+
+        return render_template('departments.html', departments=departments_data)
+    except Exception as e:
+        print(f"Error in departments route: {e}")
+        flash('Error loading page', 'error')
+        return render_template('departments.html', departments=[])
+
+# Categories routes with multi-tenant support
+@app.route('/categories')
+@login_required
+def categories():
+    try:
+        headers = get_auth_headers()
+        company_id = session.get('company_id')
+        if not company_id:
+            flash('Company ID not found', 'error')
+            return render_template('categories.html', categories=[], departments=[])
+
+        try:
+            categories_response = requests.get(
+                f"{CATEGORIES_URL}/companies/{company_id}/categories",
+                headers=headers
+            )
+            if categories_response.ok:
+                categories_data = categories_response.json()
+            else:
+                flash('Error loading categories', 'error')
+                categories_data = []
+
+            departments_response = requests.get(
+                f"{DEPARTMENTS_URL}/companies/{company_id}/departments",
+                headers=headers
+            )
+            if departments_response.ok:
+                departments = departments_response.json()
+            else:
+                departments = []
+
+            return render_template('categories.html', categories=categories_data, departments=departments)
+        except Exception as e:
+            print(f"Error loading data: {e}")
+            return render_template('categories.html', categories=[], departments=[])
+
+    except Exception as e:
+        print(f"Error in categories route: {e}")
+        flash('Error loading page', 'error')
+        return render_template('categories.html', categories=[], departments=[])
+
+# Documents routes with multi-tenant support
 @app.route('/documents')
 @login_required
 def documents():
@@ -480,43 +306,39 @@ def documents():
             return render_template('documents.html', documents=[], departments=[], categories=[])
 
         try:
-            response = requests.get(
+            documents_response = requests.get(
                 f"{DOCUMENTS_URL}/companies/{company_id}/documents",
                 headers=headers
             )
-            if not response.ok:
-                raise Exception(f"Failed to fetch documents: {response.status_code}")
-            documents_data = response.json()
-        except Exception as e:
-            print(f"Error fetching documents: {e}")
-            flash('Error loading documents', 'error')
-            documents_data = []
+            if documents_response.ok:
+                documents_data = documents_response.json()
+            else:
+                flash('Error loading documents', 'error')
+                documents_data = []
 
-        try:
             departments_response = requests.get(
                 f"{DEPARTMENTS_URL}/companies/{company_id}/departments",
                 headers=headers
             )
-            if not departments_response.ok:
-                raise Exception(f"Failed to fetch departments: {departments_response.status_code}")
-            departments = departments_response.json()
-        except Exception as e:
-            print(f"Error fetching departments: {e}")
-            departments = []
+            if departments_response.ok:
+                departments = departments_response.json()
+            else:
+                departments = []
 
-        try:
             categories_response = requests.get(
                 f"{CATEGORIES_URL}/companies/{company_id}/categories",
                 headers=headers
             )
-            if not categories_response.ok:
-                raise Exception(f"Failed to fetch categories: {categories_response.status_code}")
-            categories = categories_response.json()
-        except Exception as e:
-            print(f"Error fetching categories: {e}")
-            categories = []
+            if categories_response.ok:
+                categories = categories_response.json()
+            else:
+                categories = []
 
-        return render_template('documents.html', documents=documents_data, departments=departments, categories=categories)
+            return render_template('documents.html', documents=documents_data, departments=departments, categories=categories)
+        except Exception as e:
+            print(f"Error loading data: {e}")
+            return render_template('documents.html', documents=[], departments=[], categories=[])
+
     except Exception as e:
         print(f"Error in documents route: {e}")
         flash('Error loading page', 'error')
