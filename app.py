@@ -99,6 +99,11 @@ def logout():
 def dashboard():
     return render_template('dashboard.html')
 
+@app.route('/departments')
+@login_required
+def departments():
+    return render_template('departments.html')
+
 # Users CRUD routes
 @app.route('/users')
 @login_required

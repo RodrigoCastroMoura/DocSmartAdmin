@@ -146,28 +146,33 @@ setupFormValidation('editUserForm', {
     ]
 });
 
-// Get company_id from session
-const companyId = "{{ session.get('company_id', '') }}";
-
 async function loadUsers() {
     const contentDiv = document.getElementById('usersContent');
     showLoading(contentDiv);
 
     try {
-        const response = await fetch(`/api/users?company_id=${companyId}`);
+        const response = await fetch('/api/users');
         if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status}`);
+            throw new Error('Failed to fetch users');
         }
         const data = await response.json();
         document.getElementById('usersTableBody').innerHTML = generateUsersHTML(data);
         feather.replace();
     } catch (error) {
         console.error('Error loading users:', error);
-        showErrorMessage('Failed to load users. Please try again.');
+        showErrorMessage('Failed to load users');
+        document.getElementById('usersTableBody').innerHTML = generateUsersHTML([]);
     } finally {
         hideLoading(contentDiv);
     }
 }
+
+// Add error handling for unhandled promise rejections
+window.addEventListener('unhandledrejection', function(event) {
+    console.error('Unhandled promise rejection:', event.reason);
+    showErrorMessage('An unexpected error occurred');
+    event.preventDefault();
+});
 
 function generateUsersHTML(users) {
     if (!users || users.length === 0) {
@@ -201,7 +206,7 @@ function generateUsersHTML(users) {
                     <button class="action-btn" onclick='showEditUserModal("${user.id}", ${JSON.stringify(user)})'>
                         <i data-feather="edit-2"></i>
                     </button>
-                    <button class="action-btn danger" onclick='deleteUser("${user.id}")'>
+                    <button class="action-btn danger" onclick="deleteUser('${user.id}')">
                         <i data-feather="trash-2"></i>
                     </button>
                 </div>
@@ -214,7 +219,7 @@ async function fetchDepartments() {
     try {
         const response = await fetch('/api/departments');
         if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status}`);
+            throw new Error('Failed to fetch departments');
         }
         const departments = await response.json();
         const departmentSelects = ['userDepartment', 'editUserDepartment'];
@@ -242,7 +247,6 @@ async function createUser(event) {
     
     const formData = new FormData(form);
     const data = Object.fromEntries(formData);
-    data.company_id = companyId;
     showLoading(submitButton);
 
     try {
@@ -255,7 +259,7 @@ async function createUser(event) {
         });
 
         if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status}`);
+            throw new Error('Failed to create user');
         }
 
         hideModal('addUserModal');
@@ -281,7 +285,6 @@ async function updateUser(event) {
     const id = document.getElementById('editUserId').value;
     const formData = new FormData(form);
     const data = Object.fromEntries(formData);
-    data.company_id = companyId;
     showLoading(submitButton);
 
     try {
@@ -294,7 +297,7 @@ async function updateUser(event) {
         });
 
         if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status}`);
+            throw new Error('Failed to update user');
         }
 
         hideModal('editUserModal');
@@ -321,7 +324,7 @@ async function deleteUser(id) {
         });
 
         if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status}`);
+            throw new Error('Failed to delete user');
         }
 
         await loadUsers();
