@@ -17,10 +17,9 @@ window.ValidationRules = window.ValidationRules || {
         const cpfRegex = /^\d{11}$/;
         return cpfRegex.test(value) ? '' : 'Please enter a valid CPF (11 digits)';
     },
-    phone: (value) => {
-        if (!value) return ''; // Phone is optional
-        const phoneRegex = /^\d{10,11}$/;
-        return phoneRegex.test(value) ? '' : 'Please enter a valid phone number';
+    passwordMatch: (value, form) => {
+        const password = form.querySelector('#userPassword').value;
+        return value === password ? '' : 'Passwords do not match';
     }
 };
 
@@ -50,12 +49,22 @@ function clearError(input) {
     input.classList.remove('error');
 }
 
+// Apply phone mask
+function applyPhoneMask(input) {
+    let value = input.value.replace(/\D/g, '');
+    if (value.length <= 11) {
+        value = value.replace(/^(\d{2})(\d)/g, '($1) $2');
+        value = value.replace(/(\d)(\d{4})$/, '$1-$2');
+    }
+    input.value = value;
+}
+
 // Validate a single field
-function validateField(input, rules) {
+function validateField(input, rules, form) {
     clearError(input);
     
     for (const rule of rules) {
-        const error = rule(input.value);
+        const error = rule(input.value, form);
         if (error) {
             showError(input, error);
             return false;
@@ -75,7 +84,7 @@ function validateForm(form, validationConfig) {
     
     for (const [fieldId, rules] of Object.entries(validationConfig)) {
         const field = form.querySelector(`#${fieldId}`);
-        if (field && !validateField(field, rules)) {
+        if (field && !validateField(field, rules, form)) {
             isValid = false;
         }
     }
@@ -88,12 +97,18 @@ window.setupFormValidation = function(formId, validationConfig) {
     const form = document.getElementById(formId);
     if (!form || !validationConfig) return;
     
+    // Setup phone mask
+    const phoneInputs = form.querySelectorAll('input[data-mask="(00) 00000-0000"]');
+    phoneInputs.forEach(input => {
+        input.addEventListener('input', () => applyPhoneMask(input));
+    });
+    
     // Add real-time validation
     for (const [fieldId, rules] of Object.entries(validationConfig)) {
         const field = form.querySelector(`#${fieldId}`);
         if (field) {
-            field.addEventListener('input', () => validateField(field, rules));
-            field.addEventListener('blur', () => validateField(field, rules));
+            field.addEventListener('input', () => validateField(field, rules, form));
+            field.addEventListener('blur', () => validateField(field, rules, form));
         }
     }
     
