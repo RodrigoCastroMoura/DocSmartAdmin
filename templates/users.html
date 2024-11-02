@@ -152,27 +152,22 @@ async function loadUsers() {
 
     try {
         const response = await fetch('/api/users');
-        if (!response.ok) {
-            throw new Error('Failed to fetch users');
-        }
         const data = await response.json();
+        
+        if (!response.ok) {
+            throw new Error(data.error || 'Failed to fetch users');
+        }
+        
         document.getElementById('usersTableBody').innerHTML = generateUsersHTML(data);
         feather.replace();
     } catch (error) {
         console.error('Error loading users:', error);
-        showErrorMessage('Failed to load users');
+        showErrorMessage(error.message || 'Failed to load users');
         document.getElementById('usersTableBody').innerHTML = generateUsersHTML([]);
     } finally {
         hideLoading(contentDiv);
     }
 }
-
-// Add error handling for unhandled promise rejections
-window.addEventListener('unhandledrejection', function(event) {
-    console.error('Unhandled promise rejection:', event.reason);
-    showErrorMessage('An unexpected error occurred');
-    event.preventDefault();
-});
 
 function generateUsersHTML(users) {
     if (!users || users.length === 0) {
@@ -218,21 +213,22 @@ function generateUsersHTML(users) {
 async function fetchDepartments() {
     try {
         const response = await fetch('/api/departments');
-        if (!response.ok) {
-            throw new Error('Failed to fetch departments');
-        }
-        const departments = await response.json();
-        const departmentSelects = ['userDepartment', 'editUserDepartment'];
+        const data = await response.json();
         
+        if (!response.ok) {
+            throw new Error(data.error || 'Failed to fetch departments');
+        }
+        
+        const departmentSelects = ['userDepartment', 'editUserDepartment'];
         departmentSelects.forEach(selectId => {
             const select = document.getElementById(selectId);
-            select.innerHTML = departments.map(dept => 
+            select.innerHTML = data.map(dept => 
                 `<option value="${dept.id}">${dept.name}</option>`
             ).join('');
         });
     } catch (error) {
         console.error('Error fetching departments:', error);
-        showErrorMessage('Failed to load departments');
+        showErrorMessage(error.message || 'Failed to load departments');
     }
 }
 
@@ -258,8 +254,10 @@ async function createUser(event) {
             body: JSON.stringify(data)
         });
 
+        const responseData = await response.json();
+        
         if (!response.ok) {
-            throw new Error('Failed to create user');
+            throw new Error(responseData.error || 'Failed to create user');
         }
 
         hideModal('addUserModal');
@@ -267,7 +265,7 @@ async function createUser(event) {
         await loadUsers();
     } catch (error) {
         console.error('Error creating user:', error);
-        showErrorMessage('Failed to create user');
+        showErrorMessage(error.message || 'Failed to create user');
     } finally {
         hideLoading(submitButton);
     }
@@ -296,15 +294,17 @@ async function updateUser(event) {
             body: JSON.stringify(data)
         });
 
+        const responseData = await response.json();
+        
         if (!response.ok) {
-            throw new Error('Failed to update user');
+            throw new Error(responseData.error || 'Failed to update user');
         }
 
         hideModal('editUserModal');
         await loadUsers();
     } catch (error) {
         console.error('Error updating user:', error);
-        showErrorMessage('Failed to update user');
+        showErrorMessage(error.message || 'Failed to update user');
     } finally {
         hideLoading(submitButton);
     }
@@ -322,15 +322,16 @@ async function deleteUser(id) {
         const response = await fetch(`/api/users/${id}`, {
             method: 'DELETE'
         });
-
+        
         if (!response.ok) {
-            throw new Error('Failed to delete user');
+            const data = await response.json();
+            throw new Error(data.error || 'Failed to delete user');
         }
 
         await loadUsers();
     } catch (error) {
         console.error('Error deleting user:', error);
-        showErrorMessage('Failed to delete user');
+        showErrorMessage(error.message || 'Failed to delete user');
     } finally {
         hideLoading(row);
     }
