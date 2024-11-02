@@ -99,143 +99,17 @@ def logout():
 def dashboard():
     return render_template('dashboard.html')
 
-# Departments routes
-@app.route('/departments')
-@login_required
-def departments():
-    try:
-        headers = get_auth_headers()
-        company_id = session.get('company_id')
-        if not company_id:
-            flash('Company ID not found', 'error')
-            return render_template('departments.html', departments=[])
-
-        response = requests.get(
-            f"{DEPARTMENTS_URL}/companies/{company_id}/departments",
-            headers=headers
-        )
-        
-        if response.ok:
-            departments_data = response.json()
-        else:
-            flash('Error loading departments', 'error')
-            departments_data = []
-
-        return render_template('departments.html', departments=departments_data)
-    except Exception as e:
-        print(f"Error in departments route: {e}")
-        flash('Error loading page', 'error')
-        return render_template('departments.html', departments=[])
-
-# Categories routes
-@app.route('/categories')
-@login_required
-def categories():
-    try:
-        headers = get_auth_headers()
-        company_id = session.get('company_id')
-        if not company_id:
-            flash('Company ID not found', 'error')
-            return render_template('categories.html', categories=[], departments=[])
-
-        departments_response = requests.get(
-            f"{DEPARTMENTS_URL}/companies/{company_id}/departments",
-            headers=headers
-        )
-        if departments_response.ok:
-            departments = departments_response.json()
-        else:
-            departments = []
-
-        categories_response = requests.get(
-            f"{CATEGORIES_URL}/companies/{company_id}/categories",
-            headers=headers
-        )
-        if categories_response.ok:
-            categories_data = categories_response.json()
-        else:
-            flash('Error loading categories', 'error')
-            categories_data = []
-
-        return render_template('categories.html', categories=categories_data, departments=departments)
-    except Exception as e:
-        print(f"Error in categories route: {e}")
-        flash('Error loading page', 'error')
-        return render_template('categories.html', categories=[], departments=[])
-
-# Documents routes
-@app.route('/documents')
-@login_required
-def documents():
-    try:
-        headers = get_auth_headers()
-        company_id = session.get('company_id')
-        if not company_id:
-            flash('Company ID not found', 'error')
-            return render_template('documents.html', documents=[], departments=[], categories=[])
-
-        try:
-            documents_response = requests.get(
-                f"{DOCUMENTS_URL}/companies/{company_id}/documents",
-                headers=headers
-            )
-            if documents_response.ok:
-                documents_data = documents_response.json()
-            else:
-                flash('Error loading documents', 'error')
-                documents_data = []
-
-            departments_response = requests.get(
-                f"{DEPARTMENTS_URL}/companies/{company_id}/departments",
-                headers=headers
-            )
-            if departments_response.ok:
-                departments = departments_response.json()
-            else:
-                departments = []
-
-            categories_response = requests.get(
-                f"{CATEGORIES_URL}/companies/{company_id}/categories",
-                headers=headers
-            )
-            if categories_response.ok:
-                categories = categories_response.json()
-            else:
-                categories = []
-
-            return render_template('documents.html', documents=documents_data, departments=departments, categories=categories)
-        except Exception as e:
-            print(f"Error loading data: {e}")
-            return render_template('documents.html', documents=[], departments=[], categories=[])
-
-    except Exception as e:
-        print(f"Error in documents route: {e}")
-        flash('Error loading page', 'error')
-        return render_template('documents.html', documents=[], departments=[], categories=[])
-
 # Users CRUD routes with multi-tenant support
 @app.route('/users')
 @login_required
 def users():
     try:
-        headers = get_auth_headers()
         company_id = session.get('company_id')
         if not company_id:
             flash('Company ID not found', 'error')
             return render_template('users.html', users=[])
 
-        response = requests.get(
-            f"{USERS_URL}/companies/{company_id}/users",
-            headers=headers
-        )
-        
-        if response.ok:
-            users_data = response.json()
-        else:
-            flash('Error loading users', 'error')
-            users_data = []
-
-        return render_template('users.html', users=users_data)
+        return render_template('users.html', users=[])
     except Exception as e:
         print(f"Error in users route: {e}")
         flash('Error loading page', 'error')
@@ -256,9 +130,10 @@ def users_api():
                 f"{USERS_URL}/companies/{company_id}/users",
                 headers=headers
             )
-            if response.ok:
-                return jsonify(response.json()), 200
-            return jsonify({'error': f'Failed to fetch users: {response.status_code}'}), response.status_code
+            if not response.ok:
+                error_data = response.json() if response.content else {'error': f'Failed to fetch users: {response.status_code}'}
+                return jsonify(error_data), response.status_code
+            return jsonify(response.json()), 200
         except Exception as e:
             print(f"Error fetching users: {e}")
             return jsonify({'error': str(e)}), 500
@@ -272,9 +147,10 @@ def users_api():
             data['company_id'] = company_id
             response = requests.post(USERS_URL, headers=headers, json=data)
             
-            if response.ok:
-                return jsonify(response.json()), 201
-            return jsonify({'error': 'Failed to create user'}), response.status_code
+            if not response.ok:
+                error_data = response.json() if response.content else {'error': 'Failed to create user'}
+                return jsonify(error_data), response.status_code
+            return jsonify(response.json()), 201
         except Exception as e:
             print(f"Error creating user: {e}")
             return jsonify({'error': str(e)}), 500
@@ -301,9 +177,10 @@ def user_detail_api(user_id):
                 json=data
             )
             
-            if response.ok:
-                return jsonify(response.json()), 200
-            return jsonify({'error': 'Failed to update user'}), response.status_code
+            if not response.ok:
+                error_data = response.json() if response.content else {'error': 'Failed to update user'}
+                return jsonify(error_data), response.status_code
+            return jsonify(response.json()), 200
         except Exception as e:
             print(f"Error updating user: {e}")
             return jsonify({'error': str(e)}), 500
@@ -315,9 +192,10 @@ def user_detail_api(user_id):
                 headers=headers
             )
             
-            if response.ok:
-                return '', 204
-            return jsonify({'error': 'Failed to delete user'}), response.status_code
+            if not response.ok:
+                error_data = response.json() if response.content else {'error': 'Failed to delete user'}
+                return jsonify(error_data), response.status_code
+            return '', 204
         except Exception as e:
             print(f"Error deleting user: {e}")
             return jsonify({'error': str(e)}), 500

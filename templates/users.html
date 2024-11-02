@@ -4,9 +4,14 @@
 <div class="page-container">
     <div class="header-actions">
         <h2><i data-feather="users"></i> Users</h2>
-        <button class="action-btn primary" onclick="showAddUserModal()">
-            <i data-feather="plus"></i> Add User
-        </button>
+        <div class="button-group">
+            <button class="action-btn" onclick="loadUsers()">
+                <i data-feather="refresh-cw"></i> Load Users
+            </button>
+            <button class="action-btn primary" onclick="showAddUserModal()">
+                <i data-feather="plus"></i> Add User
+            </button>
+        </div>
     </div>
     <div class="content-grid" id="usersContent">
         <div class="users-table">
@@ -21,31 +26,12 @@
                     </tr>
                 </thead>
                 <tbody id="usersTableBody">
-                    {% for user in users %}
-                    <tr data-id="{{ user.id }}">
-                        <td>
-                            <div class="user-cell">
-                                <div class="user-avatar">{{ user.name[:2].upper() }}</div>
-                                <span>{{ user.name }}</span>
-                            </div>
-                        </td>
-                        <td>{{ user.email }}</td>
-                        <td>{{ user.role }}</td>
-                        <td><span class="status-badge {% if user.status == 'active' %}active{% else %}inactive{% endif %}">
-                            {{ user.status|title }}
-                        </span></td>
-                        <td>
-                            <div class="table-actions">
-                                <button class="action-btn" onclick="showEditUserModal('{{ user.id }}', {{ user|tojson|safe }})">
-                                    <i data-feather="edit-2"></i>
-                                </button>
-                                <button class="action-btn danger" onclick="deleteUser('{{ user.id }}')">
-                                    <i data-feather="trash-2"></i>
-                                </button>
-                            </div>
+                    <tr>
+                        <td colspan="5" class="no-data">
+                            <i data-feather="inbox"></i>
+                            <p>No users loaded</p>
                         </td>
                     </tr>
-                    {% endfor %}
                 </tbody>
             </table>
         </div>
@@ -183,29 +169,6 @@ setupFormValidation('editUserForm', {
     ]
 });
 
-// Loading state management
-function showLoading(element) {
-    if (!element) return;
-    // Remove any existing loading overlays
-    hideLoading(element);
-    
-    const loadingDiv = document.createElement('div');
-    loadingDiv.className = 'loading-overlay';
-    loadingDiv.innerHTML = `
-        <div class="spinner"></div>
-        <span>Loading...</span>
-    `;
-    document.body.appendChild(loadingDiv);
-}
-
-function hideLoading(element) {
-    if (!element) return;
-    const loadingOverlay = document.querySelector('.loading-overlay');
-    if (loadingOverlay) {
-        loadingOverlay.remove();
-    }
-}
-
 // Load users with improved error handling
 async function loadUsers() {
     const contentDiv = document.getElementById('usersContent');
@@ -214,11 +177,17 @@ async function loadUsers() {
 
     try {
         const companyId = sessionStorage.getItem('company_id');
-        const response = await fetch(`/api/users?company_id=${companyId}`);
-        if (!response.ok) {
-            throw new Error(`Failed to fetch users: ${response.status}`);
+        if (!companyId) {
+            throw new Error('Company ID not found');
         }
+
+        const response = await fetch(`/api/users?company_id=${companyId}`);
         const data = await response.json();
+        
+        if (!response.ok) {
+            throw new Error(data.error || `Failed to fetch users: ${response.status}`);
+        }
+
         tableBody.innerHTML = generateUsersHTML(data.users || []);
         feather.replace();
     } catch (error) {
@@ -227,10 +196,6 @@ async function loadUsers() {
         tableBody.innerHTML = '<tr><td colspan="5" class="error-state">Failed to load users</td></tr>';
     } finally {
         hideLoading(contentDiv);
-        const loadingOverlay = document.querySelector('.loading-overlay');
-        if (loadingOverlay) {
-            loadingOverlay.remove();
-        }
     }
 }
 
@@ -261,9 +226,9 @@ async function createUser(event) {
             body: JSON.stringify(data)
         });
 
+        const responseData = await response.json();
         if (!response.ok) {
-            const errorData = await response.json();
-            throw new Error(errorData.error || 'Failed to create user');
+            throw new Error(responseData.error || 'Failed to create user');
         }
 
         hideModal('addUserModal');
@@ -311,9 +276,9 @@ async function updateUser(event) {
             body: JSON.stringify(data)
         });
 
+        const responseData = await response.json();
         if (!response.ok) {
-            const errorData = await response.json();
-            throw new Error(errorData.error || 'Failed to update user');
+            throw new Error(responseData.error || 'Failed to update user');
         }
 
         hideModal('editUserModal');
@@ -338,10 +303,7 @@ async function deleteUser(id) {
 
     try {
         const response = await fetch(`/api/users/${id}`, {
-            method: 'DELETE',
-            headers: {
-                'Content-Type': 'application/json'
-            }
+            method: 'DELETE'
         });
 
         if (!response.ok) {
@@ -410,30 +372,6 @@ function generateUsersHTML(users) {
     }).join('');
 }
 
-function showErrorMessage(message, type = 'error') {
-    const existingToast = document.querySelector('.toast');
-    if (existingToast) {
-        existingToast.remove();
-    }
-
-    const toast = document.createElement('div');
-    toast.className = `toast ${type}`;
-    toast.setAttribute('role', 'alert');
-    toast.textContent = message;
-    document.body.appendChild(toast);
-
-    requestAnimationFrame(() => {
-        requestAnimationFrame(() => {
-            toast.classList.add('show');
-            setTimeout(() => {
-                toast.classList.remove('show');
-                setTimeout(() => toast.remove(), 300);
-            }, 3000);
-        });
-    });
-}
-
-// Modal functions
 function showModal(modalId) {
     document.getElementById(modalId).style.display = 'block';
 }
@@ -471,7 +409,6 @@ document.addEventListener('DOMContentLoaded', function() {
     if (company_id) {
         sessionStorage.setItem('company_id', company_id);
     }
-    loadUsers();
 });
 </script>
 
@@ -502,6 +439,11 @@ document.addEventListener('DOMContentLoaded', function() {
 .loading-overlay span {
     color: var(--text-primary);
     margin-top: 1rem;
+}
+
+.button-group {
+    display: flex;
+    gap: 1rem;
 }
 
 .users-table {
@@ -541,13 +483,12 @@ document.addEventListener('DOMContentLoaded', function() {
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 0.875rem;
     color: white;
+    font-weight: 500;
 }
 
 .status-badge {
-    display: inline-flex;
-    align-items: center;
+    display: inline-block;
     padding: 0.25rem 0.75rem;
     border-radius: 9999px;
     font-size: 0.875rem;
@@ -567,6 +508,12 @@ document.addEventListener('DOMContentLoaded', function() {
 .table-actions {
     display: flex;
     gap: 0.5rem;
+}
+
+.no-data {
+    text-align: center;
+    padding: 2rem;
+    color: var(--text-secondary);
 }
 
 .error-state {
