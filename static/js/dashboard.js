@@ -6,7 +6,7 @@ document.addEventListener('DOMContentLoaded', function() {
         loadingDiv.className = 'loading-indicator';
         loadingDiv.innerHTML = `
             <div class="spinner"></div>
-            <span>Carregando...</span>
+            <span>Loading...</span>
         `;
         element.classList.add('loading');
         element.appendChild(loadingDiv);
@@ -23,7 +23,7 @@ document.addEventListener('DOMContentLoaded', function() {
         element.removeAttribute('disabled');
     }
 
-    // API Response Handler with improved error handling and Portuguese messages
+    // API Response Handler with improved error handling
     window.handleApiResponse = async function(response, successCallback, errorCallback) {
         try {
             let data;
@@ -33,27 +33,14 @@ document.addEventListener('DOMContentLoaded', function() {
                 data = {};
             }
 
-            const statusMessages = {
-                201: 'Usuário criado com sucesso',
-                400: 'Dados inválidos',
-                401: 'Não autenticado',
-                403: 'Não autorizado',
-                404: 'Usuário não encontrado',
-                409: 'Usuário já existe',
-                500: 'Erro interno do servidor'
-            };
-
-            if (response.ok || response.status === 201) {
+            if (response.ok) {
                 if (successCallback) {
                     await successCallback(data);
                 }
-                if (response.status === 201) {
-                    showErrorMessage(statusMessages[201], 'success');
-                }
                 return true;
             } else {
-                const message = statusMessages[response.status] || data.error || 'Operação falhou';
-                showErrorMessage(message);
+                const errorMessage = data.error || 'Operation failed';
+                showErrorMessage(errorMessage);
                 if (errorCallback) {
                     await errorCallback(data);
                 }
@@ -61,7 +48,7 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         } catch (error) {
             console.error('API response handling error:', error);
-            showErrorMessage('Ocorreu um erro inesperado');
+            showErrorMessage('An unexpected error occurred');
             if (errorCallback) {
                 await errorCallback(error);
             }
@@ -70,14 +57,14 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     // Error Message Display with improved visibility
-    window.showErrorMessage = function(message, type = 'error') {
+    window.showErrorMessage = function(message) {
         const existingToast = document.querySelector('.error-toast');
         if (existingToast) {
             existingToast.remove();
         }
 
         const errorDiv = document.createElement('div');
-        errorDiv.className = `error-toast ${type}`;
+        errorDiv.className = 'error-toast';
         errorDiv.textContent = message;
         document.body.appendChild(errorDiv);
 
@@ -100,10 +87,10 @@ document.addEventListener('DOMContentLoaded', function() {
             if (modal) {
                 modal.style.display = 'block';
             } else {
-                console.error(`Modal não encontrado: ${modalId}`);
+                console.error(`Modal with id ${modalId} not found`);
             }
         } catch (error) {
-            console.error('Erro ao exibir modal:', error);
+            console.error('Error showing modal:', error);
         }
     }
 
@@ -113,10 +100,10 @@ document.addEventListener('DOMContentLoaded', function() {
             if (modal) {
                 modal.style.display = 'none';
             } else {
-                console.error(`Modal não encontrado: ${modalId}`);
+                console.error(`Modal with id ${modalId} not found`);
             }
         } catch (error) {
-            console.error('Erro ao ocultar modal:', error);
+            console.error('Error hiding modal:', error);
         }
     }
 
@@ -129,17 +116,17 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Global error handler for fetch operations
     window.addEventListener('unhandledrejection', function(event) {
-        console.error('Erro não tratado:', event.reason);
-        showErrorMessage('Ocorreu um erro inesperado. Tente novamente.');
+        console.error('Unhandled promise rejection:', event.reason);
+        showErrorMessage('An unexpected error occurred. Please try again.');
         event.preventDefault();
     });
 
     // Network status monitoring
     window.addEventListener('online', function() {
-        showErrorMessage('Conexão restaurada', 'success');
+        showErrorMessage('Connection restored');
     });
 
     window.addEventListener('offline', function() {
-        showErrorMessage('Sem conexão com a internet');
+        showErrorMessage('No internet connection');
     });
 });
