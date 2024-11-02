@@ -186,18 +186,21 @@ setupFormValidation('editUserForm', {
 // Loading state management
 function showLoading(element) {
     if (!element) return;
+    // Remove any existing loading overlays
+    hideLoading(element);
+    
     const loadingDiv = document.createElement('div');
     loadingDiv.className = 'loading-overlay';
     loadingDiv.innerHTML = `
         <div class="spinner"></div>
         <span>Loading...</span>
     `;
-    element.appendChild(loadingDiv);
+    document.body.appendChild(loadingDiv);
 }
 
 function hideLoading(element) {
     if (!element) return;
-    const loadingOverlay = element.querySelector('.loading-overlay');
+    const loadingOverlay = document.querySelector('.loading-overlay');
     if (loadingOverlay) {
         loadingOverlay.remove();
     }
@@ -210,7 +213,8 @@ async function loadUsers() {
     showLoading(contentDiv);
 
     try {
-        const response = await fetch('/api/users');
+        const companyId = sessionStorage.getItem('company_id');
+        const response = await fetch(`/api/users?company_id=${companyId}`);
         if (!response.ok) {
             throw new Error(`Failed to fetch users: ${response.status}`);
         }
@@ -221,9 +225,12 @@ async function loadUsers() {
         console.error('Error loading users:', error);
         showErrorMessage(error.message);
         tableBody.innerHTML = '<tr><td colspan="5" class="error-state">Failed to load users</td></tr>';
-        feather.replace();
     } finally {
         hideLoading(contentDiv);
+        const loadingOverlay = document.querySelector('.loading-overlay');
+        if (loadingOverlay) {
+            loadingOverlay.remove();
+        }
     }
 }
 
@@ -470,17 +477,17 @@ document.addEventListener('DOMContentLoaded', function() {
 
 <style>
 .loading-overlay {
-    position: absolute;
+    position: fixed;
     top: 0;
     left: 0;
-    right: 0;
-    bottom: 0;
+    width: 100%;
+    height: 100%;
     background: rgba(0, 0, 0, 0.5);
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    z-index: 1000;
+    z-index: 9999;
 }
 
 .loading-overlay .spinner {
@@ -490,35 +497,34 @@ document.addEventListener('DOMContentLoaded', function() {
     border-top-color: transparent;
     border-radius: 50%;
     animation: spin 1s linear infinite;
-    margin-bottom: 1rem;
 }
 
 .loading-overlay span {
     color: var(--text-primary);
+    margin-top: 1rem;
 }
 
-/* Rest of existing styles... */
 .users-table {
     width: 100%;
     overflow-x: auto;
 }
 
-table {
+.users-table table {
     width: 100%;
     border-collapse: collapse;
-    margin-bottom: 1rem;
 }
 
-th, td {
+.users-table th,
+.users-table td {
     padding: 1rem;
     text-align: left;
     border-bottom: 1px solid var(--border-color);
 }
 
-th {
-    background-color: var(--bg-tertiary);
-    color: var(--text-secondary);
+.users-table th {
     font-weight: 500;
+    color: var(--text-secondary);
+    background-color: var(--bg-tertiary);
 }
 
 .user-cell {
@@ -528,8 +534,8 @@ th {
 }
 
 .user-avatar {
-    width: 36px;
-    height: 36px;
+    width: 40px;
+    height: 40px;
     background-color: var(--accent-color);
     border-radius: 50%;
     display: flex;
@@ -545,22 +551,28 @@ th {
     padding: 0.25rem 0.75rem;
     border-radius: 9999px;
     font-size: 0.875rem;
-    font-weight: 500;
+    background-color: var(--bg-tertiary);
 }
 
 .status-badge.active {
-    background-color: rgba(34, 197, 94, 0.1);
-    color: var(--success-color);
+    background-color: var(--success-color);
+    color: white;
 }
 
 .status-badge.inactive {
-    background-color: rgba(239, 68, 68, 0.1);
-    color: var(--danger-color);
+    background-color: var(--danger-color);
+    color: white;
 }
 
 .table-actions {
     display: flex;
     gap: 0.5rem;
+}
+
+.error-state {
+    text-align: center;
+    padding: 2rem;
+    color: var(--text-secondary);
 }
 
 @keyframes spin {
