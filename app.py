@@ -114,7 +114,6 @@ def categories():
 def documents():
     return render_template('documents.html')
 
-# Users CRUD routes
 @app.route('/users')
 @login_required
 def users():
@@ -183,6 +182,34 @@ def user_detail_api(user_id):
         return jsonify({'error': str(e)}), 500
     except Exception as e:
         return jsonify({'error': f'An unexpected error occurred: {str(e)}'}), 500
+
+@app.route('/api/departments', methods=['GET', 'POST'])
+@login_required
+def department_api():
+    try:
+        headers = get_auth_headers()
+        company_id = session.get('company_id')
+        
+        if not company_id:
+            return jsonify({'error': 'Company ID not found'}), 400
+            
+        if request.method == 'GET':
+            response = requests.get(
+                f"{DEPARTMENTS_URL}/companies/{company_id}/departments",
+                headers=headers
+            )
+            response.raise_for_status()
+            return jsonify(response.json()), 200
+            
+        elif request.method == 'POST':
+            data = request.json
+            data['company_id'] = company_id
+            response = requests.post(DEPARTMENTS_URL, headers=headers, json=data)
+            response.raise_for_status()
+            return jsonify(response.json()), 201
+            
+    except requests.exceptions.RequestException as e:
+        return jsonify({'error': str(e)}), 500
 
 if __name__ == '__main__':
     app.run(host="0.0.0.0", port=5000, debug=True)

@@ -1,14 +1,14 @@
 // Form validation utilities
 const ValidationRules = {
-    required: (value) => value && value.trim() !== '' ? '' : 'This field is required',
+    required: (value) => value && value.trim() !== '' ? '' : 'Este campo é obrigatório',
     email: (value) => {
         const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-        return emailRegex.test(value) ? '' : 'Please enter a valid email address';
+        return emailRegex.test(value) ? '' : 'Por favor, insira um email válido';
     },
     minLength: (length) => (value) => 
-        value.length >= length ? '' : `Must be at least ${length} characters long`,
+        value.length >= length ? '' : `Deve ter pelo menos ${length} caracteres`,
     maxLength: (length) => (value) => 
-        value.length <= length ? '' : `Must not exceed ${length} characters`,
+        value.length <= length ? '' : `Não deve exceder ${length} caracteres`,
     match: (matchId, message) => (value) => {
         const matchElement = document.getElementById(matchId);
         return matchElement.value === value ? '' : message;
@@ -114,8 +114,8 @@ function setupFormValidation(formId, validationConfig) {
 
 // Add global error handling for unhandled promise rejections
 window.addEventListener('unhandledrejection', function(event) {
-    console.error('Unhandled promise rejection:', event.reason);
+    console.error('Erro não tratado:', event.reason);
     if (window.showErrorMessage) {
-        window.showErrorMessage('An unexpected error occurred. Please try again.');
+        window.showErrorMessage('Ocorreu um erro inesperado. Por favor, tente novamente.');
     }
 });
