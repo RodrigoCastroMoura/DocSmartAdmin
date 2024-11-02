@@ -23,7 +23,7 @@
                 </thead>
                 <tbody id="usersTableBody">
                     {% for user in users %}
-                    <tr>
+                    <tr data-id="{{ user.id }}">
                         <td>
                             <div class="user-cell">
                                 <div class="user-avatar">{{ user.name[:2].upper() }}</div>
@@ -152,10 +152,24 @@ async function loadUsers() {
 
     try {
         const response = await fetch('/api/users');
-        await handleApiResponse(response, async (data) => {
-            document.getElementById('usersTableBody').innerHTML = generateUsersHTML(data);
-            feather.replace();
-        });
+        if (!response.ok) {
+            const errorData = await response.json();
+            throw new Error(errorData.error || 'Failed to load users');
+        }
+        const data = await response.json();
+        document.getElementById('usersTableBody').innerHTML = generateUsersHTML(data);
+        feather.replace();
+    } catch (error) {
+        console.error('Error loading users:', error);
+        showErrorMessage(error.message || 'Failed to load users');
+        document.getElementById('usersTableBody').innerHTML = `
+            <tr>
+                <td colspan="6" class="no-data">
+                    <i data-feather="alert-circle"></i>
+                    <p>Error loading users. Please try again.</p>
+                </td>
+            </tr>`;
+        feather.replace();
     } finally {
         hideLoading(contentDiv);
     }
@@ -173,10 +187,10 @@ function generateUsersHTML(users) {
     }
 
     return users.map(user => `
-        <tr>
+        <tr data-id="${user.id}">
             <td>
                 <div class="user-cell">
-                    <div class="user-avatar">${user.name.slice(0, 2).toUpperCase()}</div>
+                    <div class="user-avatar">${user.name?.slice(0, 2).toUpperCase()}</div>
                     <span>${user.name}</span>
                 </div>
             </td>
@@ -202,25 +216,6 @@ function generateUsersHTML(users) {
     `).join('');
 }
 
-// Fetch departments for dropdowns
-async function fetchDepartments() {
-    try {
-        const response = await fetch('/api/departments');
-        await handleApiResponse(response, async (departments) => {
-            const departmentSelects = ['userDepartment', 'editUserDepartment'];
-            
-            departmentSelects.forEach(selectId => {
-                const select = document.getElementById(selectId);
-                select.innerHTML = departments.map(dept => 
-                    `<option value="${dept.id}">${dept.name}</option>`
-                ).join('');
-            });
-        });
-    } catch (error) {
-        showErrorMessage('Error fetching departments');
-    }
-}
-
 async function createUser(event) {
     event.preventDefault();
     const form = event.target;
@@ -243,11 +238,18 @@ async function createUser(event) {
             body: JSON.stringify(data)
         });
 
-        await handleApiResponse(response, async () => {
-            hideModal('addUserModal');
-            form.reset();
-            await loadUsers();
-        });
+        if (!response.ok) {
+            const errorData = await response.json();
+            throw new Error(errorData.error || 'Failed to create user');
+        }
+
+        await response.json();
+        hideModal('addUserModal');
+        form.reset();
+        await loadUsers();
+    } catch (error) {
+        console.error('Error creating user:', error);
+        showErrorMessage(error.message || 'Failed to create user');
     } finally {
         hideLoading(submitButton);
     }
@@ -276,10 +278,17 @@ async function updateUser(event) {
             body: JSON.stringify(data)
         });
 
-        await handleApiResponse(response, async () => {
-            hideModal('editUserModal');
-            await loadUsers();
-        });
+        if (!response.ok) {
+            const errorData = await response.json();
+            throw new Error(errorData.error || 'Failed to update user');
+        }
+
+        await response.json();
+        hideModal('editUserModal');
+        await loadUsers();
+    } catch (error) {
+        console.error('Error updating user:', error);
+        showErrorMessage(error.message || 'Failed to update user');
     } finally {
         hideLoading(submitButton);
     }
@@ -298,11 +307,41 @@ async function deleteUser(id) {
             method: 'DELETE'
         });
 
-        await handleApiResponse(response, async () => {
-            await loadUsers();
-        });
+        if (!response.ok) {
+            const errorData = await response.json();
+            throw new Error(errorData.error || 'Failed to delete user');
+        }
+
+        await loadUsers();
+    } catch (error) {
+        console.error('Error deleting user:', error);
+        showErrorMessage(error.message || 'Failed to delete user');
     } finally {
         hideLoading(row);
+    }
+}
+
+// Fetch departments for dropdowns
+async function fetchDepartments() {
+    try {
+        const response = await fetch('/api/departments');
+        if (!response.ok) {
+            const errorData = await response.json();
+            throw new Error(errorData.error || 'Failed to fetch departments');
+        }
+
+        const departments = await response.json();
+        const departmentSelects = ['userDepartment', 'editUserDepartment'];
+        
+        departmentSelects.forEach(selectId => {
+            const select = document.getElementById(selectId);
+            select.innerHTML = departments.map(dept => 
+                `<option value="${dept.id}">${dept.name}</option>`
+            ).join('');
+        });
+    } catch (error) {
+        console.error('Error fetching departments:', error);
+        showErrorMessage('Error loading departments');
     }
 }
 
@@ -330,6 +369,9 @@ function showEditUserModal(id, user) {
     document.getElementById('editUserRole').value = user.role;
     showModal('editUserModal');
 }
+
+// Initialize users list when page loads
+document.addEventListener('DOMContentLoaded', loadUsers);
 </script>
 
 <style>
@@ -418,6 +460,21 @@ th {
 .no-data i {
     font-size: 3rem;
     margin-bottom: 1rem;
+}
+
+.error-message {
+    color: var(--danger-color);
+    background-color: var(--bg-tertiary);
+    padding: 1rem;
+    border-radius: 4px;
+    margin-bottom: 1rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.error-message i {
+    color: var(--danger-color);
 }
 </style>
 {% endblock %}
