@@ -9,7 +9,7 @@
         </button>
     </div>
     <div class="content-grid" id="usersContent">
-        <div class="users-table">
+        <div id="usersTable" class="users-table">
             <table>
                 <thead>
                     <tr>
@@ -146,16 +146,24 @@ setupFormValidation('editUserForm', {
     ]
 });
 
+// Get company_id from session
+const companyId = "{{ session.get('company_id', '') }}";
+
 async function loadUsers() {
     const contentDiv = document.getElementById('usersContent');
     showLoading(contentDiv);
 
     try {
-        const response = await fetch('/api/users');
-        await handleApiResponse(response, async (data) => {
-            document.getElementById('usersTableBody').innerHTML = generateUsersHTML(data);
-            feather.replace();
-        });
+        const response = await fetch(`/api/users?company_id=${companyId}`);
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        const data = await response.json();
+        document.getElementById('usersTableBody').innerHTML = generateUsersHTML(data);
+        feather.replace();
+    } catch (error) {
+        console.error('Error loading users:', error);
+        showErrorMessage('Failed to load users. Please try again.');
     } finally {
         hideLoading(contentDiv);
     }
@@ -202,22 +210,24 @@ function generateUsersHTML(users) {
     `).join('');
 }
 
-// Fetch departments for dropdowns
 async function fetchDepartments() {
     try {
         const response = await fetch('/api/departments');
-        await handleApiResponse(response, async (departments) => {
-            const departmentSelects = ['userDepartment', 'editUserDepartment'];
-            
-            departmentSelects.forEach(selectId => {
-                const select = document.getElementById(selectId);
-                select.innerHTML = departments.map(dept => 
-                    `<option value="${dept.id}">${dept.name}</option>`
-                ).join('');
-            });
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        const departments = await response.json();
+        const departmentSelects = ['userDepartment', 'editUserDepartment'];
+        
+        departmentSelects.forEach(selectId => {
+            const select = document.getElementById(selectId);
+            select.innerHTML = departments.map(dept => 
+                `<option value="${dept.id}">${dept.name}</option>`
+            ).join('');
         });
     } catch (error) {
-        showErrorMessage('Error fetching departments');
+        console.error('Error fetching departments:', error);
+        showErrorMessage('Failed to load departments');
     }
 }
 
@@ -232,6 +242,7 @@ async function createUser(event) {
     
     const formData = new FormData(form);
     const data = Object.fromEntries(formData);
+    data.company_id = companyId;
     showLoading(submitButton);
 
     try {
@@ -243,11 +254,16 @@ async function createUser(event) {
             body: JSON.stringify(data)
         });
 
-        await handleApiResponse(response, async () => {
-            hideModal('addUserModal');
-            form.reset();
-            await loadUsers();
-        });
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+
+        hideModal('addUserModal');
+        form.reset();
+        await loadUsers();
+    } catch (error) {
+        console.error('Error creating user:', error);
+        showErrorMessage('Failed to create user');
     } finally {
         hideLoading(submitButton);
     }
@@ -265,6 +281,7 @@ async function updateUser(event) {
     const id = document.getElementById('editUserId').value;
     const formData = new FormData(form);
     const data = Object.fromEntries(formData);
+    data.company_id = companyId;
     showLoading(submitButton);
 
     try {
@@ -276,10 +293,15 @@ async function updateUser(event) {
             body: JSON.stringify(data)
         });
 
-        await handleApiResponse(response, async () => {
-            hideModal('editUserModal');
-            await loadUsers();
-        });
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+
+        hideModal('editUserModal');
+        await loadUsers();
+    } catch (error) {
+        console.error('Error updating user:', error);
+        showErrorMessage('Failed to update user');
     } finally {
         hideLoading(submitButton);
     }
@@ -298,9 +320,14 @@ async function deleteUser(id) {
             method: 'DELETE'
         });
 
-        await handleApiResponse(response, async () => {
-            await loadUsers();
-        });
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+
+        await loadUsers();
+    } catch (error) {
+        console.error('Error deleting user:', error);
+        showErrorMessage('Failed to delete user');
     } finally {
         hideLoading(row);
     }
@@ -330,6 +357,9 @@ function showEditUserModal(id, user) {
     document.getElementById('editUserRole').value = user.role;
     showModal('editUserModal');
 }
+
+// Initialize users list when page loads
+document.addEventListener('DOMContentLoaded', loadUsers);
 </script>
 
 <style>
@@ -350,10 +380,8 @@ function showEditUserModal(id, user) {
     gap: 0.5rem;
 }
 
-.content-grid {
-    background-color: var(--bg-secondary);
-    border-radius: 8px;
-    padding: 1.5rem;
+.users-table {
+    width: 100%;
     overflow-x: auto;
 }
 
@@ -418,6 +446,12 @@ th {
 .no-data i {
     font-size: 3rem;
     margin-bottom: 1rem;
+}
+
+.content-grid {
+    background-color: var(--bg-secondary);
+    border-radius: 8px;
+    padding: 1.5rem;
 }
 </style>
 {% endblock %}
