@@ -131,7 +131,6 @@
 
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    // Setup form validations using window.ValidationRules
     setupFormValidation('addUserForm', {
         'userName': [
             window.ValidationRules.required,
@@ -174,7 +173,6 @@ document.addEventListener('DOMContentLoaded', function() {
         ]
     });
 
-    // Load initial data
     loadUsers();
 });
 
@@ -184,16 +182,14 @@ async function loadUsers() {
 
     try {
         const response = await fetch('/api/users');
-        if (!response.ok) {
-            throw new Error(`Failed to fetch users: ${response.status}`);
-        }
-        const data = await response.json();
-        const users = data.users || [];
-        document.getElementById('usersTableBody').innerHTML = generateUsersHTML(users);
-        feather.replace();
+        await handleApiResponse(response, async (data) => {
+            const users = data.users || [];
+            document.getElementById('usersTableBody').innerHTML = generateUsersHTML(users);
+            feather.replace();
+        });
     } catch (error) {
         console.error('Error loading users:', error);
-        showErrorMessage('Unable to load users. Please try again later.');
+        showErrorMessage('Failed to load users');
     } finally {
         hideLoading(contentDiv);
     }
@@ -261,18 +257,15 @@ async function createUser(event) {
             body: JSON.stringify(data)
         });
 
-        if (!response.ok) {
-            const errorData = await response.json();
-            throw new Error(errorData.error || 'Failed to create user');
-        }
-
-        hideModal('addUserModal');
-        form.reset();
-        await loadUsers();
-        showErrorMessage('User created successfully', 'success');
+        await handleApiResponse(response, async () => {
+            hideModal('addUserModal');
+            form.reset();
+            await loadUsers();
+            showErrorMessage('User created successfully', 'success');
+        });
     } catch (error) {
         console.error('Error creating user:', error);
-        showErrorMessage(error.message);
+        showErrorMessage('Failed to create user. Please try again.');
     } finally {
         hideLoading(submitButton);
     }
@@ -301,17 +294,14 @@ async function updateUser(event) {
             body: JSON.stringify(data)
         });
 
-        if (!response.ok) {
-            const errorData = await response.json();
-            throw new Error(errorData.error || 'Failed to update user');
-        }
-
-        hideModal('editUserModal');
-        await loadUsers();
-        showErrorMessage('User updated successfully', 'success');
+        await handleApiResponse(response, async () => {
+            hideModal('editUserModal');
+            await loadUsers();
+            showErrorMessage('User updated successfully', 'success');
+        });
     } catch (error) {
         console.error('Error updating user:', error);
-        showErrorMessage(error.message);
+        showErrorMessage('Failed to update user. Please try again.');
     } finally {
         hideLoading(submitButton);
     }
@@ -330,15 +320,13 @@ async function deleteUser(id) {
             method: 'DELETE'
         });
 
-        if (!response.ok) {
-            throw new Error('Failed to delete user');
-        }
-
-        await loadUsers();
-        showErrorMessage('User deleted successfully', 'success');
+        await handleApiResponse(response, async () => {
+            await loadUsers();
+            showErrorMessage('User deleted successfully', 'success');
+        });
     } catch (error) {
         console.error('Error deleting user:', error);
-        showErrorMessage('Unable to delete user. Please try again.');
+        showErrorMessage('Failed to delete user. Please try again.');
     } finally {
         hideLoading(row);
     }
