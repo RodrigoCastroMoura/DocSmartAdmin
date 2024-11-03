@@ -270,11 +270,9 @@ def user_api():
     
     if request.method == 'GET':
         try:
-            url = f"{USERS_URL}?company_id={company_id}"
-            response = requests.get(url, headers=headers)
-            if response.ok:
-                return jsonify(response.json()), response.status_code
-            return jsonify({'error': 'Failed to fetch users', 'details': response.text}), response.status_code
+            params = {'company_id': company_id}
+            response = requests.get(USERS_URL, headers=headers, params=params)
+            return jsonify(response.json()), response.status_code
         except Exception as e:
             print(f"Error fetching users: {e}")
             return jsonify({'error': 'Failed to fetch users'}), 500
@@ -284,9 +282,7 @@ def user_api():
             data = request.json
             data['company_id'] = company_id
             response = requests.post(USERS_URL, headers=headers, json=data)
-            if response.ok:
-                return jsonify(response.json()), response.status_code
-            return jsonify({'error': 'Failed to create user', 'details': response.text}), response.status_code
+            return jsonify(response.json()), response.status_code
         except Exception as e:
             print(f"Error creating user: {e}")
             return jsonify({'error': 'Failed to create user'}), 500
@@ -309,9 +305,7 @@ def user_detail_api(user_id):
                 headers=headers,
                 json=data
             )
-            if response.ok:
-                return jsonify(response.json()), response.status_code
-            return jsonify({'error': 'Failed to update user', 'details': response.text}), response.status_code
+            return jsonify(response.json()), response.status_code
         except Exception as e:
             print(f"Error updating user: {e}")
             return jsonify({'error': 'Failed to update user'}), 500
@@ -324,7 +318,7 @@ def user_detail_api(user_id):
             )
             if response.status_code == 204:
                 return '', 204
-            return jsonify({'error': 'Failed to delete user', 'details': response.text}), response.status_code
+            return jsonify({'error': 'Failed to delete user'}), response.status_code
         except Exception as e:
             print(f"Error deleting user: {e}")
             return jsonify({'error': 'Failed to delete user'}), 500

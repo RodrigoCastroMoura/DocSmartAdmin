@@ -164,16 +164,18 @@ async function loadUsers() {
 
     try {
         const response = await fetch('/api/users');
-        if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status}`);
-        }
         const data = await response.json();
+        
+        if (!response.ok) {
+            throw new Error(data.error || `HTTP error! status: ${response.status}`);
+        }
+        
         const users = data.users || [];
         tableBody.innerHTML = generateUsersHTML(users);
         feather.replace();
     } catch (error) {
         console.error('Error loading users:', error);
-        showErrorMessage('Failed to load users');
+        showErrorMessage(error.message || 'Failed to load users');
         tableBody.innerHTML = `
             <tr>
                 <td colspan="7" class="no-data">
@@ -251,9 +253,10 @@ async function createUser(event) {
             body: JSON.stringify(data)
         });
 
+        const responseData = await response.json();
+        
         if (!response.ok) {
-            const errorData = await response.json();
-            throw new Error(errorData.error || 'Failed to create user');
+            throw new Error(responseData.error || 'Failed to create user');
         }
 
         hideModal('addUserModal');
@@ -291,9 +294,10 @@ async function updateUser(event) {
             body: JSON.stringify(data)
         });
 
+        const responseData = await response.json();
+        
         if (!response.ok) {
-            const errorData = await response.json();
-            throw new Error(errorData.error || 'Failed to update user');
+            throw new Error(responseData.error || 'Failed to update user');
         }
 
         hideModal('editUserModal');
