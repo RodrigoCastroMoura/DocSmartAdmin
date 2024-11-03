@@ -151,17 +151,30 @@ setupFormValidation('editUserForm', {
 async function loadUsers() {
     const contentDiv = document.getElementById('usersContent');
     showLoading(contentDiv);
-
+    
     try {
         const response = await fetch('/api/users');
-        await handleApiResponse(response, async (data) => {
-            const users = data.users || [];
-            document.getElementById('usersTableBody').innerHTML = generateUsersHTML(users);
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        const data = await response.json();
+        if (data && data.users) {
+            document.getElementById('usersTableBody').innerHTML = generateUsersHTML(data.users);
             feather.replace();
-        });
+        } else {
+            throw new Error('Invalid response format');
+        }
     } catch (error) {
         console.error('Error loading users:', error);
-        showErrorMessage('Failed to load users');
+        showErrorMessage('Failed to load users. Please try again.');
+        document.getElementById('usersTableBody').innerHTML = `
+            <tr>
+                <td colspan="7" class="no-data">
+                    <i data-feather="inbox"></i>
+                    <p>No users found</p>
+                </td>
+            </tr>`;
+        feather.replace();
     } finally {
         hideLoading(contentDiv);
     }
@@ -231,12 +244,15 @@ async function createUser(event) {
             body: JSON.stringify(data)
         });
 
-        await handleApiResponse(response, async () => {
-            hideModal('addUserModal');
-            form.reset();
-            await loadUsers();
-            showErrorMessage('User created successfully', 'success');
-        });
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        
+        const result = await response.json();
+        hideModal('addUserModal');
+        form.reset();
+        await loadUsers();
+        showErrorMessage('User created successfully', 'success');
     } catch (error) {
         console.error('Error creating user:', error);
         showErrorMessage('Failed to create user');
@@ -268,11 +284,14 @@ async function updateUser(event) {
             body: JSON.stringify(data)
         });
 
-        await handleApiResponse(response, async () => {
-            hideModal('editUserModal');
-            await loadUsers();
-            showErrorMessage('User updated successfully', 'success');
-        });
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+
+        const result = await response.json();
+        hideModal('editUserModal');
+        await loadUsers();
+        showErrorMessage('User updated successfully', 'success');
     } catch (error) {
         console.error('Error updating user:', error);
         showErrorMessage('Failed to update user');
@@ -294,10 +313,12 @@ async function deleteUser(id) {
             method: 'DELETE'
         });
 
-        await handleApiResponse(response, async () => {
-            await loadUsers();
-            showErrorMessage('User deleted successfully', 'success');
-        });
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+
+        await loadUsers();
+        showErrorMessage('User deleted successfully', 'success');
     } catch (error) {
         console.error('Error deleting user:', error);
         showErrorMessage('Failed to delete user');
@@ -391,18 +412,6 @@ document.addEventListener('DOMContentLoaded', loadUsers);
     gap: 0.5rem;
 }
 
-.no-data {
-    text-align: center;
-    padding: 2rem;
-    color: var(--text-secondary);
-}
-
-.no-data i {
-    font-size: 3rem;
-    margin-bottom: 1rem;
-    opacity: 0.5;
-}
-
 .page-container {
     padding: 2rem;
 }
@@ -424,6 +433,18 @@ document.addEventListener('DOMContentLoaded', loadUsers);
     background-color: var(--bg-secondary);
     border-radius: 8px;
     padding: 1.5rem;
+}
+
+.no-data {
+    text-align: center;
+    padding: 2rem;
+    color: var(--text-secondary);
+}
+
+.no-data i {
+    font-size: 3rem;
+    margin-bottom: 1rem;
+    opacity: 0.5;
 }
 </style>
 {% endblock %}
