@@ -2,6 +2,7 @@ from flask import Flask, render_template, redirect, url_for, request, flash, ses
 from functools import wraps
 import requests
 import os
+import json
 from werkzeug.utils import secure_filename
 
 app = Flask(__name__)
@@ -130,135 +131,6 @@ def documents():
 def users():
     return render_template('users.html')
 
-@app.route('/api/departments', methods=['GET', 'POST'])
-@login_required
-def department_api():
-    headers = get_auth_headers()
-    company_id = session.get('company_id')
-    
-    if not company_id:
-        return jsonify({'error': 'Company ID not found'}), 400
-    
-    if request.method == 'GET':
-        try:
-            response = requests.get(
-                f"{DEPARTMENTS_URL}/companies/{company_id}/departments",
-                headers=headers
-            )
-            return jsonify(response.json()), response.status_code
-        except Exception as e:
-            print(f"Error fetching departments: {e}")
-            return jsonify({'error': str(e)}), 500
-            
-    elif request.method == 'POST':
-        try:
-            data = request.json
-            data['company_id'] = company_id
-            response = requests.post(DEPARTMENTS_URL, headers=headers, json=data)
-            return jsonify(response.json()), response.status_code
-        except Exception as e:
-            print(f"Error creating department: {e}")
-            return jsonify({'error': str(e)}), 500
-
-@app.route('/api/departments/<department_id>', methods=['PUT', 'DELETE'])
-@login_required
-def department_detail_api(department_id):
-    headers = get_auth_headers()
-    company_id = session.get('company_id')
-    
-    if not company_id:
-        return jsonify({'error': 'Company ID not found'}), 400
-    
-    if request.method == 'PUT':
-        try:
-            data = request.json
-            data['company_id'] = company_id
-            response = requests.put(
-                f"{DEPARTMENTS_URL}/{department_id}",
-                headers=headers,
-                json=data
-            )
-            return jsonify(response.json()), response.status_code
-        except Exception as e:
-            print(f"Error updating department: {e}")
-            return jsonify({'error': str(e)}), 500
-            
-    elif request.method == 'DELETE':
-        try:
-            response = requests.delete(
-                f"{DEPARTMENTS_URL}/{department_id}",
-                headers=headers
-            )
-            if response.status_code == 204:
-                return '', 204
-            return jsonify({'error': 'Failed to delete department'}), response.status_code
-        except Exception as e:
-            print(f"Error deleting department: {e}")
-            return jsonify({'error': str(e)}), 500
-
-@app.route('/api/categories', methods=['GET', 'POST'])
-@login_required
-def category_api():
-    headers = get_auth_headers()
-    company_id = session.get('company_id')
-    
-    if request.method == 'GET':
-        try:
-            url = f"{CATEGORIES_URL}/companies/{company_id}/categories"
-            response = requests.get(url, headers=headers)
-            if response.ok:
-                return jsonify(response.json()), response.status_code
-            return jsonify({'error': 'Failed to fetch categories'}), response.status_code
-        except Exception as e:
-            print(f"Error fetching categories: {e}")
-            return jsonify({'error': 'Failed to fetch categories'}), 500
-            
-    elif request.method == 'POST':
-        try:
-            data = request.json
-            data['company_id'] = company_id
-            response = requests.post(CATEGORIES_URL, headers=headers, json=data)
-            return jsonify(response.json()), response.status_code
-        except Exception as e:
-            print(f"Error creating category: {e}")
-            return jsonify({'error': 'Failed to create category'}), 500
-
-@app.route('/api/categories/<category_id>', methods=['PUT', 'DELETE'])
-@login_required
-def category_detail_api(category_id):
-    headers = get_auth_headers()
-    company_id = session.get('company_id')
-    
-    if not company_id:
-        return jsonify({'error': 'Company ID not found'}), 400
-    
-    if request.method == 'PUT':
-        try:
-            data = request.json
-            data['company_id'] = company_id
-            response = requests.put(
-                f"{CATEGORIES_URL}/{category_id}",
-                headers=headers,
-                json=data
-            )
-            return jsonify(response.json()), response.status_code
-        except Exception as e:
-            print(f"Error updating category: {e}")
-            return jsonify({'error': str(e)}), 500
-            
-    elif request.method == 'DELETE':
-        try:
-            response = requests.delete(
-                f"{CATEGORIES_URL}/{category_id}",
-                headers=headers
-            )
-            if response.status_code == 204:
-                return '', 204
-            return jsonify({'error': 'Failed to delete category'}), response.status_code
-        except Exception as e:
-            print(f"Error deleting category: {e}")
-            return jsonify({'error': str(e)}), 500
-
 @app.route('/api/users', methods=['GET', 'POST'])
 @login_required
 def user_api():
@@ -272,7 +144,18 @@ def user_api():
         try:
             params = {'company_id': company_id}
             response = requests.get(USERS_URL, headers=headers, params=params)
+            
+            # Handle potential empty response
+            if response.status_code == 204:
+                return jsonify({'users': []}), 200
+                
+            if not response.content:
+                return jsonify({'error': 'Empty response from server'}), 500
+                
             return jsonify(response.json()), response.status_code
+        except json.JSONDecodeError as e:
+            print(f"JSON decode error: {e}")
+            return jsonify({'error': 'Invalid response format'}), 500
         except Exception as e:
             print(f"Error fetching users: {e}")
             return jsonify({'error': 'Failed to fetch users'}), 500

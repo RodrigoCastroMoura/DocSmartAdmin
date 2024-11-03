@@ -164,23 +164,24 @@ async function loadUsers() {
 
     try {
         const response = await fetch('/api/users');
-        const data = await response.json();
-        
         if (!response.ok) {
-            throw new Error(data.error || `HTTP error! status: ${response.status}`);
+            throw new Error(`HTTP error! status: ${response.status}`);
         }
         
-        const users = data.users || [];
-        tableBody.innerHTML = generateUsersHTML(users);
+        const data = await response.json();
+        if (!data || !data.users) {
+            throw new Error('Invalid response format');
+        }
+        
+        tableBody.innerHTML = generateUsersHTML(data.users);
         feather.replace();
     } catch (error) {
         console.error('Error loading users:', error);
-        showErrorMessage(error.message || 'Failed to load users');
         tableBody.innerHTML = `
             <tr>
                 <td colspan="7" class="no-data">
                     <i data-feather="alert-circle"></i>
-                    <p>Error loading users. Please try again.</p>
+                    <p>${error.message || 'Failed to load users'}</p>
                 </td>
             </tr>`;
         feather.replace();
