@@ -57,9 +57,6 @@
                 <label for="categoryDepartment">Department</label>
                 <select id="categoryDepartment" name="department_id" required>
                     <option value="">Select Department</option>
-                    {% for dept in departments %}
-                    <option value="{{ dept.id }}">{{ dept.name }}</option>
-                    {% endfor %}
                 </select>
             </div>
             <div class="modal-actions">
@@ -84,9 +81,6 @@
                 <label for="editCategoryDepartment">Department</label>
                 <select id="editCategoryDepartment" name="department_id" required>
                     <option value="">Select Department</option>
-                    {% for dept in departments %}
-                    <option value="{{ dept.id }}">{{ dept.name }}</option>
-                    {% endfor %}
                 </select>
             </div>
             <div class="modal-actions">
@@ -120,6 +114,27 @@ setupFormValidation('editCategoryForm', {
         ValidationRules.required
     ]
 });
+
+async function loadDepartmentsInForm() {
+    try {
+        const response = await fetch('/api/departments');
+        await handleApiResponse(response, async (departments) => {
+            const departmentSelects = ['categoryDepartment', 'editCategoryDepartment'];
+            departmentSelects.forEach(selectId => {
+                const select = document.getElementById(selectId);
+                if (select) {
+                    select.innerHTML = '<option value="">Select Department</option>' +
+                        departments.map(dept => 
+                            `<option value="${dept.id}">${dept.name}</option>`
+                        ).join('');
+                }
+            });
+        });
+    } catch (error) {
+        console.error('Error loading departments:', error);
+        showErrorMessage('Failed to load departments');
+    }
+}
 
 async function loadCategories() {
     const contentDiv = document.getElementById('categoriesContent');
@@ -200,7 +215,11 @@ async function createCategory(event) {
             hideModal('addCategoryModal');
             form.reset();
             await loadCategories();
+            showErrorMessage('Category created successfully', 'success');
         });
+    } catch (error) {
+        console.error('Error creating category:', error);
+        showErrorMessage('Failed to create category');
     } finally {
         hideLoading(submitButton);
     }
@@ -232,7 +251,11 @@ async function updateCategory(event) {
         await handleApiResponse(response, async () => {
             hideModal('editCategoryModal');
             await loadCategories();
+            showErrorMessage('Category updated successfully', 'success');
         });
+    } catch (error) {
+        console.error('Error updating category:', error);
+        showErrorMessage('Failed to update category');
     } finally {
         hideLoading(submitButton);
     }
@@ -253,34 +276,35 @@ async function deleteCategory(id) {
 
         await handleApiResponse(response, async () => {
             await loadCategories();
+            showErrorMessage('Category deleted successfully', 'success');
         });
+    } catch (error) {
+        console.error('Error deleting category:', error);
+        showErrorMessage('Failed to delete category');
     } finally {
         hideLoading(card);
     }
 }
 
-function showModal(modalId) {
-    document.getElementById(modalId).style.display = 'block';
-}
-
-function hideModal(modalId) {
-    document.getElementById(modalId).style.display = 'none';
-}
-
 function showAddCategoryModal() {
     document.getElementById('addCategoryForm').reset();
+    loadDepartmentsInForm();
     showModal('addCategoryModal');
 }
 
 function showEditCategoryModal(id, category) {
     document.getElementById('editCategoryId').value = id;
     document.getElementById('editCategoryName').value = category.name;
-    document.getElementById('editCategoryDepartment').value = category.department_id;
+    loadDepartmentsInForm().then(() => {
+        document.getElementById('editCategoryDepartment').value = category.department_id;
+    });
     showModal('editCategoryModal');
 }
 
 // Initialize categories list when page loads
-document.addEventListener('DOMContentLoaded', loadCategories);
+document.addEventListener('DOMContentLoaded', () => {
+    loadCategories();
+});
 </script>
 
 <style>
@@ -335,40 +359,6 @@ document.addEventListener('DOMContentLoaded', loadCategories);
     justify-content: flex-end;
     gap: 0.5rem;
     margin-top: 1rem;
-}
-
-.page-container {
-    padding: 2rem;
-}
-
-.header-actions {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 2rem;
-}
-
-.header-actions h2 {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-}
-
-.content-grid {
-    background-color: var(--bg-secondary);
-    border-radius: 8px;
-    padding: 1.5rem;
-}
-
-.no-data {
-    text-align: center;
-    padding: 2rem;
-    color: var(--text-secondary);
-}
-
-.no-data i {
-    font-size: 3rem;
-    margin-bottom: 1rem;
 }
 </style>
 {% endblock %}
