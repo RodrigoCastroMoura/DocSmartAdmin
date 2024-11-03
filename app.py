@@ -107,7 +107,18 @@ def departments():
 @app.route('/categories')
 @login_required
 def categories():
-    return render_template('categories.html', categories=[], departments=[])
+    headers = get_auth_headers()
+    company_id = session.get('company_id')
+    try:
+        departments_response = requests.get(
+            f"{DEPARTMENTS_URL}/companies/{company_id}/departments",
+            headers=headers
+        )
+        departments = departments_response.json() if departments_response.ok else []
+        return render_template('categories.html', departments=departments)
+    except Exception as e:
+        print(f"Error loading departments: {e}")
+        return render_template('categories.html', departments=[])
 
 @app.route('/documents')
 @login_required
@@ -117,7 +128,7 @@ def documents():
 @app.route('/users')
 @login_required
 def users():
-    return render_template('users.html', users=[])
+    return render_template('users.html')
 
 @app.route('/api/departments', methods=['GET', 'POST'])
 @login_required
@@ -262,7 +273,8 @@ def user_api():
     
     if request.method == 'GET':
         try:
-            response = requests.get(f"{USERS_URL}?company_id={company_id}", headers=headers)
+            url = f"{USERS_URL}?company_id={company_id}&page=1&per_page=10"
+            response = requests.get(url, headers=headers)
             if response.status_code == 200:
                 return jsonify(response.json()), 200
             return jsonify({'error': 'Failed to fetch users', 'details': response.text}), response.status_code
