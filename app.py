@@ -202,19 +202,16 @@ def category_api():
     headers = get_auth_headers()
     company_id = session.get('company_id')
     
-    if not company_id:
-        return jsonify({'error': 'Company ID not found'}), 400
-    
     if request.method == 'GET':
         try:
-            response = requests.get(
-                f"{CATEGORIES_URL}/companies/{company_id}/categories",
-                headers=headers
-            )
-            return jsonify(response.json()), response.status_code
+            url = f"{CATEGORIES_URL}/companies/{company_id}/categories"
+            response = requests.get(url, headers=headers)
+            if response.ok:
+                return jsonify(response.json()), response.status_code
+            return jsonify({'error': 'Failed to fetch categories'}), response.status_code
         except Exception as e:
             print(f"Error fetching categories: {e}")
-            return jsonify({'error': str(e)}), 500
+            return jsonify({'error': 'Failed to fetch categories'}), 500
             
     elif request.method == 'POST':
         try:
@@ -224,7 +221,7 @@ def category_api():
             return jsonify(response.json()), response.status_code
         except Exception as e:
             print(f"Error creating category: {e}")
-            return jsonify({'error': str(e)}), 500
+            return jsonify({'error': 'Failed to create category'}), 500
 
 @app.route('/api/categories/<category_id>', methods=['PUT', 'DELETE'])
 @login_required
@@ -273,10 +270,10 @@ def user_api():
     
     if request.method == 'GET':
         try:
-            url = f"{USERS_URL}?company_id={company_id}&page=1&per_page=10"
+            url = f"{USERS_URL}?company_id={company_id}"
             response = requests.get(url, headers=headers)
-            if response.status_code == 200:
-                return jsonify(response.json()), 200
+            if response.ok:
+                return jsonify(response.json()), response.status_code
             return jsonify({'error': 'Failed to fetch users', 'details': response.text}), response.status_code
         except Exception as e:
             print(f"Error fetching users: {e}")
@@ -287,7 +284,7 @@ def user_api():
             data = request.json
             data['company_id'] = company_id
             response = requests.post(USERS_URL, headers=headers, json=data)
-            if response.status_code in [200, 201]:
+            if response.ok:
                 return jsonify(response.json()), response.status_code
             return jsonify({'error': 'Failed to create user', 'details': response.text}), response.status_code
         except Exception as e:
@@ -312,8 +309,8 @@ def user_detail_api(user_id):
                 headers=headers,
                 json=data
             )
-            if response.status_code == 200:
-                return jsonify(response.json()), 200
+            if response.ok:
+                return jsonify(response.json()), response.status_code
             return jsonify({'error': 'Failed to update user', 'details': response.text}), response.status_code
         except Exception as e:
             print(f"Error updating user: {e}")

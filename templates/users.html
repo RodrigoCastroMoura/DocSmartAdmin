@@ -10,20 +10,29 @@
     </div>
     <div class="content-grid">
         <div id="usersContent">
-            <table class="users-table">
-                <thead>
-                    <tr>
-                        <th>Name</th>
-                        <th>Email</th>
-                        <th>CPF</th>
-                        <th>Phone</th>
-                        <th>Role</th>
-                        <th>Status</th>
-                        <th>Actions</th>
-                    </tr>
-                </thead>
-                <tbody id="usersTableBody"></tbody>
-            </table>
+            <div class="table-container">
+                <table class="users-table">
+                    <thead>
+                        <tr>
+                            <th>Name</th>
+                            <th>Email</th>
+                            <th>CPF</th>
+                            <th>Phone</th>
+                            <th>Role</th>
+                            <th>Status</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="usersTableBody">
+                        <tr>
+                            <td colspan="7" class="no-data">
+                                <i data-feather="inbox"></i>
+                                <p>Loading users...</p>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
         </div>
     </div>
 </div>
@@ -150,18 +159,29 @@ setupFormValidation('editUserForm', {
 
 async function loadUsers() {
     const contentDiv = document.getElementById('usersContent');
+    const tableBody = document.getElementById('usersTableBody');
     showLoading(contentDiv);
 
     try {
         const response = await fetch('/api/users');
-        await handleApiResponse(response, async (data) => {
-            const users = data.users || [];
-            document.getElementById('usersTableBody').innerHTML = generateUsersHTML(users);
-            feather.replace();
-        });
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        const data = await response.json();
+        const users = data.users || [];
+        tableBody.innerHTML = generateUsersHTML(users);
+        feather.replace();
     } catch (error) {
         console.error('Error loading users:', error);
         showErrorMessage('Failed to load users');
+        tableBody.innerHTML = `
+            <tr>
+                <td colspan="7" class="no-data">
+                    <i data-feather="alert-circle"></i>
+                    <p>Error loading users. Please try again.</p>
+                </td>
+            </tr>`;
+        feather.replace();
     } finally {
         hideLoading(contentDiv);
     }
@@ -231,15 +251,18 @@ async function createUser(event) {
             body: JSON.stringify(data)
         });
 
-        await handleApiResponse(response, async () => {
-            hideModal('addUserModal');
-            form.reset();
-            await loadUsers();
-            showErrorMessage('User created successfully', 'success');
-        });
+        if (!response.ok) {
+            const errorData = await response.json();
+            throw new Error(errorData.error || 'Failed to create user');
+        }
+
+        hideModal('addUserModal');
+        form.reset();
+        await loadUsers();
+        showErrorMessage('User created successfully', 'success');
     } catch (error) {
         console.error('Error creating user:', error);
-        showErrorMessage('Failed to create user');
+        showErrorMessage(error.message);
     } finally {
         hideLoading(submitButton);
     }
@@ -268,14 +291,17 @@ async function updateUser(event) {
             body: JSON.stringify(data)
         });
 
-        await handleApiResponse(response, async () => {
-            hideModal('editUserModal');
-            await loadUsers();
-            showErrorMessage('User updated successfully', 'success');
-        });
+        if (!response.ok) {
+            const errorData = await response.json();
+            throw new Error(errorData.error || 'Failed to update user');
+        }
+
+        hideModal('editUserModal');
+        await loadUsers();
+        showErrorMessage('User updated successfully', 'success');
     } catch (error) {
         console.error('Error updating user:', error);
-        showErrorMessage('Failed to update user');
+        showErrorMessage(error.message);
     } finally {
         hideLoading(submitButton);
     }
@@ -294,13 +320,16 @@ async function deleteUser(id) {
             method: 'DELETE'
         });
 
-        await handleApiResponse(response, async () => {
-            await loadUsers();
-            showErrorMessage('User deleted successfully', 'success');
-        });
+        if (!response.ok) {
+            const errorData = await response.json();
+            throw new Error(errorData.error || 'Failed to delete user');
+        }
+
+        await loadUsers();
+        showErrorMessage('User deleted successfully', 'success');
     } catch (error) {
         console.error('Error deleting user:', error);
-        showErrorMessage('Failed to delete user');
+        showErrorMessage(error.message);
     } finally {
         hideLoading(row);
     }
@@ -334,9 +363,14 @@ document.addEventListener('DOMContentLoaded', loadUsers);
 </script>
 
 <style>
+.table-container {
+    overflow-x: auto;
+}
+
 .users-table {
     width: 100%;
     border-collapse: collapse;
+    min-width: 800px;
 }
 
 .users-table th,
@@ -349,6 +383,10 @@ document.addEventListener('DOMContentLoaded', loadUsers);
 .users-table th {
     font-weight: 500;
     color: var(--text-secondary);
+    background-color: var(--bg-tertiary);
+    position: sticky;
+    top: 0;
+    z-index: 1;
 }
 
 .user-cell {
@@ -374,6 +412,7 @@ document.addEventListener('DOMContentLoaded', loadUsers);
     border-radius: 4px;
     font-size: 0.875rem;
     font-weight: 500;
+    display: inline-block;
 }
 
 .status-badge.active {
@@ -398,8 +437,8 @@ document.addEventListener('DOMContentLoaded', loadUsers);
 }
 
 .no-data i {
-    font-size: 3rem;
-    margin-bottom: 1rem;
+    font-size: 2rem;
+    margin-bottom: 0.5rem;
     opacity: 0.5;
 }
 
@@ -424,6 +463,26 @@ document.addEventListener('DOMContentLoaded', loadUsers);
     background-color: var(--bg-secondary);
     border-radius: 8px;
     padding: 1.5rem;
+    position: relative;
+}
+
+tr.loading {
+    opacity: 0.5;
+    pointer-events: none;
+}
+
+tr.loading .loading-indicator {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background-color: var(--bg-secondary);
+    padding: 0.5rem 1rem;
+    border-radius: 4px;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    z-index: 2;
 }
 </style>
 {% endblock %}
