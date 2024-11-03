@@ -102,22 +102,22 @@ def dashboard():
 @app.route('/departments')
 @login_required
 def departments():
-    return render_template('departments.html')
+    return render_template('departments.html', departments=[])
 
 @app.route('/categories')
 @login_required
 def categories():
-    return render_template('categories.html')
+    return render_template('categories.html', categories=[], departments=[])
 
 @app.route('/documents')
 @login_required
 def documents():
-    return render_template('documents.html')
+    return render_template('documents.html', documents=[])
 
 @app.route('/users')
 @login_required
 def users():
-    return render_template('users.html')
+    return render_template('users.html', users=[])
 
 @app.route('/api/departments', methods=['GET', 'POST'])
 @login_required
@@ -134,22 +134,20 @@ def department_api():
                 f"{DEPARTMENTS_URL}/companies/{company_id}/departments",
                 headers=headers
             )
-            response.raise_for_status()
             return jsonify(response.json()), response.status_code
-        except requests.RequestException as e:
-            print(f"Error fetching departments: {str(e)}")
-            return jsonify({'error': 'Failed to fetch departments', 'details': str(e)}), 500
+        except Exception as e:
+            print(f"Error fetching departments: {e}")
+            return jsonify({'error': str(e)}), 500
             
     elif request.method == 'POST':
         try:
             data = request.json
             data['company_id'] = company_id
             response = requests.post(DEPARTMENTS_URL, headers=headers, json=data)
-            response.raise_for_status()
             return jsonify(response.json()), response.status_code
-        except requests.RequestException as e:
-            print(f"Error creating department: {str(e)}")
-            return jsonify({'error': 'Failed to create department', 'details': str(e)}), 500
+        except Exception as e:
+            print(f"Error creating department: {e}")
+            return jsonify({'error': str(e)}), 500
 
 @app.route('/api/departments/<department_id>', methods=['PUT', 'DELETE'])
 @login_required
@@ -169,11 +167,10 @@ def department_detail_api(department_id):
                 headers=headers,
                 json=data
             )
-            response.raise_for_status()
             return jsonify(response.json()), response.status_code
-        except requests.RequestException as e:
-            print(f"Error updating department: {str(e)}")
-            return jsonify({'error': 'Failed to update department', 'details': str(e)}), 500
+        except Exception as e:
+            print(f"Error updating department: {e}")
+            return jsonify({'error': str(e)}), 500
             
     elif request.method == 'DELETE':
         try:
@@ -181,11 +178,12 @@ def department_detail_api(department_id):
                 f"{DEPARTMENTS_URL}/{department_id}",
                 headers=headers
             )
-            response.raise_for_status()
-            return '', 204
-        except requests.RequestException as e:
-            print(f"Error deleting department: {str(e)}")
-            return jsonify({'error': 'Failed to delete department', 'details': str(e)}), 500
+            if response.status_code == 204:
+                return '', 204
+            return jsonify({'error': 'Failed to delete department'}), response.status_code
+        except Exception as e:
+            print(f"Error deleting department: {e}")
+            return jsonify({'error': str(e)}), 500
 
 @app.route('/api/categories', methods=['GET', 'POST'])
 @login_required
@@ -202,22 +200,20 @@ def category_api():
                 f"{CATEGORIES_URL}/companies/{company_id}/categories",
                 headers=headers
             )
-            response.raise_for_status()
             return jsonify(response.json()), response.status_code
-        except requests.RequestException as e:
-            print(f"Error fetching categories: {str(e)}")
-            return jsonify({'error': 'Failed to fetch categories', 'details': str(e)}), 500
+        except Exception as e:
+            print(f"Error fetching categories: {e}")
+            return jsonify({'error': str(e)}), 500
             
     elif request.method == 'POST':
         try:
             data = request.json
             data['company_id'] = company_id
             response = requests.post(CATEGORIES_URL, headers=headers, json=data)
-            response.raise_for_status()
             return jsonify(response.json()), response.status_code
-        except requests.RequestException as e:
-            print(f"Error creating category: {str(e)}")
-            return jsonify({'error': 'Failed to create category', 'details': str(e)}), 500
+        except Exception as e:
+            print(f"Error creating category: {e}")
+            return jsonify({'error': str(e)}), 500
 
 @app.route('/api/categories/<category_id>', methods=['PUT', 'DELETE'])
 @login_required
@@ -237,11 +233,10 @@ def category_detail_api(category_id):
                 headers=headers,
                 json=data
             )
-            response.raise_for_status()
             return jsonify(response.json()), response.status_code
-        except requests.RequestException as e:
-            print(f"Error updating category: {str(e)}")
-            return jsonify({'error': 'Failed to update category', 'details': str(e)}), 500
+        except Exception as e:
+            print(f"Error updating category: {e}")
+            return jsonify({'error': str(e)}), 500
             
     elif request.method == 'DELETE':
         try:
@@ -249,11 +244,12 @@ def category_detail_api(category_id):
                 f"{CATEGORIES_URL}/{category_id}",
                 headers=headers
             )
-            response.raise_for_status()
-            return '', 204
-        except requests.RequestException as e:
-            print(f"Error deleting category: {str(e)}")
-            return jsonify({'error': 'Failed to delete category', 'details': str(e)}), 500
+            if response.status_code == 204:
+                return '', 204
+            return jsonify({'error': 'Failed to delete category'}), response.status_code
+        except Exception as e:
+            print(f"Error deleting category: {e}")
+            return jsonify({'error': str(e)}), 500
 
 @app.route('/api/users', methods=['GET', 'POST'])
 @login_required
@@ -266,26 +262,22 @@ def user_api():
     
     if request.method == 'GET':
         try:
-            response = requests.get(
-                f"{USERS_URL}?company_id={company_id}",
-                headers=headers
-            )
-            response.raise_for_status()
+            url = f"{USERS_URL}?company_id={company_id}"
+            response = requests.get(url, headers=headers)
             return jsonify(response.json()), response.status_code
-        except requests.RequestException as e:
-            print(f"Error fetching users: {str(e)}")
-            return jsonify({'error': 'Failed to fetch users', 'details': str(e)}), 500
+        except Exception as e:
+            print(f"Error fetching users: {e}")
+            return jsonify({'error': 'Failed to fetch users'}), 500
     
     elif request.method == 'POST':
         try:
             data = request.json
             data['company_id'] = company_id
             response = requests.post(USERS_URL, headers=headers, json=data)
-            response.raise_for_status()
             return jsonify(response.json()), response.status_code
-        except requests.RequestException as e:
-            print(f"Error creating user: {str(e)}")
-            return jsonify({'error': 'Failed to create user', 'details': str(e)}), 500
+        except Exception as e:
+            print(f"Error creating user: {e}")
+            return jsonify({'error': 'Failed to create user'}), 500
 
 @app.route('/api/users/<user_id>', methods=['PUT', 'DELETE'])
 @login_required
@@ -305,11 +297,10 @@ def user_detail_api(user_id):
                 headers=headers,
                 json=data
             )
-            response.raise_for_status()
             return jsonify(response.json()), response.status_code
-        except requests.RequestException as e:
-            print(f"Error updating user: {str(e)}")
-            return jsonify({'error': 'Failed to update user', 'details': str(e)}), 500
+        except Exception as e:
+            print(f"Error updating user: {e}")
+            return jsonify({'error': 'Failed to update user'}), 500
             
     elif request.method == 'DELETE':
         try:
@@ -317,11 +308,12 @@ def user_detail_api(user_id):
                 f"{USERS_URL}/{user_id}",
                 headers=headers
             )
-            response.raise_for_status()
-            return '', 204
-        except requests.RequestException as e:
-            print(f"Error deleting user: {str(e)}")
-            return jsonify({'error': 'Failed to delete user', 'details': str(e)}), 500
+            if response.status_code == 204:
+                return '', 204
+            return jsonify({'error': 'Failed to delete user'}), response.status_code
+        except Exception as e:
+            print(f"Error deleting user: {e}")
+            return jsonify({'error': 'Failed to delete user'}), 500
 
 if __name__ == '__main__':
     app.run(host="0.0.0.0", port=5000, debug=True)
