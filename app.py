@@ -114,7 +114,6 @@ def categories():
 def documents():
     return render_template('documents.html', documents=[])
 
-# Users CRUD routes
 @app.route('/users')
 @login_required
 def users():
@@ -263,10 +262,8 @@ def user_api():
     
     if request.method == 'GET':
         try:
-            response = requests.get(
-                f"{USERS_URL}?company_id={company_id}",
-                headers=headers
-            )
+            url = f"{USERS_URL}?company_id={company_id}"
+            response = requests.get(url, headers=headers)
             return jsonify(response.json()), response.status_code
         except Exception as e:
             print(f"Error fetching users: {e}")
