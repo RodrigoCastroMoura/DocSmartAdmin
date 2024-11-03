@@ -154,28 +154,14 @@ async function loadUsers() {
 
     try {
         const response = await fetch('/api/users');
-        if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status}`);
-        }
-        const data = await response.json();
-        
-        if (data.error) {
-            throw new Error(data.error);
-        }
-        
-        const users = data.users || [];
-        document.getElementById('usersTableBody').innerHTML = generateUsersHTML(users);
-        feather.replace();
+        await handleApiResponse(response, async (data) => {
+            const users = data.users || [];
+            document.getElementById('usersTableBody').innerHTML = generateUsersHTML(users);
+            feather.replace();
+        });
     } catch (error) {
         console.error('Error loading users:', error);
-        document.getElementById('usersTableBody').innerHTML = `
-            <tr>
-                <td colspan="7" class="no-data">
-                    <i data-feather="alert-circle"></i>
-                    <p>${error.message || 'Failed to load users'}</p>
-                </td>
-            </tr>`;
-        feather.replace();
+        showErrorMessage('Failed to load users');
     } finally {
         hideLoading(contentDiv);
     }
@@ -245,18 +231,15 @@ async function createUser(event) {
             body: JSON.stringify(data)
         });
 
-        if (!response.ok) {
-            const errorData = await response.json();
-            throw new Error(errorData.error || 'Failed to create user');
-        }
-
-        hideModal('addUserModal');
-        form.reset();
-        await loadUsers();
-        showErrorMessage('User created successfully', 'success');
+        await handleApiResponse(response, async () => {
+            hideModal('addUserModal');
+            form.reset();
+            await loadUsers();
+            showErrorMessage('User created successfully', 'success');
+        });
     } catch (error) {
         console.error('Error creating user:', error);
-        showErrorMessage(error.message);
+        showErrorMessage('Failed to create user');
     } finally {
         hideLoading(submitButton);
     }
@@ -285,17 +268,14 @@ async function updateUser(event) {
             body: JSON.stringify(data)
         });
 
-        if (!response.ok) {
-            const errorData = await response.json();
-            throw new Error(errorData.error || 'Failed to update user');
-        }
-
-        hideModal('editUserModal');
-        await loadUsers();
-        showErrorMessage('User updated successfully', 'success');
+        await handleApiResponse(response, async () => {
+            hideModal('editUserModal');
+            await loadUsers();
+            showErrorMessage('User updated successfully', 'success');
+        });
     } catch (error) {
         console.error('Error updating user:', error);
-        showErrorMessage(error.message);
+        showErrorMessage('Failed to update user');
     } finally {
         hideLoading(submitButton);
     }
@@ -314,19 +294,24 @@ async function deleteUser(id) {
             method: 'DELETE'
         });
 
-        if (!response.ok) {
-            const errorData = await response.json();
-            throw new Error(errorData.error || 'Failed to delete user');
-        }
-
-        await loadUsers();
-        showErrorMessage('User deleted successfully', 'success');
+        await handleApiResponse(response, async () => {
+            await loadUsers();
+            showErrorMessage('User deleted successfully', 'success');
+        });
     } catch (error) {
         console.error('Error deleting user:', error);
-        showErrorMessage(error.message);
+        showErrorMessage('Failed to delete user');
     } finally {
         hideLoading(row);
     }
+}
+
+function showModal(modalId) {
+    document.getElementById(modalId).style.display = 'block';
+}
+
+function hideModal(modalId) {
+    document.getElementById(modalId).style.display = 'none';
 }
 
 function showAddUserModal() {
@@ -416,6 +401,29 @@ document.addEventListener('DOMContentLoaded', loadUsers);
     font-size: 3rem;
     margin-bottom: 1rem;
     opacity: 0.5;
+}
+
+.page-container {
+    padding: 2rem;
+}
+
+.header-actions {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 2rem;
+}
+
+.header-actions h2 {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.content-grid {
+    background-color: var(--bg-secondary);
+    border-radius: 8px;
+    padding: 1.5rem;
 }
 </style>
 {% endblock %}
