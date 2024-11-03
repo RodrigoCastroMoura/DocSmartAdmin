@@ -191,19 +191,15 @@ def category_api():
     headers = get_auth_headers()
     company_id = session.get('company_id')
     
-    if not company_id:
-        return jsonify({'error': 'Company ID not found'}), 400
-    
     if request.method == 'GET':
         try:
-            response = requests.get(
-                f"{CATEGORIES_URL}/companies/{company_id}/categories",
-                headers=headers
-            )
-            return jsonify(response.json()), response.status_code
+            url = f"{CATEGORIES_URL}/companies/{company_id}/categories"
+            response = requests.get(url, headers=headers)
+            data = response.json()
+            return jsonify(data), response.status_code
         except Exception as e:
             print(f"Error fetching categories: {e}")
-            return jsonify({'error': str(e)}), 500
+            return jsonify([]), 200
             
     elif request.method == 'POST':
         try:
@@ -257,17 +253,15 @@ def user_api():
     headers = get_auth_headers()
     company_id = session.get('company_id')
     
-    if not company_id:
-        return jsonify({'error': 'Company ID not found'}), 400
-    
     if request.method == 'GET':
         try:
             url = f"{USERS_URL}?company_id={company_id}"
             response = requests.get(url, headers=headers)
-            return jsonify(response.json()), response.status_code
+            data = response.json()
+            return jsonify(data), response.status_code
         except Exception as e:
             print(f"Error fetching users: {e}")
-            return jsonify({'error': 'Failed to fetch users'}), 500
+            return jsonify({"users": []}), 200
     
     elif request.method == 'POST':
         try:
@@ -277,7 +271,7 @@ def user_api():
             return jsonify(response.json()), response.status_code
         except Exception as e:
             print(f"Error creating user: {e}")
-            return jsonify({'error': 'Failed to create user'}), 500
+            return jsonify({'error': str(e)}), 500
 
 @app.route('/api/users/<user_id>', methods=['PUT', 'DELETE'])
 @login_required
@@ -300,7 +294,7 @@ def user_detail_api(user_id):
             return jsonify(response.json()), response.status_code
         except Exception as e:
             print(f"Error updating user: {e}")
-            return jsonify({'error': 'Failed to update user'}), 500
+            return jsonify({'error': str(e)}), 500
             
     elif request.method == 'DELETE':
         try:
@@ -313,7 +307,7 @@ def user_detail_api(user_id):
             return jsonify({'error': 'Failed to delete user'}), response.status_code
         except Exception as e:
             print(f"Error deleting user: {e}")
-            return jsonify({'error': 'Failed to delete user'}), 500
+            return jsonify({'error': str(e)}), 500
 
 if __name__ == '__main__':
     app.run(host="0.0.0.0", port=5000, debug=True)
