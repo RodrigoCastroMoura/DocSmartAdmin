@@ -198,7 +198,6 @@ function generatePaginationHTML(data) {
 
     let html = '<div class="pagination-controls">';
     
-    // Previous button
     html += `
         <button class="pagination-btn" 
                 onclick="loadDocuments(${currentPage - 1})"
@@ -206,7 +205,6 @@ function generatePaginationHTML(data) {
             <i data-feather="chevron-left"></i>
         </button>`;
     
-    // Page numbers
     for (let i = 1; i <= data.total_pages; i++) {
         html += `
             <button class="pagination-btn ${i === currentPage ? 'active' : ''}"
@@ -215,7 +213,6 @@ function generatePaginationHTML(data) {
             </button>`;
     }
     
-    // Next button
     html += `
         <button class="pagination-btn"
                 onclick="loadDocuments(${currentPage + 1})"
@@ -343,7 +340,6 @@ function showEditDocumentModal(id, document) {
     showModal('editDocumentModal');
 }
 
-// Initialize documents list when page loads
 document.addEventListener('DOMContentLoaded', () => loadDocuments(1));
 </script>
 
@@ -369,11 +365,21 @@ document.addEventListener('DOMContentLoaded', () => loadDocuments(1));
 }
 
 .document-icon {
-    padding: 1rem;
+    padding: 0.75rem;
     background-color: var(--accent-color);
     border-radius: 6px;
     margin-right: 1rem;
     flex-shrink: 0;
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.document-icon i {
+    width: 20px;
+    height: 20px;
 }
 
 .document-info {
