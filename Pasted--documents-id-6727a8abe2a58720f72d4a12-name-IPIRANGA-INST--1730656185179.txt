@@ -1,0 +1,59 @@
+{
+  "documents": [
+    {
+      "id": "6727a8abe2a58720f72d4a12",
+      "name": "IPIRANGA - INST.HIDRÁULICAS - REV.01 - FL.1.pdf",
+      "titulo": "Curriculo",
+      "url": "https://storage.googleapis.com/docsmart-37bba.appspot.com/671958708d8d36c35e6c7c5e/672102c7f769a5217c9bfea0/IPIRANGA%20-%20INST.HIDR%C3%81ULICAS%20-%20REV.01%20-%20FL.1.pdf",
+      "category_id": "672102c7f769a5217c9bfea0",
+      "department_id": "67210166f769a5217c9bfe9e",
+      "company_id": "671958708d8d36c35e6c7c5e",
+      "user_id": "671958718d8d36c35e6c7c5f",
+      "status": "active",
+      "view_count": 0,
+      "download_count": 0,
+      "created_at": "2024-11-03T16:45:31.610000",
+      "created_by": "671958718d8d36c35e6c7c5f",
+      "updated_at": "2024-11-03T16:45:31.610000",
+      "updated_by": "671958718d8d36c35e6c7c5f"
+    },
+    {
+      "id": "6727a8dae2a58720f72d4a13",
+      "name": "IPIRANGA - INST.HIDRÁULICAS - REV.01 - FL.1.pdf",
+      "titulo": "Curriculo",
+      "url": "https://storage.googleapis.com/docsmart-37bba.appspot.com/671958708d8d36c35e6c7c5e/672102c7f769a5217c9bfea0/IPIRANGA%20-%20INST.HIDR%C3%81ULICAS%20-%20REV.01%20-%20FL.1.pdf",
+      "category_id": "672102c7f769a5217c9bfea0",
+      "department_id": "67210166f769a5217c9bfe9e",
+      "company_id": "671958708d8d36c35e6c7c5e",
+      "user_id": "671958718d8d36c35e6c7c5f",
+      "status": "active",
+      "view_count": 0,
+      "download_count": 0,
+      "created_at": "2024-11-03T16:46:18.415000",
+      "created_by": "671958718d8d36c35e6c7c5f",
+      "updated_at": "2024-11-03T16:46:18.415000",
+      "updated_by": "671958718d8d36c35e6c7c5f"
+    },
+    {
+      "id": "6727aa84b870a5aac241ff64",
+      "name": "RodrigoApCastroMoura (1).docx",
+      "titulo": "Teste",
+      "url": "https://storage.googleapis.com/docsmart-37bba.appspot.com/671958708d8d36c35e6c7c5e/672102c7f769a5217c9bfea0/RodrigoApCastroMoura%20%281%29.docx",
+      "category_id": "672102c7f769a5217c9bfea0",
+      "department_id": "67210166f769a5217c9bfe9e",
+      "company_id": "671958708d8d36c35e6c7c5e",
+      "user_id": "671958718d8d36c35e6c7c5f",
+      "status": "active",
+      "view_count": 0,
+      "download_count": 0,
+      "created_at": "2024-11-03T16:53:24.078000",
+      "created_by": "671958718d8d36c35e6c7c5f",
+      "updated_at": "2024-11-03T16:53:24.078000",
+      "updated_by": "671958718d8d36c35e6c7c5f"
+    }
+  ],
+  "total": 3,
+  "page": 1,
+  "per_page": 10,
+  "total_pages": 1
+}
