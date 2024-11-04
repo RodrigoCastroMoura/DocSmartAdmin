@@ -182,22 +182,19 @@ def document_api():
             
     elif request.method == 'POST':
         try:
-            # Handle file upload
-            file = request.files['file']
+            file = request.files.get('file')
             if not file:
                 return jsonify({'error': 'No file provided'}), 400
-                
-            # Get form data
+
             data = {
-                'name': request.form.get('name'),
-                'type': request.form.get('type'),
-                'department_id': request.form.get('department_id'),
+                'titulo': request.form.get('titulo'),
                 'category_id': request.form.get('category_id'),
+                'department_id': request.form.get('department_id'),
+                'user_id': session.get('user', {}).get('id'),
                 'company_id': company_id
             }
             
-            # Create document with file
-            files = {'file': (file.filename, file)}
+            files = {'file': (file.filename, file, file.content_type)}
             response = requests.post(
                 DOCUMENTS_URL,
                 headers=headers,
@@ -206,7 +203,7 @@ def document_api():
             )
             
             return response.json(), response.status_code
-            
+                
         except Exception as e:
             print(f"Error creating document: {e}")
             return jsonify({'error': 'Failed to create document'}), 500
@@ -265,81 +262,6 @@ def document_download_api(document_id):
     except Exception as e:
         print(f"Error downloading document: {e}")
         return jsonify({'error': 'Failed to download document'}), 500
-
-@app.route('/api/users', methods=['GET', 'POST'])
-@login_required
-def user_api():
-    headers = get_auth_headers()
-    company_id = session.get('company_id')
-    
-    if not company_id:
-        return jsonify({'error': 'Company ID not found'}), 400
-    
-    if request.method == 'GET':
-        try:
-            params = {'company_id': company_id}
-            response = requests.get(USERS_URL, headers=headers, params=params)
-            
-            # Handle potential empty response
-            if response.status_code == 204:
-                return jsonify({'users': []}), 200
-                
-            if not response.content:
-                return jsonify({'error': 'Empty response from server'}), 500
-                
-            return jsonify(response.json()), response.status_code
-        except json.JSONDecodeError as e:
-            print(f"JSON decode error: {e}")
-            return jsonify({'error': 'Invalid response format'}), 500
-        except Exception as e:
-            print(f"Error fetching users: {e}")
-            return jsonify({'error': 'Failed to fetch users'}), 500
-    
-    elif request.method == 'POST':
-        try:
-            data = request.json
-            data['company_id'] = company_id
-            response = requests.post(USERS_URL, headers=headers, json=data)
-            return jsonify(response.json()), response.status_code
-        except Exception as e:
-            print(f"Error creating user: {e}")
-            return jsonify({'error': 'Failed to create user'}), 500
-
-@app.route('/api/users/<user_id>', methods=['PUT', 'DELETE'])
-@login_required
-def user_detail_api(user_id):
-    headers = get_auth_headers()
-    company_id = session.get('company_id')
-    
-    if not company_id:
-        return jsonify({'error': 'Company ID not found'}), 400
-    
-    if request.method == 'PUT':
-        try:
-            data = request.json
-            data['company_id'] = company_id
-            response = requests.put(
-                f"{USERS_URL}/{user_id}",
-                headers=headers,
-                json=data
-            )
-            return jsonify(response.json()), response.status_code
-        except Exception as e:
-            print(f"Error updating user: {e}")
-            return jsonify({'error': 'Failed to update user'}), 500
-            
-    elif request.method == 'DELETE':
-        try:
-            response = requests.delete(
-                f"{USERS_URL}/{user_id}",
-                headers=headers
-            )
-            if response.status_code == 204:
-                return '', 204
-            return jsonify({'error': 'Failed to delete user'}), response.status_code
-        except Exception as e:
-            print(f"Error deleting user: {e}")
-            return jsonify({'error': 'Failed to delete user'}), 500
 
 if __name__ == '__main__':
     app.run(host="0.0.0.0", port=5000, debug=True)
