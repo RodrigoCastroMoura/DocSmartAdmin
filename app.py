@@ -180,7 +180,7 @@ def document_api():
             page = request.args.get('page', 1, type=int)
             per_page = request.args.get('per_page', 10, type=int)
             
-            # Get documents with pagination
+            # Get documents with pagination and company ID
             response = requests.get(
                 f"{DOCUMENTS_URL}/companies/{company_id}/documents",
                 headers=headers,
@@ -188,7 +188,13 @@ def document_api():
             )
             
             if response.status_code == 204:
-                return jsonify({'documents': [], 'total': 0, 'page': page, 'per_page': per_page, 'total_pages': 0})
+                return jsonify({
+                    'documents': [], 
+                    'total': 0, 
+                    'page': page, 
+                    'per_page': per_page, 
+                    'total_pages': 0
+                })
                 
             return response.json(), response.status_code
             
@@ -306,7 +312,7 @@ def list_users():
         response = requests.get(
             f"{USERS_URL}",
             headers=headers,
-            params={'company_id': company_id}
+            params={'company_id': company_id, 'page': 1, 'per_page': 10}
         )
         return response.json(), response.status_code
     except Exception as e:

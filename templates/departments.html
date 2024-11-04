@@ -19,10 +19,10 @@
                     </div>
                     <div class="department-stats">
                         <div class="stat">
-                            <i data-feather="users"></i>
+                            <i data-feather="grid"></i>
                             <div class="stat-info">
-                                <span>Members</span>
-                                <p>{{ department.member_count|default(0) }}</p>
+                                <span>Categories</span>
+                                <p>{{ department.category_count|default(0) }}</p>
                             </div>
                         </div>
                         <div class="stat">
@@ -144,10 +144,10 @@ function generateDepartmentsHTML(departments) {
             </div>
             <div class="department-stats">
                 <div class="stat">
-                    <i data-feather="users"></i>
+                    <i data-feather="grid"></i>
                     <div class="stat-info">
-                        <span>Members</span>
-                        <p>${department.member_count || 0}</p>
+                        <span>Categories</span>
+                        <p>${department.category_count || 0}</p>
                     </div>
                 </div>
                 <div class="stat">
