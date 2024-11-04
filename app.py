@@ -141,8 +141,8 @@ def documents():
         categories = categories_response.json() if categories_response.ok else []
         
         return render_template('documents.html', 
-                             departments=departments,
-                             categories=categories)
+                           departments=departments,
+                           categories=categories)
     except Exception as e:
         print(f"Error loading form data: {e}")
         return render_template('documents.html', departments=[], categories=[])
@@ -280,22 +280,26 @@ def department_categories_api(department_id):
         print(f"Error fetching department categories: {e}")
         return jsonify({'error': 'Failed to fetch categories'}), 500
 
-@app.route('/api/users')
+@app.route('/api/users/search')
 @login_required
-def list_users():
+def search_users():
     headers = get_auth_headers()
     company_id = session.get('company_id')
+    query = request.args.get('q', '')
     
     try:
         response = requests.get(
-            f"{USERS_URL}",
+            USERS_URL,
             headers=headers,
-            params={'company_id': company_id}
+            params={
+                'company_id': company_id,
+                'q': query
+            }
         )
         return response.json(), response.status_code
     except Exception as e:
-        print(f"Error fetching users: {e}")
-        return jsonify({'error': 'Failed to fetch users'}), 500
+        print(f"Error searching users: {e}")
+        return jsonify({'error': 'Failed to search users'}), 500
 
 if __name__ == '__main__':
     app.run(host="0.0.0.0", port=5000, debug=True)
