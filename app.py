@@ -141,8 +141,8 @@ def documents():
         categories = categories_response.json() if categories_response.ok else []
         
         return render_template('documents.html', 
-                           departments=departments,
-                           categories=categories)
+                             departments=departments,
+                             categories=categories)
     except Exception as e:
         print(f"Error loading form data: {e}")
         return render_template('documents.html', departments=[], categories=[])
@@ -166,23 +166,13 @@ def document_api():
             
             # Get documents with pagination
             response = requests.get(
-                f"{DOCUMENTS_URL}",
+                f"{DOCUMENTS_URL}/companies/{company_id}/documents",
                 headers=headers,
-                params={
-                    'company_id': company_id,
-                    'page': page,
-                    'per_page': per_page
-                }
+                params={'page': page, 'per_page': per_page}
             )
             
             if response.status_code == 204:
-                return jsonify({
-                    'documents': [],
-                    'total': 0,
-                    'page': page,
-                    'per_page': per_page,
-                    'total_pages': 0
-                }), 200
+                return jsonify({'documents': [], 'total': 0, 'page': page, 'per_page': per_page, 'total_pages': 0})
                 
             return response.json(), response.status_code
             
@@ -290,9 +280,9 @@ def department_categories_api(department_id):
         print(f"Error fetching department categories: {e}")
         return jsonify({'error': 'Failed to fetch categories'}), 500
 
-@app.route('/api/users', methods=['GET'])
+@app.route('/api/users')
 @login_required
-def user_api():
+def list_users():
     headers = get_auth_headers()
     company_id = session.get('company_id')
     
@@ -302,10 +292,6 @@ def user_api():
             headers=headers,
             params={'company_id': company_id}
         )
-        
-        if response.status_code == 204:
-            return jsonify({'users': [], 'total': 0}), 200
-            
         return response.json(), response.status_code
     except Exception as e:
         print(f"Error fetching users: {e}")
