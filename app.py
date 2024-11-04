@@ -180,26 +180,16 @@ def document_api():
             page = request.args.get('page', 1, type=int)
             per_page = request.args.get('per_page', 10, type=int)
             
-            # Get documents with pagination and company filter
+            # Get documents with pagination
             response = requests.get(
                 f"{DOCUMENTS_URL}/companies/{company_id}/documents",
                 headers=headers,
-                params={
-                    'page': page,
-                    'per_page': per_page,
-                    'company_id': company_id
-                }
+                params={'page': page, 'per_page': per_page}
             )
             
             if response.status_code == 204:
-                return jsonify({
-                    'documents': [],
-                    'total': 0,
-                    'page': page,
-                    'per_page': per_page,
-                    'total_pages': 0
-                })
-            
+                return jsonify({'documents': [], 'total': 0, 'page': page, 'per_page': per_page, 'total_pages': 0})
+                
             return response.json(), response.status_code
             
         except Exception as e:
@@ -316,20 +306,9 @@ def list_users():
         response = requests.get(
             f"{USERS_URL}",
             headers=headers,
-            params={
-                'page': 1,
-                'per_page': 100,
-                'company_id': company_id
-            }
+            params={'company_id': company_id}
         )
-        if not response.ok:
-            return jsonify({'error': 'Failed to fetch users'}), response.status_code
-            
-        data = response.json()
-        if not isinstance(data, dict) or 'users' not in data:
-            return jsonify({'error': 'Invalid response format'}), 500
-            
-        return data, response.status_code
+        return response.json(), response.status_code
     except Exception as e:
         print(f"Error fetching users: {e}")
         return jsonify({'error': 'Failed to fetch users'}), 500
