@@ -166,13 +166,23 @@ def document_api():
             
             # Get documents with pagination
             response = requests.get(
-                f"{DOCUMENTS_URL}/companies/{company_id}/documents",
+                f"{DOCUMENTS_URL}",
                 headers=headers,
-                params={'page': page, 'per_page': per_page}
+                params={
+                    'company_id': company_id,
+                    'page': page,
+                    'per_page': per_page
+                }
             )
             
             if response.status_code == 204:
-                return jsonify({'documents': [], 'total': 0, 'page': page, 'per_page': per_page, 'total_pages': 0})
+                return jsonify({
+                    'documents': [],
+                    'total': 0,
+                    'page': page,
+                    'per_page': per_page,
+                    'total_pages': 0
+                }), 200
                 
             return response.json(), response.status_code
             
@@ -280,26 +290,26 @@ def department_categories_api(department_id):
         print(f"Error fetching department categories: {e}")
         return jsonify({'error': 'Failed to fetch categories'}), 500
 
-@app.route('/api/users/search')
+@app.route('/api/users', methods=['GET'])
 @login_required
-def search_users():
+def user_api():
     headers = get_auth_headers()
     company_id = session.get('company_id')
-    query = request.args.get('q', '')
     
     try:
         response = requests.get(
-            USERS_URL,
+            f"{USERS_URL}",
             headers=headers,
-            params={
-                'company_id': company_id,
-                'q': query
-            }
+            params={'company_id': company_id}
         )
+        
+        if response.status_code == 204:
+            return jsonify({'users': [], 'total': 0}), 200
+            
         return response.json(), response.status_code
     except Exception as e:
-        print(f"Error searching users: {e}")
-        return jsonify({'error': 'Failed to search users'}), 500
+        print(f"Error fetching users: {e}")
+        return jsonify({'error': 'Failed to fetch users'}), 500
 
 if __name__ == '__main__':
     app.run(host="0.0.0.0", port=5000, debug=True)
