@@ -35,6 +35,7 @@
             <div class="form-group">
                 <label for="documentDepartment">Department</label>
                 <select id="documentDepartment" name="department_id" required>
+                    <option value="">Select Department</option>
                     {% for dept in departments %}
                     <option value="{{ dept.id }}">{{ dept.name }}</option>
                     {% endfor %}
@@ -43,10 +44,19 @@
             <div class="form-group">
                 <label for="documentCategory">Category</label>
                 <select id="documentCategory" name="category_id" required>
+                    <option value="">Select Category</option>
                     {% for cat in categories %}
                     <option value="{{ cat.id }}">{{ cat.name }}</option>
                     {% endfor %}
                 </select>
+            </div>
+            <div class="form-group">
+                <label for="documentUser">Assigned User</label>
+                <div class="user-search">
+                    <input type="text" id="userSearch" placeholder="Search users...">
+                    <input type="hidden" id="selectedUserId" name="user_id">
+                    <div id="userSearchResults" class="user-search-results"></div>
+                </div>
             </div>
             <div class="modal-actions">
                 <button type="button" class="action-btn" onclick="hideModal('addDocumentModal')">Cancel</button>
@@ -81,6 +91,14 @@
                     <option value="{{ cat.id }}">{{ cat.name }}</option>
                     {% endfor %}
                 </select>
+            </div>
+            <div class="form-group">
+                <label for="editDocumentUser">Assigned User</label>
+                <div class="user-search">
+                    <input type="text" id="editUserSearch" placeholder="Search users...">
+                    <input type="hidden" id="editSelectedUserId" name="user_id">
+                    <div id="editUserSearchResults" class="user-search-results"></div>
+                </div>
             </div>
             <div class="modal-actions">
                 <button type="button" class="action-btn" onclick="hideModal('editDocumentModal')">Cancel</button>
@@ -129,6 +147,125 @@ async function loadDocuments(page = 1) {
         hideLoading(contentDiv);
     }
 }
+
+function loadCategoriesByDepartment(departmentId) {
+    const categorySelect = document.getElementById('documentCategory');
+    showLoading(categorySelect);
+    
+    fetch(`/api/categories/departments/${departmentId}/categories`)
+        .then(response => response.json())
+        .then(data => {
+            categorySelect.innerHTML = '<option value="">Select Category</option>' +
+                data.categories.map(cat => 
+                    `<option value="${cat.id}">${cat.name}</option>`
+                ).join('');
+        })
+        .catch(error => {
+            console.error('Error loading categories:', error);
+            showErrorMessage('Failed to load categories');
+        })
+        .finally(() => {
+            hideLoading(categorySelect);
+        });
+}
+
+// Department change event listeners
+document.getElementById('documentDepartment').addEventListener('change', function() {
+    if (this.value) {
+        loadCategoriesByDepartment(this.value);
+    }
+});
+
+document.getElementById('editDocumentDepartment').addEventListener('change', function() {
+    if (this.value) {
+        const categorySelect = document.getElementById('editDocumentCategory');
+        showLoading(categorySelect);
+        
+        fetch(`/api/categories/departments/${this.value}/categories`)
+            .then(response => response.json())
+            .then(data => {
+                categorySelect.innerHTML = '<option value="">Select Category</option>' +
+                    data.categories.map(cat => 
+                        `<option value="${cat.id}">${cat.name}</option>`
+                    ).join('');
+            })
+            .catch(error => {
+                console.error('Error loading categories:', error);
+                showErrorMessage('Failed to load categories');
+            })
+            .finally(() => {
+                hideLoading(categorySelect);
+            });
+    }
+});
+
+// User search functionality
+let searchTimeout;
+
+function setupUserSearch(searchInput, resultsDiv, selectedInput) {
+    searchInput.addEventListener('input', function(e) {
+        clearTimeout(searchTimeout);
+        const searchTerm = e.target.value;
+        
+        if (searchTerm.length < 2) {
+            resultsDiv.classList.remove('show');
+            return;
+        }
+        
+        searchTimeout = setTimeout(() => {
+            showLoading(this);
+            fetch(`/api/users/search?q=${encodeURIComponent(searchTerm)}`)
+                .then(response => response.json())
+                .then(data => {
+                    resultsDiv.innerHTML = data.users.map(user => `
+                        <div class="user-result" onclick="selectUser('${user.id}', '${user.name}', '${searchInput.id}', '${selectedInput.id}', '${resultsDiv.id}')">
+                            ${user.name} (${user.email})
+                        </div>
+                    `).join('');
+                    resultsDiv.classList.add('show');
+                })
+                .catch(error => {
+                    console.error('Error searching users:', error);
+                    showErrorMessage('Failed to search users');
+                })
+                .finally(() => {
+                    hideLoading(this);
+                });
+        }, 300);
+    });
+}
+
+function selectUser(id, name, searchInputId, selectedInputId, resultsId) {
+    document.getElementById(searchInputId).value = name;
+    document.getElementById(selectedInputId).value = id;
+    document.getElementById(resultsId).classList.remove('show');
+}
+
+// Setup user search for both add and edit forms
+document.addEventListener('DOMContentLoaded', function() {
+    setupUserSearch(
+        document.getElementById('userSearch'),
+        document.getElementById('userSearchResults'),
+        document.getElementById('selectedUserId')
+    );
+    
+    setupUserSearch(
+        document.getElementById('editUserSearch'),
+        document.getElementById('editUserSearchResults'),
+        document.getElementById('editSelectedUserId')
+    );
+    
+    // Close search results when clicking outside
+    document.addEventListener('click', function(e) {
+        if (!e.target.closest('.user-search')) {
+            document.querySelectorAll('.user-search-results').forEach(div => {
+                div.classList.remove('show');
+            });
+        }
+    });
+    
+    loadDocuments(1);
+});
 
 function generateDocumentsHTML(documents) {
     if (!documents || documents.length === 0) {
@@ -216,8 +353,6 @@ async function createDocument(event) {
     }
     
     const formData = new FormData(form);
-    formData.append('user_id', '{{ session.get("user", {}).get("id", "") }}');
-    formData.append('company_id', '{{ session.get("company_id", "") }}');
     showLoading(submitButton);
 
     try {
@@ -248,8 +383,6 @@ async function updateDocument(event) {
     const id = document.getElementById('editDocumentId').value;
     const formData = new FormData(form);
     const data = Object.fromEntries(formData);
-    data.user_id = '{{ session.get("user", {}).get("id", "") }}';
-    data.company_id = '{{ session.get("company_id", "") }}';
     showLoading(submitButton);
 
     try {
@@ -322,10 +455,10 @@ function showEditDocumentModal(id, document) {
     document.getElementById('editDocumentTitle').value = document.titulo || '';
     document.getElementById('editDocumentDepartment').value = document.department_id;
     document.getElementById('editDocumentCategory').value = document.category_id;
+    document.getElementById('editUserSearch').value = document.user_name || '';
+    document.getElementById('editSelectedUserId').value = document.user_id || '';
     showModal('editDocumentModal');
 }
-
-document.addEventListener('DOMContentLoaded', () => loadDocuments(1));
 </script>
 
 <style>
@@ -520,6 +653,47 @@ document.addEventListener('DOMContentLoaded', () => loadDocuments(1));
     background-color: var(--bg-secondary);
     border-radius: 8px;
     padding: 1.5rem;
+}
+
+.user-search {
+    position: relative;
+}
+
+.user-search input {
+    width: 100%;
+    padding: 0.75rem;
+    background-color: var(--bg-tertiary);
+    border: 1px solid transparent;
+    border-radius: 4px;
+    color: var(--text-primary);
+}
+
+.user-search-results {
+    display: none;
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    background-color: var(--bg-tertiary);
+    border: 1px solid var(--border-color);
+    border-radius: 4px;
+    max-height: 200px;
+    overflow-y: auto;
+    z-index: 100;
+}
+
+.user-search-results.show {
+    display: block;
+}
+
+.user-result {
+    padding: 0.75rem;
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+
+.user-result:hover {
+    background-color: var(--accent-color);
 }
 </style>
 {% endblock %}

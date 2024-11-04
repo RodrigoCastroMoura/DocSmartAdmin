@@ -190,7 +190,7 @@ def document_api():
                 'titulo': request.form.get('titulo'),
                 'category_id': request.form.get('category_id'),
                 'department_id': request.form.get('department_id'),
-                'user_id': session.get('user', {}).get('id'),
+                'user_id': request.form.get('user_id'),
                 'company_id': company_id
             }
             
@@ -262,6 +262,44 @@ def document_download_api(document_id):
     except Exception as e:
         print(f"Error downloading document: {e}")
         return jsonify({'error': 'Failed to download document'}), 500
+
+@app.route('/api/categories/departments/<department_id>/categories')
+@login_required
+def department_categories_api(department_id):
+    headers = get_auth_headers()
+    company_id = session.get('company_id')
+    
+    try:
+        response = requests.get(
+            f"{CATEGORIES_URL}/departments/{department_id}/categories",
+            headers=headers,
+            params={'company_id': company_id}
+        )
+        return response.json(), response.status_code
+    except Exception as e:
+        print(f"Error fetching department categories: {e}")
+        return jsonify({'error': 'Failed to fetch categories'}), 500
+
+@app.route('/api/users/search')
+@login_required
+def search_users():
+    headers = get_auth_headers()
+    company_id = session.get('company_id')
+    query = request.args.get('q', '')
+    
+    try:
+        response = requests.get(
+            f"{USERS_URL}/search",
+            headers=headers,
+            params={
+                'q': query,
+                'company_id': company_id
+            }
+        )
+        return response.json(), response.status_code
+    except Exception as e:
+        print(f"Error searching users: {e}")
+        return jsonify({'error': 'Failed to search users'}), 500
 
 if __name__ == '__main__':
     app.run(host="0.0.0.0", port=5000, debug=True)
