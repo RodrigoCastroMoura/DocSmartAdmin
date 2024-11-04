@@ -52,10 +52,12 @@
             </div>
             <div class="form-group">
                 <label for="documentUser">Assigned User</label>
-                <div class="user-search">
-                    <input type="text" id="userSearch" placeholder="Search users...">
+                <div class="user-select">
+                    <input type="text" id="selectedUserDisplay" readonly placeholder="Click to select user" onclick="showUserSelectionModal('add')">
                     <input type="hidden" id="selectedUserId" name="user_id">
-                    <div id="userSearchResults" class="user-search-results"></div>
+                    <button type="button" class="action-btn" onclick="showUserSelectionModal('add')">
+                        <i data-feather="search"></i>
+                    </button>
                 </div>
             </div>
             <div class="modal-actions">
@@ -79,6 +81,7 @@
             <div class="form-group">
                 <label for="editDocumentDepartment">Department</label>
                 <select id="editDocumentDepartment" name="department_id" required>
+                    <option value="">Select Department</option>
                     {% for dept in departments %}
                     <option value="{{ dept.id }}">{{ dept.name }}</option>
                     {% endfor %}
@@ -87,6 +90,7 @@
             <div class="form-group">
                 <label for="editDocumentCategory">Category</label>
                 <select id="editDocumentCategory" name="category_id" required>
+                    <option value="">Select Category</option>
                     {% for cat in categories %}
                     <option value="{{ cat.id }}">{{ cat.name }}</option>
                     {% endfor %}
@@ -94,10 +98,12 @@
             </div>
             <div class="form-group">
                 <label for="editDocumentUser">Assigned User</label>
-                <div class="user-search">
-                    <input type="text" id="editUserSearch" placeholder="Search users...">
+                <div class="user-select">
+                    <input type="text" id="editSelectedUserDisplay" readonly placeholder="Click to select user" onclick="showUserSelectionModal('edit')">
                     <input type="hidden" id="editSelectedUserId" name="user_id">
-                    <div id="editUserSearchResults" class="user-search-results"></div>
+                    <button type="button" class="action-btn" onclick="showUserSelectionModal('edit')">
+                        <i data-feather="search"></i>
+                    </button>
                 </div>
             </div>
             <div class="modal-actions">
@@ -108,7 +114,26 @@
     </div>
 </div>
 
+<!-- User Selection Modal -->
+<div id="userSelectionModal" class="modal">
+    <div class="modal-content">
+        <h3>Select User</h3>
+        <div class="form-group">
+            <input type="text" id="userFilter" placeholder="Filter users..." onkeyup="filterUsers()">
+        </div>
+        <div class="users-list" id="usersList">
+            <!-- Users will be loaded here -->
+        </div>
+        <div class="modal-actions">
+            <button type="button" class="action-btn" onclick="hideModal('userSelectionModal')">Cancel</button>
+        </div>
+    </div>
+</div>
+
 <script>
+let users = []; // Will store all users
+let currentUserSelectionMode = 'add'; // 'add' or 'edit'
+
 setupFormValidation('addDocumentForm', {
     'documentTitle': [
         ValidationRules.required,
@@ -199,73 +224,57 @@ document.getElementById('editDocumentDepartment').addEventListener('change', fun
     }
 });
 
-// User search functionality
-let searchTimeout;
-
-function setupUserSearch(searchInput, resultsDiv, selectedInput) {
-    searchInput.addEventListener('input', function(e) {
-        clearTimeout(searchTimeout);
-        const searchTerm = e.target.value;
-        
-        if (searchTerm.length < 2) {
-            resultsDiv.classList.remove('show');
-            return;
-        }
-        
-        searchTimeout = setTimeout(() => {
-            showLoading(this);
-            fetch(`/api/users/search?q=${encodeURIComponent(searchTerm)}`)
-                .then(response => response.json())
-                .then(data => {
-                    resultsDiv.innerHTML = data.users.map(user => `
-                        <div class="user-result" onclick="selectUser('${user.id}', '${user.name}', '${searchInput.id}', '${selectedInput.id}', '${resultsDiv.id}')">
-                            ${user.name} (${user.email})
-                        </div>
-                    `).join('');
-                    resultsDiv.classList.add('show');
-                })
-                .catch(error => {
-                    console.error('Error searching users:', error);
-                    showErrorMessage('Failed to search users');
-                })
-                .finally(() => {
-                    hideLoading(this);
-                });
-        }, 300);
-    });
+async function loadUsers() {
+    try {
+        const response = await fetch('/api/users');
+        if (!response.ok) throw new Error('Failed to load users');
+        const data = await response.json();
+        users = data.users || [];
+        renderUsers(users);
+    } catch (error) {
+        console.error('Error loading users:', error);
+        showErrorMessage('Failed to load users');
+    }
 }
 
-function selectUser(id, name, searchInputId, selectedInputId, resultsId) {
-    document.getElementById(searchInputId).value = name;
-    document.getElementById(selectedInputId).value = id;
-    document.getElementById(resultsId).classList.remove('show');
+function renderUsers(usersToRender) {
+    const usersList = document.getElementById('usersList');
+    usersList.innerHTML = usersToRender.map(user => `
+        <div class="user-item" onclick="selectUserFromList('${user.id}', '${user.name}', '${user.email}')">
+            <div class="user-item-avatar">${user.name.slice(0, 2).toUpperCase()}</div>
+            <div class="user-item-info">
+                <p>${user.name}</p>
+                <p class="email">${user.email}</p>
+            </div>
+        </div>
+    `).join('');
 }
 
-// Setup user search for both add and edit forms
-document.addEventListener('DOMContentLoaded', function() {
-    setupUserSearch(
-        document.getElementById('userSearch'),
-        document.getElementById('userSearchResults'),
-        document.getElementById('selectedUserId')
+function filterUsers() {
+    const filterText = document.getElementById('userFilter').value.toLowerCase();
+    const filtered = users.filter(user => 
+        user.name.toLowerCase().includes(filterText) || 
+        user.email.toLowerCase().includes(filterText)
     );
-    
-    setupUserSearch(
-        document.getElementById('editUserSearch'),
-        document.getElementById('editUserSearchResults'),
-        document.getElementById('editSelectedUserId')
-    );
-    
-    // Close search results when clicking outside
-    document.addEventListener('click', function(e) {
-        if (!e.target.closest('.user-search')) {
-            document.querySelectorAll('.user-search-results').forEach(div => {
-                div.classList.remove('show');
-            });
-        }
-    });
-    
-    loadDocuments(1);
-});
+    renderUsers(filtered);
+}
+
+function showUserSelectionModal(mode) {
+    currentUserSelectionMode = mode;
+    showModal('userSelectionModal');
+    loadUsers();
+}
+
+function selectUserFromList(id, name, email) {
+    if (currentUserSelectionMode === 'add') {
+        document.getElementById('selectedUserDisplay').value = `${name} (${email})`;
+        document.getElementById('selectedUserId').value = id;
+    } else {
+        document.getElementById('editSelectedUserDisplay').value = `${name} (${email})`;
+        document.getElementById('editSelectedUserId').value = id;
+    }
+    hideModal('userSelectionModal');
+}
 
 function generateDocumentsHTML(documents) {
     if (!documents || documents.length === 0) {
@@ -455,10 +464,13 @@ function showEditDocumentModal(id, document) {
     document.getElementById('editDocumentTitle').value = document.titulo || '';
     document.getElementById('editDocumentDepartment').value = document.department_id;
     document.getElementById('editDocumentCategory').value = document.category_id;
-    document.getElementById('editUserSearch').value = document.user_name || '';
+    document.getElementById('editSelectedUserDisplay').value = document.user_name || '';
     document.getElementById('editSelectedUserId').value = document.user_id || '';
     showModal('editDocumentModal');
 }
+
+// Initialize documents list when page loads
+document.addEventListener('DOMContentLoaded', () => loadDocuments(1));
 </script>
 
 <style>
@@ -466,15 +478,14 @@ function showEditDocumentModal(id, document) {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
     gap: 1rem;
-    margin-bottom: 2rem;
 }
 
 .document-card {
-    display: flex;
-    min-height: 160px;
-    padding: 1rem;
     background-color: var(--bg-tertiary);
-    border-radius: 6px;
+    border-radius: 8px;
+    padding: 1.5rem;
+    display: flex;
+    gap: 1rem;
     transition: transform 0.2s;
 }
 
@@ -483,61 +494,54 @@ function showEditDocumentModal(id, document) {
 }
 
 .document-icon {
-    padding: 0.75rem;
+    padding: 1rem;
     background-color: var(--accent-color);
-    border-radius: 6px;
-    margin-right: 1rem;
-    flex-shrink: 0;
-    width: 40px;
-    height: 40px;
+    border-radius: 8px;
     display: flex;
     align-items: center;
     justify-content: center;
 }
 
-.document-icon i {
-    width: 20px;
-    height: 20px;
-}
-
 .document-info {
+    flex: 1;
     display: flex;
     flex-direction: column;
-    flex-grow: 1;
 }
 
 .document-header h3 {
-    margin-bottom: 0.25rem;
-    font-size: 1.1rem;
-    line-height: 1.4;
+    margin: 0;
+    margin-bottom: 0.5rem;
 }
 
 .document-meta {
     display: flex;
     gap: 0.5rem;
-    font-size: 0.875rem;
-    color: var(--text-secondary);
-    margin-bottom: 0.5rem;
-    flex-wrap: wrap;
+    margin: 0;
 }
 
 .document-meta span {
-    padding: 0.25rem 0.5rem;
+    font-size: 0.875rem;
+    color: var(--text-secondary);
     background-color: var(--bg-secondary);
+    padding: 0.25rem 0.5rem;
     border-radius: 4px;
 }
 
 .document-footer {
     margin-top: auto;
-    padding-top: 0.75rem;
-    border-top: 1px solid var(--border-color);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
 }
 
-.document-footer .filename {
+.filename {
     font-size: 0.875rem;
     color: var(--text-secondary);
-    margin-bottom: 0.5rem;
-    word-break: break-all;
+    margin: 0;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 200px;
 }
 
 .document-stats {
@@ -554,36 +558,27 @@ function showEditDocumentModal(id, document) {
 }
 
 .document-actions {
-    display: flex;
-    gap: 0.5rem;
     margin-top: 1rem;
-}
-
-.pagination {
     display: flex;
-    justify-content: center;
-    margin-top: 2rem;
+    justify-content: flex-end;
+    gap: 0.5rem;
 }
 
 .pagination-controls {
     display: flex;
+    justify-content: center;
     gap: 0.5rem;
-    align-items: center;
+    margin-top: 2rem;
 }
 
 .pagination-btn {
-    padding: 0.5rem;
-    min-width: 2.5rem;
-    height: 2.5rem;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    background-color: var(--bg-tertiary);
+    padding: 0.5rem 1rem;
     border: none;
-    border-radius: 4px;
+    background-color: var(--bg-tertiary);
     color: var(--text-primary);
+    border-radius: 4px;
     cursor: pointer;
-    transition: all 0.2s;
+    transition: background-color 0.2s;
 }
 
 .pagination-btn:hover:not(:disabled) {
@@ -599,101 +594,64 @@ function showEditDocumentModal(id, document) {
     cursor: not-allowed;
 }
 
-#documentFile {
-    padding: 0.5rem;
-    background-color: var(--bg-tertiary);
-    border-radius: 4px;
-    color: var(--text-primary);
-}
-
-#documentFile::file-selector-button {
-    background-color: var(--accent-color);
-    color: white;
-    padding: 0.5rem 1rem;
-    border: none;
-    border-radius: 4px;
-    cursor: pointer;
-    margin-right: 1rem;
-}
-
-#documentFile::file-selector-button:hover {
-    background-color: var(--accent-hover);
-}
-
-.no-data {
-    text-align: center;
-    padding: 2rem;
-    color: var(--text-secondary);
-    grid-column: 1 / -1;
-}
-
-.no-data i {
-    font-size: 3rem;
-    margin-bottom: 1rem;
-}
-
-.page-container {
-    padding: 2rem;
-}
-
-.header-actions {
+.user-select {
     display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 2rem;
-}
-
-.header-actions h2 {
-    display: flex;
-    align-items: center;
     gap: 0.5rem;
 }
 
-.content-grid {
-    background-color: var(--bg-secondary);
-    border-radius: 8px;
-    padding: 1.5rem;
-}
-
-.user-search {
-    position: relative;
-}
-
-.user-search input {
-    width: 100%;
-    padding: 0.75rem;
+.user-select input[readonly] {
     background-color: var(--bg-tertiary);
-    border: 1px solid transparent;
-    border-radius: 4px;
-    color: var(--text-primary);
+    cursor: pointer;
 }
 
-.user-search-results {
-    display: none;
-    position: absolute;
-    top: 100%;
-    left: 0;
-    right: 0;
-    background-color: var(--bg-tertiary);
-    border: 1px solid var(--border-color);
-    border-radius: 4px;
-    max-height: 200px;
+.users-list {
+    max-height: 300px;
     overflow-y: auto;
-    z-index: 100;
+    margin: 1rem 0;
 }
 
-.user-search-results.show {
-    display: block;
-}
-
-.user-result {
+.user-item {
+    display: flex;
+    align-items: center;
     padding: 0.75rem;
+    border-radius: 4px;
     cursor: pointer;
     transition: background-color 0.2s;
 }
 
-.user-result:hover {
+.user-item:hover {
+    background-color: var(--bg-tertiary);
+}
+
+.user-item.selected {
     background-color: var(--accent-color);
+    color: white;
+}
+
+.user-item-avatar {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    background-color: var(--accent-color);
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-right: 0.75rem;
+    font-size: 0.875rem;
+}
+
+.user-item-info {
+    flex: 1;
+}
+
+.user-item-info p {
+    margin: 0;
+}
+
+.user-item-info .email {
+    font-size: 0.875rem;
+    color: var(--text-secondary);
 }
 </style>
 {% endblock %}

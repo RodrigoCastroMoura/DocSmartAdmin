@@ -280,26 +280,22 @@ def department_categories_api(department_id):
         print(f"Error fetching department categories: {e}")
         return jsonify({'error': 'Failed to fetch categories'}), 500
 
-@app.route('/api/users/search')
+@app.route('/api/users')
 @login_required
-def search_users():
+def list_users():
     headers = get_auth_headers()
     company_id = session.get('company_id')
-    query = request.args.get('q', '')
     
     try:
         response = requests.get(
-            f"{USERS_URL}/search",
+            f"{USERS_URL}",
             headers=headers,
-            params={
-                'q': query,
-                'company_id': company_id
-            }
+            params={'company_id': company_id}
         )
         return response.json(), response.status_code
     except Exception as e:
-        print(f"Error searching users: {e}")
-        return jsonify({'error': 'Failed to search users'}), 500
+        print(f"Error fetching users: {e}")
+        return jsonify({'error': 'Failed to fetch users'}), 500
 
 if __name__ == '__main__':
     app.run(host="0.0.0.0", port=5000, debug=True)
