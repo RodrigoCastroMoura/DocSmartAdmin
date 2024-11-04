@@ -105,6 +105,22 @@ def dashboard():
 def departments():
     return render_template('departments.html', departments=[])
 
+@app.route('/api/departments')
+@login_required
+def department_api():
+    headers = get_auth_headers()
+    company_id = session.get('company_id')
+    
+    try:
+        response = requests.get(
+            f"{DEPARTMENTS_URL}/companies/{company_id}/departments",
+            headers=headers
+        )
+        return response.json(), response.status_code
+    except Exception as e:
+        print(f"Error fetching departments: {e}")
+        return jsonify({'error': 'Failed to fetch departments'}), 500
+
 @app.route('/categories')
 @login_required
 def categories():
