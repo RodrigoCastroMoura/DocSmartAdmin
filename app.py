@@ -151,6 +151,27 @@ def document_types():
 def users():
     return render_template('users.html')
 
+@app.route('/api/document_types', methods=['GET'])
+@login_required
+def document_type_api():
+    headers = get_auth_headers()
+    company_id = session.get('company_id')
+    
+    try:
+        response = requests.get(
+            f"{DOCUMENT_TYPES_URL}/companies/{company_id}/types",
+            headers=headers,
+            params=request.args.to_dict()
+        )
+        
+        if response.status_code == 204:
+            return jsonify([]), 200
+            
+        return response.json(), response.status_code
+    except Exception as e:
+        print(f"Error fetching document types: {e}")
+        return jsonify({'error': 'Failed to fetch document types'}), 500
+
 @app.route('/api/departments', methods=['GET'])
 @login_required
 def departments_api():
