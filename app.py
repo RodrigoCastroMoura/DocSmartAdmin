@@ -19,6 +19,7 @@ DEPARTMENTS_URL = f"{API_BASE_URL}/departments"
 CATEGORIES_URL = f"{API_BASE_URL}/categories"
 DOCUMENTS_URL = f"{API_BASE_URL}/documents"
 USERS_URL = f"{API_BASE_URL}/users"
+DOCUMENT_TYPES_URL = f"{API_BASE_URL}/document_types"
 
 def login_required(f):
     @wraps(f)
@@ -145,6 +146,71 @@ def documents():
 @login_required
 def users():
     return render_template('users.html')
+
+@app.route('/api/document_types', methods=['GET', 'POST'])
+@login_required
+def document_type_api():
+    headers = get_auth_headers()
+    company_id = session.get('company_id')
+    
+    if request.method == 'GET':
+        try:
+            params = request.args.to_dict()
+            params['company_id'] = company_id
+            response = requests.get(
+                f'{API_BASE_URL}/document_types',
+                headers=headers,
+                params=params
+            )
+            return response.json(), response.status_code
+        except Exception as e:
+            print(f'Error fetching document types: {e}')
+            return jsonify({'error': 'Failed to fetch document types'}), 500
+            
+    elif request.method == 'POST':
+        try:
+            data = request.json
+            data['company_id'] = company_id
+            response = requests.post(
+                f'{API_BASE_URL}/document_types',
+                headers=headers,
+                json=data
+            )
+            return response.json(), response.status_code
+        except Exception as e:
+            print(f'Error creating document type: {e}')
+            return jsonify({'error': 'Failed to create document type'}), 500
+
+@app.route('/api/document_types/<type_id>', methods=['PUT', 'DELETE'])
+@login_required
+def document_type_detail_api(type_id):
+    headers = get_auth_headers()
+    
+    if request.method == 'PUT':
+        try:
+            data = request.json
+            response = requests.put(
+                f'{API_BASE_URL}/document_types/{type_id}',
+                headers=headers,
+                json=data
+            )
+            return response.json(), response.status_code
+        except Exception as e:
+            print(f'Error updating document type: {e}')
+            return jsonify({'error': 'Failed to update document type'}), 500
+            
+    elif request.method == 'DELETE':
+        try:
+            response = requests.delete(
+                f'{API_BASE_URL}/document_types/{type_id}',
+                headers=headers
+            )
+            if response.status_code == 204:
+                return '', 204
+            return response.json(), response.status_code
+        except Exception as e:
+            print(f'Error deleting document type: {e}')
+            return jsonify({'error': 'Failed to delete document type'}), 500
 
 @app.route('/api/departments', methods=['GET', 'POST'])
 @login_required
@@ -406,7 +472,7 @@ def document_api():
                 return jsonify({'error': 'No file selected'}), 400
 
             # Required fields validation
-            required_fields = ['titulo', 'category_id', 'department_id', 'user_id']
+            required_fields = ['titulo', 'category_id', 'department_id', 'user_id', 'document_type_id']
             for field in required_fields:
                 if not request.form.get(field):
                     return jsonify({'error': f'Missing required field: {field}'}), 400
@@ -421,6 +487,7 @@ def document_api():
                 'category_id': request.form.get('category_id'),
                 'department_id': request.form.get('department_id'),
                 'user_id': request.form.get('user_id'),
+                'document_type_id': request.form.get('document_type_id'),
                 'company_id': company_id
             }
             
@@ -459,9 +526,11 @@ def document_detail_api(document_id):
             f"{DOCUMENTS_URL}/{document_id}",
             headers=headers
         )
+        
         if response.status_code == 204:
             return '', 204
         return response.json(), response.status_code
+            
     except Exception as e:
         print(f"Error deleting document: {e}")
         return jsonify({'error': 'Failed to delete document'}), 500
@@ -470,6 +539,7 @@ def document_detail_api(document_id):
 @login_required
 def document_download_api(document_id):
     headers = get_auth_headers()
+    
     try:
         response = requests.get(
             f"{DOCUMENTS_URL}/{document_id}/download",
