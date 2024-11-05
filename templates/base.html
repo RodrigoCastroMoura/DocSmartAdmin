@@ -40,6 +40,10 @@
                     <i data-feather="file-text"></i>
                     <span>Documents</span>
                 </a>
+                <a href="{{ url_for('document_types') }}" class="nav-item {% if request.endpoint == 'document_types' %}active{% endif %}">
+                    <i data-feather="file"></i>
+                    <span>Document Types</span>
+                </a>
                 <a href="{{ url_for('users') }}" class="nav-item {% if request.endpoint == 'users' %}active{% endif %}">
                     <i data-feather="users"></i>
                     <span>Users</span>
