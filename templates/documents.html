@@ -106,7 +106,6 @@ async function loadDepartmentCategories(departmentId) {
         }
         const data = await response.json();
         
-        // Handle the categories array from the response
         const categories = data.categories || [];
         
         categorySelect.innerHTML = `
@@ -234,6 +233,7 @@ async function createDocument(event) {
     }
     
     const formData = new FormData(form);
+    formData.append('company_id', '{{ session.get("company_id", "") }}');
     showLoading(submitButton);
 
     try {
@@ -244,9 +244,10 @@ async function createDocument(event) {
 
         if (!response.ok) {
             const errorData = await response.json();
-            throw new Error(errorData.error || 'Failed to create document');
+            throw new Error(errorData.error || 'Failed to upload document');
         }
 
+        const data = await response.json();
         hideModal('addDocumentModal');
         form.reset();
         await loadDocuments(currentPage);
@@ -306,7 +307,7 @@ function hideModal(modalId) {
 function showAddDocumentModal() {
     document.getElementById('addDocumentForm').reset();
     document.getElementById('documentCategory').innerHTML = '<option value="">Select Category</option>';
-    loadUsers(); // Add this line to load users when opening the modal
+    loadUsers();
     showModal('addDocumentModal');
 }
 

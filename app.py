@@ -146,7 +146,6 @@ def documents():
 def users():
     return render_template('users.html')
 
-# API Routes
 @app.route('/api/departments', methods=['GET', 'POST'])
 @login_required
 def department_api():
@@ -405,20 +404,16 @@ def document_api():
             if file.filename == '':
                 return jsonify({'error': 'No file selected'}), 400
 
-            # Prepare multipart form data
             files = {'file': (file.filename, file, file.content_type)}
             
-            # Prepare document metadata
             data = {
                 'titulo': request.form.get('titulo'),
                 'category_id': request.form.get('category_id'),
                 'department_id': request.form.get('department_id'),
                 'user_id': request.form.get('user_id'),
-                'company_id': company_id,
-                'name': file.filename
+                'company_id': company_id
             }
             
-            # Remove Content-Type header for multipart request
             upload_headers = {k: v for k, v in headers.items() if k.lower() != 'content-type'}
             
             response = requests.post(
@@ -428,15 +423,11 @@ def document_api():
                 files=files
             )
             
-            if response.ok:
-                return response.json(), 200
-            else:
-                error_data = response.json()
-                return jsonify({'error': error_data.get('error', 'Failed to upload document')}), response.status_code
+            return response.json(), response.status_code
                 
         except Exception as e:
             print(f"Error creating document: {e}")
-            return jsonify({'error': str(e) or 'Failed to create document'}), 500
+            return jsonify({'error': str(e)}), 500
 
 @app.route('/api/documents/<document_id>', methods=['DELETE'])
 @login_required
