@@ -219,7 +219,7 @@ def document_api():
                     'per_page': int(params.get('per_page', 10)),
                     'total_pages': 0
                 }), 200
-
+            
             if not response.ok:
                 error_data = response.json()
                 return jsonify({'error': error_data.get('error', 'Failed to fetch documents')}), response.status_code
@@ -238,7 +238,6 @@ def document_api():
             
     elif request.method == 'POST':
         try:
-            # Validate file presence
             if 'file' not in request.files:
                 return jsonify({'error': 'No file provided'}), 400
             
@@ -246,7 +245,6 @@ def document_api():
             if not file or not file.filename:
                 return jsonify({'error': 'Invalid file or filename'}), 400
 
-            # Validate form data
             data = request.form.to_dict()
             required_fields = ['titulo', 'category_id', 'document_type_id']
             missing_fields = [field for field in required_fields if not data.get(field)]
@@ -255,15 +253,12 @@ def document_api():
                     'error': f'Missing required fields: {", ".join(missing_fields)}'
                 }), 400
 
-            # Add company ID and prepare file
             data['company_id'] = company_id
             filename = secure_filename(file.filename)
             files = {'file': (filename, file.stream, file.content_type)}
             
-            # Remove content-type header for multipart request
             upload_headers = {k: v for k, v in headers.items() if k.lower() != 'content-type'}
             
-            # Make API request
             response = requests.post(
                 f"{DOCUMENTS_URL}/companies/{company_id}/upload",
                 headers=upload_headers,
@@ -273,9 +268,7 @@ def document_api():
 
             if not response.ok:
                 error_data = response.json()
-                return jsonify({
-                    'error': error_data.get('error', 'Failed to upload document')
-                }), response.status_code
+                return jsonify({'error': error_data.get('error', 'Failed to upload document')}), response.status_code
 
             return response.json(), 201
 
