@@ -397,6 +397,7 @@ def document_api():
             
     elif request.method == 'POST':
         try:
+            # Input validation
             if 'file' not in request.files:
                 return jsonify({'error': 'No file provided'}), 400
                 
@@ -404,8 +405,17 @@ def document_api():
             if file.filename == '':
                 return jsonify({'error': 'No file selected'}), 400
 
-            files = {'file': (file.filename, file, file.content_type)}
+            # Required fields validation
+            required_fields = ['titulo', 'category_id', 'department_id', 'user_id']
+            for field in required_fields:
+                if not request.form.get(field):
+                    return jsonify({'error': f'Missing required field: {field}'}), 400
+
+            # Secure filename and prepare file data
+            secure_name = secure_filename(file.filename)
+            files = {'file': (secure_name, file, file.content_type)}
             
+            # Prepare form data
             data = {
                 'titulo': request.form.get('titulo'),
                 'category_id': request.form.get('category_id'),
@@ -414,8 +424,10 @@ def document_api():
                 'company_id': company_id
             }
             
+            # Remove content-type from headers for multipart form data
             upload_headers = {k: v for k, v in headers.items() if k.lower() != 'content-type'}
             
+            # Make API request
             response = requests.post(
                 DOCUMENTS_URL,
                 headers=upload_headers,
@@ -423,11 +435,19 @@ def document_api():
                 files=files
             )
             
-            return response.json(), response.status_code
+            # Handle API response
+            if response.ok:
+                return response.json(), 201
+            else:
+                error_data = response.json()
+                return jsonify({'error': error_data.get('error', 'Failed to create document')}), response.status_code
                 
+        except requests.exceptions.RequestException as e:
+            print(f"Network error while creating document: {e}")
+            return jsonify({'error': 'Network error occurred while uploading document'}), 503
         except Exception as e:
             print(f"Error creating document: {e}")
-            return jsonify({'error': str(e)}), 500
+            return jsonify({'error': 'Internal server error'}), 500
 
 @app.route('/api/documents/<document_id>', methods=['DELETE'])
 @login_required
@@ -464,13 +484,10 @@ def document_download_api(document_id):
                 download_name=filename,
                 as_attachment=True
             )
+        else:
+            error_data = response.json()
+            return jsonify({'error': error_data.get('error', 'Failed to download document')}), response.status_code
             
-        error_data = response.json()
-        return jsonify({'error': error_data.get('error', 'Failed to download document')}), response.status_code
     except Exception as e:
         print(f"Error downloading document: {e}")
         return jsonify({'error': 'Failed to download document'}), 500
-
-if __name__ == '__main__':
-    port = int(os.environ.get('PORT', 5000))
-    app.run(host='0.0.0.0', port=port, debug=True)
