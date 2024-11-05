@@ -32,6 +32,12 @@
                 <input type="text" id="documentTypeDescription" name="description">
             </div>
             <div class="form-group">
+                <label for="documentTypeDepartment">Department</label>
+                <select id="documentTypeDepartment" onchange="loadDepartmentCategories(this.value)">
+                    <option value="">Select Department</option>
+                </select>
+            </div>
+            <div class="form-group">
                 <label for="documentTypeCategory">Category</label>
                 <select id="documentTypeCategory" name="category_id" required>
                     <option value="">Select Category</option>
@@ -58,6 +64,12 @@
             <div class="form-group">
                 <label for="editDocumentTypeDescription">Description</label>
                 <input type="text" id="editDocumentTypeDescription" name="description">
+            </div>
+            <div class="form-group">
+                <label for="editDocumentTypeDepartment">Department</label>
+                <select id="editDocumentTypeDepartment" onchange="loadDepartmentCategories(this.value, 'editDocumentTypeCategory')">
+                    <option value="">Select Department</option>
+                </select>
             </div>
             <div class="form-group">
                 <label for="editDocumentTypeCategory">Category</label>
@@ -96,32 +108,54 @@ setupFormValidation('editDocumentTypeForm', {
     ]
 });
 
-async function loadCategories() {
-    const categorySelects = [
-        document.getElementById('documentTypeCategory'),
-        document.getElementById('editDocumentTypeCategory')
+async function loadDepartments() {
+    const departmentSelects = [
+        document.getElementById('documentTypeDepartment'),
+        document.getElementById('editDocumentTypeDepartment')
     ];
     
     try {
-        const response = await fetch('/api/categories');
-        if (!response.ok) throw new Error('Failed to load categories');
+        const response = await fetch('/api/departments');
+        if (!response.ok) throw new Error('Failed to load departments');
         const data = await response.json();
-        if (!data || !data.categories) throw new Error('Invalid categories data');
         
-        const categoriesOptions = `
-            <option value="">Select Category</option>
-            ${data.categories.map(category => 
-                `<option value="${category.id}">${category.name}</option>`
+        const departmentsOptions = `
+            <option value="">Select Department</option>
+            ${data.map(dept => 
+                `<option value="${dept.id}">${dept.name}</option>`
             ).join('')}`;
             
-        categorySelects.forEach(select => {
-            if (select) select.innerHTML = categoriesOptions;
+        departmentSelects.forEach(select => {
+            if (select) select.innerHTML = departmentsOptions;
         });
     } catch (error) {
-        console.error('Error loading categories:', error);
-        categorySelects.forEach(select => {
-            if (select) select.innerHTML = '<option value="">Error loading categories</option>';
+        console.error('Error loading departments:', error);
+        departmentSelects.forEach(select => {
+            if (select) select.innerHTML = '<option value="">Error loading departments</option>';
         });
+    }
+}
+
+async function loadDepartmentCategories(departmentId, targetId = 'documentTypeCategory') {
+    const categorySelect = document.getElementById(targetId);
+    categorySelect.innerHTML = '<option value="">Loading categories...</option>';
+    categorySelect.disabled = true;
+
+    try {
+        const response = await fetch(`/api/categories/departments/${departmentId}/categories`);
+        if (!response.ok) throw new Error('Failed to load categories');
+        const data = await response.json();
+        
+        categorySelect.innerHTML = `
+            <option value="">Select Category</option>
+            ${data.categories.map(cat => 
+                `<option value="${cat.id}">${cat.name}</option>`
+            ).join('')}`;
+    } catch (error) {
+        console.error('Error loading categories:', error);
+        categorySelect.innerHTML = '<option value="">Error loading categories</option>';
+    } finally {
+        categorySelect.disabled = false;
     }
 }
 
@@ -311,7 +345,7 @@ function hideModal(modalId) {
 
 function showAddDocumentTypeModal() {
     document.getElementById('addDocumentTypeForm').reset();
-    loadCategories();
+    loadDepartments();
     showModal('addDocumentTypeModal');
 }
 
@@ -319,8 +353,13 @@ function showEditDocumentTypeModal(id, type) {
     document.getElementById('editDocumentTypeId').value = id;
     document.getElementById('editDocumentTypeName').value = type.name;
     document.getElementById('editDocumentTypeDescription').value = type.description || '';
-    loadCategories().then(() => {
-        document.getElementById('editDocumentTypeCategory').value = type.category_id || '';
+    loadDepartments().then(() => {
+        if (type.department_id) {
+            document.getElementById('editDocumentTypeDepartment').value = type.department_id;
+            loadDepartmentCategories(type.department_id, 'editDocumentTypeCategory').then(() => {
+                document.getElementById('editDocumentTypeCategory').value = type.category_id || '';
+            });
+        }
     });
     showModal('editDocumentTypeModal');
 }
