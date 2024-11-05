@@ -182,24 +182,16 @@ def document_type_api():
             if not data:
                 return jsonify({'error': 'No data provided'}), 400
                 
-            required_fields = ['name', 'category_id']
-            missing_fields = [field for field in required_fields if not data.get(field)]
-            if missing_fields:
-                return jsonify({'error': f'Missing required fields: {", ".join(missing_fields)}'}), 400
-                
             data['company_id'] = company_id
             response = requests.post(
-                f"{DOCUMENT_TYPES_URL}/companies/{company_id}/types",
+                f"{DOCUMENT_TYPES_URL}",  # Remove the company_id from URL
                 headers=headers,
                 json=data
             )
             
             if response.status_code == 201:
                 return response.json(), 201
-                
-            error_data = response.json()
-            return jsonify({'error': error_data.get('error', 'Failed to create document type')}), response.status_code
-            
+            return response.json(), response.status_code
         except Exception as e:
             print(f"Error creating document type: {e}")
             return jsonify({'error': 'Failed to create document type'}), 500
@@ -230,9 +222,7 @@ def document_type_detail_api(type_id):
             
             if response.status_code == 200:
                 return response.json(), 200
-                
-            error_data = response.json()
-            return jsonify({'error': error_data.get('error', 'Failed to update document type')}), response.status_code
+            return response.json(), response.status_code
             
         except Exception as e:
             print(f"Error updating document type: {e}")
@@ -246,9 +236,7 @@ def document_type_detail_api(type_id):
             )
             if response.status_code == 204:
                 return '', 204
-                
-            error_data = response.json()
-            return jsonify({'error': error_data.get('error', 'Failed to delete document type')}), response.status_code
+            return response.json(), response.status_code
             
         except Exception as e:
             print(f"Error deleting document type: {e}")
@@ -461,10 +449,11 @@ def document_api():
         try:
             params = {
                 'page': request.args.get('page', 1),
-                'per_page': request.args.get('per_page', 10)
+                'per_page': request.args.get('per_page', 10),
+                'company_id': company_id
             }
             response = requests.get(
-                f"{DOCUMENTS_URL}/companies/{company_id}/documents",
+                DOCUMENTS_URL,
                 headers=headers,
                 params=params
             )
@@ -481,29 +470,26 @@ def document_api():
             file = request.files['file']
             if file.filename == '':
                 return jsonify({'error': 'No file selected'}), 400
-
-            required_fields = ['titulo', 'category_id', 'department_id', 'user_id', 'document_type_id']
-            missing_fields = [field for field in required_fields if not request.form.get(field)]
-            if missing_fields:
-                return jsonify({'error': f'Missing required fields: {", ".join(missing_fields)}'}), 400
-
-            allowed_extensions = {'pdf', 'doc', 'docx', 'xls', 'xlsx', 'txt', 'jpg', 'jpeg', 'png'}
-            if '.' not in file.filename or file.filename.rsplit('.', 1)[1].lower() not in allowed_extensions:
-                return jsonify({'error': 'Invalid file type'}), 400
-
-            secure_name = secure_filename(file.filename)
-            files = {'file': (secure_name, file, file.content_type)}
+                
+            # Create a secure filename
+            filename = secure_filename(file.filename)
             
+            # Prepare form data
             data = {
                 'titulo': request.form.get('titulo'),
                 'category_id': request.form.get('category_id'),
                 'department_id': request.form.get('department_id'),
                 'user_id': request.form.get('user_id'),
-                'document_type_id': request.form.get('document_type_id'),
-                'company_id': company_id
+                'company_id': company_id,
+                'document_type_id': request.form.get('document_type_id')
             }
             
+            # Remove Content-Type from headers for multipart/form-data
             upload_headers = {k: v for k, v in headers.items() if k.lower() != 'content-type'}
+            
+            files = {
+                'file': (filename, file.stream, file.content_type)
+            }
             
             response = requests.post(
                 f"{DOCUMENTS_URL}/companies/{company_id}/upload",
@@ -515,8 +501,7 @@ def document_api():
             if response.status_code == 201:
                 return response.json(), 201
                 
-            error_data = response.json()
-            return jsonify({'error': error_data.get('error', 'Failed to create document')}), response.status_code
+            return response.json(), response.status_code
                 
         except Exception as e:
             print(f"Error creating document: {e}")
@@ -545,6 +530,7 @@ def document_detail_api(document_id):
 @login_required
 def document_download_api(document_id):
     headers = get_auth_headers()
+    company_id = session.get('company_id')
     
     try:
         response = requests.get(
