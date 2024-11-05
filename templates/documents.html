@@ -1,4 +1,108 @@
-[Previous content with updated loadDocumentTypes function]
+{% extends "base.html" %}
+
+{% block content %}
+<div class="page-container">
+    <div class="header-actions">
+        <h2><i data-feather="file-text"></i> Documents</h2>
+        <button class="action-btn primary" onclick="showAddDocumentModal()">
+            <i data-feather="plus"></i> Add Document
+        </button>
+    </div>
+    <div class="content-grid">
+        <div id="documentsContent">
+            <div class="documents-grid">
+                <div class="no-data">
+                    <i data-feather="inbox"></i>
+                    <p>Loading documents...</p>
+                </div>
+            </div>
+            <div class="pagination-controls">
+                <button class="action-btn" onclick="changePage(currentPage - 1)" id="prevPage" disabled>
+                    <i data-feather="chevron-left"></i> Previous
+                </button>
+                <span id="pageInfo">Page 1</span>
+                <button class="action-btn" onclick="changePage(currentPage + 1)" id="nextPage" disabled>
+                    Next <i data-feather="chevron-right"></i>
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Add Document Modal -->
+<div id="addDocumentModal" class="modal">
+    <div class="modal-content">
+        <h3>Add Document</h3>
+        <form id="addDocumentForm" onsubmit="createDocument(event)">
+            <div class="form-group">
+                <label for="documentTitle">Title</label>
+                <input type="text" id="documentTitle" name="titulo" required>
+            </div>
+            <div class="form-group">
+                <label for="documentDepartment">Department</label>
+                <select id="documentDepartment" name="department_id" required onchange="loadDepartmentCategories(this.value)">
+                    <option value="">Select Department</option>
+                    {% for dept in departments %}
+                    <option value="{{ dept.id }}">{{ dept.name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="documentCategory">Category</label>
+                <select id="documentCategory" name="category_id" required>
+                    <option value="">Select Category</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="documentType">Document Type</label>
+                <select id="documentType" name="document_type_id" required>
+                    <option value="">Select Document Type</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="documentUser">User</label>
+                <select id="documentUser" name="user_id" required>
+                    <option value="">Select User</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="documentFile">File</label>
+                <input type="file" id="documentFile" name="file" required>
+            </div>
+            <div class="modal-actions">
+                <button type="button" class="action-btn" onclick="hideModal('addDocumentModal')">Cancel</button>
+                <button type="submit" class="action-btn primary">Upload</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script src="{{ url_for('static', filename='js/validation.js') }}"></script>
+<script>
+let currentPage = 1;
+const perPage = 10;
+let totalPages = 1;
+
+setupFormValidation('addDocumentForm', {
+    'documentTitle': [
+        ValidationRules.required,
+        ValidationRules.minLength(3),
+        ValidationRules.maxLength(100)
+    ],
+    'documentDepartment': [
+        ValidationRules.required
+    ],
+    'documentCategory': [
+        ValidationRules.required
+    ],
+    'documentType': [
+        ValidationRules.required
+    ],
+    'documentUser': [
+        ValidationRules.required
+    ]
+});
+
 async function loadDocumentTypes() {
     const typeSelect = document.getElementById('documentType');
     typeSelect.innerHTML = '<option value="">Loading document types...</option>';
@@ -9,10 +113,9 @@ async function loadDocumentTypes() {
         if (!response.ok) throw new Error('Failed to load document types');
         const data = await response.json();
         
-        const types = data.document_types || [];
         typeSelect.innerHTML = `
             <option value="">Select Document Type</option>
-            ${types.map(type => 
+            ${data.types.map(type => 
                 `<option value="${type.id}">${type.name}</option>`
             ).join('')}`;
     } catch (error) {
@@ -22,4 +125,344 @@ async function loadDocumentTypes() {
         typeSelect.disabled = false;
     }
 }
-[Rest of the file content]
+
+async function loadDepartmentCategories(departmentId) {
+    const categorySelect = document.getElementById('documentCategory');
+    categorySelect.innerHTML = '<option value="">Loading categories...</option>';
+    categorySelect.disabled = true;
+
+    try {
+        const response = await fetch(`/api/categories/departments/${departmentId}/categories`);
+        if (!response.ok) {
+            throw new Error('Failed to load categories');
+        }
+        const data = await response.json();
+        
+        const categories = data.categories || [];
+        
+        categorySelect.innerHTML = `
+            <option value="">Select Category</option>
+            ${categories.map(cat => `
+                <option value="${cat.id}">${cat.name}</option>
+            `).join('')}`;
+    } catch (error) {
+        console.error('Error loading categories:', error);
+        categorySelect.innerHTML = '<option value="">Error loading categories</option>';
+    } finally {
+        categorySelect.disabled = false;
+    }
+}
+
+async function loadUsers() {
+    const userSelect = document.getElementById('documentUser');
+    try {
+        const response = await fetch('/api/users');
+        if (!response.ok) throw new Error('Failed to load users');
+        const data = await response.json();
+        
+        userSelect.innerHTML = `
+            <option value="">Select User</option>
+            ${data.users.map(user => 
+                `<option value="${user.id}">${user.name}</option>`
+            ).join('')}`;
+    } catch (error) {
+        console.error('Error loading users:', error);
+        userSelect.innerHTML = '<option value="">Error loading users</option>';
+    }
+}
+
+async function loadDocuments(page = 1) {
+    const contentDiv = document.getElementById('documentsContent');
+    showLoading(contentDiv);
+
+    try {
+        const response = await fetch(`/api/documents?page=${page}&per_page=${perPage}`);
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        const data = await response.json();
+        if (!data) {
+            throw new Error('Invalid response format');
+        }
+
+        currentPage = page;
+        totalPages = data.total_pages || 1;
+        updateDocumentsGrid(data);
+        updatePaginationControls();
+    } catch (error) {
+        console.error('Error loading documents:', error);
+        contentDiv.innerHTML = `
+            <div class="documents-grid">
+                <div class="no-data">
+                    <i data-feather="alert-circle"></i>
+                    <p>Error loading documents. Please try again.</p>
+                </div>
+            </div>`;
+        feather.replace();
+    } finally {
+        hideLoading(contentDiv);
+    }
+}
+
+function updatePaginationControls() {
+    document.getElementById('prevPage').disabled = currentPage <= 1;
+    document.getElementById('nextPage').disabled = currentPage >= totalPages;
+    document.getElementById('pageInfo').textContent = `Page ${currentPage} of ${totalPages}`;
+}
+
+function changePage(newPage) {
+    if (newPage >= 1 && newPage <= totalPages) {
+        loadDocuments(newPage);
+    }
+}
+
+function updateDocumentsGrid(data) {
+    const documents = data.documents || [];
+    const gridHTML = documents.length === 0 ? `
+        <div class="documents-grid">
+            <div class="no-data">
+                <i data-feather="inbox"></i>
+                <p>No documents found</p>
+            </div>
+        </div>` : `
+        <div class="documents-grid">
+            ${documents.map(doc => `
+                <div class="document-card" data-id="${doc.id}">
+                    <div class="document-header">
+                        <i data-feather="file-text"></i>
+                        <h3>${doc.name}</h3>
+                    </div>
+                    <div class="document-info">
+                        <p>${doc.titulo}</p>
+                        <div class="document-meta">
+                            <span><i data-feather="eye"></i> ${doc.view_count}</span>
+                            <span><i data-feather="download"></i> ${doc.download_count}</span>
+                        </div>
+                    </div>
+                    <div class="document-actions">
+                        <button class="action-btn" onclick="downloadDocument('${doc.id}')">
+                            <i data-feather="download"></i>
+                        </button>
+                        <button class="action-btn danger" onclick="deleteDocument('${doc.id}')">
+                            <i data-feather="trash-2"></i>
+                        </button>
+                    </div>
+                </div>
+            `).join('')}
+        </div>`;
+
+    const contentDiv = document.getElementById('documentsContent');
+    const paginationControls = contentDiv.querySelector('.pagination-controls');
+    contentDiv.innerHTML = gridHTML;
+    contentDiv.appendChild(paginationControls);
+    feather.replace();
+}
+
+async function createDocument(event) {
+    event.preventDefault();
+    const form = event.target;
+    const submitButton = form.querySelector('button[type="submit"]');
+    
+    if (!validateForm(form)) {
+        return;
+    }
+    
+    const formData = new FormData(form);
+    showLoading(submitButton);
+
+    try {
+        const response = await fetch('/api/documents', {
+            method: 'POST',
+            body: formData
+        });
+
+        if (!response.ok) {
+            const errorData = await response.json();
+            throw new Error(errorData.error || 'Failed to upload document');
+        }
+
+        const data = await response.json();
+        hideModal('addDocumentModal');
+        form.reset();
+        await loadDocuments(currentPage);
+        showErrorMessage('Document uploaded successfully', 'success');
+    } catch (error) {
+        console.error('Error creating document:', error);
+        showErrorMessage(error.message);
+    } finally {
+        hideLoading(submitButton);
+    }
+}
+
+async function downloadDocument(id) {
+    try {
+        window.location.href = `/api/documents/${id}/download`;
+    } catch (error) {
+        console.error('Error downloading document:', error);
+        showErrorMessage('Failed to download document');
+    }
+}
+
+async function deleteDocument(id) {
+    if (!confirm('Are you sure you want to delete this document?')) {
+        return;
+    }
+
+    const card = document.querySelector(`.document-card[data-id="${id}"]`);
+    showLoading(card);
+
+    try {
+        const response = await fetch(`/api/documents/${id}`, {
+            method: 'DELETE'
+        });
+
+        if (!response.ok) {
+            throw new Error('Failed to delete document');
+        }
+
+        await loadDocuments(currentPage);
+        showErrorMessage('Document deleted successfully', 'success');
+    } catch (error) {
+        console.error('Error deleting document:', error);
+        showErrorMessage(error.message);
+    } finally {
+        hideLoading(card);
+    }
+}
+
+function showModal(modalId) {
+    document.getElementById(modalId).style.display = 'block';
+}
+
+function hideModal(modalId) {
+    document.getElementById(modalId).style.display = 'none';
+}
+
+function showAddDocumentModal() {
+    document.getElementById('addDocumentForm').reset();
+    document.getElementById('documentCategory').innerHTML = '<option value="">Select Category</option>';
+    loadUsers();
+    loadDocumentTypes();
+    showModal('addDocumentModal');
+}
+
+document.addEventListener('DOMContentLoaded', () => loadDocuments());
+</script>
+
+<style>
+.documents-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 1rem;
+    margin-bottom: 1rem;
+}
+
+.document-card {
+    background-color: var(--bg-tertiary);
+    border-radius: 8px;
+    padding: 1.5rem;
+    transition: transform 0.2s;
+}
+
+.document-card:hover {
+    transform: translateY(-2px);
+}
+
+.document-header {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    margin-bottom: 1rem;
+}
+
+.document-header i {
+    padding: 0.75rem;
+    background-color: var(--accent-color);
+    border-radius: 6px;
+}
+
+.document-info {
+    margin: 1rem 0;
+}
+
+.document-meta {
+    display: flex;
+    gap: 1rem;
+    margin-top: 0.5rem;
+    color: var(--text-secondary);
+    font-size: 0.875rem;
+}
+
+.document-meta span {
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+}
+
+.document-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 0.5rem;
+    margin-top: 1rem;
+}
+
+.pagination-controls {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 1rem;
+    margin-top: 1rem;
+    padding: 1rem;
+}
+
+.pagination-controls button {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.pagination-controls button:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+#pageInfo {
+    color: var(--text-secondary);
+}
+
+.page-container {
+    padding: 2rem;
+}
+
+.header-actions {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 2rem;
+}
+
+.header-actions h2 {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.content-grid {
+    background-color: var(--bg-secondary);
+    border-radius: 8px;
+    padding: 1.5rem;
+}
+
+.no-data {
+    text-align: center;
+    padding: 2rem;
+    color: var(--text-secondary);
+}
+
+.no-data i {
+    font-size: 2rem;
+    margin-bottom: 0.5rem;
+    opacity: 0.5;
+}
+</style>
+{% endblock %}
