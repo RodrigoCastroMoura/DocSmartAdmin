@@ -136,11 +136,11 @@ async function loadDocumentTypes() {
         }
         
         const data = await response.json();
-        if (!data) {
+        if (!data || !data.document_types) {
             throw new Error('Invalid response format');
         }
 
-        contentDiv.innerHTML = generateDocumentTypesHTML(data);
+        contentDiv.innerHTML = generateDocumentTypesHTML(data.document_types);
         feather.replace();
     } catch (error) {
         console.error('Error loading document types:', error);

@@ -160,10 +160,17 @@ def document_type_api():
     
     if request.method == 'GET':
         try:
+            params = {
+                'page': request.args.get('page', 1),
+                'per_page': request.args.get('per_page', 10)
+            }
             response = requests.get(
-                f"{DOCUMENT_TYPES_URL}/companies/{company_id}/document_types",
-                headers=headers
+                f"{DOCUMENT_TYPES_URL}/companies/{company_id}/types",
+                headers=headers,
+                params=params
             )
+            if not response.ok:
+                return jsonify({'error': 'Failed to fetch document types'}), response.status_code
             return response.json(), response.status_code
         except Exception as e:
             print(f"Error fetching document types: {e}")
@@ -182,7 +189,7 @@ def document_type_api():
                 
             data['company_id'] = company_id
             response = requests.post(
-                DOCUMENT_TYPES_URL,
+                f"{DOCUMENT_TYPES_URL}/companies/{company_id}/types",
                 headers=headers,
                 json=data
             )
@@ -216,7 +223,7 @@ def document_type_detail_api(type_id):
                 
             data['company_id'] = company_id
             response = requests.put(
-                f"{DOCUMENT_TYPES_URL}/{type_id}",
+                f"{DOCUMENT_TYPES_URL}/companies/{company_id}/types/{type_id}",
                 headers=headers,
                 json=data
             )
@@ -234,7 +241,7 @@ def document_type_detail_api(type_id):
     elif request.method == 'DELETE':
         try:
             response = requests.delete(
-                f"{DOCUMENT_TYPES_URL}/{type_id}",
+                f"{DOCUMENT_TYPES_URL}/companies/{company_id}/types/{type_id}",
                 headers=headers
             )
             if response.status_code == 204:
@@ -461,32 +468,10 @@ def document_api():
                 headers=headers,
                 params=params
             )
-            
-            if response.status_code == 204:
-                return jsonify({
-                    'documents': [], 
-                    'total': 0, 
-                    'page': params['page'], 
-                    'per_page': params['per_page'], 
-                    'total_pages': 0
-                }), 200
-            
-            if response.ok:
-                data = response.json()
-                return jsonify(data), 200
-                
-            error_data = response.json()
-            return jsonify({
-                'error': error_data.get('error', 'Failed to fetch documents'),
-                'documents': []
-            }), response.status_code
-            
+            return response.json(), response.status_code
         except Exception as e:
             print(f"Error fetching documents: {e}")
-            return jsonify({
-                'error': 'Failed to fetch documents',
-                'documents': []
-            }), 500
+            return jsonify({'error': 'Failed to fetch documents'}), 500
             
     elif request.method == 'POST':
         try:
@@ -521,7 +506,7 @@ def document_api():
             upload_headers = {k: v for k, v in headers.items() if k.lower() != 'content-type'}
             
             response = requests.post(
-                DOCUMENTS_URL,
+                f"{DOCUMENTS_URL}/companies/{company_id}/upload",
                 headers=upload_headers,
                 data=data,
                 files=files
@@ -529,42 +514,38 @@ def document_api():
             
             if response.status_code == 201:
                 return response.json(), 201
-            
+                
             error_data = response.json()
             return jsonify({'error': error_data.get('error', 'Failed to create document')}), response.status_code
                 
-        except requests.exceptions.RequestException as e:
-            print(f"Network error while creating document: {e}")
-            return jsonify({'error': 'Network error occurred while uploading document'}), 503
         except Exception as e:
             print(f"Error creating document: {e}")
-            return jsonify({'error': 'Internal server error'}), 500
+            return jsonify({'error': 'Failed to create document'}), 500
 
 @app.route('/api/documents/<document_id>', methods=['DELETE'])
 @login_required
 def document_detail_api(document_id):
     headers = get_auth_headers()
+    company_id = session.get('company_id')
     
-    try:
-        response = requests.delete(
-            f"{DOCUMENTS_URL}/{document_id}",
-            headers=headers
-        )
-        
-        if response.status_code == 204:
-            return '', 204
-            
-        error_data = response.json()
-        return jsonify({'error': error_data.get('error', 'Failed to delete document')}), response.status_code
-            
-    except Exception as e:
-        print(f"Error deleting document: {e}")
-        return jsonify({'error': 'Failed to delete document'}), 500
+    if request.method == 'DELETE':
+        try:
+            response = requests.delete(
+                f"{DOCUMENTS_URL}/{document_id}",
+                headers=headers
+            )
+            if response.status_code == 204:
+                return '', 204
+            return response.json(), response.status_code
+        except Exception as e:
+            print(f"Error deleting document: {e}")
+            return jsonify({'error': 'Failed to delete document'}), 500
 
 @app.route('/api/documents/<document_id>/download')
 @login_required
-def download_document(document_id):
+def document_download_api(document_id):
     headers = get_auth_headers()
+    
     try:
         response = requests.get(
             f"{DOCUMENTS_URL}/{document_id}/download",
@@ -572,26 +553,20 @@ def download_document(document_id):
             stream=True
         )
         
-        if response.status_code == 404:
-            return jsonify({'error': 'Document not found'}), 404
-        elif response.status_code != 200:
-            error_data = response.json()
-            return jsonify({'error': error_data.get('error', 'Failed to download document')}), response.status_code
+        if response.status_code == 200:
+            return Response(
+                response.iter_content(chunk_size=8192),
+                content_type=response.headers['Content-Type'],
+                headers={
+                    'Content-Disposition': response.headers.get('Content-Disposition', 'attachment')
+                }
+            )
             
-        content_type = response.headers.get('content-type', 'application/octet-stream')
-        filename = response.headers.get('content-disposition', '').split('filename=')[-1].strip('"')
-            
-        def generate():
-            for chunk in response.iter_content(chunk_size=8192):
-                yield chunk
-                    
-        download_response = Response(generate(), content_type=content_type)
-        download_response.headers['Content-Disposition'] = f'attachment; filename="{filename}"'
-        return download_response
-            
+        error_data = response.json()
+        return jsonify({'error': error_data.get('error', 'Failed to download document')}), response.status_code
     except Exception as e:
         print(f"Error downloading document: {e}")
         return jsonify({'error': 'Failed to download document'}), 500
 
 if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=5000, debug=True)
+    app.run(host='0.0.0.0', port=5000)
