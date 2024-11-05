@@ -178,10 +178,11 @@ async function loadDocuments(page = 1) {
     try {
         const response = await fetch(`/api/documents?page=${page}&per_page=${perPage}`);
         if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status}`);
+            throw new Error(`Failed to load documents: ${response.status}`);
         }
+        
         const data = await response.json();
-        if (!data) {
+        if (!data || !Array.isArray(data.documents)) {
             throw new Error('Invalid response format');
         }
 
@@ -195,7 +196,7 @@ async function loadDocuments(page = 1) {
             <div class="documents-grid">
                 <div class="no-data">
                     <i data-feather="alert-circle"></i>
-                    <p>Error loading documents. Please try again.</p>
+                    <p>${error.message || 'Failed to load documents'}</p>
                 </div>
             </div>`;
         feather.replace();
