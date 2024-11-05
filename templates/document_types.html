@@ -135,8 +135,12 @@ async function loadDocumentTypes() {
             throw new Error(`HTTP error! status: ${response.status}`);
         }
         
-        const types = await response.json();
-        contentDiv.innerHTML = generateDocumentTypesHTML(types);
+        const data = await response.json();
+        if (!data) {
+            throw new Error('Invalid response format');
+        }
+
+        contentDiv.innerHTML = generateDocumentTypesHTML(data);
         feather.replace();
     } catch (error) {
         console.error('Error loading document types:', error);
@@ -172,8 +176,10 @@ function generateDocumentTypesHTML(types) {
             </div>
             <div class="document-type-info">
                 <p class="description">${type.description || 'No description'}</p>
-                <p class="category">${type.category_name || 'Uncategorized'}</p>
-                <p>${type.document_count || 0} documents</p>
+                <p class="meta">
+                    <span>Documents: ${type.document_count || 0}</span>
+                    <span>Created: ${new Date(type.created_at).toLocaleDateString()}</span>
+                </p>
             </div>
             <div class="document-type-actions">
                 <button class="action-btn" onclick='showEditDocumentTypeModal("${type.id}", ${JSON.stringify(type)})'>
@@ -364,13 +370,10 @@ document.addEventListener('DOMContentLoaded', loadDocumentTypes);
     font-style: italic;
 }
 
-.document-type-info .category {
-    display: inline-block;
-    padding: 0.25rem 0.5rem;
-    background-color: var(--bg-secondary);
-    border-radius: 4px;
+.document-type-info .meta {
+    display: flex;
+    gap: 1rem;
     font-size: 0.875rem;
-    margin-bottom: 0.5rem;
 }
 
 .document-type-actions {
@@ -410,8 +413,9 @@ document.addEventListener('DOMContentLoaded', loadDocumentTypes);
 }
 
 .no-data i {
-    font-size: 3rem;
-    margin-bottom: 1rem;
+    font-size: 2rem;
+    margin-bottom: 0.5rem;
+    opacity: 0.5;
 }
 </style>
 {% endblock %}

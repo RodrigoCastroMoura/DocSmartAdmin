@@ -164,12 +164,7 @@ def document_type_api():
                 f"{DOCUMENT_TYPES_URL}/companies/{company_id}/document_types",
                 headers=headers
             )
-            
-            if response.status_code == 204 or response.status_code == 404:
-                return jsonify([]), 200
-            
-            return response.json(), 200
-            
+            return response.json(), response.status_code
         except Exception as e:
             print(f"Error fetching document types: {e}")
             return jsonify({'error': 'Failed to fetch document types'}), 500
@@ -534,7 +529,7 @@ def document_api():
             
             if response.status_code == 201:
                 return response.json(), 201
-                
+            
             error_data = response.json()
             return jsonify({'error': error_data.get('error', 'Failed to create document')}), response.status_code
                 
