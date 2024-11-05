@@ -169,12 +169,24 @@ def document_type_api():
                 headers=headers,
                 params=params
             )
-            if not response.ok:
-                return jsonify({'error': 'Failed to fetch document types'}), response.status_code
+            
+            if response.status_code == 204:
+                return jsonify({
+                    'types': [],
+                    'total': 0,
+                    'page': 1,
+                    'per_page': 10,
+                    'total_pages': 0
+                }), 200
+                
             return response.json(), response.status_code
+            
         except Exception as e:
             print(f"Error fetching document types: {e}")
-            return jsonify({'error': 'Failed to fetch document types'}), 500
+            return jsonify({
+                'error': 'Failed to fetch document types',
+                'types': []
+            }), 500
             
     elif request.method == 'POST':
         try:
