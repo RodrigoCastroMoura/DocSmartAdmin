@@ -25,7 +25,7 @@
                         <p>{{ category.document_count|default(0) }} documents</p>
                     </div>
                     <div class="category-actions">
-                        <button class="action-btn" onclick="showEditCategoryModal('{{ category.id }}', {{ category|tojson|safe }})">
+                        <button class="action-btn" onclick='showEditCategoryModal("{{ category.id }}", {{ category|tojson|safe }})'>
                             <i data-feather="edit-2"></i>
                         </button>
                         <button class="action-btn danger" onclick="deleteCategory('{{ category.id }}')">
@@ -128,9 +128,19 @@ async function loadCategories() {
     try {
         const response = await fetch('/api/categories');
         await handleApiResponse(response, async (data) => {
-            contentDiv.innerHTML = generateCategoriesHTML(data);
+            contentDiv.innerHTML = generateCategoriesHTML(data.categories);
             feather.replace();
         });
+    } catch (error) {
+        console.error('Error loading categories:', error);
+        contentDiv.innerHTML = `
+            <div class='categories-grid'>
+                <div class='no-data'>
+                    <i data-feather='alert-circle'></i>
+                    <p>Failed to load categories</p>
+                </div>
+            </div>`;
+        feather.replace();
     } finally {
         hideLoading(contentDiv);
     }

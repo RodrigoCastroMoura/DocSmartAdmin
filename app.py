@@ -43,6 +43,7 @@ def login_required(f):
 def get_auth_headers():
     return {'Authorization': f'Bearer {session["access_token"]}'}
 
+# Routes...
 @app.route('/')
 def index():
     if 'access_token' in session:
@@ -137,20 +138,104 @@ def categories():
         print(f"Error loading departments: {e}")
         return render_template('categories.html', departments=[])
 
+# Updated Categories API endpoints
+@app.route('/api/categories', methods=['GET', 'POST'])
+@login_required
+def category_api():
+    headers = get_auth_headers()
+    company_id = session.get('company_id')
+    
+    if request.method == 'GET':
+        try:
+            response = requests.get(
+                f'{CATEGORIES_URL}/companies/{company_id}/categories',
+                headers=headers,
+                params=request.args
+            )
+            return response.json(), response.status_code
+        except Exception as e:
+            print(f'Error fetching categories: {e}')
+            return jsonify({'error': 'Failed to fetch categories'}), 500
+    
+    elif request.method == 'POST':
+        try:
+            data = request.json
+            data['company_id'] = company_id
+            response = requests.post(
+                CATEGORIES_URL,
+                headers=headers,
+                json=data
+            )
+            return response.json(), response.status_code
+        except Exception as e:
+            print(f'Error creating category: {e}')
+            return jsonify({'error': 'Failed to create category'}), 500
+
+@app.route('/api/categories/<category_id>', methods=['PUT', 'DELETE'])
+@login_required
+def category_detail_api(category_id):
+    headers = get_auth_headers()
+    company_id = session.get('company_id')
+    
+    if request.method == 'PUT':
+        try:
+            data = request.json
+            data['company_id'] = company_id
+            response = requests.put(
+                f"{CATEGORIES_URL}/{category_id}",
+                headers=headers,
+                json=data
+            )
+            return response.json(), response.status_code
+        except Exception as e:
+            print(f'Error updating category: {e}')
+            return jsonify({'error': 'Failed to update category'}), 500
+            
+    elif request.method == 'DELETE':
+        try:
+            response = requests.delete(
+                f"{CATEGORIES_URL}/{category_id}",
+                headers=headers
+            )
+            if response.status_code == 204:
+                return '', 204
+            return response.json(), response.status_code
+        except Exception as e:
+            print(f'Error deleting category: {e}')
+            return jsonify({'error': 'Failed to delete category'}), 500
+
+@app.route('/api/categories/departments/<department_id>/categories')
+@login_required
+def department_categories_api(department_id):
+    headers = get_auth_headers()
+    company_id = session.get('company_id')
+    
+    try:
+        response = requests.get(
+            f"{CATEGORIES_URL}/departments/{department_id}/categories",
+            headers=headers,
+            params={'company_id': company_id}
+        )
+        return response.json(), response.status_code
+    except Exception as e:
+        print(f"Error fetching department categories: {e}")
+        return jsonify({'error': 'Failed to fetch categories'}), 500
+
+# Rest of the routes...
 @app.route('/documents')
 @login_required
 def documents():
     headers = get_auth_headers()
     company_id = session.get('company_id')
     try:
-        # Get departments and categories for form dropdowns
         departments_response = requests.get(
             f"{DEPARTMENTS_URL}/companies/{company_id}/departments",
             headers=headers
         )
         categories_response = requests.get(
             f"{CATEGORIES_URL}/companies/{company_id}/categories",
-            headers=headers
+            headers=headers,
+            params={'page': 1, 'per_page': 10}
         )
         
         departments = departments_response.json() if departments_response.ok else []
@@ -176,11 +261,9 @@ def document_api():
     
     if request.method == 'GET':
         try:
-            # Get pagination parameters
             page = request.args.get('page', 1, type=int)
             per_page = request.args.get('per_page', 10, type=int)
             
-            # Get documents with pagination and company ID
             response = requests.get(
                 f"{DOCUMENTS_URL}/companies/{company_id}/documents",
                 headers=headers,
@@ -212,7 +295,7 @@ def document_api():
                 'titulo': request.form.get('titulo'),
                 'category_id': request.form.get('category_id'),
                 'department_id': request.form.get('department_id'),
-                'user_id': request.form.get('user_id'),
+                'user_id': session.get('user', {}).get('id'),
                 'company_id': company_id
             }
             
@@ -284,23 +367,6 @@ def document_download_api(document_id):
     except Exception as e:
         print(f"Error downloading document: {e}")
         return jsonify({'error': 'Failed to download document'}), 500
-
-@app.route('/api/categories/departments/<department_id>/categories')
-@login_required
-def department_categories_api(department_id):
-    headers = get_auth_headers()
-    company_id = session.get('company_id')
-    
-    try:
-        response = requests.get(
-            f"{CATEGORIES_URL}/departments/{department_id}/categories",
-            headers=headers,
-            params={'company_id': company_id}
-        )
-        return response.json(), response.status_code
-    except Exception as e:
-        print(f"Error fetching department categories: {e}")
-        return jsonify({'error': 'Failed to fetch categories'}), 500
 
 @app.route('/api/users')
 @login_required
