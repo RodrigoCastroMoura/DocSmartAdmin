@@ -43,7 +43,6 @@ def login_required(f):
 def get_auth_headers():
     return {'Authorization': f'Bearer {session["access_token"]}'}
 
-# Routes...
 @app.route('/')
 def index():
     if 'access_token' in session:
@@ -106,21 +105,69 @@ def dashboard():
 def departments():
     return render_template('departments.html', departments=[])
 
-@app.route('/api/departments')
+@app.route('/api/departments', methods=['GET', 'POST'])
 @login_required
 def department_api():
     headers = get_auth_headers()
     company_id = session.get('company_id')
     
-    try:
-        response = requests.get(
-            f"{DEPARTMENTS_URL}/companies/{company_id}/departments",
-            headers=headers
-        )
-        return response.json(), response.status_code
-    except Exception as e:
-        print(f"Error fetching departments: {e}")
-        return jsonify({'error': 'Failed to fetch departments'}), 500
+    if request.method == 'GET':
+        try:
+            response = requests.get(
+                f'{DEPARTMENTS_URL}/companies/{company_id}/departments',
+                headers=headers
+            )
+            return response.json(), response.status_code
+        except Exception as e:
+            print(f'Error fetching departments: {e}')
+            return jsonify({'error': 'Failed to fetch departments'}), 500
+            
+    elif request.method == 'POST':
+        try:
+            data = request.json
+            data['company_id'] = company_id
+            response = requests.post(
+                DEPARTMENTS_URL,
+                headers=headers,
+                json=data
+            )
+            return response.json(), response.status_code
+        except Exception as e:
+            print(f'Error creating department: {e}')
+            return jsonify({'error': 'Failed to create department'}), 500
+
+@app.route('/api/departments/<department_id>', methods=['PUT', 'DELETE'])
+@login_required
+def department_detail_api(department_id):
+    headers = get_auth_headers()
+    company_id = session.get('company_id')
+    
+    if request.method == 'PUT':
+        try:
+            data = request.json
+            data['company_id'] = company_id
+            response = requests.put(
+                f'{DEPARTMENTS_URL}/{department_id}',
+                headers=headers,
+                json=data
+            )
+            return response.json(), response.status_code
+        except Exception as e:
+            print(f'Error updating department: {e}')
+            return jsonify({'error': 'Failed to update department'}), 500
+            
+    elif request.method == 'DELETE':
+        try:
+            response = requests.delete(
+                f'{DEPARTMENTS_URL}/{department_id}',
+                headers=headers
+            )
+            if response.status_code == 204:
+                return '', 204
+            return response.json(), response.status_code
+        except Exception as e:
+            print(f'Error deleting department: {e}')
+            return jsonify({'error': 'Failed to delete department'}), 500
 
 @app.route('/categories')
 @login_required
@@ -138,7 +185,6 @@ def categories():
         print(f"Error loading departments: {e}")
         return render_template('categories.html', departments=[])
 
-# Updated Categories API endpoints
 @app.route('/api/categories', methods=['GET', 'POST'])
 @login_required
 def category_api():
@@ -221,7 +267,6 @@ def department_categories_api(department_id):
         print(f"Error fetching department categories: {e}")
         return jsonify({'error': 'Failed to fetch categories'}), 500
 
-# Rest of the routes...
 @app.route('/documents')
 @login_required
 def documents():
@@ -252,6 +297,23 @@ def documents():
 @login_required
 def users():
     return render_template('users.html')
+
+@app.route('/api/users')
+@login_required
+def list_users():
+    headers = get_auth_headers()
+    company_id = session.get('company_id')
+    
+    try:
+        response = requests.get(
+            f"{USERS_URL}",
+            headers=headers,
+            params={'company_id': company_id, 'page': 1, 'per_page': 10}
+        )
+        return response.json(), response.status_code
+    except Exception as e:
+        print(f"Error fetching users: {e}")
+        return jsonify({'error': 'Failed to fetch users'}), 500
 
 @app.route('/api/documents', methods=['GET', 'POST'])
 @login_required
@@ -367,23 +429,6 @@ def document_download_api(document_id):
     except Exception as e:
         print(f"Error downloading document: {e}")
         return jsonify({'error': 'Failed to download document'}), 500
-
-@app.route('/api/users')
-@login_required
-def list_users():
-    headers = get_auth_headers()
-    company_id = session.get('company_id')
-    
-    try:
-        response = requests.get(
-            f"{USERS_URL}",
-            headers=headers,
-            params={'company_id': company_id, 'page': 1, 'per_page': 10}
-        )
-        return response.json(), response.status_code
-    except Exception as e:
-        print(f"Error fetching users: {e}")
-        return jsonify({'error': 'Failed to fetch users'}), 500
 
 if __name__ == '__main__':
     app.run(host="0.0.0.0", port=5000, debug=True)
