@@ -85,6 +85,34 @@ setupFormValidation('addDocumentForm', {
     ]
 });
 
+async function loadDepartmentCategories(departmentId) {
+    const categorySelect = document.getElementById('documentCategory');
+    categorySelect.innerHTML = '<option value="">Loading categories...</option>';
+    categorySelect.disabled = true;
+
+    try {
+        const response = await fetch(`/api/categories/departments/${departmentId}/categories`);
+        if (!response.ok) {
+            throw new Error('Failed to load categories');
+        }
+        const data = await response.json();
+        
+        // Handle the categories array from the response
+        const categories = data.categories || [];
+        
+        categorySelect.innerHTML = `
+            <option value="">Select Category</option>
+            ${categories.map(cat => `
+                <option value="${cat.id}">${cat.name}</option>
+            `).join('')}`;
+    } catch (error) {
+        console.error('Error loading categories:', error);
+        categorySelect.innerHTML = '<option value="">Error loading categories</option>';
+    } finally {
+        categorySelect.disabled = false;
+    }
+}
+
 async function loadDocuments(page = 1) {
     const contentDiv = document.getElementById('documentsContent');
     showLoading(contentDiv);
@@ -167,31 +195,6 @@ function updateDocumentsGrid(data) {
 
     document.getElementById('documentsContent').innerHTML = gridHTML + document.querySelector('.pagination-controls').outerHTML;
     feather.replace();
-}
-
-async function loadDepartmentCategories(departmentId) {
-    const categorySelect = document.getElementById('documentCategory');
-    categorySelect.innerHTML = '<option value="">Loading categories...</option>';
-    categorySelect.disabled = true;
-
-    try {
-        const response = await fetch(`/api/categories/departments/${departmentId}/categories`);
-        if (!response.ok) {
-            throw new Error('Failed to load categories');
-        }
-        const categories = await response.json();
-        
-        categorySelect.innerHTML = `
-            <option value="">Select Category</option>
-            ${categories.map(cat => `
-                <option value="${cat.id}">${cat.name}</option>
-            `).join('')}`;
-    } catch (error) {
-        console.error('Error loading categories:', error);
-        categorySelect.innerHTML = '<option value="">Error loading categories</option>';
-    } finally {
-        categorySelect.disabled = false;
-    }
 }
 
 async function createDocument(event) {
