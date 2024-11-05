@@ -1,4 +1,70 @@
-[Previous HTML content remains the same until line 231...]
+{% extends "base.html" %}
+
+{% block content %}
+<div class="page-container">
+    <div class="header-actions">
+        <h2><i data-feather="file"></i> Document Types</h2>
+        <button class="action-btn primary" onclick="showAddDocumentTypeModal()">
+            <i data-feather="plus"></i> Add Document Type
+        </button>
+    </div>
+    <div class="content-grid" id="documentTypesContent">
+        <div class="document-types-grid">
+            <div class="no-data">
+                <i data-feather="inbox"></i>
+                <p>Loading document types...</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Add Document Type Modal -->
+<div id="addDocumentTypeModal" class="modal">
+    <div class="modal-content">
+        <h3>Add Document Type</h3>
+        <form id="addDocumentTypeForm" onsubmit="createDocumentType(event)">
+            <div class="form-group">
+                <label for="documentTypeName">Name</label>
+                <input type="text" id="documentTypeName" name="name" required>
+            </div>
+            <div class="form-group">
+                <label for="documentTypeDescription">Description</label>
+                <input type="text" id="documentTypeDescription" name="description">
+            </div>
+            <div class="form-group">
+                <label for="documentTypeDepartment">Department</label>
+                <select id="documentTypeDepartment" onchange="loadDepartmentCategories(this.value)">
+                    <option value="">Select Department</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="documentTypeCategory">Category</label>
+                <select id="documentTypeCategory" name="category_id" required>
+                    <option value="">Select Category</option>
+                </select>
+            </div>
+            <div class="modal-actions">
+                <button type="button" class="action-btn" onclick="hideModal('addDocumentTypeModal')">Cancel</button>
+                <button type="submit" class="action-btn primary">Add</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Add the rest of the HTML content... -->
+
+<script>
+// Setup form validation
+setupFormValidation('addDocumentTypeForm', {
+    'documentTypeName': [
+        ValidationRules.required,
+        ValidationRules.minLength(3),
+        ValidationRules.maxLength(50)
+    ],
+    'documentTypeCategory': [
+        ValidationRules.required
+    ]
+});
 
 async function createDocumentType(event) {
     event.preventDefault();
@@ -22,14 +88,14 @@ async function createDocumentType(event) {
             body: JSON.stringify({
                 name: data.name,
                 description: data.description || '',
-                category_id: data.category_id,
-                company_id: '{{ session.get("company_id", "") }}'
+                category_id: data.category_id
             })
         });
 
+        const responseData = await response.json();
+        
         if (!response.ok) {
-            const errorData = await response.json();
-            throw new Error(errorData.error || 'Failed to create document type');
+            throw new Error(responseData.error || 'Failed to create document type');
         }
 
         hideModal('addDocumentTypeModal');
@@ -44,4 +110,8 @@ async function createDocumentType(event) {
     }
 }
 
-[Rest of the file remains the same...]
+[Rest of the JavaScript code remains the same...]
+</script>
+
+[Rest of the HTML content remains the same...]
+{% endblock %}
