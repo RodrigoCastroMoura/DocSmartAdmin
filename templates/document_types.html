@@ -106,6 +106,7 @@ async function loadCategories() {
         const response = await fetch('/api/categories');
         if (!response.ok) throw new Error('Failed to load categories');
         const data = await response.json();
+        if (!data || !data.categories) throw new Error('Invalid categories data');
         
         const categoriesOptions = `
             <option value="">Select Category</option>
@@ -134,12 +135,8 @@ async function loadDocumentTypes() {
             throw new Error(`HTTP error! status: ${response.status}`);
         }
         
-        const data = await response.json();
-        if (!data || !data.types) {
-            throw new Error('Invalid response format');
-        }
-        
-        contentDiv.innerHTML = generateDocumentTypesHTML(data.types);
+        const types = await response.json();
+        contentDiv.innerHTML = generateDocumentTypesHTML(types);
         feather.replace();
     } catch (error) {
         console.error('Error loading document types:', error);
@@ -157,7 +154,7 @@ async function loadDocumentTypes() {
 }
 
 function generateDocumentTypesHTML(types) {
-    if (!types || types.length === 0) {
+    if (!Array.isArray(types) || types.length === 0) {
         return `
             <div class="document-types-grid">
                 <div class="no-data">

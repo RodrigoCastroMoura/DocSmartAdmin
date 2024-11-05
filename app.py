@@ -165,43 +165,26 @@ def document_type_api():
                 headers=headers
             )
             
-            if response.status_code == 204:
-                return jsonify({
-                    'types': [],
-                    'total': 0,
-                    'page': 1,
-                    'per_page': 10,
-                    'total_pages': 0
-                }), 200
+            if response.status_code == 204 or response.status_code == 404:
+                return jsonify([]), 200
             
-            if response.ok:
-                data = response.json()
-                return jsonify({
-                    'types': data.get('types', []),
-                    'total': data.get('total', 0),
-                    'page': data.get('page', 1),
-                    'per_page': data.get('per_page', 10),
-                    'total_pages': data.get('total_pages', 0)
-                }), 200
+            return response.json(), 200
             
-            error_data = response.json()
-            return jsonify({'error': error_data.get('error', 'Failed to fetch document types'), 'types': []}), response.status_code
-        
         except Exception as e:
             print(f"Error fetching document types: {e}")
-            return jsonify({'error': 'Failed to fetch document types', 'types': []}), 500
+            return jsonify({'error': 'Failed to fetch document types'}), 500
             
     elif request.method == 'POST':
         try:
             data = request.json
             if not data:
                 return jsonify({'error': 'No data provided'}), 400
-            
+                
             required_fields = ['name', 'category_id']
             missing_fields = [field for field in required_fields if not data.get(field)]
             if missing_fields:
                 return jsonify({'error': f'Missing required fields: {", ".join(missing_fields)}'}), 400
-            
+                
             data['company_id'] = company_id
             response = requests.post(
                 DOCUMENT_TYPES_URL,
@@ -211,7 +194,7 @@ def document_type_api():
             
             if response.status_code == 201:
                 return response.json(), 201
-            
+                
             error_data = response.json()
             return jsonify({'error': error_data.get('error', 'Failed to create document type')}), response.status_code
             
@@ -230,12 +213,12 @@ def document_type_detail_api(type_id):
             data = request.json
             if not data:
                 return jsonify({'error': 'No data provided'}), 400
-            
+                
             required_fields = ['name', 'category_id']
             missing_fields = [field for field in required_fields if not data.get(field)]
             if missing_fields:
                 return jsonify({'error': f'Missing required fields: {", ".join(missing_fields)}'}), 400
-            
+                
             data['company_id'] = company_id
             response = requests.put(
                 f"{DOCUMENT_TYPES_URL}/{type_id}",
@@ -245,7 +228,7 @@ def document_type_detail_api(type_id):
             
             if response.status_code == 200:
                 return response.json(), 200
-            
+                
             error_data = response.json()
             return jsonify({'error': error_data.get('error', 'Failed to update document type')}), response.status_code
             
@@ -261,7 +244,7 @@ def document_type_detail_api(type_id):
             )
             if response.status_code == 204:
                 return '', 204
-            
+                
             error_data = response.json()
             return jsonify({'error': error_data.get('error', 'Failed to delete document type')}), response.status_code
             
@@ -466,108 +449,6 @@ def department_categories_api(department_id):
         print(f"Error fetching department categories: {e}")
         return jsonify({'error': 'Failed to fetch categories', 'categories': []}), 500
 
-@app.route('/api/users', methods=['GET', 'POST'])
-@login_required
-def user_api():
-    headers = get_auth_headers()
-    company_id = session.get('company_id')
-    
-    if request.method == 'GET':
-        try:
-            params = {
-                'company_id': company_id,
-                'page': request.args.get('page', 1),
-                'per_page': request.args.get('per_page', 10)
-            }
-            response = requests.get(
-                USERS_URL,
-                headers=headers,
-                params=params
-            )
-            
-            if response.status_code == 204:
-                return jsonify({
-                    'users': [],
-                    'total': 0,
-                    'page': params['page'],
-                    'per_page': params['per_page'],
-                    'total_pages': 0
-                })
-                
-            return response.json(), response.status_code
-        except Exception as e:
-            print(f"Error fetching users: {e}")
-            return jsonify({'error': 'Failed to fetch users', 'users': []}), 500
-            
-    elif request.method == 'POST':
-        try:
-            data = request.json
-            if not data:
-                return jsonify({'error': 'No data provided'}), 400
-                
-            required_fields = ['name', 'email', 'cpf', 'password', 'role']
-            missing_fields = [field for field in required_fields if not data.get(field)]
-            if missing_fields:
-                return jsonify({'error': f'Missing required fields: {", ".join(missing_fields)}'}), 400
-                
-            data['company_id'] = company_id
-            response = requests.post(
-                USERS_URL,
-                headers=headers,
-                json=data
-            )
-            
-            if response.status_code == 201:
-                return response.json(), 201
-            return response.json(), response.status_code
-        except Exception as e:
-            print(f"Error creating user: {e}")
-            return jsonify({'error': 'Failed to create user'}), 500
-
-@app.route('/api/users/<user_id>', methods=['PUT', 'DELETE'])
-@login_required
-def user_detail_api(user_id):
-    headers = get_auth_headers()
-    company_id = session.get('company_id')
-    
-    if request.method == 'PUT':
-        try:
-            data = request.json
-            if not data:
-                return jsonify({'error': 'No data provided'}), 400
-                
-            required_fields = ['name', 'email', 'cpf', 'role']
-            missing_fields = [field for field in required_fields if not data.get(field)]
-            if missing_fields:
-                return jsonify({'error': f'Missing required fields: {", ".join(missing_fields)}'}), 400
-                
-            data['company_id'] = company_id
-            response = requests.put(
-                f"{USERS_URL}/{user_id}",
-                headers=headers,
-                json=data
-            )
-            
-            if response.status_code == 200:
-                return response.json(), 200
-            return response.json(), response.status_code
-        except Exception as e:
-            print(f"Error updating user: {e}")
-            return jsonify({'error': 'Failed to update user'}), 500
-            
-    elif request.method == 'DELETE':
-        try:
-            response = requests.delete(
-                f"{USERS_URL}/{user_id}",
-                headers=headers
-            )
-            if response.status_code == 204:
-                return '', 204
-            return response.json(), response.status_code
-        except Exception as e:
-            print(f"Error deleting user: {e}")
-            return jsonify({'error': 'Failed to delete user'}), 500
-
 @app.route('/api/documents', methods=['GET', 'POST'])
 @login_required
 def document_api():
@@ -614,7 +495,6 @@ def document_api():
             
     elif request.method == 'POST':
         try:
-            # Input validation
             if 'file' not in request.files:
                 return jsonify({'error': 'No file provided'}), 400
                 
@@ -622,22 +502,18 @@ def document_api():
             if file.filename == '':
                 return jsonify({'error': 'No file selected'}), 400
 
-            # Required fields validation
             required_fields = ['titulo', 'category_id', 'department_id', 'user_id', 'document_type_id']
             missing_fields = [field for field in required_fields if not request.form.get(field)]
             if missing_fields:
                 return jsonify({'error': f'Missing required fields: {", ".join(missing_fields)}'}), 400
 
-            # File type validation
             allowed_extensions = {'pdf', 'doc', 'docx', 'xls', 'xlsx', 'txt', 'jpg', 'jpeg', 'png'}
-            if not '.' in file.filename or file.filename.rsplit('.', 1)[1].lower() not in allowed_extensions:
+            if '.' not in file.filename or file.filename.rsplit('.', 1)[1].lower() not in allowed_extensions:
                 return jsonify({'error': 'Invalid file type'}), 400
 
-            # Secure filename and prepare file data
             secure_name = secure_filename(file.filename)
             files = {'file': (secure_name, file, file.content_type)}
             
-            # Prepare form data
             data = {
                 'titulo': request.form.get('titulo'),
                 'category_id': request.form.get('category_id'),
@@ -647,10 +523,8 @@ def document_api():
                 'company_id': company_id
             }
             
-            # Remove content-type from headers for multipart form data
             upload_headers = {k: v for k, v in headers.items() if k.lower() != 'content-type'}
             
-            # Make API request
             response = requests.post(
                 DOCUMENTS_URL,
                 headers=upload_headers,
@@ -658,7 +532,6 @@ def document_api():
                 files=files
             )
             
-            # Return appropriate status code
             if response.status_code == 201:
                 return response.json(), 201
                 
