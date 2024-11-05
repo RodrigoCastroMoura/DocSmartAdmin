@@ -27,6 +27,16 @@
                 <label for="documentTypeName">Name</label>
                 <input type="text" id="documentTypeName" name="name" required>
             </div>
+            <div class="form-group">
+                <label for="documentTypeDescription">Description</label>
+                <input type="text" id="documentTypeDescription" name="description">
+            </div>
+            <div class="form-group">
+                <label for="documentTypeCategory">Category</label>
+                <select id="documentTypeCategory" name="category_id" required>
+                    <option value="">Select Category</option>
+                </select>
+            </div>
             <div class="modal-actions">
                 <button type="button" class="action-btn" onclick="hideModal('addDocumentTypeModal')">Cancel</button>
                 <button type="submit" class="action-btn primary">Add</button>
@@ -45,6 +55,16 @@
                 <label for="editDocumentTypeName">Name</label>
                 <input type="text" id="editDocumentTypeName" name="name" required>
             </div>
+            <div class="form-group">
+                <label for="editDocumentTypeDescription">Description</label>
+                <input type="text" id="editDocumentTypeDescription" name="description">
+            </div>
+            <div class="form-group">
+                <label for="editDocumentTypeCategory">Category</label>
+                <select id="editDocumentTypeCategory" name="category_id" required>
+                    <option value="">Select Category</option>
+                </select>
+            </div>
             <div class="modal-actions">
                 <button type="button" class="action-btn" onclick="hideModal('editDocumentTypeModal')">Cancel</button>
                 <button type="submit" class="action-btn primary">Update</button>
@@ -59,6 +79,9 @@ setupFormValidation('addDocumentTypeForm', {
         ValidationRules.required,
         ValidationRules.minLength(3),
         ValidationRules.maxLength(50)
+    ],
+    'documentTypeCategory': [
+        ValidationRules.required
     ]
 });
 
@@ -67,8 +90,39 @@ setupFormValidation('editDocumentTypeForm', {
         ValidationRules.required,
         ValidationRules.minLength(3),
         ValidationRules.maxLength(50)
+    ],
+    'editDocumentTypeCategory': [
+        ValidationRules.required
     ]
 });
+
+async function loadCategories() {
+    const categorySelects = [
+        document.getElementById('documentTypeCategory'),
+        document.getElementById('editDocumentTypeCategory')
+    ];
+    
+    try {
+        const response = await fetch('/api/categories');
+        if (!response.ok) throw new Error('Failed to load categories');
+        const data = await response.json();
+        
+        const categoriesOptions = `
+            <option value="">Select Category</option>
+            ${data.categories.map(category => 
+                `<option value="${category.id}">${category.name}</option>`
+            ).join('')}`;
+            
+        categorySelects.forEach(select => {
+            if (select) select.innerHTML = categoriesOptions;
+        });
+    } catch (error) {
+        console.error('Error loading categories:', error);
+        categorySelects.forEach(select => {
+            if (select) select.innerHTML = '<option value="">Error loading categories</option>';
+        });
+    }
+}
 
 async function loadDocumentTypes() {
     const contentDiv = document.getElementById('documentTypesContent');
@@ -76,13 +130,27 @@ async function loadDocumentTypes() {
 
     try {
         const response = await fetch('/api/document_types');
-        await handleApiResponse(response, async (data) => {
-            contentDiv.innerHTML = generateDocumentTypesHTML(data.types);
-            feather.replace();
-        });
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        
+        const data = await response.json();
+        if (!data || !data.types) {
+            throw new Error('Invalid response format');
+        }
+        
+        contentDiv.innerHTML = generateDocumentTypesHTML(data.types);
+        feather.replace();
     } catch (error) {
         console.error('Error loading document types:', error);
-        showErrorMessage('Failed to load document types');
+        contentDiv.innerHTML = `
+            <div class="document-types-grid">
+                <div class="no-data">
+                    <i data-feather="alert-circle"></i>
+                    <p>${error.message || 'Failed to load document types'}</p>
+                </div>
+            </div>`;
+        feather.replace();
     } finally {
         hideLoading(contentDiv);
     }
@@ -106,6 +174,8 @@ function generateDocumentTypesHTML(types) {
                 <h3>${type.name}</h3>
             </div>
             <div class="document-type-info">
+                <p class="description">${type.description || 'No description'}</p>
+                <p class="category">${type.category_name || 'Uncategorized'}</p>
                 <p>${type.document_count || 0} documents</p>
             </div>
             <div class="document-type-actions">
@@ -144,12 +214,18 @@ async function createDocumentType(event) {
             body: JSON.stringify(data)
         });
 
-        await handleApiResponse(response, async () => {
-            hideModal('addDocumentTypeModal');
-            form.reset();
-            await loadDocumentTypes();
-            showErrorMessage('Document type created successfully', 'success');
-        });
+        if (!response.ok) {
+            const errorData = await response.json();
+            throw new Error(errorData.error || 'Failed to create document type');
+        }
+
+        hideModal('addDocumentTypeModal');
+        form.reset();
+        await loadDocumentTypes();
+        showErrorMessage('Document type created successfully', 'success');
+    } catch (error) {
+        console.error('Error creating document type:', error);
+        showErrorMessage(error.message);
     } finally {
         hideLoading(submitButton);
     }
@@ -178,11 +254,17 @@ async function updateDocumentType(event) {
             body: JSON.stringify(data)
         });
 
-        await handleApiResponse(response, async () => {
-            hideModal('editDocumentTypeModal');
-            await loadDocumentTypes();
-            showErrorMessage('Document type updated successfully', 'success');
-        });
+        if (!response.ok) {
+            const errorData = await response.json();
+            throw new Error(errorData.error || 'Failed to update document type');
+        }
+
+        hideModal('editDocumentTypeModal');
+        await loadDocumentTypes();
+        showErrorMessage('Document type updated successfully', 'success');
+    } catch (error) {
+        console.error('Error updating document type:', error);
+        showErrorMessage(error.message);
     } finally {
         hideLoading(submitButton);
     }
@@ -201,10 +283,16 @@ async function deleteDocumentType(id) {
             method: 'DELETE'
         });
 
-        await handleApiResponse(response, async () => {
-            await loadDocumentTypes();
-            showErrorMessage('Document type deleted successfully', 'success');
-        });
+        if (!response.ok) {
+            const errorData = await response.json();
+            throw new Error(errorData.error || 'Failed to delete document type');
+        }
+
+        await loadDocumentTypes();
+        showErrorMessage('Document type deleted successfully', 'success');
+    } catch (error) {
+        console.error('Error deleting document type:', error);
+        showErrorMessage(error.message);
     } finally {
         hideLoading(card);
     }
@@ -220,12 +308,17 @@ function hideModal(modalId) {
 
 function showAddDocumentTypeModal() {
     document.getElementById('addDocumentTypeForm').reset();
+    loadCategories();
     showModal('addDocumentTypeModal');
 }
 
 function showEditDocumentTypeModal(id, type) {
     document.getElementById('editDocumentTypeId').value = id;
     document.getElementById('editDocumentTypeName').value = type.name;
+    document.getElementById('editDocumentTypeDescription').value = type.description || '';
+    loadCategories().then(() => {
+        document.getElementById('editDocumentTypeCategory').value = type.category_id || '';
+    });
     showModal('editDocumentTypeModal');
 }
 
@@ -267,6 +360,20 @@ document.addEventListener('DOMContentLoaded', loadDocumentTypes);
 .document-type-info {
     margin: 1rem 0;
     color: var(--text-secondary);
+}
+
+.document-type-info .description {
+    margin-bottom: 0.5rem;
+    font-style: italic;
+}
+
+.document-type-info .category {
+    display: inline-block;
+    padding: 0.25rem 0.5rem;
+    background-color: var(--bg-secondary);
+    border-radius: 4px;
+    font-size: 0.875rem;
+    margin-bottom: 0.5rem;
 }
 
 .document-type-actions {
