@@ -184,7 +184,17 @@ def document_type_api():
                 params=params
             )
             
-            return response.json(), response.status_code
+            if not response.ok:
+                return jsonify({'error': 'Failed to fetch document types'}), response.status_code
+            
+            data = response.json()
+            return jsonify({
+                'types': data.get('types', []),
+                'total': data.get('total', 0),
+                'page': data.get('page', 1),
+                'per_page': data.get('per_page', 10),
+                'total_pages': data.get('total_pages', 1)
+            }), 200
         except Exception as e:
             print(f"Error fetching document types: {e}")
             return jsonify({
@@ -214,66 +224,79 @@ def document_type_api():
                 json=data
             )
             
+            if response.status_code == 201:
+                return response.json(), 201
             return response.json(), response.status_code
         except Exception as e:
             print(f"Error creating document type: {e}")
             return jsonify({'error': 'Failed to create document type'}), 500
 
-@app.route('/api/users', methods=['GET', 'POST'])
+@app.route('/api/document_types/<type_id>', methods=['PUT', 'DELETE'])
 @login_required
-def user_api():
+def document_type_detail_api(type_id):
     headers = get_auth_headers()
     company_id = session.get('company_id')
     
     if not company_id:
         return jsonify({'error': 'Company ID not found'}), 400
     
-    if request.method == 'GET':
-        try:
-            params = {
-                'page': request.args.get('page', 1),
-                'per_page': request.args.get('per_page', 10)
-            }
-            response = requests.get(
-                f"{USERS_URL}/companies/{company_id}/users",
-                headers=headers,
-                params=params
-            )
-            
-            return response.json(), response.status_code
-        except Exception as e:
-            print(f"Error fetching users: {e}")
-            return jsonify({
-                'error': 'Failed to fetch users',
-                'users': [],
-                'total': 0,
-                'page': 1,
-                'per_page': 10,
-                'total_pages': 1
-            }), 500
-            
-    elif request.method == 'POST':
+    if request.method == 'PUT':
         try:
             data = request.json
             if not data:
                 return jsonify({'error': 'No data provided'}), 400
                 
-            required_fields = ['name', 'email', 'password', 'role']
+            required_fields = ['name', 'category_id']
             missing_fields = [field for field in required_fields if not data.get(field)]
             if missing_fields:
                 return jsonify({'error': f'Missing required fields: {", ".join(missing_fields)}'}), 400
-            
+                
             data['company_id'] = company_id
-            response = requests.post(
-                f"{USERS_URL}/companies/{company_id}/users",
+            response = requests.put(
+                f"{DOCUMENT_TYPES_URL}/companies/{company_id}/types/{type_id}",
                 headers=headers,
                 json=data
             )
             
+            if response.status_code == 200:
+                return response.json(), 200
             return response.json(), response.status_code
         except Exception as e:
-            print(f"Error creating user: {e}")
-            return jsonify({'error': 'Failed to create user'}), 500
+            print(f"Error updating document type: {e}")
+            return jsonify({'error': 'Failed to update document type'}), 500
+            
+    elif request.method == 'DELETE':
+        try:
+            response = requests.delete(
+                f"{DOCUMENT_TYPES_URL}/companies/{company_id}/types/{type_id}",
+                headers=headers
+            )
+            
+            if response.status_code == 204:
+                return '', 204
+            return response.json(), response.status_code
+        except Exception as e:
+            print(f"Error deleting document type: {e}")
+            return jsonify({'error': 'Failed to delete document type'}), 500
+
+@app.route('/api/categories/departments/<department_id>/categories')
+@login_required
+def department_categories_api(department_id):
+    headers = get_auth_headers()
+    company_id = session.get('company_id')
+    
+    if not company_id:
+        return jsonify({'error': 'Company ID not found'}), 400
+        
+    try:
+        response = requests.get(
+            f"{CATEGORIES_URL}/departments/{department_id}/categories",
+            headers=headers
+        )
+        return response.json(), response.status_code
+    except Exception as e:
+        print(f"Error fetching department categories: {e}")
+        return jsonify({'error': 'Failed to fetch categories'}), 500
 
 @app.route('/api/documents', methods=['GET', 'POST'])
 @login_required
