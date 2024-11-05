@@ -54,6 +54,12 @@
                 </select>
             </div>
             <div class="form-group">
+                <label for="documentUser">User</label>
+                <select id="documentUser" name="user_id" required>
+                    <option value="">Select User</option>
+                </select>
+            </div>
+            <div class="form-group">
                 <label for="documentFile">File</label>
                 <input type="file" id="documentFile" name="file" required>
             </div>
@@ -81,6 +87,9 @@ setupFormValidation('addDocumentForm', {
         ValidationRules.required
     ],
     'documentCategory': [
+        ValidationRules.required
+    ],
+    'documentUser': [
         ValidationRules.required
     ]
 });
@@ -110,6 +119,24 @@ async function loadDepartmentCategories(departmentId) {
         categorySelect.innerHTML = '<option value="">Error loading categories</option>';
     } finally {
         categorySelect.disabled = false;
+    }
+}
+
+async function loadUsers() {
+    const userSelect = document.getElementById('documentUser');
+    try {
+        const response = await fetch('/api/users');
+        if (!response.ok) throw new Error('Failed to load users');
+        const data = await response.json();
+        
+        userSelect.innerHTML = `
+            <option value="">Select User</option>
+            ${data.users.map(user => 
+                `<option value="${user.id}">${user.name}</option>`
+            ).join('')}`;
+    } catch (error) {
+        console.error('Error loading users:', error);
+        userSelect.innerHTML = '<option value="">Error loading users</option>';
     }
 }
 
@@ -216,7 +243,8 @@ async function createDocument(event) {
         });
 
         if (!response.ok) {
-            throw new Error('Failed to create document');
+            const errorData = await response.json();
+            throw new Error(errorData.error || 'Failed to create document');
         }
 
         hideModal('addDocumentModal');
@@ -278,6 +306,7 @@ function hideModal(modalId) {
 function showAddDocumentModal() {
     document.getElementById('addDocumentForm').reset();
     document.getElementById('documentCategory').innerHTML = '<option value="">Select Category</option>';
+    loadUsers(); // Add this line to load users when opening the modal
     showModal('addDocumentModal');
 }
 

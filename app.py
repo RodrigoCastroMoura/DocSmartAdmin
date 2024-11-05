@@ -109,6 +109,44 @@ def dashboard():
 def departments():
     return render_template('departments.html')
 
+@app.route('/categories')
+@login_required
+def categories():
+    headers = get_auth_headers()
+    company_id = session.get('company_id')
+    try:
+        departments_response = requests.get(
+            f"{DEPARTMENTS_URL}/companies/{company_id}/departments",
+            headers=headers
+        )
+        departments = departments_response.json() if departments_response.ok else []
+        return render_template('categories.html', departments=departments)
+    except Exception as e:
+        print(f"Error loading departments: {e}")
+        return render_template('categories.html', departments=[])
+
+@app.route('/documents')
+@login_required
+def documents():
+    headers = get_auth_headers()
+    company_id = session.get('company_id')
+    try:
+        departments_response = requests.get(
+            f"{DEPARTMENTS_URL}/companies/{company_id}/departments",
+            headers=headers
+        )
+        departments = departments_response.json() if departments_response.ok else []
+        return render_template('documents.html', departments=departments)
+    except Exception as e:
+        print(f"Error loading form data: {e}")
+        return render_template('documents.html', departments=[])
+
+@app.route('/users')
+@login_required
+def users():
+    return render_template('users.html')
+
+# API Routes
 @app.route('/api/departments', methods=['GET', 'POST'])
 @login_required
 def department_api():
@@ -172,22 +210,6 @@ def department_detail_api(department_id):
         except Exception as e:
             print(f'Error deleting department: {e}')
             return jsonify({'error': 'Failed to delete department'}), 500
-
-@app.route('/categories')
-@login_required
-def categories():
-    headers = get_auth_headers()
-    company_id = session.get('company_id')
-    try:
-        departments_response = requests.get(
-            f"{DEPARTMENTS_URL}/companies/{company_id}/departments",
-            headers=headers
-        )
-        departments = departments_response.json() if departments_response.ok else []
-        return render_template('categories.html', departments=departments)
-    except Exception as e:
-        print(f"Error loading departments: {e}")
-        return render_template('categories.html', departments=[])
 
 @app.route('/api/categories', methods=['GET', 'POST'])
 @login_required
@@ -271,27 +293,6 @@ def department_categories_api(department_id):
         print(f"Error fetching department categories: {e}")
         return jsonify({'error': 'Failed to fetch categories'}), 500
 
-@app.route('/documents')
-@login_required
-def documents():
-    headers = get_auth_headers()
-    company_id = session.get('company_id')
-    try:
-        departments_response = requests.get(
-            f"{DEPARTMENTS_URL}/companies/{company_id}/departments",
-            headers=headers
-        )
-        departments = departments_response.json() if departments_response.ok else []
-        return render_template('documents.html', departments=departments)
-    except Exception as e:
-        print(f"Error loading form data: {e}")
-        return render_template('documents.html', departments=[])
-
-@app.route('/users')
-@login_required
-def users():
-    return render_template('users.html')
-
 @app.route('/api/users', methods=['GET', 'POST'])
 @login_required
 def user_api():
@@ -367,7 +368,6 @@ def user_detail_api(user_id):
 def document_api():
     headers = get_auth_headers()
     company_id = session.get('company_id')
-    user_id = session.get('user', {}).get('id')
     
     if request.method == 'GET':
         try:
@@ -398,22 +398,27 @@ def document_api():
             
     elif request.method == 'POST':
         try:
-            file = request.files.get('file')
-            if not file:
+            if 'file' not in request.files:
                 return jsonify({'error': 'No file provided'}), 400
+                
+            file = request.files['file']
+            if file.filename == '':
+                return jsonify({'error': 'No file selected'}), 400
 
-            # Create multipart form data
+            # Prepare multipart form data
             files = {'file': (file.filename, file, file.content_type)}
+            
+            # Prepare document metadata
             data = {
                 'titulo': request.form.get('titulo'),
                 'category_id': request.form.get('category_id'),
                 'department_id': request.form.get('department_id'),
-                'user_id': user_id,
+                'user_id': request.form.get('user_id'),
                 'company_id': company_id,
-                'name': file.filename  # Added missing name field
+                'name': file.filename
             }
             
-            # Remove Content-Type from headers for multipart request
+            # Remove Content-Type header for multipart request
             upload_headers = {k: v for k, v in headers.items() if k.lower() != 'content-type'}
             
             response = requests.post(
@@ -423,11 +428,11 @@ def document_api():
                 files=files
             )
             
-            if not response.ok:
+            if response.ok:
+                return response.json(), 200
+            else:
                 error_data = response.json()
-                return jsonify({'error': error_data.get('error', 'Failed to create document')}), response.status_code
-                
-            return response.json(), response.status_code
+                return jsonify({'error': error_data.get('error', 'Failed to upload document')}), response.status_code
                 
         except Exception as e:
             print(f"Error creating document: {e}")
