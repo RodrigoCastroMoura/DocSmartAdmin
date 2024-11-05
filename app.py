@@ -172,7 +172,7 @@ def document_type_api():
             
             if response.status_code == 204:
                 return jsonify({
-                    'types': [],
+                    'document_types': [],
                     'total': 0,
                     'page': 1,
                     'per_page': 10,
@@ -185,9 +185,9 @@ def document_type_api():
             print(f"Error fetching document types: {e}")
             return jsonify({
                 'error': 'Failed to fetch document types',
-                'types': []
+                'document_types': []
             }), 500
-            
+
     elif request.method == 'POST':
         try:
             data = request.json
