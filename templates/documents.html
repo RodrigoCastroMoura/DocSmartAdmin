@@ -49,7 +49,7 @@
             </div>
             <div class="form-group">
                 <label for="documentCategory">Category</label>
-                <select id="documentCategory" name="category_id" required>
+                <select id="documentCategory" name="category_id" required onchange="loadDocumentTypes(this.value)">
                     <option value="">Select Category</option>
                 </select>
             </div>
@@ -103,19 +103,19 @@ setupFormValidation('addDocumentForm', {
     ]
 });
 
-async function loadDocumentTypes() {
+async function loadDocumentTypes(categoryId) {
     const typeSelect = document.getElementById('documentType');
     typeSelect.innerHTML = '<option value="">Loading document types...</option>';
     typeSelect.disabled = true;
 
     try {
-        const response = await fetch('/api/document_types');
+        const response = await fetch(`/api/document_types/categories/${categoryId}/types`);
         if (!response.ok) throw new Error('Failed to load document types');
         const data = await response.json();
         
         typeSelect.innerHTML = `
             <option value="">Select Document Type</option>
-            ${data.types.map(type => 
+            ${data.map(type => 
                 `<option value="${type.id}">${type.name}</option>`
             ).join('')}`;
     } catch (error) {
@@ -342,7 +342,6 @@ function showAddDocumentModal() {
     document.getElementById('addDocumentForm').reset();
     document.getElementById('documentCategory').innerHTML = '<option value="">Select Category</option>';
     loadUsers();
-    loadDocumentTypes();
     showModal('addDocumentModal');
 }
 
