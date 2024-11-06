@@ -163,17 +163,22 @@ def users_api():
         try:
             params = {
                 'page': request.args.get('page', 1),
-                'per_page': request.args.get('per_page', 10)
+                'per_page': request.args.get('per_page', 10),
+                'company_id': company_id
             }
             response = requests.get(
-                f"{USERS_URL}/companies/{company_id}/users",
+                f"{USERS_URL}",
                 headers=headers,
                 params=params
             )
-            return response.json(), response.status_code
+            
+            if not response.ok:
+                return jsonify({'error': 'Failed to fetch users'}), response.status_code
+                
+            return response.json(), 200
         except Exception as e:
             print(f"Error fetching users: {e}")
-            return jsonify({'error': 'Failed to fetch users'}), 500
+            return jsonify({'error': 'Failed to fetch users', 'users': []}), 500
             
     elif request.method == 'POST':
         try:
@@ -518,8 +523,6 @@ def category_detail_api(category_id):
 @login_required
 def department_categories_api(department_id):
     headers = get_auth_headers()
-    company_id = session.get('company_id')
-    
     try:
         response = requests.get(
             f"{CATEGORIES_URL}/departments/{department_id}/categories",
