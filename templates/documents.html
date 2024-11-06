@@ -83,6 +83,29 @@ let currentPage = 1;
 const perPage = 10;
 let totalPages = 1;
 
+function getFileIcon(filename) {
+    const ext = filename.split('.').pop().toLowerCase();
+    switch (ext) {
+        case 'pdf':
+            return 'file-text';
+        case 'doc':
+        case 'docx':
+            return 'file-text';
+        case 'xls':
+        case 'xlsx':
+            return 'file';
+        case 'jpg':
+        case 'jpeg':
+        case 'png':
+            return 'image';
+        case 'zip':
+        case 'rar':
+            return 'archive';
+        default:
+            return 'file';
+    }
+}
+
 setupFormValidation('addDocumentForm', {
     'documentTitle': [
         ValidationRules.required,
@@ -229,7 +252,7 @@ function updateDocumentsGrid(data) {
             ${documents.map(doc => `
                 <div class="document-card" data-id="${doc.id}">
                     <div class="document-header">
-                        <i data-feather="file-text"></i>
+                        <i data-feather="${getFileIcon(doc.name)}"></i>
                         <div class="document-title">
                             <h3>${doc.document_type_name || 'No Type'}</h3>
                         </div>
