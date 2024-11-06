@@ -232,11 +232,9 @@ function updateDocumentsGrid(data) {
                         <i data-feather="file-text"></i>
                         <div class="document-title">
                             <h3>${doc.document_type_name || 'No Type'}</h3>
-                            <span class="document-filename">${doc.name}</span>
                         </div>
                     </div>
                     <div class="document-info">
-                        <p class="document-description">${doc.titulo}</p>
                         <div class="document-user">
                             <div class="user-avatar">${doc.user_name ? doc.user_name.slice(0, 2).toUpperCase() : 'NA'}</div>
                             <div class="user-info">
@@ -403,21 +401,8 @@ document.addEventListener('DOMContentLoaded', () => loadDocuments());
     color: var(--text-primary);
 }
 
-.document-filename {
-    display: block;
-    font-size: 0.8rem;
-    color: var(--text-secondary);
-    margin-top: 0.25rem;
-    word-break: break-word;
-}
-
 .document-info {
     margin: 1rem 0;
-}
-
-.document-description {
-    margin-bottom: 1rem;
-    color: var(--text-secondary);
 }
 
 .document-user {
