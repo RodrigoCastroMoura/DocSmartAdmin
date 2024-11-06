@@ -163,11 +163,10 @@ def users_api():
         try:
             params = {
                 'page': request.args.get('page', 1),
-                'per_page': request.args.get('per_page', 10),
-                'company_id': company_id
+                'per_page': request.args.get('per_page', 10)
             }
             response = requests.get(
-                f"{USERS_URL}",
+                f"{USERS_URL}/companies/{company_id}/users",
                 headers=headers,
                 params=params
             )
@@ -445,18 +444,17 @@ def category_api():
         except Exception as e:
             print(f"Error fetching categories: {e}")
             return jsonify({'error': 'Failed to fetch categories'}), 500
-    
+            
     elif request.method == 'POST':
         try:
             data = request.json
             if not data:
                 return jsonify({'error': 'No data provided'}), 400
                 
-            if not data.get('name'):
-                return jsonify({'error': 'Name is required'}), 400
-                
-            if not data.get('department_id'):
-                return jsonify({'error': 'Department ID is required'}), 400
+            required_fields = ['name', 'department_id']
+            missing_fields = [field for field in required_fields if not data.get(field)]
+            if missing_fields:
+                return jsonify({'error': f'Missing required fields: {", ".join(missing_fields)}'}), 400
                 
             data['company_id'] = company_id
             response = requests.post(
@@ -484,11 +482,10 @@ def category_detail_api(category_id):
             if not data:
                 return jsonify({'error': 'No data provided'}), 400
                 
-            if not data.get('name'):
-                return jsonify({'error': 'Name is required'}), 400
-                
-            if not data.get('department_id'):
-                return jsonify({'error': 'Department ID is required'}), 400
+            required_fields = ['name', 'department_id']
+            missing_fields = [field for field in required_fields if not data.get(field)]
+            if missing_fields:
+                return jsonify({'error': f'Missing required fields: {", ".join(missing_fields)}'}), 400
                 
             data['company_id'] = company_id
             response = requests.put(
@@ -526,24 +523,12 @@ def department_categories_api(department_id):
     try:
         response = requests.get(
             f"{CATEGORIES_URL}/departments/{department_id}/categories",
-            headers=headers,
-            params={'company_id': company_id}
+            headers=headers
         )
-        
-        if response.status_code == 204:
-            return jsonify({
-                'categories': [],
-                'total': 0,
-                'page': 1,
-                'per_page': 10,
-                'total_pages': 0
-            })
-            
         return response.json(), response.status_code
     except Exception as e:
         print(f"Error fetching department categories: {e}")
-        return jsonify({'error': 'Failed to fetch categories', 'categories': []}), 500
-
+        return jsonify({'error': 'Failed to fetch categories'}), 500
 
 @app.route('/api/document_types/categories/<category_id>/types')
 @login_required
