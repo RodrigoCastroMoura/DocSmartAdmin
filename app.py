@@ -190,7 +190,7 @@ def documents_api():
             if not form_data:
                 return jsonify({'error': 'No form data provided'}), 400
                 
-            required_fields = ['titulo', 'category_id', 'department_id', 'user_id']
+            required_fields = ['titulo', 'category_id', 'department_id', 'user_id', 'document_type_id']
             missing_fields = [field for field in required_fields if not form_data.get(field)]
             if missing_fields:
                 return jsonify({'error': f'Missing required fields: {", ".join(missing_fields)}'}), 400
@@ -202,6 +202,7 @@ def documents_api():
                 'category_id': form_data.get('category_id'),
                 'department_id': form_data.get('department_id'),
                 'user_id': form_data.get('user_id'),
+                'document_type_id': form_data.get('document_type_id'),
                 'company_id': company_id
             }
             
@@ -288,7 +289,7 @@ def users_api():
             return response.json(), 200
         except Exception as e:
             print(f"Error fetching users: {e}")
-            return jsonify({'error': 'Failed to fetch users', 'users': []}), 500
+            return jsonify({'error': 'Failed to fetch users'}), 500
             
     elif request.method == 'POST':
         try:
