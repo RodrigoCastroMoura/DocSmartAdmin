@@ -230,13 +230,24 @@ function updateDocumentsGrid(data) {
                 <div class="document-card" data-id="${doc.id}">
                     <div class="document-header">
                         <i data-feather="file-text"></i>
-                        <h3>${doc.name}</h3>
+                        <div class="document-title">
+                            <h3>${doc.name}</h3>
+                            <span class="document-type">${doc.document_type_name || 'No Type'}</span>
+                        </div>
                     </div>
                     <div class="document-info">
-                        <p>${doc.titulo}</p>
+                        <p class="document-description">${doc.titulo}</p>
+                        <div class="document-user">
+                            <div class="user-avatar">${doc.user_name ? doc.user_name.slice(0, 2).toUpperCase() : 'NA'}</div>
+                            <div class="user-info">
+                                <span class="user-name">${doc.user_name || 'No User'}</span>
+                                <span class="user-cpf">${doc.user_cpf || 'No CPF'}</span>
+                            </div>
+                        </div>
                         <div class="document-meta">
                             <span><i data-feather="eye"></i> ${doc.view_count}</span>
                             <span><i data-feather="download"></i> ${doc.download_count}</span>
+                            <span class="document-date">Created: ${new Date(doc.created_at).toLocaleDateString()}</span>
                         </div>
                     </div>
                     <div class="document-actions">
@@ -369,7 +380,7 @@ document.addEventListener('DOMContentLoaded', () => loadDocuments());
 
 .document-header {
     display: flex;
-    align-items: center;
+    align-items: flex-start;
     gap: 1rem;
     margin-bottom: 1rem;
 }
@@ -378,16 +389,80 @@ document.addEventListener('DOMContentLoaded', () => loadDocuments());
     padding: 0.75rem;
     background-color: var(--accent-color);
     border-radius: 6px;
+    flex-shrink: 0;
+}
+
+.document-title {
+    flex-grow: 1;
+}
+
+.document-title h3 {
+    margin: 0;
+    font-size: 1.1rem;
+    word-break: break-word;
+}
+
+.document-type {
+    display: inline-block;
+    background-color: var(--bg-secondary);
+    color: var(--text-secondary);
+    font-size: 0.8rem;
+    padding: 0.25rem 0.5rem;
+    border-radius: 4px;
+    margin-top: 0.5rem;
 }
 
 .document-info {
     margin: 1rem 0;
 }
 
+.document-description {
+    margin-bottom: 1rem;
+    color: var(--text-secondary);
+}
+
+.document-user {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    margin-bottom: 1rem;
+    padding: 0.75rem;
+    background-color: var(--bg-secondary);
+    border-radius: 6px;
+}
+
+.user-avatar {
+    width: 32px;
+    height: 32px;
+    background-color: var(--accent-color);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.875rem;
+    color: white;
+    flex-shrink: 0;
+}
+
+.user-info {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+}
+
+.user-name {
+    font-weight: 500;
+}
+
+.user-cpf {
+    font-size: 0.875rem;
+    color: var(--text-secondary);
+}
+
 .document-meta {
     display: flex;
+    flex-wrap: wrap;
     gap: 1rem;
-    margin-top: 0.5rem;
     color: var(--text-secondary);
     font-size: 0.875rem;
 }
@@ -396,6 +471,10 @@ document.addEventListener('DOMContentLoaded', () => loadDocuments());
     display: flex;
     align-items: center;
     gap: 0.25rem;
+}
+
+.document-date {
+    margin-left: auto;
 }
 
 .document-actions {
