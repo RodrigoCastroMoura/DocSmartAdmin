@@ -8,6 +8,38 @@
             <i data-feather="plus"></i> Add Document
         </button>
     </div>
+    <div class="filters-section">
+        <div class="filter-group">
+            <label for="filterDepartment">Department</label>
+            <select id="filterDepartment" onchange="handleFilterChange()">
+                <option value="">All Departments</option>
+                {% for dept in departments %}
+                <option value="{{ dept.id }}">{{ dept.name }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="filter-group">
+            <label for="filterCategory">Category</label>
+            <select id="filterCategory" onchange="handleFilterChange()">
+                <option value="">All Categories</option>
+            </select>
+        </div>
+        <div class="filter-group">
+            <label for="filterDocumentType">Document Type</label>
+            <select id="filterDocumentType" onchange="handleFilterChange()">
+                <option value="">All Types</option>
+            </select>
+        </div>
+        <div class="filter-group">
+            <label for="filterUser">User</label>
+            <select id="filterUser" onchange="handleFilterChange()">
+                <option value="">All Users</option>
+            </select>
+        </div>
+        <button class="action-btn" onclick="clearFilters()">
+            <i data-feather="x"></i> Clear Filters
+        </button>
+    </div>
     <div class="content-grid">
         <div id="documentsContent">
             <div class="documents-grid">
@@ -116,6 +148,63 @@ function getFileIcon(filename) {
     }
 }
 
+async function loadFilterData() {
+    try {
+        // Load users for filter
+        const usersResponse = await fetch('/api/users');
+        if (usersResponse.ok) {
+            const userData = await usersResponse.json();
+            const userSelect = document.getElementById('filterUser');
+            userSelect.innerHTML = `
+                <option value="">All Users</option>
+                ${userData.users.map(user => 
+                    `<option value="${user.id}">${user.name}</option>`
+                ).join('')}`;
+        }
+
+        // Load initial categories and document types if department is selected
+        const departmentId = document.getElementById('filterDepartment').value;
+        if (departmentId) {
+            await loadDepartmentCategories(departmentId, 'filterCategory');
+            const categoryId = document.getElementById('filterCategory').value;
+            if (categoryId) {
+                await loadDocumentTypes(categoryId, 'filterDocumentType');
+            }
+        }
+    } catch (error) {
+        console.error('Error loading filter data:', error);
+    }
+}
+
+async function handleFilterChange() {
+    const departmentId = document.getElementById('filterDepartment').value;
+    const categorySelect = document.getElementById('filterCategory');
+    const documentTypeSelect = document.getElementById('filterDocumentType');
+
+    if (departmentId) {
+        await loadDepartmentCategories(departmentId, 'filterCategory');
+        const categoryId = categorySelect.value;
+        if (categoryId) {
+            await loadDocumentTypes(categoryId, 'filterDocumentType');
+        }
+    } else {
+        categorySelect.innerHTML = '<option value="">All Categories</option>';
+        documentTypeSelect.innerHTML = '<option value="">All Types</option>';
+    }
+
+    // Reset to first page when filters change
+    currentPage = 1;
+    await loadDocuments();
+}
+
+function clearFilters() {
+    document.getElementById('filterDepartment').value = '';
+    document.getElementById('filterCategory').value = '';
+    document.getElementById('filterDocumentType').value = '';
+    document.getElementById('filterUser').value = '';
+    handleFilterChange();
+}
+
 setupFormValidation('addDocumentForm', {
     'documentTitle': [
         ValidationRules.required,
@@ -128,8 +217,8 @@ setupFormValidation('addDocumentForm', {
     'documentUser': [ValidationRules.required]
 });
 
-async function loadDocumentTypes(categoryId) {
-    const typeSelect = document.getElementById('documentType');
+async function loadDocumentTypes(categoryId, targetId = 'documentType') {
+    const typeSelect = document.getElementById(targetId);
     typeSelect.innerHTML = '<option value="">Loading document types...</option>';
     typeSelect.disabled = true;
 
@@ -139,7 +228,7 @@ async function loadDocumentTypes(categoryId) {
         const data = await response.json();
         
         typeSelect.innerHTML = `
-            <option value="">Select Document Type</option>
+            <option value="">${targetId === 'filterDocumentType' ? 'All Types' : 'Select Document Type'}</option>
             ${data.map(type => 
                 `<option value="${type.id}">${type.name}</option>`
             ).join('')}`;
@@ -151,8 +240,8 @@ async function loadDocumentTypes(categoryId) {
     }
 }
 
-async function loadDepartmentCategories(departmentId) {
-    const categorySelect = document.getElementById('documentCategory');
+async function loadDepartmentCategories(departmentId, targetId = 'documentCategory') {
+    const categorySelect = document.getElementById(targetId);
     categorySelect.innerHTML = '<option value="">Loading categories...</option>';
     categorySelect.disabled = true;
 
@@ -164,7 +253,7 @@ async function loadDepartmentCategories(departmentId) {
         const categories = data.categories || [];
         
         categorySelect.innerHTML = `
-            <option value="">Select Category</option>
+            <option value="">${targetId === 'filterCategory' ? 'All Categories' : 'Select Category'}</option>
             ${categories.map(cat => `
                 <option value="${cat.id}">${cat.name}</option>
             `).join('')}`;
@@ -199,7 +288,24 @@ async function loadDocuments(page = 1) {
     showLoading(contentDiv);
 
     try {
-        const response = await fetch(`/api/documents?page=${page}&per_page=${perPage}`);
+        // Get filter values
+        const departmentId = document.getElementById('filterDepartment').value;
+        const categoryId = document.getElementById('filterCategory').value;
+        const documentTypeId = document.getElementById('filterDocumentType').value;
+        const userId = document.getElementById('filterUser').value;
+
+        // Build query parameters
+        const params = new URLSearchParams({
+            page: page,
+            per_page: perPage
+        });
+
+        if (departmentId) params.append('department_id', departmentId);
+        if (categoryId) params.append('category_id', categoryId);
+        if (documentTypeId) params.append('document_type_id', documentTypeId);
+        if (userId) params.append('user_id', userId);
+
+        const response = await fetch(`/api/documents?${params.toString()}`);
         if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
         const data = await response.json();
         if (!data) throw new Error('Invalid response format');
@@ -251,6 +357,7 @@ function updateDocumentsGrid(data) {
                         <i data-feather="${getFileIcon(doc.name)}"></i>
                         <div class="document-title">
                             <h3>${doc.document_type_name || 'No Type'}</h3>
+                            <span class="document-filename">${doc.name}</span>
                         </div>
                     </div>
                     <div class="document-info">
@@ -298,20 +405,15 @@ function previewDocument(id, url) {
     const fileExt = url.split('.').pop().toLowerCase();
     const previewContent = document.getElementById('previewContent');
     
-    // For PDFs
     if (fileExt === 'pdf') {
         previewContent.innerHTML = `
             <embed src="${url}" type="application/pdf" width="100%" height="100%">
         `;
-    }
-    // For images
-    else if (['jpg', 'jpeg', 'png', 'gif', 'bmp'].includes(fileExt)) {
+    } else if (['jpg', 'jpeg', 'png', 'gif', 'bmp'].includes(fileExt)) {
         previewContent.innerHTML = `
             <img src="${url}" style="max-width: 100%; max-height: 100%; object-fit: contain;">
         `;
-    }
-    // For text files
-    else if (['txt', 'csv', 'json'].includes(fileExt)) {
+    } else if (['txt', 'csv', 'json'].includes(fileExt)) {
         fetch(url)
             .then(response => response.text())
             .then(content => {
@@ -328,9 +430,7 @@ function previewDocument(id, url) {
                 `;
                 feather.replace();
             });
-    }
-    // For other file types
-    else {
+    } else {
         previewContent.innerHTML = `
             <div class="preview-message">
                 <i data-feather="${getFileIcon(url)}"></i>
@@ -425,7 +525,11 @@ function showAddDocumentModal() {
     showModal('addDocumentModal');
 }
 
-document.addEventListener('DOMContentLoaded', () => loadDocuments());
+// Initialize documents list and filters when page loads
+document.addEventListener('DOMContentLoaded', () => {
+    loadDocuments();
+    loadFilterData();
+});
 </script>
 
 <style>
@@ -458,18 +562,20 @@ document.addEventListener('DOMContentLoaded', () => loadDocuments());
     padding: 0.75rem;
     background-color: var(--accent-color);
     border-radius: 6px;
-    flex-shrink: 0;
 }
 
 .document-title {
-    flex-grow: 1;
+    flex: 1;
 }
 
 .document-title h3 {
-    margin: 0;
+    margin: 0 0 0.25rem 0;
     font-size: 1.1rem;
-    word-break: break-word;
-    color: var(--text-primary);
+}
+
+.document-filename {
+    font-size: 0.875rem;
+    color: var(--text-secondary);
 }
 
 .document-info {
@@ -480,10 +586,7 @@ document.addEventListener('DOMContentLoaded', () => loadDocuments());
     display: flex;
     align-items: center;
     gap: 0.75rem;
-    margin-bottom: 1rem;
-    padding: 0.75rem;
-    background-color: var(--bg-secondary);
-    border-radius: 6px;
+    margin-bottom: 0.75rem;
 }
 
 .user-avatar {
@@ -496,13 +599,11 @@ document.addEventListener('DOMContentLoaded', () => loadDocuments());
     justify-content: center;
     font-size: 0.875rem;
     color: white;
-    flex-shrink: 0;
 }
 
 .user-info {
     display: flex;
     flex-direction: column;
-    gap: 0.25rem;
 }
 
 .user-name {
@@ -516,7 +617,6 @@ document.addEventListener('DOMContentLoaded', () => loadDocuments());
 
 .document-meta {
     display: flex;
-    flex-wrap: wrap;
     gap: 1rem;
     font-size: 0.875rem;
     color: var(--text-secondary);
@@ -535,71 +635,64 @@ document.addEventListener('DOMContentLoaded', () => loadDocuments());
     margin-top: 1rem;
 }
 
+.filters-section {
+    background-color: var(--bg-secondary);
+    border-radius: 8px;
+    padding: 1rem;
+    margin-bottom: 1rem;
+    display: flex;
+    gap: 1rem;
+    flex-wrap: wrap;
+    align-items: flex-end;
+}
+
+.filter-group {
+    flex: 1;
+    min-width: 200px;
+}
+
+.filter-group label {
+    display: block;
+    margin-bottom: 0.5rem;
+    color: var(--text-secondary);
+    font-size: 0.875rem;
+}
+
+.filter-group select {
+    width: 100%;
+    padding: 0.5rem;
+    border-radius: 4px;
+    background-color: var(--bg-tertiary);
+    border: 1px solid var(--border-color);
+    color: var(--text-primary);
+}
+
 .preview-modal {
     width: 90%;
+    height: 90%;
     max-width: 1200px;
-    height: 90vh;
-    max-height: 90vh;
-    padding: 0;
 }
 
 .preview-header {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 1rem;
-    border-bottom: 1px solid var(--border-color);
-}
-
-.preview-header h3 {
-    margin: 0;
-}
-
-.close-btn {
-    background: none;
-    border: none;
-    color: var(--text-primary);
-    cursor: pointer;
-    padding: 0.5rem;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
-
-.close-btn:hover {
-    color: var(--danger-color);
+    margin-bottom: 1rem;
 }
 
 .preview-container {
-    height: calc(100% - 60px);
-    padding: 1rem;
+    height: calc(100% - 4rem);
     overflow: auto;
 }
 
-.preview-container img,
-.preview-container embed {
-    display: block;
-    margin: 0 auto;
-    max-width: 100%;
-    max-height: 100%;
-    width: 100%;
-    height: 100%;
-    object-fit: contain;
-}
-
 .preview-message {
-    height: 100%;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    gap: 1rem;
-    color: var(--text-secondary);
     text-align: center;
+    padding: 2rem;
 }
 
 .preview-message i {
     font-size: 3rem;
+    margin-bottom: 1rem;
     opacity: 0.5;
 }
 
@@ -612,43 +705,20 @@ document.addEventListener('DOMContentLoaded', () => loadDocuments());
 }
 
 #pageInfo {
-    color: var(--text-secondary);
-}
-
-.page-container {
-    padding: 2rem;
-}
-
-.header-actions {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 2rem;
-}
-
-.header-actions h2 {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    margin: 0;
-}
-
-.content-grid {
-    background-color: var(--bg-secondary);
-    border-radius: 8px;
-    padding: 1.5rem;
-}
-
-.no-data {
+    min-width: 100px;
     text-align: center;
-    padding: 2rem;
-    color: var(--text-secondary);
 }
 
-.no-data i {
-    font-size: 2rem;
-    margin-bottom: 0.5rem;
-    opacity: 0.5;
+.close-btn {
+    background: none;
+    border: none;
+    padding: 0.5rem;
+    cursor: pointer;
+    color: var(--text-primary);
+}
+
+.close-btn:hover {
+    color: var(--danger-color);
 }
 </style>
 {% endblock %}
