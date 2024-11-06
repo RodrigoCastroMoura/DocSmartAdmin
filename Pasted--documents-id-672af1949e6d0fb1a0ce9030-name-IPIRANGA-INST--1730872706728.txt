@@ -1,0 +1,50 @@
+{
+  "documents": [
+    {
+      "id": "672af1949e6d0fb1a0ce9030",
+      "name": "IPIRANGA - INST.HIDRÁULICAS - REV.01 - FL.1.pdf",
+      "titulo": "teste",
+      "url": "https://storage.googleapis.com/docsmart-37bba.appspot.com/671958708d8d36c35e6c7c5e/672a7d5f9e6d0fb1a0ce9025/IPIRANGA%20-%20INST.HIDR%C3%81ULICAS%20-%20REV.01%20-%20FL.1.pdf",
+      "user_id": "671958718d8d36c35e6c7c5f",
+      "user_name": "Rodrigo Aparecido",
+      "user_cpf": "31599899841",
+      "category_id": "672a7d5f9e6d0fb1a0ce9025",
+      "document_type_id": "672ae3319e6d0fb1a0ce902c",
+      "document_type_name": "CPF",
+      "department_id": "672a7d039e6d0fb1a0ce9024",
+      "company_id": "671958708d8d36c35e6c7c5e",
+      "status": "active",
+      "view_count": 0,
+      "download_count": 0,
+      "created_at": "2024-11-06T04:33:24.728000",
+      "created_by": "671958718d8d36c35e6c7c5f",
+      "updated_at": "2024-11-06T04:33:24.728000",
+      "updated_by": "671958718d8d36c35e6c7c5f"
+    },
+    {
+      "id": "672af2a19e6d0fb1a0ce9031",
+      "name": "IPIRANGA - INST.HIDRÁULICAS - REV.01 - FL.1.pdf",
+      "titulo": "RG ",
+      "url": "https://storage.googleapis.com/docsmart-37bba.appspot.com/671958708d8d36c35e6c7c5e/672a7d5f9e6d0fb1a0ce9025/IPIRANGA%20-%20INST.HIDR%C3%81ULICAS%20-%20REV.01%20-%20FL.1.pdf",
+      "user_id": "672616b258436627b970adc8",
+      "user_name": "John Doe ",
+      "user_cpf": "55737513017",
+      "category_id": "672a7d5f9e6d0fb1a0ce9025",
+      "document_type_id": "672a7dd99e6d0fb1a0ce9026",
+      "document_type_name": "RG ",
+      "department_id": "672a7d039e6d0fb1a0ce9024",
+      "company_id": "671958708d8d36c35e6c7c5e",
+      "status": "active",
+      "view_count": 0,
+      "download_count": 0,
+      "created_at": "2024-11-06T04:37:53.312000",
+      "created_by": "671958718d8d36c35e6c7c5f",
+      "updated_at": "2024-11-06T04:37:53.312000",
+      "updated_by": "671958718d8d36c35e6c7c5f"
+    }
+  ],
+  "total": 2,
+  "page": 1,
+  "per_page": 10,
+  "total_pages": 1
+}
