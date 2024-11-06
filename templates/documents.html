@@ -108,9 +108,8 @@ function getFileIcon(filename) {
         case 'xls': case 'xlsx': return 'file';
         case 'ppt': case 'pptx': return 'file';
         case 'txt': return 'file-text';
-        case 'jpg': case 'jpeg': case 'png': case 'gif': case 'bmp': case 'svg': return 'image';
+        case 'jpg': case 'jpeg': case 'png': case 'gif': case 'bmp': return 'image';
         case 'zip': case 'rar': case '7z': case 'tar': case 'gz': return 'archive';
-        case 'js': case 'py': case 'java': case 'cpp': case 'html': case 'css': return 'file-text';
         case 'mp3': case 'wav': case 'ogg': return 'music';
         case 'mp4': case 'avi': case 'mov': return 'video';
         default: return 'file';
@@ -299,11 +298,39 @@ function previewDocument(id, url) {
     const fileExt = url.split('.').pop().toLowerCase();
     const previewContent = document.getElementById('previewContent');
     
+    // For PDFs
     if (fileExt === 'pdf') {
         previewContent.innerHTML = `
-            <iframe src="${url}" width="100%" height="100%" frameborder="0"></iframe>
+            <embed src="${url}" type="application/pdf" width="100%" height="100%">
         `;
-    } else {
+    }
+    // For images
+    else if (['jpg', 'jpeg', 'png', 'gif', 'bmp'].includes(fileExt)) {
+        previewContent.innerHTML = `
+            <img src="${url}" style="max-width: 100%; max-height: 100%; object-fit: contain;">
+        `;
+    }
+    // For text files
+    else if (['txt', 'csv', 'json'].includes(fileExt)) {
+        fetch(url)
+            .then(response => response.text())
+            .then(content => {
+                previewContent.innerHTML = `
+                    <pre style="white-space: pre-wrap; padding: 1rem;">${content}</pre>
+                `;
+            })
+            .catch(() => {
+                previewContent.innerHTML = `
+                    <div class="preview-message">
+                        <i data-feather="${getFileIcon(url)}"></i>
+                        <p>Failed to load preview.</p>
+                    </div>
+                `;
+                feather.replace();
+            });
+    }
+    // For other file types
+    else {
         previewContent.innerHTML = `
             <div class="preview-message">
                 <i data-feather="${getFileIcon(url)}"></i>
@@ -491,18 +518,14 @@ document.addEventListener('DOMContentLoaded', () => loadDocuments());
     display: flex;
     flex-wrap: wrap;
     gap: 1rem;
-    color: var(--text-secondary);
     font-size: 0.875rem;
+    color: var(--text-secondary);
 }
 
 .document-meta span {
     display: flex;
     align-items: center;
     gap: 0.25rem;
-}
-
-.document-date {
-    margin-left: auto;
 }
 
 .document-actions {
@@ -512,27 +535,6 @@ document.addEventListener('DOMContentLoaded', () => loadDocuments());
     margin-top: 1rem;
 }
 
-.pagination-controls {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    gap: 1rem;
-    margin-top: 1rem;
-    padding: 1rem;
-}
-
-.pagination-controls button {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-}
-
-.pagination-controls button:disabled {
-    opacity: 0.5;
-    cursor: not-allowed;
-}
-
-/* Preview Modal Styles */
 .preview-modal {
     width: 90%;
     max-width: 1200px;
@@ -571,13 +573,18 @@ document.addEventListener('DOMContentLoaded', () => loadDocuments());
 .preview-container {
     height: calc(100% - 60px);
     padding: 1rem;
+    overflow: auto;
 }
 
-.preview-container iframe {
+.preview-container img,
+.preview-container embed {
+    display: block;
+    margin: 0 auto;
+    max-width: 100%;
+    max-height: 100%;
     width: 100%;
     height: 100%;
-    border: none;
-    border-radius: 4px;
+    object-fit: contain;
 }
 
 .preview-message {
@@ -593,6 +600,54 @@ document.addEventListener('DOMContentLoaded', () => loadDocuments());
 
 .preview-message i {
     font-size: 3rem;
+    opacity: 0.5;
+}
+
+.pagination-controls {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 1rem;
+    margin-top: 1rem;
+}
+
+#pageInfo {
+    color: var(--text-secondary);
+}
+
+.page-container {
+    padding: 2rem;
+}
+
+.header-actions {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 2rem;
+}
+
+.header-actions h2 {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin: 0;
+}
+
+.content-grid {
+    background-color: var(--bg-secondary);
+    border-radius: 8px;
+    padding: 1.5rem;
+}
+
+.no-data {
+    text-align: center;
+    padding: 2rem;
+    color: var(--text-secondary);
+}
+
+.no-data i {
+    font-size: 2rem;
+    margin-bottom: 0.5rem;
     opacity: 0.5;
 }
 </style>
