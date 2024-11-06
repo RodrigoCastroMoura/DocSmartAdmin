@@ -89,15 +89,15 @@ function getFileIcon(filename) {
     const ext = filename.split('.').pop().toLowerCase();
     switch (ext) {
         case 'pdf': return 'file-text';
-        case 'doc': case 'docx': return 'file-word';
-        case 'xls': case 'xlsx': return 'file-spreadsheet';
-        case 'ppt': case 'pptx': return 'file-presentation';
+        case 'doc': case 'docx': return 'file-text';
+        case 'xls': case 'xlsx': return 'file-text';
+        case 'ppt': case 'pptx': return 'file-text';
         case 'txt': return 'file-text';
         case 'jpg': case 'jpeg': case 'png': case 'gif': case 'bmp': case 'svg': return 'image';
-        case 'zip': case 'rar': case '7z': case 'tar': case 'gz': return 'archive';
-        case 'js': case 'py': case 'java': case 'cpp': case 'html': case 'css': return 'code';
-        case 'mp3': case 'wav': case 'ogg': return 'music';
-        case 'mp4': case 'avi': case 'mov': return 'video';
+        case 'zip': case 'rar': case '7z': case 'tar': case 'gz': return 'file';
+        case 'js': case 'py': case 'java': case 'cpp': case 'html': case 'css': return 'file-text';
+        case 'mp3': case 'wav': case 'ogg': return 'file-text';
+        case 'mp4': case 'avi': case 'mov': return 'file-text';
         default: return 'file';
     }
 }
@@ -254,10 +254,13 @@ function updateDocumentsGrid(data) {
                         </div>
                     </div>
                     <div class="document-actions">
-                        <button class="action-btn" onclick="downloadDocument('${doc.id}')">
+                        <button class="action-btn" onclick="window.open('${doc.url}', '_blank')" title="Preview">
+                            <i data-feather="eye"></i>
+                        </button>
+                        <button class="action-btn" onclick="downloadDocument('${doc.id}')" title="Download">
                             <i data-feather="download"></i>
                         </button>
-                        <button class="action-btn danger" onclick="deleteDocument('${doc.id}')">
+                        <button class="action-btn danger" onclick="deleteDocument('${doc.id}')" title="Delete">
                             <i data-feather="trash-2"></i>
                         </button>
                     </div>
@@ -502,41 +505,6 @@ document.addEventListener('DOMContentLoaded', () => loadDocuments());
 
 #pageInfo {
     color: var(--text-secondary);
-}
-
-.page-container {
-    padding: 2rem;
-}
-
-.header-actions {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 2rem;
-}
-
-.header-actions h2 {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-}
-
-.content-grid {
-    background-color: var(--bg-secondary);
-    border-radius: 8px;
-    padding: 1.5rem;
-}
-
-.no-data {
-    text-align: center;
-    padding: 2rem;
-    color: var(--text-secondary);
-}
-
-.no-data i {
-    font-size: 2rem;
-    margin-bottom: 0.5rem;
-    opacity: 0.5;
 }
 </style>
 {% endblock %}
