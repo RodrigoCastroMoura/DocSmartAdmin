@@ -189,7 +189,7 @@ def document_type_api():
                 
             data['company_id'] = company_id
             response = requests.post(
-                f"{DOCUMENT_TYPES_URL}/companies/{company_id}/types",
+                f"{DOCUMENT_TYPES_URL}",
                 headers=headers,
                 json=data
             )
@@ -223,7 +223,7 @@ def document_type_detail_api(type_id):
                 
             data['company_id'] = company_id
             response = requests.put(
-                f"{DOCUMENT_TYPES_URL}/companies/{company_id}/types/{type_id}",
+                f"{DOCUMENT_TYPES_URL}/{type_id}",
                 headers=headers,
                 json=data
             )
@@ -241,7 +241,7 @@ def document_type_detail_api(type_id):
     elif request.method == 'DELETE':
         try:
             response = requests.delete(
-                f"{DOCUMENT_TYPES_URL}/companies/{company_id}/types/{type_id}",
+                f"{DOCUMENT_TYPES_URL}/{type_id}",
                 headers=headers
             )
             if response.status_code == 204:
@@ -450,6 +450,34 @@ def department_categories_api(department_id):
     except Exception as e:
         print(f"Error fetching department categories: {e}")
         return jsonify({'error': 'Failed to fetch categories', 'categories': []}), 500
+
+
+@app.route('/api/document_types/categories/<category_id>/types')
+@login_required
+def department_type_api(category_id):
+    headers = get_auth_headers()
+
+    try:
+        response = requests.get(
+            f"{DOCUMENT_TYPES_URL}/categories/{category_id}/types",
+            headers=headers
+        )
+
+        if response.status_code == 204:
+            return jsonify({
+                'categories': [],
+                'total': 0,
+                'page': 1,
+                'per_page': 10,
+                'total_pages': 0
+            })
+
+        return response.json(), response.status_code
+    except Exception as e:
+        print(f"Error fetching document_types categories: {e}")
+        return jsonify({'error': 'Failed to fetch categories', 'categories': []}), 500
+
+
 
 @app.route('/api/documents', methods=['GET', 'POST'])
 @login_required
