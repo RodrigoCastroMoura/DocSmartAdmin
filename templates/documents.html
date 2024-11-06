@@ -41,7 +41,6 @@
         </button>
     </div>
     <div class="content-grid">
-        <!-- Rest of the content remains the same -->
         {% include 'documents_content.html' %}
     </div>
 </div>
@@ -51,7 +50,6 @@
 
 <script src="{{ url_for('static', filename='js/validation.js') }}"></script>
 <script>
-// JavaScript code remains the same
 {% include 'documents_script.html' %}
 </script>
 
@@ -64,6 +62,7 @@
     background-color: var(--bg-tertiary);
     padding: 1.5rem;
     border-radius: 8px;
+    align-items: end;  /* Align items at the bottom */
 }
 
 .filter-group {
@@ -86,7 +85,13 @@
     color: var(--text-primary);
 }
 
-/* Rest of the styles remain the same */
+/* Add styles for clear filters button */
+.filters-section .action-btn {
+    height: 38px;  /* Match height with select inputs */
+    margin-top: auto;  /* Push button to bottom */
+    white-space: nowrap;
+}
+
 {% include 'documents_styles.html' %}
 </style>
 {% endblock %}

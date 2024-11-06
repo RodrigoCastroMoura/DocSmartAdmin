@@ -20,6 +20,114 @@ function getFileIcon(filename) {
     }
 }
 
+async function loadDocuments(page = 1) {
+    currentPage = page;
+    const contentDiv = document.getElementById('documentsContent');
+    showLoading(contentDiv);
+
+    try {
+        // Get filter values
+        const departmentId = document.getElementById('filterDepartment').value;
+        const categoryId = document.getElementById('filterCategory').value;
+        const documentTypeId = document.getElementById('filterDocumentType').value;
+        const userId = document.getElementById('filterUser').value;
+
+        // Build query params
+        const params = new URLSearchParams({
+            page: currentPage,
+            per_page: perPage
+        });
+
+        if (departmentId) params.append('department_id', departmentId);
+        if (categoryId) params.append('category_id', categoryId);
+        if (documentTypeId) params.append('document_type_id', documentTypeId);
+        if (userId) params.append('user_id', userId);
+
+        const response = await fetch(`/api/documents?${params}`);
+        const data = await response.json();
+        
+        totalPages = data.total_pages || 1;
+        updateDocumentsGrid(data);
+        updatePaginationControls();
+    } catch (error) {
+        console.error('Error loading documents:', error);
+        showErrorMessage('Failed to load documents');
+    } finally {
+        hideLoading(contentDiv);
+    }
+}
+
+async function loadFilterData() {
+    try {
+        // Load departments (already in select from server-side)
+        
+        // Load document types
+        const typesResponse = await fetch('/api/document_types');
+        if (typesResponse.ok) {
+            const typesData = await typesResponse.json();
+            const typeSelect = document.getElementById('filterDocumentType');
+            typeSelect.innerHTML = '<option value="">All Types</option>' +
+                typesData.document_types.map(type => 
+                    `<option value="${type.id}">${type.name}</option>`
+                ).join('');
+        }
+
+        // Load users
+        const usersResponse = await fetch('/api/users');
+        if (usersResponse.ok) {
+            const usersData = await usersResponse.json();
+            const userSelect = document.getElementById('filterUser');
+            userSelect.innerHTML = '<option value="">All Users</option>' +
+                usersData.users.map(user => 
+                    `<option value="${user.id}">${user.name}</option>`
+                ).join('');
+        }
+    } catch (error) {
+        console.error('Error loading filter data:', error);
+        showErrorMessage('Failed to load filter options');
+    }
+}
+
+async function handleFilterChange() {
+    const departmentId = document.getElementById('filterDepartment').value;
+    const categorySelect = document.getElementById('filterCategory');
+
+    // Clear and disable category select when no department is selected
+    if (!departmentId) {
+        categorySelect.innerHTML = '<option value="">All Categories</option>';
+        categorySelect.disabled = true;
+        return;
+    }
+
+    try {
+        categorySelect.disabled = true;
+        const response = await fetch(`/api/categories/departments/${departmentId}/categories`);
+        if (response.ok) {
+            const data = await response.json();
+            categorySelect.innerHTML = '<option value="">All Categories</option>' +
+                data.categories.map(cat => 
+                    `<option value="${cat.id}">${cat.name}</option>`
+                ).join('');
+        }
+    } catch (error) {
+        console.error('Error loading categories:', error);
+        showErrorMessage('Failed to load categories');
+    } finally {
+        categorySelect.disabled = false;
+    }
+
+    // Reload documents with new filter
+    loadDocuments(1);
+}
+
+function clearFilters() {
+    document.getElementById('filterDepartment').value = '';
+    document.getElementById('filterCategory').value = '';
+    document.getElementById('filterDocumentType').value = '';
+    document.getElementById('filterUser').value = '';
+    loadDocuments(1);
+}
+
 function updatePaginationControls() {
     document.getElementById('prevPage').disabled = currentPage <= 1;
     document.getElementById('nextPage').disabled = currentPage >= totalPages;
@@ -86,9 +194,6 @@ function updateDocumentsGrid(data) {
     contentDiv.appendChild(paginationControls);
     feather.replace();
 }
-
-// Load functions from before (loadFilterData, handleFilterChange, clearFilters, etc.)
-// They remain the same...
 
 // Initialize documents list and filters when page loads
 document.addEventListener('DOMContentLoaded', () => {
