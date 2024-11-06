@@ -1,0 +1,130 @@
+let currentPage = 1;
+const perPage = 10;
+let totalPages = 1;
+
+function getFileIcon(filename) {
+    if (!filename) return 'file';
+    
+    const ext = filename.split('.').pop().toLowerCase();
+    switch (ext) {
+        case 'pdf': return 'file-text';
+        case 'doc': case 'docx': return 'file-text';
+        case 'xls': case 'xlsx': return 'file';
+        case 'ppt': case 'pptx': return 'file';
+        case 'txt': return 'file-text';
+        case 'jpg': case 'jpeg': case 'png': case 'gif': case 'bmp': return 'image';
+        case 'zip': case 'rar': case '7z': case 'tar': case 'gz': return 'archive';
+        case 'mp3': case 'wav': case 'ogg': return 'music';
+        case 'mp4': case 'avi': case 'mov': return 'video';
+        default: return 'file';
+    }
+}
+
+async function loadFilterData() {
+    try {
+        // Load users for filter
+        const usersResponse = await fetch('/api/users');
+        if (usersResponse.ok) {
+            const userData = await usersResponse.json();
+            const userSelect = document.getElementById('filterUser');
+            userSelect.innerHTML = `
+                <option value="">All Users</option>
+                ${userData.users.map(user => 
+                    `<option value="${user.id}">${user.name}</option>`
+                ).join('')}`;
+        }
+
+        // Load initial categories and document types if department is selected
+        const departmentId = document.getElementById('filterDepartment').value;
+        if (departmentId) {
+            await loadDepartmentCategories(departmentId, 'filterCategory');
+            const categoryId = document.getElementById('filterCategory').value;
+            if (categoryId) {
+                await loadDocumentTypes(categoryId, 'filterDocumentType');
+            }
+        }
+    } catch (error) {
+        console.error('Error loading filter data:', error);
+    }
+}
+
+async function handleFilterChange() {
+    const departmentId = document.getElementById('filterDepartment').value;
+    const categorySelect = document.getElementById('filterCategory');
+    const documentTypeSelect = document.getElementById('filterDocumentType');
+
+    if (departmentId) {
+        await loadDepartmentCategories(departmentId, 'filterCategory');
+        const categoryId = categorySelect.value;
+        if (categoryId) {
+            await loadDocumentTypes(categoryId, 'filterDocumentType');
+        }
+    } else {
+        categorySelect.innerHTML = '<option value="">All Categories</option>';
+        documentTypeSelect.innerHTML = '<option value="">All Types</option>';
+    }
+
+    // Reset to first page when filters change
+    currentPage = 1;
+    await loadDocuments();
+}
+
+function clearFilters() {
+    document.getElementById('filterDepartment').value = '';
+    document.getElementById('filterCategory').value = '';
+    document.getElementById('filterDocumentType').value = '';
+    document.getElementById('filterUser').value = '';
+    handleFilterChange();
+}
+
+async function loadDocuments(page = 1) {
+    const contentDiv = document.getElementById('documentsContent');
+    showLoading(contentDiv);
+
+    try {
+        // Get filter values
+        const departmentId = document.getElementById('filterDepartment').value;
+        const categoryId = document.getElementById('filterCategory').value;
+        const documentTypeId = document.getElementById('filterDocumentType').value;
+        const userId = document.getElementById('filterUser').value;
+
+        // Build query parameters
+        const params = new URLSearchParams({
+            page: page,
+            per_page: perPage
+        });
+
+        if (departmentId) params.append('department_id', departmentId);
+        if (categoryId) params.append('category_id', categoryId);
+        if (documentTypeId) params.append('document_type_id', documentTypeId);
+        if (userId) params.append('user_id', userId);
+
+        const response = await fetch(`/api/documents?${params.toString()}`);
+        if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+        const data = await response.json();
+        if (!data) throw new Error('Invalid response format');
+
+        currentPage = page;
+        totalPages = data.total_pages || 1;
+        updateDocumentsGrid(data);
+        updatePaginationControls();
+    } catch (error) {
+        console.error('Error loading documents:', error);
+        contentDiv.innerHTML = `
+            <div class="documents-grid">
+                <div class="no-data">
+                    <i data-feather="alert-circle"></i>
+                    <p>Error loading documents. Please try again.</p>
+                </div>
+            </div>`;
+        feather.replace();
+    } finally {
+        hideLoading(contentDiv);
+    }
+}
+
+// Initialize documents list and filters when page loads
+document.addEventListener('DOMContentLoaded', () => {
+    loadDocuments();
+    loadFilterData();
+});
