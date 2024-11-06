@@ -77,6 +77,21 @@
     </div>
 </div>
 
+<!-- Document Preview Modal -->
+<div id="previewModal" class="modal">
+    <div class="modal-content preview-modal">
+        <div class="preview-header">
+            <h3>Document Preview</h3>
+            <button class="close-btn" onclick="hideModal('previewModal')">
+                <i data-feather="x"></i>
+            </button>
+        </div>
+        <div class="preview-container">
+            <div id="previewContent"></div>
+        </div>
+    </div>
+</div>
+
 <script src="{{ url_for('static', filename='js/validation.js') }}"></script>
 <script>
 let currentPage = 1;
@@ -89,13 +104,13 @@ function getFileIcon(filename) {
     const ext = filename.split('.').pop().toLowerCase();
     switch (ext) {
         case 'pdf': return 'file-text';
-        case 'doc': case 'docx': return 'file-word';
-        case 'xls': case 'xlsx': return 'file-spreadsheet';
-        case 'ppt': case 'pptx': return 'file-presentation';
+        case 'doc': case 'docx': return 'file-text';
+        case 'xls': case 'xlsx': return 'file';
+        case 'ppt': case 'pptx': return 'file';
         case 'txt': return 'file-text';
         case 'jpg': case 'jpeg': case 'png': case 'gif': case 'bmp': case 'svg': return 'image';
         case 'zip': case 'rar': case '7z': case 'tar': case 'gz': return 'archive';
-        case 'js': case 'py': case 'java': case 'cpp': case 'html': case 'css': return 'code';
+        case 'js': case 'py': case 'java': case 'cpp': case 'html': case 'css': return 'file-text';
         case 'mp3': case 'wav': case 'ogg': return 'music';
         case 'mp4': case 'avi': case 'mov': return 'video';
         default: return 'file';
@@ -254,7 +269,10 @@ function updateDocumentsGrid(data) {
                         </div>
                     </div>
                     <div class="document-actions">
-                        <button class="action-btn" onclick="downloadDocument('${doc.id}')">
+                        <button class="action-btn" onclick="previewDocument('${doc.id}', '${doc.url}')">
+                            <i data-feather="eye"></i>
+                        </button>
+                        <button class="action-btn" onclick="downloadDocument('${doc.id}', '${doc.url}')">
                             <i data-feather="download"></i>
                         </button>
                         <button class="action-btn danger" onclick="deleteDocument('${doc.id}')">
@@ -270,6 +288,42 @@ function updateDocumentsGrid(data) {
     contentDiv.innerHTML = gridHTML;
     contentDiv.appendChild(paginationControls);
     feather.replace();
+}
+
+function previewDocument(id, url) {
+    if (!url) {
+        showErrorMessage('Document URL not available');
+        return;
+    }
+
+    const fileExt = url.split('.').pop().toLowerCase();
+    const previewContent = document.getElementById('previewContent');
+    
+    if (fileExt === 'pdf') {
+        previewContent.innerHTML = `
+            <iframe src="${url}" width="100%" height="100%" frameborder="0"></iframe>
+        `;
+    } else {
+        previewContent.innerHTML = `
+            <div class="preview-message">
+                <i data-feather="${getFileIcon(url)}"></i>
+                <p>This file type cannot be previewed directly.</p>
+                <p>Click the download button to view the file.</p>
+            </div>
+        `;
+        feather.replace();
+    }
+
+    showModal('previewModal');
+}
+
+function downloadDocument(id, url) {
+    if (!url) {
+        showErrorMessage('Document URL not available');
+        return;
+    }
+
+    window.open(url, '_blank');
 }
 
 async function createDocument(event) {
@@ -303,28 +357,6 @@ async function createDocument(event) {
         showErrorMessage(error.message);
     } finally {
         hideLoading(submitButton);
-    }
-}
-
-async function downloadDocument(id) {
-    const documentCard = document.querySelector(`.document-card[data-id="${id}"]`);
-    if (!documentCard) return;
-
-    try {
-        const response = await fetch(`/api/documents?page=${currentPage}&per_page=${perPage}`);
-        if (!response.ok) throw new Error('Failed to fetch document details');
-        
-        const data = await response.json();
-        const document = data.documents.find(doc => doc.id === id);
-        
-        if (!document || !document.url) {
-            throw new Error('Document URL not found');
-        }
-
-        window.open(document.url, '_blank');
-    } catch (error) {
-        console.error('Error downloading document:', error);
-        showErrorMessage('Failed to download document');
     }
 }
 
@@ -500,42 +532,67 @@ document.addEventListener('DOMContentLoaded', () => loadDocuments());
     cursor: not-allowed;
 }
 
-#pageInfo {
-    color: var(--text-secondary);
+/* Preview Modal Styles */
+.preview-modal {
+    width: 90%;
+    max-width: 1200px;
+    height: 90vh;
+    max-height: 90vh;
+    padding: 0;
 }
 
-.page-container {
-    padding: 2rem;
-}
-
-.header-actions {
+.preview-header {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: 2rem;
+    padding: 1rem;
+    border-bottom: 1px solid var(--border-color);
 }
 
-.header-actions h2 {
+.preview-header h3 {
+    margin: 0;
+}
+
+.close-btn {
+    background: none;
+    border: none;
+    color: var(--text-primary);
+    cursor: pointer;
+    padding: 0.5rem;
     display: flex;
     align-items: center;
-    gap: 0.5rem;
+    justify-content: center;
 }
 
-.content-grid {
-    background-color: var(--bg-secondary);
-    border-radius: 8px;
-    padding: 1.5rem;
+.close-btn:hover {
+    color: var(--danger-color);
 }
 
-.no-data {
-    text-align: center;
-    padding: 2rem;
+.preview-container {
+    height: calc(100% - 60px);
+    padding: 1rem;
+}
+
+.preview-container iframe {
+    width: 100%;
+    height: 100%;
+    border: none;
+    border-radius: 4px;
+}
+
+.preview-message {
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 1rem;
     color: var(--text-secondary);
+    text-align: center;
 }
 
-.no-data i {
-    font-size: 2rem;
-    margin-bottom: 0.5rem;
+.preview-message i {
+    font-size: 3rem;
     opacity: 0.5;
 }
 </style>
