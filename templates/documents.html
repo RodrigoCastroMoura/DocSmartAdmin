@@ -88,59 +88,17 @@ function getFileIcon(filename) {
     
     const ext = filename.split('.').pop().toLowerCase();
     switch (ext) {
-        // Documents
-        case 'pdf':
-            return 'file-text';
-        case 'doc':
-        case 'docx':
-            return 'file-word';
-        case 'xls':
-        case 'xlsx':
-            return 'file-spreadsheet';
-        case 'ppt':
-        case 'pptx':
-            return 'file-presentation';
-        case 'txt':
-            return 'file-text';
-        
-        // Images
-        case 'jpg':
-        case 'jpeg':
-        case 'png':
-        case 'gif':
-        case 'bmp':
-        case 'svg':
-            return 'image';
-        
-        // Archives
-        case 'zip':
-        case 'rar':
-        case '7z':
-        case 'tar':
-        case 'gz':
-            return 'archive';
-            
-        // Code files
-        case 'js':
-        case 'py':
-        case 'java':
-        case 'cpp':
-        case 'html':
-        case 'css':
-            return 'code';
-            
-        // Media
-        case 'mp3':
-        case 'wav':
-        case 'ogg':
-            return 'music';
-        case 'mp4':
-        case 'avi':
-        case 'mov':
-            return 'video';
-            
-        default:
-            return 'file';
+        case 'pdf': return 'file-text';
+        case 'doc': case 'docx': return 'file-word';
+        case 'xls': case 'xlsx': return 'file-spreadsheet';
+        case 'ppt': case 'pptx': return 'file-presentation';
+        case 'txt': return 'file-text';
+        case 'jpg': case 'jpeg': case 'png': case 'gif': case 'bmp': case 'svg': return 'image';
+        case 'zip': case 'rar': case '7z': case 'tar': case 'gz': return 'archive';
+        case 'js': case 'py': case 'java': case 'cpp': case 'html': case 'css': return 'code';
+        case 'mp3': case 'wav': case 'ogg': return 'music';
+        case 'mp4': case 'avi': case 'mov': return 'video';
+        default: return 'file';
     }
 }
 
@@ -150,18 +108,10 @@ setupFormValidation('addDocumentForm', {
         ValidationRules.minLength(3),
         ValidationRules.maxLength(100)
     ],
-    'documentDepartment': [
-        ValidationRules.required
-    ],
-    'documentCategory': [
-        ValidationRules.required
-    ],
-    'documentType': [
-        ValidationRules.required
-    ],
-    'documentUser': [
-        ValidationRules.required
-    ]
+    'documentDepartment': [ValidationRules.required],
+    'documentCategory': [ValidationRules.required],
+    'documentType': [ValidationRules.required],
+    'documentUser': [ValidationRules.required]
 });
 
 async function loadDocumentTypes(categoryId) {
@@ -194,9 +144,7 @@ async function loadDepartmentCategories(departmentId) {
 
     try {
         const response = await fetch(`/api/categories/departments/${departmentId}/categories`);
-        if (!response.ok) {
-            throw new Error('Failed to load categories');
-        }
+        if (!response.ok) throw new Error('Failed to load categories');
         const data = await response.json();
         
         const categories = data.categories || [];
@@ -238,13 +186,9 @@ async function loadDocuments(page = 1) {
 
     try {
         const response = await fetch(`/api/documents?page=${page}&per_page=${perPage}`);
-        if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status}`);
-        }
+        if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
         const data = await response.json();
-        if (!data) {
-            throw new Error('Invalid response format');
-        }
+        if (!data) throw new Error('Invalid response format');
 
         currentPage = page;
         totalPages = data.total_pages || 1;
@@ -333,9 +277,7 @@ async function createDocument(event) {
     const form = event.target;
     const submitButton = form.querySelector('button[type="submit"]');
     
-    if (!validateForm(form)) {
-        return;
-    }
+    if (!validateForm(form)) return;
     
     const formData = new FormData(form);
     showLoading(submitButton);
@@ -365,8 +307,21 @@ async function createDocument(event) {
 }
 
 async function downloadDocument(id) {
+    const documentCard = document.querySelector(`.document-card[data-id="${id}"]`);
+    if (!documentCard) return;
+
     try {
-        window.location.href = `/api/documents/${id}/download`;
+        const response = await fetch(`/api/documents?page=${currentPage}&per_page=${perPage}`);
+        if (!response.ok) throw new Error('Failed to fetch document details');
+        
+        const data = await response.json();
+        const document = data.documents.find(doc => doc.id === id);
+        
+        if (!document || !document.url) {
+            throw new Error('Document URL not found');
+        }
+
+        window.open(document.url, '_blank');
     } catch (error) {
         console.error('Error downloading document:', error);
         showErrorMessage('Failed to download document');
@@ -374,9 +329,7 @@ async function downloadDocument(id) {
 }
 
 async function deleteDocument(id) {
-    if (!confirm('Are you sure you want to delete this document?')) {
-        return;
-    }
+    if (!confirm('Are you sure you want to delete this document?')) return;
 
     const card = document.querySelector(`.document-card[data-id="${id}"]`);
     showLoading(card);
@@ -386,9 +339,7 @@ async function deleteDocument(id) {
             method: 'DELETE'
         });
 
-        if (!response.ok) {
-            throw new Error('Failed to delete document');
-        }
+        if (!response.ok) throw new Error('Failed to delete document');
 
         await loadDocuments(currentPage);
         showErrorMessage('Document deleted successfully', 'success');
