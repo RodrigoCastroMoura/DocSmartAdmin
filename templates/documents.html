@@ -128,41 +128,6 @@ let currentPage = 1;
 const perPage = 10;
 let totalPages = 1;
 
-async function loadDocuments(page = 1, filters = {}) {
-    const contentDiv = document.getElementById('documentsContent');
-    showLoading(contentDiv);
-    
-    try {
-        const params = new URLSearchParams({
-            page: page,
-            per_page: perPage,
-            ...filters
-        });
-        
-        const response = await fetch(`/api/documents?${params}`);
-        if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
-        const data = await response.json();
-        if (!data) throw new Error('Invalid response format');
-        
-        currentPage = page;
-        totalPages = data.total_pages || 1;
-        updateDocumentsGrid(data);
-        updatePaginationControls();
-    } catch (error) {
-        console.error('Error loading documents:', error);
-        contentDiv.innerHTML = `
-            <div class="documents-grid">
-                <div class="no-data">
-                    <i data-feather="alert-circle"></i>
-                    <p>Error loading documents. Please try again.</p>
-                </div>
-            </div>`;
-        feather.replace();
-    } finally {
-        hideLoading(contentDiv);
-    }
-}
-
 async function loadFilterOptions() {
     try {
         // Load departments
@@ -176,8 +141,9 @@ async function loadFilterOptions() {
         populateFilterSelect('filterCategory', categories.categories);
         
         // Load document types
-        const types = await loadDocumentTypes();
-        populateFilterSelect('filterDocumentType', types);
+        const typeResponse = await fetch('/api/document_types');
+        const types = await typeResponse.json();
+        populateFilterSelect('filterDocumentType', types.document_types);
         
         // Load users
         const userResponse = await fetch('/api/users');
@@ -185,20 +151,6 @@ async function loadFilterOptions() {
         populateFilterSelect('filterUser', users.users);
     } catch (error) {
         console.error('Error loading filter options:', error);
-    }
-}
-
-async function loadDocumentTypes() {
-    try {
-        const response = await fetch('/api/document_types');
-        if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status}`);
-        }
-        const data = await response.json();
-        return data.document_types || [];
-    } catch (error) {
-        console.error('Error loading document types:', error);
-        return [];
     }
 }
 
@@ -274,9 +226,7 @@ async function loadDocumentTypes(categoryId) {
 
     try {
         const response = await fetch(`/api/document_types/categories/${categoryId}/types`);
-        if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status}`);
-        }
+        if (!response.ok) throw new Error('Failed to load document types');
         const data = await response.json();
         
         typeSelect.innerHTML = `
@@ -332,6 +282,41 @@ async function loadUsers() {
     } catch (error) {
         console.error('Error loading users:', error);
         userSelect.innerHTML = '<option value="">Error loading users</option>';
+    }
+}
+
+async function loadDocuments(page = 1, filters = {}) {
+    const contentDiv = document.getElementById('documentsContent');
+    showLoading(contentDiv);
+    
+    try {
+        const params = new URLSearchParams({
+            page: page,
+            per_page: perPage,
+            ...filters
+        });
+        
+        const response = await fetch(`/api/documents?${params}`);
+        if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+        const data = await response.json();
+        if (!data) throw new Error('Invalid response format');
+        
+        currentPage = page;
+        totalPages = data.total_pages || 1;
+        updateDocumentsGrid(data);
+        updatePaginationControls();
+    } catch (error) {
+        console.error('Error loading documents:', error);
+        contentDiv.innerHTML = `
+            <div class="documents-grid">
+                <div class="no-data">
+                    <i data-feather="alert-circle"></i>
+                    <p>Error loading documents. Please try again.</p>
+                </div>
+            </div>`;
+        feather.replace();
+    } finally {
+        hideLoading(contentDiv);
     }
 }
 
@@ -410,97 +395,6 @@ function updateDocumentsGrid(data) {
     feather.replace();
 }
 
-function showModal(modalId) {
-    document.getElementById(modalId).style.display = 'block';
-}
-
-function hideModal(modalId) {
-    document.getElementById(modalId).style.display = 'none';
-}
-
-function showAddDocumentModal() {
-    document.getElementById('addDocumentForm').reset();
-    loadUsers();
-    showModal('addDocumentModal');
-}
-
-async function createDocument(event) {
-    event.preventDefault();
-    const form = event.target;
-    const submitButton = form.querySelector('button[type="submit"]');
-    
-    if (!validateForm(form)) {
-        return;
-    }
-    
-    const formData = new FormData(form);
-    showLoading(submitButton);
-
-    try {
-        const response = await fetch('/api/documents', {
-            method: 'POST',
-            body: formData
-        });
-
-        if (!response.ok) {
-            const errorData = await response.json();
-            throw new Error(errorData.error || 'Failed to create document');
-        }
-
-        hideModal('addDocumentModal');
-        form.reset();
-        await loadDocuments();
-        showErrorMessage('Document created successfully', 'success');
-    } catch (error) {
-        console.error('Error creating document:', error);
-        showErrorMessage(error.message);
-    } finally {
-        hideLoading(submitButton);
-    }
-}
-
-async function deleteDocument(id) {
-    if (!confirm('Are you sure you want to delete this document?')) {
-        return;
-    }
-
-    const card = document.querySelector(`.document-card[data-id="${id}"]`);
-    showLoading(card);
-
-    try {
-        const response = await fetch(`/api/documents/${id}`, {
-            method: 'DELETE'
-        });
-
-        if (!response.ok) {
-            const errorData = await response.json();
-            throw new Error(errorData.error || 'Failed to delete document');
-        }
-
-        await loadDocuments();
-        showErrorMessage('Document deleted successfully', 'success');
-    } catch (error) {
-        console.error('Error deleting document:', error);
-        showErrorMessage(error.message);
-    } finally {
-        hideLoading(card);
-    }
-}
-
-async function downloadDocument(id, url) {
-    const card = document.querySelector(`.document-card[data-id="${id}"]`);
-    showLoading(card);
-
-    try {
-        window.location.href = `/api/documents/${id}/download`;
-    } catch (error) {
-        console.error('Error downloading document:', error);
-        showErrorMessage('Failed to download document');
-    } finally {
-        hideLoading(card);
-    }
-}
-
 function previewDocument(id, url) {
     if (!url) {
         showErrorMessage('Document URL not available');
@@ -522,19 +416,119 @@ function previewDocument(id, url) {
             <img src="${url}" style="max-width: 100%; max-height: 100%; object-fit: contain;">
         `;
     }
+    // For text files
+    else if (['txt', 'csv', 'json'].includes(fileExt)) {
+        fetch(url)
+            .then(response => response.text())
+            .then(content => {
+                previewContent.innerHTML = `
+                    <pre style="white-space: pre-wrap; padding: 1rem;">${content}</pre>
+                `;
+            })
+            .catch(() => {
+                previewContent.innerHTML = `
+                    <div class="preview-message">
+                        <i data-feather="${getFileIcon(url)}"></i>
+                        <p>Failed to load preview.</p>
+                    </div>
+                `;
+                feather.replace();
+            });
+    }
     // For other file types
     else {
         previewContent.innerHTML = `
             <div class="preview-message">
-                <i data-feather="file"></i>
-                <p>Preview not available for this file type.</p>
-                <p>Please download to view the content.</p>
+                <i data-feather="${getFileIcon(url)}"></i>
+                <p>This file type cannot be previewed directly.</p>
+                <p>Click the download button to view the file.</p>
             </div>
         `;
+        feather.replace();
     }
-    
+
     showModal('previewModal');
-    feather.replace();
+}
+
+function downloadDocument(id, url) {
+    if (!url) {
+        showErrorMessage('Document URL not available');
+        return;
+    }
+
+    window.open(url, '_blank');
+}
+
+async function createDocument(event) {
+    event.preventDefault();
+    const form = event.target;
+    const submitButton = form.querySelector('button[type="submit"]');
+    
+    if (!validateForm(form)) return;
+    
+    const formData = new FormData(form);
+    showLoading(submitButton);
+
+    try {
+        const response = await fetch('/api/documents', {
+            method: 'POST',
+            body: formData
+        });
+
+        if (!response.ok) {
+            const errorData = await response.json();
+            throw new Error(errorData.error || 'Failed to upload document');
+        }
+
+        const data = await response.json();
+        hideModal('addDocumentModal');
+        form.reset();
+        await loadDocuments(currentPage);
+        showErrorMessage('Document uploaded successfully', 'success');
+    } catch (error) {
+        console.error('Error creating document:', error);
+        showErrorMessage(error.message);
+    } finally {
+        hideLoading(submitButton);
+    }
+}
+
+async function deleteDocument(id) {
+    if (!confirm('Are you sure you want to delete this document?')) return;
+
+    const card = document.querySelector(`.document-card[data-id="${id}"]`);
+    showLoading(card);
+
+    try {
+        const response = await fetch(`/api/documents/${id}`, {
+            method: 'DELETE'
+        });
+
+        if (!response.ok) throw new Error('Failed to delete document');
+
+        await loadDocuments(currentPage);
+        showErrorMessage('Document deleted successfully', 'success');
+    } catch (error) {
+        console.error('Error deleting document:', error);
+        showErrorMessage(error.message);
+    } finally {
+        hideLoading(card);
+    }
+}
+
+function showModal(modalId) {
+    document.getElementById(modalId).style.display = 'block';
+}
+
+function hideModal(modalId) {
+    document.getElementById(modalId).style.display = 'none';
+}
+
+function showAddDocumentModal() {
+    document.getElementById('addDocumentForm').reset();
+    document.getElementById('documentCategory').innerHTML = '<option value="">Select Category</option>';
+    loadUsers();
+    showModal('addDocumentModal');
 }
 
 // Initialize page
@@ -560,18 +554,23 @@ document.addEventListener('DOMContentLoaded', () => {
     padding: 1rem;
     border-radius: 8px;
     margin-bottom: 1rem;
-    width: 100%;
 }
 
 .filter-row {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    display: flex;
     gap: 1rem;
+    flex-wrap: wrap;
 }
 
 .filter-group {
     flex: 1;
-    min-width: 0;
+    min-width: 200px;
+}
+
+.filter-group label {
+    display: block;
+    margin-bottom: 0.5rem;
+    color: var(--text-secondary);
 }
 
 .filter-group select {
@@ -587,6 +586,7 @@ document.addEventListener('DOMContentLoaded', () => {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
     gap: 1rem;
+    margin-bottom: 1rem;
 }
 
 .document-card {
@@ -602,8 +602,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
 .document-header {
     display: flex;
-    align-items: center;
+    align-items: flex-start;
     gap: 1rem;
+    margin-bottom: 1rem;
 }
 
 .document-header i {
@@ -660,10 +661,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
 .document-meta {
     display: flex;
-    align-items: center;
-    gap: 0.75rem;
-    color: var(--text-secondary);
+    flex-wrap: wrap;
+    gap: 1rem;
     font-size: 0.875rem;
+    color: var(--text-secondary);
 }
 
 .document-meta span {
