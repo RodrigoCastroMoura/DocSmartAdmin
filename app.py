@@ -371,15 +371,9 @@ def categories_api():
     
     if request.method == 'GET':
         try:
-            params = {
-                'page': request.args.get('page', 1),
-                'per_page': request.args.get('per_page', 10),
-                'company_id': company_id
-            }
             response = requests.get(
                 f"{CATEGORIES_URL}/companies/{company_id}/categories",
-                headers=headers,
-                params=params
+                headers=headers
             )
             if not response.ok:
                 return jsonify({'error': 'Failed to fetch categories'}), response.status_code
@@ -461,7 +455,6 @@ def category_detail_api(category_id):
 @login_required
 def categories_by_department(department_id):
     headers = get_auth_headers()
-    company_id = session.get('company_id')
     try:
         response = requests.get(
             f"{CATEGORIES_URL}/departments/{department_id}/categories",
@@ -474,105 +467,25 @@ def categories_by_department(department_id):
         print(f"Error fetching categories by department: {e}")
         return jsonify({'error': 'Failed to fetch categories'}), 500
 
-@app.route('/api/users', methods=['GET', 'POST'])
+@app.route('/api/users', methods=['GET'])
 @login_required
 def users_api():
     headers = get_auth_headers()
-    company_id = session.get('company_id')
-    
-    if request.method == 'GET':
-        try:
-            params = {
-                'page': request.args.get('page', 1),
-                'per_page': request.args.get('per_page', 10),
-                'company_id': company_id
-            }
-            response = requests.get(
-                f"{USERS_URL}",
-                headers=headers,
-                params=params
-            )
-            
-            if not response.ok:
-                return jsonify({'error': 'Failed to fetch users'}), response.status_code
-                
-            return response.json(), 200
-        except Exception as e:
-            print(f"Error fetching users: {e}")
-            return jsonify({'error': 'Failed to fetch users'}), 500
-            
-    elif request.method == 'POST':
-        try:
-            data = request.json
-            if not data:
-                return jsonify({'error': 'No data provided'}), 400
-                
-            required_fields = ['name', 'email', 'cpf', 'password', 'role']
-            missing_fields = [field for field in required_fields if not data.get(field)]
-            if missing_fields:
-                return jsonify({'error': f'Missing required fields: {", ".join(missing_fields)}'}), 400
-                
-            data['company_id'] = company_id
-            response = requests.post(
-                USERS_URL,
-                headers=headers,
-                json=data
-            )
-            
-            if response.status_code == 201:
-                return response.json(), 201
-            return response.json(), response.status_code
-        except Exception as e:
-            print(f"Error creating user: {e}")
-            return jsonify({'error': 'Failed to create user'}), 500
+    try:
+        response = requests.get(
+            f"{USERS_URL}",
+            headers=headers
+        )
+        if not response.ok:
+            return jsonify({'error': 'Failed to fetch users'}), response.status_code
+        return response.json(), 200
+    except Exception as e:
+        print(f"Error fetching users: {e}")
+        return jsonify({'error': 'Failed to fetch users'}), 500
 
-@app.route('/api/users/<user_id>', methods=['PUT', 'DELETE'])
+@app.route('/api/document_types', methods=['GET'])
 @login_required
-def user_detail_api(user_id):
-    headers = get_auth_headers()
-    company_id = session.get('company_id')
-    
-    if request.method == 'PUT':
-        try:
-            data = request.json
-            if not data:
-                return jsonify({'error': 'No data provided'}), 400
-                
-            required_fields = ['name', 'email', 'cpf', 'role']
-            missing_fields = [field for field in required_fields if not data.get(field)]
-            if missing_fields:
-                return jsonify({'error': f'Missing required fields: {", ".join(missing_fields)}'}), 400
-                
-            data['company_id'] = company_id
-            response = requests.put(
-                f"{USERS_URL}/{user_id}",
-                headers=headers,
-                json=data
-            )
-            
-            if response.status_code == 200:
-                return response.json(), 200
-            return response.json(), response.status_code
-        except Exception as e:
-            print(f"Error updating user: {e}")
-            return jsonify({'error': 'Failed to update user'}), 500
-            
-    elif request.method == 'DELETE':
-        try:
-            response = requests.delete(
-                f"{USERS_URL}/{user_id}",
-                headers=headers
-            )
-            if response.status_code == 204:
-                return '', 204
-            return response.json(), response.status_code
-        except Exception as e:
-            print(f"Error deleting user: {e}")
-            return jsonify({'error': 'Failed to delete user'}), 500
-
-@app.route('/api/document_types', methods=['GET', 'POST'])
-@login_required
-def document_type_api():
+def document_types_api():
     headers = get_auth_headers()
     company_id = session.get('company_id')
     
@@ -580,15 +493,13 @@ def document_type_api():
         try:
             params = {
                 'page': request.args.get('page', 1),
-                'per_page': request.args.get('per_page', 10),
-                'company_id': company_id
+                'per_page': request.args.get('per_page', 10)
             }
             response = requests.get(
-                f"{DOCUMENT_TYPES_URL}",
+                f"{DOCUMENT_TYPES_URL}/companies/{company_id}/types",
                 headers=headers,
                 params=params
             )
-            
             if not response.ok:
                 return jsonify({
                     'document_types': [],
@@ -597,7 +508,6 @@ def document_type_api():
                     'per_page': 10,
                     'total_pages': 1
                 }), response.status_code
-                
             return response.json(), 200
         except Exception as e:
             print(f"Error fetching document types: {e}")
@@ -608,75 +518,6 @@ def document_type_api():
                 'per_page': 10,
                 'total_pages': 1
             }), 500
-            
-    elif request.method == 'POST':
-        try:
-            data = request.json
-            if not data:
-                return jsonify({'error': 'No data provided'}), 400
-                
-            required_fields = ['name', 'category_id']
-            missing_fields = [field for field in required_fields if not data.get(field)]
-            if missing_fields:
-                return jsonify({'error': f'Missing required fields: {", ".join(missing_fields)}'}), 400
-                
-            data['company_id'] = company_id
-            response = requests.post(
-                DOCUMENT_TYPES_URL,
-                headers=headers,
-                json=data
-            )
-            
-            if response.status_code == 201:
-                return response.json(), 201
-            return response.json(), response.status_code
-        except Exception as e:
-            print(f"Error creating document type: {e}")
-            return jsonify({'error': 'Failed to create document type'}), 500
-
-@app.route('/api/document_types/<type_id>', methods=['PUT', 'DELETE'])
-@login_required
-def document_type_detail_api(type_id):
-    headers = get_auth_headers()
-    company_id = session.get('company_id')
-    
-    if request.method == 'PUT':
-        try:
-            data = request.json
-            if not data:
-                return jsonify({'error': 'No data provided'}), 400
-                
-            required_fields = ['name', 'category_id']
-            missing_fields = [field for field in required_fields if not data.get(field)]
-            if missing_fields:
-                return jsonify({'error': f'Missing required fields: {", ".join(missing_fields)}'}), 400
-                
-            data['company_id'] = company_id
-            response = requests.put(
-                f"{DOCUMENT_TYPES_URL}/{type_id}",
-                headers=headers,
-                json=data
-            )
-            
-            if response.status_code == 200:
-                return response.json(), 200
-            return response.json(), response.status_code
-        except Exception as e:
-            print(f"Error updating document type: {e}")
-            return jsonify({'error': 'Failed to update document type'}), 500
-            
-    elif request.method == 'DELETE':
-        try:
-            response = requests.delete(
-                f"{DOCUMENT_TYPES_URL}/{type_id}",
-                headers=headers
-            )
-            if response.status_code == 204:
-                return '', 204
-            return response.json(), response.status_code
-        except Exception as e:
-            print(f"Error deleting document type: {e}")
-            return jsonify({'error': 'Failed to delete document type'}), 500
 
 @app.route('/api/document_types/categories/<category_id>/types')
 @login_required
@@ -689,7 +530,6 @@ def document_types_by_category(category_id):
         )
         if not response.ok:
             return jsonify({'error': 'Failed to fetch document types'}), response.status_code
-            
         return response.json(), 200
     except Exception as e:
         print(f"Error fetching document types by category: {e}")
