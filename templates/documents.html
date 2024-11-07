@@ -1,53 +1,741 @@
 {% extends "base.html" %}
 
 {% block content %}
-[Previous content remains the same until line 131]
+<div class="page-container">
+    <div class="header-actions">
+        <h2><i data-feather="file-text"></i> Documents</h2>
+        <button class="action-btn primary" onclick="showAddDocumentModal()">
+            <i data-feather="plus"></i> Add Document
+        </button>
+    </div>
+    
+    <div class="filter-section">
+        <div class="filter-row">
+            <div class="filter-group">
+                <label for="filterDepartment">Department</label>
+                <select id="filterDepartment" onchange="applyFilters()">
+                    <option value="">All Departments</option>
+                </select>
+            </div>
+            <div class="filter-group">
+                <label for="filterCategory">Category</label>
+                <select id="filterCategory" onchange="applyFilters()">
+                    <option value="">All Categories</option>
+                </select>
+            </div>
+            <div class="filter-group">
+                <label for="filterDocumentType">Document Type</label>
+                <select id="filterDocumentType" onchange="applyFilters()">
+                    <option value="">All Types</option>
+                </select>
+            </div>
+            <div class="filter-group">
+                <label for="filterUser">User</label>
+                <select id="filterUser" onchange="applyFilters()">
+                    <option value="">All Users</option>
+                </select>
+            </div>
+        </div>
+    </div>
+
+    <div class="content-grid">
+        <div id="documentsContent">
+            <div class="documents-grid">
+                <div class="no-data">
+                    <i data-feather="inbox"></i>
+                    <p>Loading documents...</p>
+                </div>
+            </div>
+            <div class="pagination-controls">
+                <button class="action-btn" onclick="changePage(currentPage - 1)" id="prevPage" disabled>
+                    <i data-feather="chevron-left"></i> Previous
+                </button>
+                <span id="pageInfo">Page 1</span>
+                <button class="action-btn" onclick="changePage(currentPage + 1)" id="nextPage" disabled>
+                    Next <i data-feather="chevron-right"></i>
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Add Document Modal -->
+<div id="addDocumentModal" class="modal">
+    <div class="modal-content">
+        <h3>Add Document</h3>
+        <form id="addDocumentForm" onsubmit="createDocument(event)">
+            <div class="form-group">
+                <label for="documentTitle">Title</label>
+                <input type="text" id="documentTitle" name="titulo" required>
+            </div>
+            <div class="form-group">
+                <label for="documentDepartment">Department</label>
+                <select id="documentDepartment" name="department_id" required onchange="loadDepartmentCategories(this.value)">
+                    <option value="">Select Department</option>
+                    {% for dept in departments %}
+                    <option value="{{ dept.id }}">{{ dept.name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="documentCategory">Category</label>
+                <select id="documentCategory" name="category_id" required onchange="loadDocumentTypes(this.value)">
+                    <option value="">Select Category</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="documentType">Document Type</label>
+                <select id="documentType" name="document_type_id" required>
+                    <option value="">Select Document Type</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="documentUser">User</label>
+                <select id="documentUser" name="user_id" required>
+                    <option value="">Select User</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="documentFile">File</label>
+                <input type="file" id="documentFile" name="file" required>
+            </div>
+            <div class="modal-actions">
+                <button type="button" class="action-btn" onclick="hideModal('addDocumentModal')">Cancel</button>
+                <button type="submit" class="action-btn primary">Upload</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Document Preview Modal -->
+<div id="previewModal" class="modal">
+    <div class="modal-content preview-modal">
+        <div class="preview-header">
+            <h3>Document Preview</h3>
+            <button class="close-btn" onclick="hideModal('previewModal')">
+                <i data-feather="x"></i>
+            </button>
+        </div>
+        <div class="preview-container">
+            <div id="previewContent"></div>
+        </div>
+    </div>
+</div>
+
+<script src="{{ url_for('static', filename='js/validation.js') }}"></script>
+<script>
+let currentPage = 1;
+const perPage = 10;
+let totalPages = 1;
 
 async function loadFilterOptions() {
     try {
-        const responses = await Promise.allSettled([
-            fetch('/api/departments'),
-            fetch('/api/categories'),
-            fetch('/api/document_types'),
-            fetch('/api/users')
-        ]);
+        // Load departments
+        const deptResponse = await fetch('/api/departments');
+        const departments = await deptResponse.json();
+        populateFilterSelect('filterDepartment', departments);
         
-        const results = await Promise.all(
-            responses.map(async (response, index) => {
-                if (response.status === 'rejected') {
-                    console.error(`Error loading filter option ${index}:`, response.reason);
-                    return { value: [] };
-                }
-                if (!response.value.ok) {
-                    throw new Error(`HTTP error! status: ${response.value.status}`);
-                }
-                return response.value.json();
-            })
-        );
+        // Load categories
+        const catResponse = await fetch('/api/categories');
+        const categories = await catResponse.json();
+        populateFilterSelect('filterCategory', categories.categories);
         
-        const [departments, categories, types, users] = results;
+        // Load document types
+        const typeResponse = await fetch('/api/document_types');
+        const types = await typeResponse.json();
+        populateFilterSelect('filterDocumentType', types.document_types);
         
-        if (Array.isArray(departments)) {
-            populateFilterSelect('filterDepartment', departments);
-        } else if (departments.departments) {
-            populateFilterSelect('filterDepartment', departments.departments);
-        }
-        
-        if (categories && categories.categories) {
-            populateFilterSelect('filterCategory', categories.categories);
-        }
-        
-        if (types && types.document_types) {
-            populateFilterSelect('filterDocumentType', types.document_types);
-        }
-        
-        if (users && users.users) {
-            populateFilterSelect('filterUser', users.users);
-        }
+        // Load users
+        const userResponse = await fetch('/api/users');
+        const users = await userResponse.json();
+        populateFilterSelect('filterUser', users.users);
     } catch (error) {
         console.error('Error loading filter options:', error);
-        showErrorMessage('Failed to load some filter options. Please try refreshing the page.');
     }
 }
 
-[Rest of the file remains the same]
+function populateFilterSelect(selectId, items) {
+    const select = document.getElementById(selectId);
+    if (!select || !items) return;
+    
+    const currentValue = select.value;
+    const defaultOption = select.querySelector('option[value=""]');
+    select.innerHTML = '';
+    if (defaultOption) select.appendChild(defaultOption);
+    
+    items.forEach(item => {
+        const option = document.createElement('option');
+        option.value = item.id;
+        option.textContent = item.name;
+        select.appendChild(option);
+    });
+    
+    if (currentValue) select.value = currentValue;
+}
+
+async function applyFilters() {
+    const filters = {
+        department_id: document.getElementById('filterDepartment').value,
+        category_id: document.getElementById('filterCategory').value,
+        document_type_id: document.getElementById('filterDocumentType').value,
+        user_id: document.getElementById('filterUser').value
+    };
+    
+    // Store filters in URL params
+    const params = new URLSearchParams(filters);
+    window.history.replaceState({}, '', `${window.location.pathname}?${params}`);
+    
+    // Reload documents with filters
+    await loadDocuments(1, filters);
+}
+
+function getFileIcon(filename) {
+    if (!filename) return 'file';
+    
+    const ext = filename.split('.').pop().toLowerCase();
+    switch (ext) {
+        case 'pdf': return 'file-text';
+        case 'doc': case 'docx': return 'file-text';
+        case 'xls': case 'xlsx': return 'file';
+        case 'ppt': case 'pptx': return 'file';
+        case 'txt': return 'file-text';
+        case 'jpg': case 'jpeg': case 'png': case 'gif': case 'bmp': return 'image';
+        case 'zip': case 'rar': case '7z': case 'tar': case 'gz': return 'archive';
+        case 'mp3': case 'wav': case 'ogg': return 'music';
+        case 'mp4': case 'avi': case 'mov': return 'video';
+        default: return 'file';
+    }
+}
+
+setupFormValidation('addDocumentForm', {
+    'documentTitle': [
+        ValidationRules.required,
+        ValidationRules.minLength(3),
+        ValidationRules.maxLength(100)
+    ],
+    'documentDepartment': [ValidationRules.required],
+    'documentCategory': [ValidationRules.required],
+    'documentType': [ValidationRules.required],
+    'documentUser': [ValidationRules.required]
+});
+
+async function loadDocumentTypes(categoryId) {
+    const typeSelect = document.getElementById('documentType');
+    typeSelect.innerHTML = '<option value="">Loading document types...</option>';
+    typeSelect.disabled = true;
+
+    try {
+        const response = await fetch(`/api/document_types/categories/${categoryId}/types`);
+        if (!response.ok) throw new Error('Failed to load document types');
+        const data = await response.json();
+        
+        typeSelect.innerHTML = `
+            <option value="">Select Document Type</option>
+            ${data.map(type => 
+                `<option value="${type.id}">${type.name}</option>`
+            ).join('')}`;
+    } catch (error) {
+        console.error('Error loading document types:', error);
+        typeSelect.innerHTML = '<option value="">Error loading document types</option>';
+    } finally {
+        typeSelect.disabled = false;
+    }
+}
+
+async function loadDepartmentCategories(departmentId) {
+    const categorySelect = document.getElementById('documentCategory');
+    categorySelect.innerHTML = '<option value="">Loading categories...</option>';
+    categorySelect.disabled = true;
+
+    try {
+        const response = await fetch(`/api/categories/departments/${departmentId}/categories`);
+        if (!response.ok) throw new Error('Failed to load categories');
+        const data = await response.json();
+        
+        const categories = data.categories || [];
+        
+        categorySelect.innerHTML = `
+            <option value="">Select Category</option>
+            ${categories.map(cat => `
+                <option value="${cat.id}">${cat.name}</option>
+            `).join('')}`;
+    } catch (error) {
+        console.error('Error loading categories:', error);
+        categorySelect.innerHTML = '<option value="">Error loading categories</option>';
+    } finally {
+        categorySelect.disabled = false;
+    }
+}
+
+async function loadUsers() {
+    const userSelect = document.getElementById('documentUser');
+    try {
+        const response = await fetch('/api/users');
+        if (!response.ok) throw new Error('Failed to load users');
+        const data = await response.json();
+        
+        userSelect.innerHTML = `
+            <option value="">Select User</option>
+            ${data.users.map(user => 
+                `<option value="${user.id}">${user.name}</option>`
+            ).join('')}`;
+    } catch (error) {
+        console.error('Error loading users:', error);
+        userSelect.innerHTML = '<option value="">Error loading users</option>';
+    }
+}
+
+async function loadDocuments(page = 1, filters = {}) {
+    const contentDiv = document.getElementById('documentsContent');
+    showLoading(contentDiv);
+    
+    try {
+        const params = new URLSearchParams({
+            page: page,
+            per_page: perPage,
+            ...filters
+        });
+        
+        const response = await fetch(`/api/documents?${params}`);
+        if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+        const data = await response.json();
+        if (!data) throw new Error('Invalid response format');
+        
+        currentPage = page;
+        totalPages = data.total_pages || 1;
+        updateDocumentsGrid(data);
+        updatePaginationControls();
+    } catch (error) {
+        console.error('Error loading documents:', error);
+        contentDiv.innerHTML = `
+            <div class="documents-grid">
+                <div class="no-data">
+                    <i data-feather="alert-circle"></i>
+                    <p>Error loading documents. Please try again.</p>
+                </div>
+            </div>`;
+        feather.replace();
+    } finally {
+        hideLoading(contentDiv);
+    }
+}
+
+function updatePaginationControls() {
+    document.getElementById('prevPage').disabled = currentPage <= 1;
+    document.getElementById('nextPage').disabled = currentPage >= totalPages;
+    document.getElementById('pageInfo').textContent = `Page ${currentPage} of ${totalPages}`;
+}
+
+function changePage(newPage) {
+    if (newPage >= 1 && newPage <= totalPages) {
+        const urlParams = new URLSearchParams(window.location.search);
+        const filters = {
+            department_id: urlParams.get('department_id') || '',
+            category_id: urlParams.get('category_id') || '',
+            document_type_id: urlParams.get('document_type_id') || '',
+            user_id: urlParams.get('user_id') || ''
+        };
+        loadDocuments(newPage, filters);
+    }
+}
+
+function updateDocumentsGrid(data) {
+    const documents = data.documents || [];
+    const gridHTML = documents.length === 0 ? `
+        <div class="documents-grid">
+            <div class="no-data">
+                <i data-feather="inbox"></i>
+                <p>No documents found</p>
+            </div>
+        </div>` : `
+        <div class="documents-grid">
+            ${documents.map(doc => `
+                <div class="document-card" data-id="${doc.id}">
+                    <div class="document-header">
+                        <i data-feather="${getFileIcon(doc.name)}"></i>
+                        <div class="document-title">
+                            <h3>${doc.document_type_name || 'No Type'}</h3>
+                        </div>
+                    </div>
+                    <div class="document-info">
+                        <div class="document-user">
+                            <div class="user-avatar">${doc.user_name ? doc.user_name.slice(0, 2).toUpperCase() : 'NA'}</div>
+                            <div class="user-info">
+                                <span class="user-name">${doc.user_name || 'No User'}</span>
+                                <span class="user-cpf">${doc.user_cpf || 'No CPF'}</span>
+                            </div>
+                        </div>
+                        <div class="document-meta">
+                            <span><i data-feather="eye"></i> ${doc.view_count}</span>
+                            <span><i data-feather="download"></i> ${doc.download_count}</span>
+                            <span class="document-date">Created: ${new Date(doc.created_at).toLocaleDateString()}</span>
+                        </div>
+                    </div>
+                    <div class="document-actions">
+                        <button class="action-btn" onclick="previewDocument('${doc.id}', '${doc.url}')">
+                            <i data-feather="eye"></i>
+                        </button>
+                        <button class="action-btn" onclick="downloadDocument('${doc.id}', '${doc.url}')">
+                            <i data-feather="download"></i>
+                        </button>
+                        <button class="action-btn danger" onclick="deleteDocument('${doc.id}')">
+                            <i data-feather="trash-2"></i>
+                        </button>
+                    </div>
+                </div>
+            `).join('')}
+        </div>`;
+
+    const contentDiv = document.getElementById('documentsContent');
+    const paginationControls = contentDiv.querySelector('.pagination-controls');
+    contentDiv.innerHTML = gridHTML;
+    if (paginationControls) {
+        contentDiv.appendChild(paginationControls);
+    }
+    feather.replace();
+}
+
+function previewDocument(id, url) {
+    if (!url) {
+        showErrorMessage('Document URL not available');
+        return;
+    }
+
+    const fileExt = url.split('.').pop().toLowerCase();
+    const previewContent = document.getElementById('previewContent');
+    
+    // For PDFs
+    if (fileExt === 'pdf') {
+        previewContent.innerHTML = `
+            <embed src="${url}" type="application/pdf" width="100%" height="100%">
+        `;
+    }
+    // For images
+    else if (['jpg', 'jpeg', 'png', 'gif', 'bmp'].includes(fileExt)) {
+        previewContent.innerHTML = `
+            <img src="${url}" style="max-width: 100%; max-height: 100%; object-fit: contain;">
+        `;
+    }
+    // For text files
+    else if (['txt', 'csv', 'json'].includes(fileExt)) {
+        fetch(url)
+            .then(response => response.text())
+            .then(content => {
+                previewContent.innerHTML = `
+                    <pre style="white-space: pre-wrap; padding: 1rem;">${content}</pre>
+                `;
+            })
+            .catch(() => {
+                previewContent.innerHTML = `
+                    <div class="preview-message">
+                        <i data-feather="${getFileIcon(url)}"></i>
+                        <p>Failed to load preview.</p>
+                    </div>
+                `;
+                feather.replace();
+            });
+    }
+    // For other file types
+    else {
+        previewContent.innerHTML = `
+            <div class="preview-message">
+                <i data-feather="${getFileIcon(url)}"></i>
+                <p>This file type cannot be previewed directly.</p>
+                <p>Click the download button to view the file.</p>
+            </div>
+        `;
+        feather.replace();
+    }
+
+    showModal('previewModal');
+}
+
+function downloadDocument(id, url) {
+    if (!url) {
+        showErrorMessage('Document URL not available');
+        return;
+    }
+
+    window.open(url, '_blank');
+}
+
+async function createDocument(event) {
+    event.preventDefault();
+    const form = event.target;
+    const submitButton = form.querySelector('button[type="submit"]');
+    
+    if (!validateForm(form)) return;
+    
+    const formData = new FormData(form);
+    showLoading(submitButton);
+
+    try {
+        const response = await fetch('/api/documents', {
+            method: 'POST',
+            body: formData
+        });
+
+        if (!response.ok) {
+            const errorData = await response.json();
+            throw new Error(errorData.error || 'Failed to upload document');
+        }
+
+        const data = await response.json();
+        hideModal('addDocumentModal');
+        form.reset();
+        await loadDocuments(currentPage);
+        showErrorMessage('Document uploaded successfully', 'success');
+    } catch (error) {
+        console.error('Error creating document:', error);
+        showErrorMessage(error.message);
+    } finally {
+        hideLoading(submitButton);
+    }
+}
+
+async function deleteDocument(id) {
+    if (!confirm('Are you sure you want to delete this document?')) return;
+
+    const card = document.querySelector(`.document-card[data-id="${id}"]`);
+    showLoading(card);
+
+    try {
+        const response = await fetch(`/api/documents/${id}`, {
+            method: 'DELETE'
+        });
+
+        if (!response.ok) throw new Error('Failed to delete document');
+
+        await loadDocuments(currentPage);
+        showErrorMessage('Document deleted successfully', 'success');
+    } catch (error) {
+        console.error('Error deleting document:', error);
+        showErrorMessage(error.message);
+    } finally {
+        hideLoading(card);
+    }
+}
+
+function showModal(modalId) {
+    document.getElementById(modalId).style.display = 'block';
+}
+
+function hideModal(modalId) {
+    document.getElementById(modalId).style.display = 'none';
+}
+
+function showAddDocumentModal() {
+    document.getElementById('addDocumentForm').reset();
+    document.getElementById('documentCategory').innerHTML = '<option value="">Select Category</option>';
+    loadUsers();
+    showModal('addDocumentModal');
+}
+
+// Initialize page
+document.addEventListener('DOMContentLoaded', () => {
+    loadFilterOptions();
+    
+    // Load documents with any existing URL filters
+    const urlParams = new URLSearchParams(window.location.search);
+    const filters = {
+        department_id: urlParams.get('department_id') || '',
+        category_id: urlParams.get('category_id') || '',
+        document_type_id: urlParams.get('document_type_id') || '',
+        user_id: urlParams.get('user_id') || ''
+    };
+    
+    loadDocuments(1, filters);
+});
+</script>
+
+<style>
+.filter-section {
+    background: var(--bg-tertiary);
+    padding: 1rem;
+    border-radius: 8px;
+    margin-bottom: 1rem;
+}
+
+.filter-row {
+    display: flex;
+    gap: 1rem;
+    flex-wrap: wrap;
+}
+
+.filter-group {
+    flex: 1;
+    min-width: 200px;
+}
+
+.filter-group label {
+    display: block;
+    margin-bottom: 0.5rem;
+    color: var(--text-secondary);
+}
+
+.filter-group select {
+    width: 100%;
+    padding: 0.5rem;
+    background: var(--bg-secondary);
+    border: 1px solid var(--border-color);
+    border-radius: 4px;
+    color: var(--text-primary);
+}
+
+.documents-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 1rem;
+    margin-bottom: 1rem;
+}
+
+.document-card {
+    background-color: var(--bg-tertiary);
+    border-radius: 8px;
+    padding: 1.5rem;
+    transition: transform 0.2s;
+}
+
+.document-card:hover {
+    transform: translateY(-2px);
+}
+
+.document-header {
+    display: flex;
+    align-items: flex-start;
+    gap: 1rem;
+    margin-bottom: 1rem;
+}
+
+.document-header i {
+    padding: 0.75rem;
+    background-color: var(--accent-color);
+    border-radius: 6px;
+}
+
+.document-title {
+    flex: 1;
+}
+
+.document-title h3 {
+    margin: 0;
+    font-size: 1.1rem;
+}
+
+.document-info {
+    margin: 1rem 0;
+}
+
+.document-user {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    margin-bottom: 1rem;
+}
+
+.user-avatar {
+    width: 32px;
+    height: 32px;
+    background-color: var(--accent-color);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.875rem;
+    color: white;
+}
+
+.user-info {
+    display: flex;
+    flex-direction: column;
+}
+
+.user-name {
+    font-weight: 500;
+}
+
+.user-cpf {
+    font-size: 0.875rem;
+    color: var(--text-secondary);
+}
+
+.document-meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1rem;
+    font-size: 0.875rem;
+    color: var(--text-secondary);
+}
+
+.document-meta span {
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+}
+
+.document-date {
+    margin-left: auto;
+}
+
+.document-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 0.5rem;
+    margin-top: 1rem;
+}
+
+.pagination-controls {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 1rem;
+    margin-top: 1rem;
+}
+
+.preview-modal {
+    width: 90%;
+    max-width: 1200px;
+    height: 90vh;
+}
+
+.preview-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1rem;
+}
+
+.preview-container {
+    height: calc(100% - 4rem);
+    overflow: auto;
+}
+
+.preview-message {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+    gap: 1rem;
+    color: var(--text-secondary);
+    text-align: center;
+}
+
+.preview-message i {
+    font-size: 3rem;
+    opacity: 0.5;
+}
+
+.close-btn {
+    background: none;
+    border: none;
+    color: var(--text-primary);
+    cursor: pointer;
+    padding: 0.5rem;
+}
+
+.close-btn:hover {
+    color: var(--danger-color);
+}
+</style>
+{% endblock %}
