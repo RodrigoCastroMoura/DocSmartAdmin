@@ -35,7 +35,9 @@ def login_required(f):
                 data = response.json()
                 session['access_token'] = data['access_token']
                 session['refresh_token'] = data['refresh_token']
-        except:
+        except Exception as e:
+            print(f"Token refresh error: {e}")
+            session.clear()
             return redirect(url_for('login'))
             
         return f(*args, **kwargs)
@@ -168,8 +170,8 @@ def documents_api():
                 'document_type_id': request.args.get('document_type_id'),
                 'user_id': request.args.get('user_id')
             }
-            # Remove None values
-            params = {k: v for k, v in params.items() if v is not None}
+            # Remove None and empty values
+            params = {k: v for k, v in params.items() if v is not None and v != ''}
             
             response = requests.get(
                 f'{DOCUMENTS_URL}/companies/{company_id}/documents',
@@ -296,7 +298,7 @@ def departments_api():
             return response.json(), 200
         except Exception as e:
             print(f"Error fetching departments: {e}")
-            return jsonify({'error': 'Failed to fetch departments'}), 500
+            return jsonify([]), 500
             
     elif request.method == 'POST':
         try:
@@ -382,11 +384,11 @@ def categories_api():
                 params=params
             )
             if not response.ok:
-                return jsonify({'error': 'Failed to fetch categories'}), response.status_code
+                return jsonify({'categories': [], 'total': 0}), response.status_code
             return response.json(), 200
         except Exception as e:
             print(f"Error fetching categories: {e}")
-            return jsonify({'error': 'Failed to fetch categories'}), 500
+            return jsonify({'categories': [], 'total': 0}), 500
             
     elif request.method == 'POST':
         try:
@@ -468,11 +470,11 @@ def categories_by_department(department_id):
             headers=headers
         )
         if not response.ok:
-            return jsonify({'error': 'Failed to fetch categories'}), response.status_code
+            return jsonify({'categories': []}), response.status_code
         return response.json(), 200
     except Exception as e:
         print(f"Error fetching categories by department: {e}")
-        return jsonify({'error': 'Failed to fetch categories'}), 500
+        return jsonify({'categories': []}), 500
 
 @app.route('/api/users', methods=['GET', 'POST'])
 @login_required
@@ -487,19 +489,22 @@ def users_api():
                 'per_page': request.args.get('per_page', 10),
                 'company_id': company_id
             }
+            # Remove None and empty values
+            params = {k: v for k, v in params.items() if v is not None and v != ''}
+            
             response = requests.get(
-                f"{USERS_URL}",
+                USERS_URL,
                 headers=headers,
                 params=params
             )
             
             if not response.ok:
-                return jsonify({'error': 'Failed to fetch users'}), response.status_code
+                return jsonify({'users': [], 'total': 0}), response.status_code
                 
             return response.json(), 200
         except Exception as e:
             print(f"Error fetching users: {e}")
-            return jsonify({'error': 'Failed to fetch users'}), 500
+            return jsonify({'users': [], 'total': 0}), 500
             
     elif request.method == 'POST':
         try:
@@ -572,7 +577,7 @@ def user_detail_api(user_id):
 
 @app.route('/api/document_types', methods=['GET', 'POST'])
 @login_required
-def document_type_api():
+def document_types_api():
     headers = get_auth_headers()
     company_id = session.get('company_id')
     
@@ -583,6 +588,9 @@ def document_type_api():
                 'per_page': request.args.get('per_page', 10),
                 'company_id': company_id
             }
+            # Remove None and empty values
+            params = {k: v for k, v in params.items() if v is not None and v != ''}
+            
             response = requests.get(
                 f"{DOCUMENT_TYPES_URL}",
                 headers=headers,
@@ -597,7 +605,7 @@ def document_type_api():
                     'per_page': 10,
                     'total_pages': 1
                 }), response.status_code
-                
+            
             return response.json(), 200
         except Exception as e:
             print(f"Error fetching document types: {e}")
@@ -688,12 +696,13 @@ def document_types_by_category(category_id):
             headers=headers
         )
         if not response.ok:
-            return jsonify({'error': 'Failed to fetch document types'}), response.status_code
+            return jsonify([]), response.status_code
             
-        return response.json(), 200
+        data = response.json()
+        return jsonify(data.get('document_types', [])), 200
     except Exception as e:
         print(f"Error fetching document types by category: {e}")
-        return jsonify({'error': 'Failed to fetch document types'}), 500
+        return jsonify([]), 500
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000)
