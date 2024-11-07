@@ -162,14 +162,31 @@ def documents_api():
         try:
             params = {
                 'page': request.args.get('page', 1),
-                'per_page': request.args.get('per_page', 10)
+                'per_page': request.args.get('per_page', 10),
+                'department_id': request.args.get('department_id'),
+                'category_id': request.args.get('category_id'),
+                'document_type_id': request.args.get('document_type_id'),
+                'user_id': request.args.get('user_id')
             }
+            # Remove None values
+            params = {k: v for k, v in params.items() if v is not None}
+            
             response = requests.get(
                 f'{DOCUMENTS_URL}/companies/{company_id}/documents',
                 headers=headers,
                 params=params
             )
-            return response.json(), response.status_code
+            
+            if not response.ok:
+                return jsonify({
+                    'documents': [],
+                    'total': 0,
+                    'page': 1,
+                    'per_page': 10,
+                    'total_pages': 1
+                }), response.status_code
+                
+            return response.json(), 200
         except Exception as e:
             print(f'Error fetching documents: {e}')
             return jsonify({
@@ -553,23 +570,6 @@ def user_detail_api(user_id):
             print(f"Error deleting user: {e}")
             return jsonify({'error': 'Failed to delete user'}), 500
 
-@app.route('/api/document_types/categories/<category_id>/types')
-@login_required
-def document_types_by_category(category_id):
-    headers = get_auth_headers()
-    try:
-        response = requests.get(
-            f"{DOCUMENT_TYPES_URL}/categories/{category_id}/types",
-            headers=headers
-        )
-        if not response.ok:
-            return jsonify({'error': 'Failed to fetch document types'}), response.status_code
-            
-        return response.json(), 200
-    except Exception as e:
-        print(f"Error fetching document types by category: {e}")
-        return jsonify({'error': 'Failed to fetch document types'}), 500
-
 @app.route('/api/document_types', methods=['GET', 'POST'])
 @login_required
 def document_type_api():
@@ -580,19 +580,34 @@ def document_type_api():
         try:
             params = {
                 'page': request.args.get('page', 1),
-                'per_page': request.args.get('per_page', 10)
+                'per_page': request.args.get('per_page', 10),
+                'company_id': company_id
             }
             response = requests.get(
-                f"{DOCUMENT_TYPES_URL}/companies/{company_id}/types",
+                f"{DOCUMENT_TYPES_URL}",
                 headers=headers,
                 params=params
             )
+            
             if not response.ok:
-                return jsonify({'error': 'Failed to fetch document types'}), response.status_code
-            return response.json(), response.status_code
+                return jsonify({
+                    'document_types': [],
+                    'total': 0,
+                    'page': 1,
+                    'per_page': 10,
+                    'total_pages': 1
+                }), response.status_code
+                
+            return response.json(), 200
         except Exception as e:
             print(f"Error fetching document types: {e}")
-            return jsonify({'error': 'Failed to fetch document types'}), 500
+            return jsonify({
+                'document_types': [],
+                'total': 0,
+                'page': 1,
+                'per_page': 10,
+                'total_pages': 1
+            }), 500
             
     elif request.method == 'POST':
         try:
@@ -662,6 +677,23 @@ def document_type_detail_api(type_id):
         except Exception as e:
             print(f"Error deleting document type: {e}")
             return jsonify({'error': 'Failed to delete document type'}), 500
+
+@app.route('/api/document_types/categories/<category_id>/types')
+@login_required
+def document_types_by_category(category_id):
+    headers = get_auth_headers()
+    try:
+        response = requests.get(
+            f"{DOCUMENT_TYPES_URL}/categories/{category_id}/types",
+            headers=headers
+        )
+        if not response.ok:
+            return jsonify({'error': 'Failed to fetch document types'}), response.status_code
+            
+        return response.json(), 200
+    except Exception as e:
+        print(f"Error fetching document types by category: {e}")
+        return jsonify({'error': 'Failed to fetch document types'}), 500
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000)

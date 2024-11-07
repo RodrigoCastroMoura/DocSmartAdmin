@@ -8,6 +8,36 @@
             <i data-feather="plus"></i> Add Document
         </button>
     </div>
+    
+    <div class="filter-section">
+        <div class="filter-row">
+            <div class="filter-group">
+                <label for="filterDepartment">Department</label>
+                <select id="filterDepartment" onchange="applyFilters()">
+                    <option value="">All Departments</option>
+                </select>
+            </div>
+            <div class="filter-group">
+                <label for="filterCategory">Category</label>
+                <select id="filterCategory" onchange="applyFilters()">
+                    <option value="">All Categories</option>
+                </select>
+            </div>
+            <div class="filter-group">
+                <label for="filterDocumentType">Document Type</label>
+                <select id="filterDocumentType" onchange="applyFilters()">
+                    <option value="">All Types</option>
+                </select>
+            </div>
+            <div class="filter-group">
+                <label for="filterUser">User</label>
+                <select id="filterUser" onchange="applyFilters()">
+                    <option value="">All Users</option>
+                </select>
+            </div>
+        </div>
+    </div>
+
     <div class="content-grid">
         <div id="documentsContent">
             <div class="documents-grid">
@@ -97,6 +127,67 @@
 let currentPage = 1;
 const perPage = 10;
 let totalPages = 1;
+
+async function loadFilterOptions() {
+    try {
+        // Load departments
+        const deptResponse = await fetch('/api/departments');
+        const departments = await deptResponse.json();
+        populateFilterSelect('filterDepartment', departments);
+        
+        // Load categories
+        const catResponse = await fetch('/api/categories');
+        const categories = await catResponse.json();
+        populateFilterSelect('filterCategory', categories.categories);
+        
+        // Load document types
+        const typeResponse = await fetch('/api/document_types');
+        const types = await typeResponse.json();
+        populateFilterSelect('filterDocumentType', types.document_types);
+        
+        // Load users
+        const userResponse = await fetch('/api/users');
+        const users = await userResponse.json();
+        populateFilterSelect('filterUser', users.users);
+    } catch (error) {
+        console.error('Error loading filter options:', error);
+    }
+}
+
+function populateFilterSelect(selectId, items) {
+    const select = document.getElementById(selectId);
+    if (!select || !items) return;
+    
+    const currentValue = select.value;
+    const defaultOption = select.querySelector('option[value=""]');
+    select.innerHTML = '';
+    if (defaultOption) select.appendChild(defaultOption);
+    
+    items.forEach(item => {
+        const option = document.createElement('option');
+        option.value = item.id;
+        option.textContent = item.name;
+        select.appendChild(option);
+    });
+    
+    if (currentValue) select.value = currentValue;
+}
+
+async function applyFilters() {
+    const filters = {
+        department_id: document.getElementById('filterDepartment').value,
+        category_id: document.getElementById('filterCategory').value,
+        document_type_id: document.getElementById('filterDocumentType').value,
+        user_id: document.getElementById('filterUser').value
+    };
+    
+    // Store filters in URL params
+    const params = new URLSearchParams(filters);
+    window.history.replaceState({}, '', `${window.location.pathname}?${params}`);
+    
+    // Reload documents with filters
+    await loadDocuments(1, filters);
+}
 
 function getFileIcon(filename) {
     if (!filename) return 'file';
@@ -194,16 +285,22 @@ async function loadUsers() {
     }
 }
 
-async function loadDocuments(page = 1) {
+async function loadDocuments(page = 1, filters = {}) {
     const contentDiv = document.getElementById('documentsContent');
     showLoading(contentDiv);
-
+    
     try {
-        const response = await fetch(`/api/documents?page=${page}&per_page=${perPage}`);
+        const params = new URLSearchParams({
+            page: page,
+            per_page: perPage,
+            ...filters
+        });
+        
+        const response = await fetch(`/api/documents?${params}`);
         if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
         const data = await response.json();
         if (!data) throw new Error('Invalid response format');
-
+        
         currentPage = page;
         totalPages = data.total_pages || 1;
         updateDocumentsGrid(data);
@@ -231,7 +328,14 @@ function updatePaginationControls() {
 
 function changePage(newPage) {
     if (newPage >= 1 && newPage <= totalPages) {
-        loadDocuments(newPage);
+        const urlParams = new URLSearchParams(window.location.search);
+        const filters = {
+            department_id: urlParams.get('department_id') || '',
+            category_id: urlParams.get('category_id') || '',
+            document_type_id: urlParams.get('document_type_id') || '',
+            user_id: urlParams.get('user_id') || ''
+        };
+        loadDocuments(newPage, filters);
     }
 }
 
@@ -285,7 +389,9 @@ function updateDocumentsGrid(data) {
     const contentDiv = document.getElementById('documentsContent');
     const paginationControls = contentDiv.querySelector('.pagination-controls');
     contentDiv.innerHTML = gridHTML;
-    contentDiv.appendChild(paginationControls);
+    if (paginationControls) {
+        contentDiv.appendChild(paginationControls);
+    }
     feather.replace();
 }
 
@@ -425,10 +531,57 @@ function showAddDocumentModal() {
     showModal('addDocumentModal');
 }
 
-document.addEventListener('DOMContentLoaded', () => loadDocuments());
+// Initialize page
+document.addEventListener('DOMContentLoaded', () => {
+    loadFilterOptions();
+    
+    // Load documents with any existing URL filters
+    const urlParams = new URLSearchParams(window.location.search);
+    const filters = {
+        department_id: urlParams.get('department_id') || '',
+        category_id: urlParams.get('category_id') || '',
+        document_type_id: urlParams.get('document_type_id') || '',
+        user_id: urlParams.get('user_id') || ''
+    };
+    
+    loadDocuments(1, filters);
+});
 </script>
 
 <style>
+.filter-section {
+    background: var(--bg-tertiary);
+    padding: 1rem;
+    border-radius: 8px;
+    margin-bottom: 1rem;
+}
+
+.filter-row {
+    display: flex;
+    gap: 1rem;
+    flex-wrap: wrap;
+}
+
+.filter-group {
+    flex: 1;
+    min-width: 200px;
+}
+
+.filter-group label {
+    display: block;
+    margin-bottom: 0.5rem;
+    color: var(--text-secondary);
+}
+
+.filter-group select {
+    width: 100%;
+    padding: 0.5rem;
+    background: var(--bg-secondary);
+    border: 1px solid var(--border-color);
+    border-radius: 4px;
+    color: var(--text-primary);
+}
+
 .documents-grid {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
@@ -458,18 +611,15 @@ document.addEventListener('DOMContentLoaded', () => loadDocuments());
     padding: 0.75rem;
     background-color: var(--accent-color);
     border-radius: 6px;
-    flex-shrink: 0;
 }
 
 .document-title {
-    flex-grow: 1;
+    flex: 1;
 }
 
 .document-title h3 {
     margin: 0;
     font-size: 1.1rem;
-    word-break: break-word;
-    color: var(--text-primary);
 }
 
 .document-info {
@@ -481,9 +631,6 @@ document.addEventListener('DOMContentLoaded', () => loadDocuments());
     align-items: center;
     gap: 0.75rem;
     margin-bottom: 1rem;
-    padding: 0.75rem;
-    background-color: var(--bg-secondary);
-    border-radius: 6px;
 }
 
 .user-avatar {
@@ -496,13 +643,11 @@ document.addEventListener('DOMContentLoaded', () => loadDocuments());
     justify-content: center;
     font-size: 0.875rem;
     color: white;
-    flex-shrink: 0;
 }
 
 .user-info {
     display: flex;
     flex-direction: column;
-    gap: 0.25rem;
 }
 
 .user-name {
@@ -528,79 +673,15 @@ document.addEventListener('DOMContentLoaded', () => loadDocuments());
     gap: 0.25rem;
 }
 
+.document-date {
+    margin-left: auto;
+}
+
 .document-actions {
     display: flex;
     justify-content: flex-end;
     gap: 0.5rem;
     margin-top: 1rem;
-}
-
-.preview-modal {
-    width: 90%;
-    max-width: 1200px;
-    height: 90vh;
-    max-height: 90vh;
-    padding: 0;
-}
-
-.preview-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 1rem;
-    border-bottom: 1px solid var(--border-color);
-}
-
-.preview-header h3 {
-    margin: 0;
-}
-
-.close-btn {
-    background: none;
-    border: none;
-    color: var(--text-primary);
-    cursor: pointer;
-    padding: 0.5rem;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
-
-.close-btn:hover {
-    color: var(--danger-color);
-}
-
-.preview-container {
-    height: calc(100% - 60px);
-    padding: 1rem;
-    overflow: auto;
-}
-
-.preview-container img,
-.preview-container embed {
-    display: block;
-    margin: 0 auto;
-    max-width: 100%;
-    max-height: 100%;
-    width: 100%;
-    height: 100%;
-    object-fit: contain;
-}
-
-.preview-message {
-    height: 100%;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    gap: 1rem;
-    color: var(--text-secondary);
-    text-align: center;
-}
-
-.preview-message i {
-    font-size: 3rem;
-    opacity: 0.5;
 }
 
 .pagination-controls {
@@ -611,44 +692,50 @@ document.addEventListener('DOMContentLoaded', () => loadDocuments());
     margin-top: 1rem;
 }
 
-#pageInfo {
-    color: var(--text-secondary);
+.preview-modal {
+    width: 90%;
+    max-width: 1200px;
+    height: 90vh;
 }
 
-.page-container {
-    padding: 2rem;
-}
-
-.header-actions {
+.preview-header {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: 2rem;
+    margin-bottom: 1rem;
 }
 
-.header-actions h2 {
+.preview-container {
+    height: calc(100% - 4rem);
+    overflow: auto;
+}
+
+.preview-message {
     display: flex;
+    flex-direction: column;
     align-items: center;
-    gap: 0.5rem;
-    margin: 0;
-}
-
-.content-grid {
-    background-color: var(--bg-secondary);
-    border-radius: 8px;
-    padding: 1.5rem;
-}
-
-.no-data {
-    text-align: center;
-    padding: 2rem;
+    justify-content: center;
+    height: 100%;
+    gap: 1rem;
     color: var(--text-secondary);
+    text-align: center;
 }
 
-.no-data i {
-    font-size: 2rem;
-    margin-bottom: 0.5rem;
+.preview-message i {
+    font-size: 3rem;
     opacity: 0.5;
+}
+
+.close-btn {
+    background: none;
+    border: none;
+    color: var(--text-primary);
+    cursor: pointer;
+    padding: 0.5rem;
+}
+
+.close-btn:hover {
+    color: var(--danger-color);
 }
 </style>
 {% endblock %}
