@@ -152,6 +152,42 @@ def document_types():
 def users():
     return render_template('users.html')
 
+@app.route('/api/departments', methods=['GET'])
+@login_required
+def departments_api():
+    headers = get_auth_headers()
+    company_id = session.get('company_id')
+    
+    try:
+        response = requests.get(
+            f"{DEPARTMENTS_URL}/companies/{company_id}/departments",
+            headers=headers
+        )
+        if not response.ok:
+            return jsonify({'error': 'Failed to fetch departments'}), response.status_code
+        return response.json(), 200
+    except Exception as e:
+        print(f"Error fetching departments: {e}")
+        return jsonify({'departments': [], 'error': 'Failed to fetch departments'}), 500
+
+@app.route('/api/categories', methods=['GET'])
+@login_required
+def categories_api():
+    headers = get_auth_headers()
+    company_id = session.get('company_id')
+    
+    try:
+        response = requests.get(
+            f"{CATEGORIES_URL}/companies/{company_id}/categories",
+            headers=headers
+        )
+        if not response.ok:
+            return jsonify({'error': 'Failed to fetch categories'}), response.status_code
+        return response.json(), 200
+    except Exception as e:
+        print(f"Error fetching categories: {e}")
+        return jsonify({'categories': [], 'error': 'Failed to fetch categories'}), 500
+
 @app.route('/api/documents', methods=['GET', 'POST'])
 @login_required
 def documents_api():
@@ -169,7 +205,6 @@ def documents_api():
                 'user_id': request.args.get('user_id'),
                 'company_id': company_id
             }
-            # Remove None values
             params = {k: v for k, v in params.items() if v is not None}
             
             response = requests.get(
