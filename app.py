@@ -580,10 +580,11 @@ def document_type_api():
         try:
             params = {
                 'page': request.args.get('page', 1),
-                'per_page': request.args.get('per_page', 10)
+                'per_page': request.args.get('per_page', 10),
+                'company_id': company_id
             }
             response = requests.get(
-                f"{DOCUMENT_TYPES_URL}/companies/{company_id}/types",
+                f"{DOCUMENT_TYPES_URL}",
                 headers=headers,
                 params=params
             )
