@@ -13,26 +13,26 @@
         <div class="filter-row">
             <div class="filter-group">
                 <label for="filterDepartment">Department</label>
-                <select id="filterDepartment" onchange="applyFilters()">
+                <select id="filterDepartment" onchange="applyFiltersDepartment(this.value)">
                     <option value="">All Departments</option>
                 </select>
             </div>
             <div class="filter-group">
                 <label for="filterCategory">Category</label>
-                <select id="filterCategory" onchange="applyFilters()">
-                    <option value="">All Categories</option>
+                <select id="filterCategory" onchange="applyFiltersCategory(this.value)">
+                    <option value="">Categories</option>
                 </select>
             </div>
             <div class="filter-group">
                 <label for="filterDocumentType">Document Type</label>
                 <select id="filterDocumentType" onchange="applyFilters()">
-                    <option value="">All Types</option>
+                    <option value="">Types</option>
                 </select>
             </div>
             <div class="filter-group">
                 <label for="filterUser">User</label>
                 <select id="filterUser" onchange="applyFilters()">
-                    <option value="">All Users</option>
+                    <option value="">Users</option>
                 </select>
             </div>
         </div>
@@ -187,6 +187,88 @@ async function applyFilters() {
     
     // Reload documents with filters
     await loadDocuments(1, filters);
+}
+
+async function applyFiltersDepartment(departmentId) {
+
+
+    const categorySelect = document.getElementById('filterCategory');
+    categorySelect.innerHTML = '<option value="">Loading categories...</option>';
+    categorySelect.disabled = true;
+
+    try {
+        const response = await fetch(`/api/categories/departments/${departmentId}/categories`);
+        if (!response.ok) throw new Error('Failed to load categories');
+        const data = await response.json();
+
+        const categories = data.categories || [];
+
+        categorySelect.innerHTML = `
+            <option value="">Select Category</option>
+            ${categories.map(cat => `
+                <option value="${cat.id}">${cat.name}</option>
+            `).join('')}`;
+
+        const filters = {
+            department_id: document.getElementById('filterDepartment').value,
+            user_id: document.getElementById('filterUser').value
+        };
+
+        // Store filters in URL params
+        const params = new URLSearchParams(filters);
+        window.history.replaceState({}, '', `${window.location.pathname}?${params}`);
+
+        // Reload documents with filters
+        await loadDocuments(1, filters);
+        
+    } catch (error) {
+        console.error('Error loading categories:', error);
+        categorySelect.innerHTML = '<option value="">Error loading categories</option>';
+    } finally {
+        categorySelect.disabled = false;
+    }
+
+}
+
+async function applyFiltersCategory(categoryId) {
+
+    const typeSelect = document.getElementById('filterDocumentType');
+    typeSelect.innerHTML = '<option value="">Loading document types...</option>';
+    typeSelect.disabled = true;
+
+    try {
+        const response = await fetch(`/api/document_types/categories/${categoryId}/types`);
+        if (!response.ok) throw new Error('Failed to load document types');
+        const data = await response.json();
+
+        typeSelect.innerHTML = `
+            <option value="">Select Document Type</option>
+            ${data.map(type => 
+                `<option value="${type.id}">${type.name}</option>`
+            ).join('')}`;
+
+        const filters = {
+            department_id: document.getElementById('filterDepartment').value,
+            category_id: document.getElementById('filterCategory').value,
+            user_id: document.getElementById('filterUser').value
+            
+        };
+
+        // Store filters in URL params
+        const params = new URLSearchParams(filters);
+        window.history.replaceState({}, '', `${window.location.pathname}?${params}`);
+
+        // Reload documents with filters
+        await loadDocuments(1, filters);
+
+        
+    } catch (error) {
+        console.error('Error loading document types:', error);
+        typeSelect.innerHTML = '<option value="">Error loading document types</option>';
+    } finally {
+        typeSelect.disabled = false;
+    }
+
 }
 
 function getFileIcon(filename) {
@@ -736,6 +818,13 @@ document.addEventListener('DOMContentLoaded', () => {
 
 .close-btn:hover {
     color: var(--danger-color);
+}
+
+.header-actions {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 2rem;
 }
 </style>
 {% endblock %}
