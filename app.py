@@ -110,6 +110,46 @@ def dashboard():
 def departments():
     return render_template('departments.html')
 
+@app.route('/departments/<department_id>/categories')
+@login_required
+def department_categories(department_id):
+    headers = get_auth_headers()
+    company_id = session.get('company_id')
+    
+    try:
+        # Get department details
+        dept_response = requests.get(
+            f"{DEPARTMENTS_URL}/{department_id}",
+            headers=headers
+        )
+        
+        if not dept_response.ok:
+            flash('Department not found', 'error')
+            return redirect(url_for('departments'))
+            
+        department = dept_response.json()
+        
+        # Get categories for department
+        cat_response = requests.get(
+            f"{CATEGORIES_URL}/departments/{department_id}/categories",
+            headers=headers
+        )
+        
+        categories = []
+        if cat_response.ok:
+            data = cat_response.json()
+            categories = data.get('categories', [])
+        
+        return render_template(
+            'department_categories.html',
+            department=department,
+            categories=categories
+        )
+    except Exception as e:
+        print(f"Error loading department categories: {e}")
+        flash('Error loading department categories', 'error')
+        return redirect(url_for('departments'))
+
 @app.route('/categories')
 @login_required
 def categories():
@@ -151,7 +191,7 @@ def departments_api():
         elif response.status_code == 403:
             return jsonify({'error': 'Access forbidden'}), 403
         elif response.status_code == 404:
-            return jsonify({'error': 'No departments found'}), 404
+            return jsonify([]), 200  # Return empty array for no departments
         elif not response.ok:
             error_data = response.json()
             return jsonify({'error': error_data.get('error', 'Failed to fetch departments')}), response.status_code
@@ -189,12 +229,19 @@ def create_department():
         response = requests.post(
             DEPARTMENTS_URL,
             headers=headers,
-            json=data
+            json=data,
+            timeout=10
         )
         
         if response.status_code == 201:
             return response.json(), 201
         return response.json(), response.status_code
+    except requests.Timeout:
+        print("Timeout error creating department")
+        return jsonify({'error': 'Request timed out'}), 504
+    except requests.ConnectionError:
+        print("Connection error creating department")
+        return jsonify({'error': 'Failed to connect to server'}), 503
     except Exception as e:
         print(f"Error creating department: {e}")
         return jsonify({'error': 'Failed to create department'}), 500
@@ -213,12 +260,19 @@ def department_detail_api(department_id):
             response = requests.put(
                 f"{DEPARTMENTS_URL}/{department_id}",
                 headers=headers,
-                json=data
+                json=data,
+                timeout=10
             )
             
             if response.status_code == 200:
                 return response.json(), 200
             return response.json(), response.status_code
+        except requests.Timeout:
+            print("Timeout error updating department")
+            return jsonify({'error': 'Request timed out'}), 504
+        except requests.ConnectionError:
+            print("Connection error updating department")
+            return jsonify({'error': 'Failed to connect to server'}), 503
         except Exception as e:
             print(f"Error updating department: {e}")
             return jsonify({'error': 'Failed to update department'}), 500
@@ -227,15 +281,59 @@ def department_detail_api(department_id):
         try:
             response = requests.delete(
                 f"{DEPARTMENTS_URL}/{department_id}",
-                headers=headers
+                headers=headers,
+                timeout=10
             )
             
             if response.status_code == 204:
                 return '', 204
             return response.json(), response.status_code
+        except requests.Timeout:
+            print("Timeout error deleting department")
+            return jsonify({'error': 'Request timed out'}), 504
+        except requests.ConnectionError:
+            print("Connection error deleting department")
+            return jsonify({'error': 'Failed to connect to server'}), 503
         except Exception as e:
             print(f"Error deleting department: {e}")
             return jsonify({'error': 'Failed to delete department'}), 500
+
+@app.route('/api/categories')
+@login_required
+def categories_api():
+    headers = get_auth_headers()
+    company_id = session.get('company_id')
+    
+    if not company_id:
+        return jsonify({'error': 'Company ID not found in session'}), 400
+    
+    try:
+        response = requests.get(
+            f"{CATEGORIES_URL}/companies/{company_id}/categories",
+            headers=headers,
+            timeout=10
+        )
+        
+        if response.status_code == 401:
+            return jsonify({'error': 'Authentication failed'}), 401
+        elif response.status_code == 403:
+            return jsonify({'error': 'Access forbidden'}), 403
+        elif response.status_code == 404:
+            return jsonify({'categories': []}), 200
+        elif not response.ok:
+            error_data = response.json()
+            return jsonify({'error': error_data.get('error', 'Failed to fetch categories')}), response.status_code
+            
+        return response.json(), 200
+    except requests.Timeout:
+        print("Timeout error fetching categories")
+        return jsonify({'error': 'Request timed out'}), 504
+    except requests.ConnectionError:
+        print("Connection error fetching categories")
+        return jsonify({'error': 'Failed to connect to server'}), 503
+    except Exception as e:
+        print(f"Error fetching categories: {e}")
+        return jsonify({'error': 'An unexpected error occurred'}), 500
 
 @app.route('/api/documents')
 @login_required
