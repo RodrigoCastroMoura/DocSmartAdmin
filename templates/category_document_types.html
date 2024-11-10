@@ -112,6 +112,35 @@ setupFormValidation('editDocumentTypeForm', {
     ]
 });
 
+async function loadDocumentTypes() {
+    const contentDiv = document.querySelector('.document-types-grid');
+    showLoading(contentDiv);
+
+    try {
+        const response = await fetch(window.location.pathname);
+        if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+        const html = await response.text();
+        const parser = new DOMParser();
+        const doc = parser.parseFromString(html, 'text/html');
+        const newContent = doc.querySelector('.document-types-grid');
+        
+        if (newContent) {
+            contentDiv.innerHTML = newContent.innerHTML;
+            feather.replace();
+        }
+    } catch (error) {
+        console.error('Error loading document types:', error);
+        contentDiv.innerHTML = `
+            <div class="no-data">
+                <i data-feather="alert-circle"></i>
+                <p>${error.message || 'Failed to load document types'}</p>
+            </div>`;
+        feather.replace();
+    } finally {
+        hideLoading(contentDiv);
+    }
+}
+
 function showModal(modalId) {
     document.getElementById(modalId).style.display = 'block';
 }
@@ -237,6 +266,12 @@ async function deleteDocumentType(id) {
         hideLoading(card);
     }
 }
+
+// Initialize document types list when page loads
+document.addEventListener('DOMContentLoaded', () => {
+    loadDocumentTypes();
+    feather.replace();
+});
 </script>
 
 <style>
