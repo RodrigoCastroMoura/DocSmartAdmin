@@ -24,7 +24,11 @@
                 <div class="category-card" data-id="{{ category.id }}">
                     <div class="category-header">
                         <i data-feather="folder"></i>
-                        <h3>{{ category.name }}</h3>
+                        <div class="category-title">
+                            <a href="{{ url_for('category_document_types', category_id=category.id) }}" class="category-link">
+                                <h3>{{ category.name }}</h3>
+                            </a>
+                        </div>
                     </div>
                     <div class="category-info">
                         <p>{{ category.document_count|default(0) }} documents</p>
@@ -349,6 +353,19 @@ document.addEventListener('DOMContentLoaded', () => {
     justify-content: center;
     border-radius: 8px;
     z-index: 10;
+}
+
+.category-title {
+    flex: 1;
+}
+
+.category-link {
+    text-decoration: none;
+    color: var(--text-primary);
+}
+
+.category-link:hover h3 {
+    color: var(--accent-color);
 }
 </style>
 {% endblock %}

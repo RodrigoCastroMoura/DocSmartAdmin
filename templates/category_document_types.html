@@ -1,0 +1,54 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="page-container">
+    <div class="header-actions">
+        <div class="header-title">
+            <a href="{{ url_for('department_categories', department_id=category.department_id) }}" class="back-link">
+                <i data-feather="arrow-left"></i>
+                Back to Categories
+            </a>
+            <h2>
+                <i data-feather="file"></i> 
+                Document Types for {{ category.name if category else 'Unknown Category' }}
+            </h2>
+        </div>
+        <button class="action-btn primary" onclick="showAddDocumentTypeModal()">
+            <i data-feather="plus"></i> Add Document Type
+        </button>
+    </div>
+    <div class="content-grid">
+        <div class="document-types-grid">
+            {% if document_types %}
+                {% for type in document_types %}
+                <div class="document-type-card" data-id="{{ type.id }}">
+                    <div class="document-type-header">
+                        <i data-feather="file"></i>
+                        <h3>{{ type.name }}</h3>
+                    </div>
+                    <div class="document-type-info">
+                        <p class="description">{{ type.description or 'No description' }}</p>
+                        <p class="meta">Documents: {{ type.document_count|default(0) }}</p>
+                    </div>
+                    <div class="document-type-actions">
+                        <button class="action-btn" onclick='showEditDocumentTypeModal("{{ type.id }}", {{ type|tojson|safe }})'>
+                            <i data-feather="edit-2"></i>
+                        </button>
+                        <button class="action-btn danger" onclick="deleteDocumentType('{{ type.id }}')">
+                            <i data-feather="trash-2"></i>
+                        </button>
+                    </div>
+                </div>
+                {% endfor %}
+            {% else %}
+                <div class="no-data">
+                    <i data-feather="inbox"></i>
+                    <p>No document types found for this category</p>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<!-- Include modals and scripts from document_types.html -->
+{% endblock %}
