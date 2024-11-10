@@ -113,46 +113,16 @@ async function loadCategories() {
     showLoading(contentDiv);
 
     try {
-        const departmentId = new URL(window.location.href).pathname.split('/')[2];
-        const response = await fetch(`/api/categories/departments/${departmentId}/categories`);
+        const response = await fetch(window.location.pathname);
+        const html = await response.text();
+        const parser = new DOMParser();
+        const doc = parser.parseFromString(html, 'text/html');
+        const newContent = doc.querySelector('.categories-grid');
         
-        if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status}`);
+        if (newContent) {
+            contentDiv.innerHTML = newContent.innerHTML;
+            feather.replace();
         }
-        
-        const data = await response.json();
-        const categories = data.categories || [];
-        
-        contentDiv.innerHTML = categories.length === 0 
-            ? `<div class="no-data">
-                   <i data-feather="inbox"></i>
-                   <p>No categories found for this department</p>
-               </div>`
-            : categories.map(category => `
-                <div class="category-card" data-id="${category.id}">
-                    <div class="category-header">
-                        <i data-feather="folder"></i>
-                        <div class="category-title">
-                            <a href="/categories/${category.id}/document_types" class="category-link">
-                                <h3>${category.name}</h3>
-                            </a>
-                        </div>
-                    </div>
-                    <div class="category-info">
-                        <p>${category.document_count || 0} documents</p>
-                    </div>
-                    <div class="category-actions">
-                        <button class="action-btn" onclick='showEditCategoryModal("${category.id}", ${JSON.stringify(category)})'>
-                            <i data-feather="edit-2"></i>
-                        </button>
-                        <button class="action-btn danger" onclick="deleteCategory('${category.id}')">
-                            <i data-feather="trash-2"></i>
-                        </button>
-                    </div>
-                </div>
-            `).join('');
-            
-        feather.replace();
     } catch (error) {
         console.error('Error loading categories:', error);
         contentDiv.innerHTML = `
@@ -205,7 +175,7 @@ async function createCategory(event) {
 
         hideModal('addCategoryModal');
         form.reset();
-        await loadCategories(); // Load categories without page reload
+        window.location.reload(); // Reload to show new category
         showErrorMessage('Category created successfully', 'success');
     } catch (error) {
         console.error('Error creating category:', error);
@@ -244,7 +214,7 @@ async function updateCategory(event) {
         }
 
         hideModal('editCategoryModal');
-        await loadCategories(); // Load categories without page reload
+        window.location.reload(); // Reload to show updated category
         showErrorMessage('Category updated successfully', 'success');
     } catch (error) {
         console.error('Error updating category:', error);
@@ -272,7 +242,7 @@ async function deleteCategory(id) {
             throw new Error(errorData.error || 'Failed to delete category');
         }
 
-        await loadCategories(); // Load categories without page reload
+        window.location.reload(); // Reload to show updated list
         showErrorMessage('Category deleted successfully', 'success');
     } catch (error) {
         console.error('Error deleting category:', error);
