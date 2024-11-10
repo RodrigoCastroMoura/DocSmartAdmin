@@ -113,12 +113,34 @@ def departments():
 @app.route('/categories')
 @login_required
 def categories():
-    return render_template('categories.html')
+    headers = get_auth_headers()
+    company_id = session.get('company_id')
+    try:
+        departments_response = requests.get(
+            f"{DEPARTMENTS_URL}/companies/{company_id}/departments",
+            headers=headers
+        )
+        departments = departments_response.json() if departments_response.ok else []
+        return render_template('categories.html', departments=departments)
+    except Exception as e:
+        print(f"Error loading departments: {e}")
+        return render_template('categories.html', departments=[])
 
 @app.route('/documents')
 @login_required
 def documents():
-    return render_template('documents.html')
+    headers = get_auth_headers()
+    company_id = session.get('company_id')
+    try:
+        departments_response = requests.get(
+            f"{DEPARTMENTS_URL}/companies/{company_id}/departments",
+            headers=headers
+        )
+        departments = departments_response.json() if departments_response.ok else []
+        return render_template('documents.html', departments=departments)
+    except Exception as e:
+        print(f"Error loading form data: {e}")
+        return render_template('documents.html', departments=[])
 
 @app.route('/document_types')
 @login_required
@@ -129,6 +151,35 @@ def document_types():
 @login_required
 def users():
     return render_template('users.html')
+
+@app.route('/departments/<department_id>/categories')
+@login_required
+def department_categories(department_id):
+    headers = get_auth_headers()
+    company_id = session.get('company_id')
+    try:
+        # Get department details
+        dept_response = requests.get(
+            f"{DEPARTMENTS_URL}/{department_id}",
+            headers=headers
+        )
+        department = dept_response.json() if dept_response.ok else None
+        
+        # Get categories for department
+        categories_response = requests.get(
+            f"{CATEGORIES_URL}/departments/{department_id}/categories",
+            headers=headers
+        )
+        categories = categories_response.json() if categories_response.ok else {'categories': []}
+        
+        return render_template(
+            'department_categories.html',
+            department=department,
+            categories=categories.get('categories', [])
+        )
+    except Exception as e:
+        print(f"Error loading department categories: {e}")
+        return render_template('department_categories.html', department=None, categories=[])
 
 @app.route('/api/document_types/categories/<category_id>/types')
 @login_required
@@ -161,7 +212,7 @@ def document_type_api():
                 'company_id': company_id
             }
             response = requests.get(
-                f"{DOCUMENT_TYPES_URL}",
+                f"{DOCUMENT_TYPES_URL}/companies/{company_id}/types",
                 headers=headers,
                 params=params
             )
@@ -185,6 +236,31 @@ def document_type_api():
                 'per_page': 10,
                 'total_pages': 1
             }), 500
+            
+    elif request.method == 'POST':
+        try:
+            data = request.json
+            if not data:
+                return jsonify({'error': 'No data provided'}), 400
+                
+            required_fields = ['name', 'category_id']
+            missing_fields = [field for field in required_fields if not data.get(field)]
+            if missing_fields:
+                return jsonify({'error': f'Missing required fields: {", ".join(missing_fields)}'}), 400
+                
+            data['company_id'] = company_id
+            response = requests.post(
+                DOCUMENT_TYPES_URL,
+                headers=headers,
+                json=data
+            )
+            
+            if response.status_code == 201:
+                return response.json(), 201
+            return response.json(), response.status_code
+        except Exception as e:
+            print(f"Error creating document type: {e}")
+            return jsonify({'error': 'Failed to create document type'}), 500
 
 @app.route('/api/documents', methods=['GET', 'POST'])
 @login_required
@@ -207,7 +283,7 @@ def documents_api():
             params = {k: v for k, v in params.items() if v is not None}
             
             response = requests.get(
-                f'{DOCUMENTS_URL}/companies/{company_id}/documents',
+                f"{DOCUMENTS_URL}/companies/{company_id}/documents",
                 headers=headers,
                 params=params
             )
