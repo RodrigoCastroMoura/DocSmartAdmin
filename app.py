@@ -335,6 +335,58 @@ def categories_api():
         print(f"Error fetching categories: {e}")
         return jsonify({'error': 'An unexpected error occurred'}), 500
 
+@app.route('/api/categories', methods=['POST'])
+@login_required
+def create_category():
+    headers = get_auth_headers()
+    company_id = session.get('company_id')
+    
+    try:
+        data = request.json
+        if not data or 'name' not in data or 'department_id' not in data:
+            return jsonify({'error': 'Name and department_id are required'}), 400
+            
+        data['company_id'] = company_id
+        response = requests.post(
+            CATEGORIES_URL,
+            headers=headers,
+            json=data
+        )
+        
+        if response.status_code == 201:
+            return response.json(), 201
+        return response.json(), response.status_code
+    except Exception as e:
+        print(f"Error creating category: {e}")
+        return jsonify({'error': 'Failed to create category'}), 500
+
+@app.route('/api/document_types')
+@login_required
+def document_types_api():
+    headers = get_auth_headers()
+    company_id = session.get('company_id')
+    
+    try:
+        response = requests.get(
+            f"{DOCUMENT_TYPES_URL}/companies/{company_id}/types",
+            headers=headers
+        )
+        
+        if response.status_code == 401:
+            return jsonify({'error': 'Authentication failed'}), 401
+        elif response.status_code == 403:
+            return jsonify({'error': 'Access forbidden'}), 403
+        elif response.status_code == 404:
+            return jsonify({'document_types': []}), 200
+        elif not response.ok:
+            error_data = response.json()
+            return jsonify({'error': error_data.get('error', 'Failed to fetch document types')}), response.status_code
+            
+        return response.json(), 200
+    except Exception as e:
+        print(f"Error fetching document types: {e}")
+        return jsonify({'error': 'An unexpected error occurred'}), 500
+
 @app.route('/api/documents')
 @login_required
 def documents_api():
@@ -475,38 +527,5 @@ def document_detail_api(document_id):
         print(f"Error deleting document: {e}")
         return jsonify({'error': 'Failed to delete document'}), 500
 
-@app.route('/api/documents/<document_id>/download')
-@login_required
-def document_download_api(document_id):
-    headers = get_auth_headers()
-    try:
-        response = requests.get(
-            f"{DOCUMENTS_URL}/{document_id}/download",
-            headers=headers,
-            stream=True,
-            timeout=30
-        )
-        
-        if not response.ok:
-            error_data = response.json()
-            return jsonify({'error': error_data.get('error', 'Failed to download document')}), response.status_code
-            
-        return Response(
-            response.iter_content(chunk_size=8192),
-            content_type=response.headers['Content-Type'],
-            headers={
-                'Content-Disposition': response.headers['Content-Disposition']
-            }
-        )
-    except requests.Timeout:
-        print("Timeout error downloading document")
-        return jsonify({'error': 'Request timed out'}), 504
-    except requests.ConnectionError:
-        print("Connection error downloading document")
-        return jsonify({'error': 'Failed to connect to server'}), 503
-    except Exception as e:
-        print(f"Error downloading document: {e}")
-        return jsonify({'error': 'Failed to download document'}), 500
-
 if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=5000)
+    app.run(host='0.0.0.0', port=5000, debug=True)
