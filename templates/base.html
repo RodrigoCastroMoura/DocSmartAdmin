@@ -99,6 +99,35 @@
                 }
             });
         }
+
+        function showNotification(message, type = 'error') {
+            const modal = document.getElementById('notificationModal');
+            const header = modal.querySelector('.notification-header');
+            const icon = document.getElementById('notificationIcon');
+            const title = document.getElementById('notificationTitle');
+            const messageEl = document.getElementById('notificationMessage');
+            
+            // Reset classes
+            header.classList.remove('success', 'error');
+            
+            if (type === 'success') {
+                header.classList.add('success');
+                title.textContent = 'Success';
+                icon.setAttribute('data-feather', 'check-circle');
+            } else {
+                header.classList.add('error');
+                title.textContent = 'Error';
+                icon.setAttribute('data-feather', 'alert-circle');
+            }
+            
+            messageEl.textContent = message;
+            modal.style.display = 'block';
+            feather.replace();
+        }
+
+        function hideNotificationModal() {
+            document.getElementById('notificationModal').style.display = 'none';
+        }
     </script>
 
     <style>
@@ -143,6 +172,57 @@
         .dropdown-item i {
             color: var(--danger-color);
         }
+
+        .notification-modal {
+            max-width: 400px;
+        }
+
+        .notification-header {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .notification-header i {
+            font-size: 1.5rem;
+        }
+
+        .notification-header.success i {
+            color: var(--success-color);
+        }
+
+        .notification-header.error i {
+            color: var(--danger-color);
+        }
+
+        .notification-body {
+            margin-bottom: 1.5rem;
+        }
+
+        .notification-actions {
+            display: flex;
+            justify-content: flex-end;
+        }
     </style>
+
+    <!-- Notification Modal -->
+    <div id="notificationModal" class="modal">
+        <div class="modal-content notification-modal">
+            <div class="notification-header">
+                <i data-feather="info" id="notificationIcon"></i>
+                <h3 id="notificationTitle">Notification</h3>
+                <button class="close-btn" onclick="hideNotificationModal()">
+                    <i data-feather="x"></i>
+                </button>
+            </div>
+            <div class="notification-body">
+                <p id="notificationMessage"></p>
+            </div>
+            <div class="notification-actions">
+                <button class="action-btn" onclick="hideNotificationModal()">Close</button>
+            </div>
+        </div>
+    </div>
 </body>
 </html>
