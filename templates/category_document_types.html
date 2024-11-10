@@ -24,7 +24,9 @@
                 <div class="document-type-card" data-id="{{ type.id }}">
                     <div class="document-type-header">
                         <i data-feather="file"></i>
-                        <h3>{{ type.name }}</h3>
+                        <a href="{{ url_for('document_type_documents', type_id=type.id) }}" class="document-type-link">
+                            <h3>{{ type.name }}</h3>
+                        </a>
                     </div>
                     <div class="document-type-info">
                         <p class="description">{{ type.description or 'No description' }}</p>
@@ -357,6 +359,15 @@ document.addEventListener('DOMContentLoaded', () => {
     font-size: 2rem;
     margin-bottom: 0.5rem;
     opacity: 0.5;
+}
+
+.document-type-link {
+    text-decoration: none;
+    color: var(--text-primary);
+}
+
+.document-type-link:hover h3 {
+    color: var(--accent-color);
 }
 </style>
 {% endblock %}
