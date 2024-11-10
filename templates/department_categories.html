@@ -122,14 +122,24 @@ async function loadCategories() {
     } catch (error) {
         console.error('Error loading categories:', error);
         contentDiv.innerHTML = `
-            <div class="no-data">
+            <div class="no-data error">
                 <i data-feather="alert-circle"></i>
-                <p>Error loading categories</p>
+                <p>${error.message || 'Failed to load categories. Please try again.'}</p>
             </div>`;
         feather.replace();
+        showErrorMessage(error.message || 'Failed to load categories');
     } finally {
         hideLoading(contentDiv);
     }
+}
+
+function showAddCategoryModal() {
+    document.getElementById('addCategoryForm').reset();
+    document.getElementById('addCategoryModal').style.display = 'block';
+}
+
+function hideModal(modalId) {
+    document.getElementById(modalId).style.display = 'none';
 }
 
 async function createCategory(event) {
@@ -161,7 +171,7 @@ async function createCategory(event) {
 
         hideModal('addCategoryModal');
         form.reset();
-        await loadCategories();
+        window.location.reload(); // Reload to show new category
         showErrorMessage('Category created successfully', 'success');
     } catch (error) {
         console.error('Error creating category:', error);
@@ -200,7 +210,7 @@ async function updateCategory(event) {
         }
 
         hideModal('editCategoryModal');
-        await loadCategories();
+        window.location.reload(); // Reload to show updated category
         showErrorMessage('Category updated successfully', 'success');
     } catch (error) {
         console.error('Error updating category:', error);
@@ -228,7 +238,7 @@ async function deleteCategory(id) {
             throw new Error(errorData.error || 'Failed to delete category');
         }
 
-        await loadCategories();
+        window.location.reload(); // Reload to show updated list
         showErrorMessage('Category deleted successfully', 'success');
     } catch (error) {
         console.error('Error deleting category:', error);
@@ -238,19 +248,16 @@ async function deleteCategory(id) {
     }
 }
 
-function showModal(modalId) {
-    document.getElementById(modalId).style.display = 'block';
-}
-
-function hideModal(modalId) {
-    document.getElementById(modalId).style.display = 'none';
-}
-
 function showEditCategoryModal(id, category) {
     document.getElementById('editCategoryId').value = id;
     document.getElementById('editCategoryName').value = category.name;
-    showModal('editCategoryModal');
+    document.getElementById('editCategoryModal').style.display = 'block';
 }
+
+// Initialize the page
+document.addEventListener('DOMContentLoaded', () => {
+    feather.replace();
+});
 </script>
 
 <style>
@@ -265,6 +272,7 @@ function showEditCategoryModal(id, category) {
     border-radius: 8px;
     padding: 1.5rem;
     transition: transform 0.2s;
+    position: relative;
 }
 
 .category-card:hover {
@@ -319,6 +327,28 @@ function showEditCategoryModal(id, category) {
     align-items: center;
     gap: 0.5rem;
     margin: 0;
+}
+
+.no-data.error {
+    color: var(--danger-color);
+}
+
+.no-data.error i {
+    color: var(--danger-color);
+}
+
+.loading-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(0, 0, 0, 0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 8px;
+    z-index: 10;
 }
 </style>
 {% endblock %}
