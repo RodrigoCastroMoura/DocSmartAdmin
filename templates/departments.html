@@ -10,49 +10,10 @@
     </div>
     <div class="content-grid" id="departmentsContent">
         <div class="departments-grid">
-            {% if departments %}
-                {% for department in departments %}
-                <div class="department-card" data-id="{{ department.id }}">
-                    <div class="department-header">
-                        <i data-feather="briefcase"></i>
-                        <div class="department-title">
-                            <a href="/departments/{{ department.id }}/categories" class="department-link">
-                                <h3>{{ department.name }}</h3>
-                            </a>
-                        </div>
-                    </div>
-                    <div class="department-stats">
-                        <div class="stat">
-                            <i data-feather="grid"></i>
-                            <div class="stat-info">
-                                <span>Categories</span>
-                                <p>{{ department.category_count|default(0) }}</p>
-                            </div>
-                        </div>
-                        <div class="stat">
-                            <i data-feather="file-text"></i>
-                            <div class="stat-info">
-                                <span>Documents</span>
-                                <p>{{ department.document_count|default(0) }}</p>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="department-actions">
-                        <button class="action-btn" onclick="showEditDepartmentModal('{{ department.id }}', '{{ department.name }}')">
-                            <i data-feather="edit-2"></i>
-                        </button>
-                        <button class="action-btn danger" onclick="deleteDepartment('{{ department.id }}')">
-                            <i data-feather="trash-2"></i>
-                        </button>
-                    </div>
-                </div>
-                {% endfor %}
-            {% else %}
-                <div class="no-data">
-                    <i data-feather="inbox"></i>
-                    <p>No departments found</p>
-                </div>
-            {% endif %}
+            <div class="no-data">
+                <i data-feather="inbox"></i>
+                <p>Loading departments...</p>
+            </div>
         </div>
     </div>
 </div>
@@ -115,8 +76,15 @@ async function loadDepartments() {
 
     try {
         const response = await fetch('/api/departments');
-        if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
         const data = await response.json();
+
+        if (!response.ok) {
+            throw new Error(data.error || `Failed to load departments (${response.status})`);
+        }
+        
+        if (!Array.isArray(data)) {
+            throw new Error('Invalid response format: expected an array');
+        }
         
         contentDiv.innerHTML = generateDepartmentsHTML(data);
         feather.replace();
@@ -124,12 +92,13 @@ async function loadDepartments() {
         console.error('Error loading departments:', error);
         contentDiv.innerHTML = `
             <div class="departments-grid">
-                <div class="no-data">
+                <div class="no-data error">
                     <i data-feather="alert-circle"></i>
-                    <p>Failed to load departments</p>
+                    <p>${error.message || 'Failed to load departments. Please try again.'}</p>
                 </div>
             </div>`;
         feather.replace();
+        showErrorMessage(error.message || 'Failed to load departments. Please try again.');
     } finally {
         hideLoading(contentDiv);
     }
@@ -206,9 +175,9 @@ async function createDepartment(event) {
             body: JSON.stringify({ name })
         });
 
+        const data = await response.json();
         if (!response.ok) {
-            const errorData = await response.json();
-            throw new Error(errorData.error || 'Failed to create department');
+            throw new Error(data.error || 'Failed to create department');
         }
 
         hideModal('addDepartmentModal');
@@ -217,7 +186,7 @@ async function createDepartment(event) {
         showErrorMessage('Department created successfully', 'success');
     } catch (error) {
         console.error('Error creating department:', error);
-        showErrorMessage(error.message);
+        showErrorMessage(error.message || 'Failed to create department');
     } finally {
         hideLoading(submitButton);
     }
@@ -245,9 +214,9 @@ async function updateDepartment(event) {
             body: JSON.stringify({ name })
         });
 
+        const data = await response.json();
         if (!response.ok) {
-            const errorData = await response.json();
-            throw new Error(errorData.error || 'Failed to update department');
+            throw new Error(data.error || 'Failed to update department');
         }
 
         hideModal('editDepartmentModal');
@@ -255,7 +224,7 @@ async function updateDepartment(event) {
         showErrorMessage('Department updated successfully', 'success');
     } catch (error) {
         console.error('Error updating department:', error);
-        showErrorMessage(error.message);
+        showErrorMessage(error.message || 'Failed to update department');
     } finally {
         hideLoading(submitButton);
     }
@@ -275,15 +244,15 @@ async function deleteDepartment(id) {
         });
 
         if (!response.ok) {
-            const errorData = await response.json();
-            throw new Error(errorData.error || 'Failed to delete department');
+            const data = await response.json();
+            throw new Error(data.error || 'Failed to delete department');
         }
 
         await loadDepartments();
         showErrorMessage('Department deleted successfully', 'success');
     } catch (error) {
         console.error('Error deleting department:', error);
-        showErrorMessage(error.message);
+        showErrorMessage(error.message || 'Failed to delete department');
     } finally {
         hideLoading(card);
     }
@@ -398,6 +367,35 @@ document.addEventListener('DOMContentLoaded', loadDepartments);
     align-items: center;
     gap: 0.5rem;
     margin: 0;
+}
+
+.no-data.error {
+    color: var(--danger-color);
+}
+
+.no-data.error i {
+    color: var(--danger-color);
+}
+
+.content-grid {
+    background-color: var(--bg-secondary);
+    border-radius: 8px;
+    padding: 1.5rem;
+    position: relative;
+}
+
+.loading-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(0, 0, 0, 0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 8px;
+    z-index: 10;
 }
 </style>
 {% endblock %}
