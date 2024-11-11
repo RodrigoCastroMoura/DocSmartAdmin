@@ -113,10 +113,11 @@ def users_api():
         return jsonify({'error': 'Company ID not found in session'}), 400
     
     try:
-        print(f"Fetching users for company: {company_id}")
+        print(f"Fetching users with company_id: {company_id}")
         response = requests.get(
-            f"{USERS_URL}/companies/{company_id}/users",
+            f"{USERS_URL}/users",
             headers=headers,
+            params={'company_id': company_id},
             timeout=REQUEST_TIMEOUT
         )
         
@@ -124,27 +125,22 @@ def users_api():
         
         if not response.ok:
             if response.status_code in [401, 403]:
+                print("users_api: Authentication failed")
                 return jsonify({'error': 'Authentication failed'}), response.status_code
             error_message = handle_api_error(response, 'Failed to fetch users')
+            print(f"users_api error: {error_message}")
             return jsonify({'error': error_message}), response.status_code
-            
+        
         data = response.json()
         print(f"Raw users response: {data}")
         
-        # Normalize the response
         if isinstance(data, dict) and 'users' in data:
-            users_list = data['users']
+            return jsonify(data), 200
         elif isinstance(data, list):
-            users_list = data
+            return jsonify({'users': data}), 200
         else:
-            users_list = [data] if data else []
+            return jsonify({'users': [data] if data else []}), 200
             
-        # Ensure we always return a list
-        if not isinstance(users_list, list):
-            users_list = [users_list] if users_list else []
-            
-        return jsonify({'users': users_list}), 200
-        
     except requests.exceptions.Timeout:
         print("users_api: Request timed out")
         return jsonify({'error': 'Request timed out'}), 504
@@ -153,7 +149,7 @@ def users_api():
         return jsonify({'error': 'Connection error'}), 502
     except Exception as e:
         print(f"Error in users_api: {str(e)}")
-        return jsonify({'error': str(e)}), 500
+        return jsonify({'users': []}), 200
 
 @app.route('/')
 def index():
@@ -313,25 +309,33 @@ def document_types_api():
     company_id = session.get('company_id')
     
     if not company_id:
+        print("document_types_api: No company_id in session")
         return jsonify({'error': 'Company ID not found in session'}), 400
     
     try:
-        print(f"Fetching document types for company: {company_id}")
+        print(f"Fetching document types with company_id: {company_id}")
         response = requests.get(
-            f"{DOCUMENT_TYPES_URL}/companies/{company_id}/document_types",
+            f"{DOCUMENT_TYPES_URL}/types",
             headers=headers,
+            params={'company_id': company_id},
             timeout=REQUEST_TIMEOUT
         )
         
+        print(f"Document types API response status: {response.status_code}")
+        
         if not response.ok:
             if response.status_code in [401, 403]:
+                print("document_types_api: Authentication failed")
                 return jsonify({'error': 'Authentication failed'}), response.status_code
             error_message = handle_api_error(response, 'Failed to fetch document types')
+            print(f"document_types_api error: {error_message}")
             return jsonify({'error': error_message}), response.status_code
             
         data = response.json()
+        print(f"Raw document types response: {data}")
+        
         if isinstance(data, dict) and 'document_types' in data:
-            return jsonify({'document_types': data['document_types']}), 200
+            return jsonify(data), 200
         elif isinstance(data, list):
             return jsonify({'document_types': data}), 200
         else:
@@ -344,7 +348,7 @@ def document_types_api():
         print("document_types_api: Connection error")
         return jsonify({'error': 'Connection error'}), 502
     except Exception as e:
-        print(f"Error fetching document types: {e}")
+        print(f"Error in document_types_api: {str(e)}")
         return jsonify({'document_types': []}), 200
 
 @app.route('/api/documents')
