@@ -15,27 +15,8 @@ author = "agent"
 task = "workflow.run"
 args = "Flask Admin Dashboard"
 
-[[workflows.workflow.tasks]]
-task = "workflow.run"
-args = "Flask Server"
-
 [[workflows.workflow]]
 name = "Flask Admin Dashboard"
-author = "agent"
-
-[workflows.workflow.metadata]
-agentRequireRestartOnSave = false
-
-[[workflows.workflow.tasks]]
-task = "packager.installForAll"
-
-[[workflows.workflow.tasks]]
-task = "shell.exec"
-args = "python app.py"
-waitForPort = 5000
-
-[[workflows.workflow]]
-name = "Flask Server"
 author = "agent"
 
 [workflows.workflow.metadata]
