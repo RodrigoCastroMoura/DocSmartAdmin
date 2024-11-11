@@ -199,6 +199,47 @@ def department_categories(department_id):
         flash('Error loading department categories', 'error')
         return redirect(url_for('departments'))
 
+@app.route('/categories/<category_id>/document_types')
+@login_required
+def category_document_types(category_id):
+    headers = get_auth_headers()
+    company_id = session.get('company_id')
+    
+    try:
+        # Get category details
+        cat_response = requests.get(
+            f"{CATEGORIES_URL}/{category_id}",
+            headers=headers,
+            timeout=REQUEST_TIMEOUT
+        )
+        
+        if not cat_response.ok:
+            flash('Category not found', 'error')
+            return redirect(url_for('categories'))
+            
+        category = cat_response.json()
+        
+        # Get document types for category
+        types_response = requests.get(
+            f"{DOCUMENT_TYPES_URL}/categories/{category_id}/types",
+            headers=headers,
+            timeout=REQUEST_TIMEOUT
+        )
+        
+        document_types = []
+        if types_response.ok:
+            document_types = types_response.json()
+        
+        return render_template(
+            'category_document_types.html',
+            category=category,
+            document_types=document_types
+        )
+    except Exception as e:
+        print(f"Error loading category document types: {e}")
+        flash('Error loading category document types', 'error')
+        return redirect(url_for('categories'))
+
 # API routes with proper error handling
 @app.route('/api/departments')
 @login_required
@@ -278,10 +319,6 @@ def department_categories_api(department_id):
 @login_required
 def category_document_types_api(category_id):
     headers = get_auth_headers()
-    company_id = session.get('company_id')
-    
-    if not company_id:
-        return jsonify({'error': 'Company ID not found in session'}), 400
     
     try:
         response = requests.get(
@@ -295,24 +332,24 @@ def category_document_types_api(category_id):
         elif response.status_code == 403:
             return jsonify({'error': 'Access forbidden'}), 403
         elif response.status_code == 404:
-            return jsonify([]), 200
+            return jsonify({'document_types': []}), 200
         elif not response.ok:
             error_message = handle_api_error(response, 'Failed to fetch document types')
             return jsonify({'error': error_message}), response.status_code
-            
+        
         data = response.json()
         if not isinstance(data, list):
-            return jsonify({'error': 'Invalid response format'}), 500
-            
-        return jsonify(data), 200
+            return jsonify({'document_types': []}), 200
+        
+        return jsonify({'document_types': data}), 200
     except requests.Timeout:
-        print("Timeout error fetching document types")
+        print("Timeout error fetching category document types")
         return jsonify({'error': 'Request timed out'}), 504
     except requests.ConnectionError:
-        print("Connection error fetching document types")
+        print("Connection error fetching category document types")
         return jsonify({'error': 'Failed to connect to server'}), 503
     except Exception as e:
-        print(f"Error fetching document types: {e}")
+        print(f"Error fetching category document types: {e}")
         return jsonify({'error': 'An unexpected error occurred'}), 500
 
 @app.route('/api/document_types')
@@ -343,7 +380,7 @@ def document_types_api():
             
         data = response.json()
         if not isinstance(data, list):
-            return jsonify({'error': 'Invalid response format'}), 500
+            return jsonify({'document_types': []}), 200
             
         return jsonify({'document_types': data}), 200
     except requests.Timeout:
@@ -483,8 +520,9 @@ def create_document():
         if missing_fields:
             return jsonify({'error': f'Missing required fields: {", ".join(missing_fields)}'}), 400
             
-        # Create files tuple for requests
-        files = {'file': (secure_filename(file.filename), file.stream, file.content_type)}
+        files = {
+            'file': (secure_filename(file.filename), file.stream, file.content_type)
+        }
         
         response = requests.post(
             DOCUMENTS_URL,
