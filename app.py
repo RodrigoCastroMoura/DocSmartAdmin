@@ -273,9 +273,9 @@ def delete_department(department_id):
         print(f"Error deleting department: {e}")
         return jsonify({'error': 'An unexpected error occurred'}), 500
 
-@app.route('/api/document_types')
+@app.route('/api/users')
 @login_required
-def document_types_api():
+def users_api():
     headers = get_auth_headers()
     company_id = session.get('company_id')
     
@@ -284,52 +284,25 @@ def document_types_api():
     
     try:
         response = requests.get(
-            f"{DOCUMENT_TYPES_URL}/companies/{company_id}/types",
+            f"{USERS_URL}/companies/{company_id}/users",
             headers=headers,
             timeout=REQUEST_TIMEOUT
         )
         
-        if response.status_code == 404:
-            return jsonify({'document_types': []}), 200
-            
-        if not response.ok:
-            error_message = handle_api_error(response, 'Failed to fetch document types')
-            return jsonify({'error': error_message}), response.status_code
-            
-        try:
-            data = response.json()
-            # Handle both array and object responses
-            if isinstance(data, list):
-                return jsonify({'document_types': data}), 200
-            elif isinstance(data, dict):
-                if 'document_types' in data:
-                    return jsonify(data), 200
-                elif 'types' in data:
-                    return jsonify({'document_types': data['types']}), 200
-                else:
-                    # If it's a dict but doesn't have expected keys, try to convert all values
-                    document_types = list(data.values()) if data else []
-                    return jsonify({'document_types': document_types}), 200
-            else:
-                return jsonify({'document_types': []}), 200
-                
-        except ValueError as e:
-            print(f"JSON decode error: {e}")
-            return jsonify({'error': 'Invalid JSON response from server'}), 500
-            
+        return handle_api_request(response, 'Failed to fetch users', {'users': []})
     except requests.Timeout:
-        print("Timeout error fetching document types")
+        print("Timeout error fetching users")
         return jsonify({'error': 'Request timed out. Please try again.'}), 504
     except requests.ConnectionError:
-        print("Connection error fetching document types")
+        print("Connection error fetching users")
         return jsonify({'error': 'Failed to connect to server. Please check your connection.'}), 503
     except Exception as e:
-        print(f"Error fetching document types: {e}")
-        return jsonify({'error': 'An unexpected error occurred while fetching document types'}), 500
+        print(f"Error fetching users: {e}")
+        return jsonify({'error': 'An unexpected error occurred'}), 500
 
-@app.route('/api/documents')
+@app.route('/api/users/<user_id>', methods=['DELETE'])
 @login_required
-def documents_api():
+def delete_user(user_id):
     headers = get_auth_headers()
     company_id = session.get('company_id')
     
@@ -337,68 +310,83 @@ def documents_api():
         return jsonify({'error': 'Company ID not found in session'}), 400
     
     try:
-        # Get query parameters for filtering
-        params = {
-            'page': request.args.get('page', 1),
-            'per_page': request.args.get('per_page', 10),
-            'department_id': request.args.get('department_id'),
-            'category_id': request.args.get('category_id'),
-            'document_type_id': request.args.get('document_type_id'),
-            'user_id': request.args.get('user_id')
-        }
-        
-        # Remove None values
-        params = {k: v for k, v in params.items() if v is not None}
-        
-        response = requests.get(
-            f"{DOCUMENTS_URL}/companies/{company_id}/documents",
+        response = requests.delete(
+            f"{USERS_URL}/companies/{company_id}/users/{user_id}",
             headers=headers,
-            params=params,
             timeout=REQUEST_TIMEOUT
         )
         
-        empty_response = {
-            'documents': [],
-            'total': 0,
-            'page': int(params.get('page', 1)),
-            'per_page': int(params.get('per_page', 10)),
-            'total_pages': 0
-        }
-        
-        if response.status_code == 404:
-            return jsonify(empty_response), 200
-            
-        if not response.ok:
-            error_message = handle_api_error(response, 'Failed to fetch documents')
-            return jsonify({'error': error_message}), response.status_code
-        
-        try:
-            data = response.json()
-            if not isinstance(data, dict):
-                return jsonify(empty_response), 200
-                
-            documents_data = {
-                'documents': data.get('documents', []),
-                'total': data.get('total', 0),
-                'page': data.get('page', int(params.get('page', 1))),
-                'per_page': data.get('per_page', int(params.get('per_page', 10))),
-                'total_pages': data.get('total_pages', 0)
-            }
-            
-            return jsonify(documents_data), 200
-            
-        except ValueError as e:
-            print(f"JSON decode error: {e}")
-            return jsonify({'error': 'Invalid JSON response from server'}), 500
-            
+        return handle_api_request(response, 'Failed to delete user')
     except requests.Timeout:
-        print("Timeout error fetching documents")
+        print("Timeout error deleting user")
         return jsonify({'error': 'Request timed out. Please try again.'}), 504
     except requests.ConnectionError:
-        print("Connection error fetching documents")
+        print("Connection error deleting user")
         return jsonify({'error': 'Failed to connect to server. Please check your connection.'}), 503
     except Exception as e:
-        print(f"Error fetching documents: {e}")
+        print(f"Error deleting user: {e}")
+        return jsonify({'error': 'An unexpected error occurred'}), 500
+
+@app.route('/api/users', methods=['POST'])
+@login_required
+def create_user():
+    headers = get_auth_headers()
+    company_id = session.get('company_id')
+    
+    if not company_id:
+        return jsonify({'error': 'Company ID not found in session'}), 400
+    
+    try:
+        data = request.json
+        data['company_id'] = company_id
+        
+        response = requests.post(
+            f"{USERS_URL}/companies/{company_id}/users",
+            headers=headers,
+            json=data,
+            timeout=REQUEST_TIMEOUT
+        )
+        
+        return handle_api_request(response, 'Failed to create user')
+    except requests.Timeout:
+        print("Timeout error creating user")
+        return jsonify({'error': 'Request timed out. Please try again.'}), 504
+    except requests.ConnectionError:
+        print("Connection error creating user")
+        return jsonify({'error': 'Failed to connect to server. Please check your connection.'}), 503
+    except Exception as e:
+        print(f"Error creating user: {e}")
+        return jsonify({'error': 'An unexpected error occurred'}), 500
+
+@app.route('/api/users/<user_id>', methods=['PUT'])
+@login_required
+def update_user(user_id):
+    headers = get_auth_headers()
+    company_id = session.get('company_id')
+    
+    if not company_id:
+        return jsonify({'error': 'Company ID not found in session'}), 400
+    
+    try:
+        data = request.json
+        data['company_id'] = company_id
+        
+        response = requests.put(
+            f"{USERS_URL}/companies/{company_id}/users/{user_id}",
+            headers=headers,
+            json=data,
+            timeout=REQUEST_TIMEOUT
+        )
+        
+        return handle_api_request(response, 'Failed to update user')
+    except requests.Timeout:
+        print("Timeout error updating user")
+        return jsonify({'error': 'Request timed out. Please try again.'}), 504
+    except requests.ConnectionError:
+        print("Connection error updating user")
+        return jsonify({'error': 'Failed to connect to server. Please check your connection.'}), 503
+    except Exception as e:
+        print(f"Error updating user: {e}")
         return jsonify({'error': 'An unexpected error occurred'}), 500
 
 if __name__ == "__main__":
