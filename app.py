@@ -184,6 +184,50 @@ def dashboard():
 def departments():
     return render_template('departments.html')
 
+@app.route('/departments/<department_id>/categories')
+@login_required
+def department_categories(department_id):
+    headers = get_auth_headers()
+    try:
+        # Get department details
+        dept_response = requests.get(
+            f"{DEPARTMENTS_URL}/{department_id}",
+            headers=headers,
+            timeout=REQUEST_TIMEOUT
+        )
+        if not dept_response.ok:
+            flash('Department not found', 'error')
+            return redirect(url_for('departments'))
+        
+        department = dept_response.json()
+        
+        # Get categories for the department
+        categories_response = requests.get(
+            f"{CATEGORIES_URL}/departments/{department_id}/categories",
+            headers=headers,
+            timeout=REQUEST_TIMEOUT
+        )
+        
+        if categories_response.ok:
+            data = categories_response.json()
+            categories = data.get('categories', [])
+        else:
+            categories = []
+            flash('Error loading categories', 'error')
+        
+        return render_template('department_categories.html',
+                             department=department,
+                             categories=categories)
+    except requests.Timeout:
+        flash('Request timed out', 'error')
+    except requests.ConnectionError:
+        flash('Failed to connect to server', 'error')
+    except Exception as e:
+        print(f"Error loading department categories: {e}")
+        flash('An unexpected error occurred', 'error')
+    
+    return redirect(url_for('departments'))
+
 @app.route('/categories')
 @login_required
 def categories():
