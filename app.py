@@ -24,7 +24,23 @@ USERS_URL = f"{API_BASE_URL}/users"
 DOCUMENT_TYPES_URL = f"{API_BASE_URL}/document_types"
 
 # Request timeout in seconds
-REQUEST_TIMEOUT = 10
+REQUEST_TIMEOUT = 30  # Increased timeout for better reliability
+
+def refresh_token():
+    """Attempt to refresh the access token"""
+    try:
+        headers = {'Authorization': f'Bearer {session.get("refresh_token")}'}
+        response = requests.post(REFRESH_URL, headers=headers, timeout=REQUEST_TIMEOUT)
+        
+        if response.ok:
+            data = response.json()
+            session['access_token'] = data['access_token']
+            session['refresh_token'] = data['refresh_token']
+            session['token_expiry'] = time.time() + 3600
+            return True
+    except Exception as e:
+        print(f"Token refresh error: {e}")
+    return False
 
 def login_required(f):
     @wraps(f)
@@ -32,39 +48,71 @@ def login_required(f):
         if 'access_token' not in session:
             return redirect(url_for('login'))
         
+        # Check token expiration
         if 'token_expiry' in session and session['token_expiry'] < time.time():
-            try:
-                headers = {'Authorization': f'Bearer {session["access_token"]}'}
-                response = requests.post(REFRESH_URL, headers=headers, timeout=REQUEST_TIMEOUT)
-                if response.status_code == 200:
-                    data = response.json()
-                    session['access_token'] = data['access_token']
-                    session['refresh_token'] = data['refresh_token']
-                    session['token_expiry'] = time.time() + 3600  # Set token expiry to 1 hour
-                else:
-                    session.clear()
-                    return redirect(url_for('login'))
-            except Exception as e:
-                print(f"Token refresh error: {e}")
+            if not refresh_token():
                 session.clear()
+                flash('Your session has expired. Please log in again.', 'error')
                 return redirect(url_for('login'))
             
         return f(*args, **kwargs)
     return decorated_function
 
 def get_auth_headers():
+    """Get authentication headers with proper error handling"""
+    token = session.get('access_token')
+    if not token:
+        raise ValueError('No access token found')
+    
     return {
-        'Authorization': f'Bearer {session.get("access_token")}',
-        'accept': 'application/json'
+        'Authorization': f'Bearer {token}',
+        'accept': 'application/json',
+        'Content-Type': 'application/json'
     }
 
 def handle_api_error(response, default_error="An error occurred"):
-    """Handle API error responses and return appropriate error message"""
+    """Enhanced API error handling"""
     try:
-        error_data = response.json()
-        return error_data.get('error', default_error)
-    except:
+        if response.status_code == 401:
+            # Try to refresh token on authentication failure
+            if refresh_token():
+                return 'Token refreshed, please retry the operation'
+            return 'Authentication failed'
+        
+        if not response.ok:
+            error_data = response.json()
+            if isinstance(error_data, dict):
+                return error_data.get('error') or error_data.get('message') or default_error
         return default_error
+    except Exception as e:
+        print(f"Error parsing API response: {e}")
+        return default_error
+
+def handle_api_response(response, success_code=200, error_message="Operation failed"):
+    """Enhanced API response handler with proper error handling"""
+    try:
+        if response.status_code == 401:
+            if refresh_token():
+                return jsonify({'error': 'Please retry the operation'}), 401
+            return jsonify({'error': 'Authentication failed'}), 401
+        elif response.status_code == 403:
+            return jsonify({'error': 'Access forbidden'}), 403
+        elif response.status_code == 404:
+            return jsonify({'error': 'Resource not found'}), 404
+        elif not response.ok:
+            error = handle_api_error(response, error_message)
+            return jsonify({'error': error}), response.status_code
+        
+        try:
+            return response.json(), success_code
+        except ValueError:
+            if response.status_code == 204:
+                return '', 204
+            return jsonify({'error': 'Invalid JSON response'}), 500
+            
+    except Exception as e:
+        print(f"Error handling API response: {e}")
+        return jsonify({'error': error_message}), 500
 
 @app.route('/')
 def index():
@@ -126,7 +174,6 @@ def logout():
     session.clear()
     return redirect(url_for('login'))
 
-# Basic routes
 @app.route('/dashboard')
 @login_required
 def dashboard():
@@ -157,7 +204,6 @@ def document_types():
 def users():
     return render_template('users.html')
 
-# API routes with proper error handling
 @app.route('/api/departments')
 @login_required
 def departments_api():
@@ -173,27 +219,10 @@ def departments_api():
             headers=headers,
             timeout=REQUEST_TIMEOUT
         )
-        
-        if response.status_code == 401:
-            return jsonify({'error': 'Authentication failed'}), 401
-        elif response.status_code == 403:
-            return jsonify({'error': 'Access forbidden'}), 403
-        elif response.status_code == 404:
-            return jsonify([]), 200
-        elif not response.ok:
-            error_message = handle_api_error(response, 'Failed to fetch departments')
-            return jsonify({'error': error_message}), response.status_code
-            
-        data = response.json()
-        if not isinstance(data, list):
-            return jsonify({'error': 'Invalid response format'}), 500
-            
-        return jsonify(data), 200
+        return handle_api_response(response, error_message='Failed to fetch departments')
     except requests.Timeout:
-        print("Timeout error fetching departments")
         return jsonify({'error': 'Request timed out'}), 504
     except requests.ConnectionError:
-        print("Connection error fetching departments")
         return jsonify({'error': 'Failed to connect to server'}), 503
     except Exception as e:
         print(f"Error fetching departments: {e}")
@@ -210,23 +239,10 @@ def department_categories_api(department_id):
             headers=headers,
             timeout=REQUEST_TIMEOUT
         )
-        
-        if response.status_code == 401:
-            return jsonify({'error': 'Authentication failed'}), 401
-        elif response.status_code == 403:
-            return jsonify({'error': 'Access forbidden'}), 403
-        elif response.status_code == 404:
-            return jsonify({'categories': []}), 200
-        elif not response.ok:
-            error_message = handle_api_error(response, 'Failed to fetch categories')
-            return jsonify({'error': error_message}), response.status_code
-            
-        return response.json(), 200
+        return handle_api_response(response, error_message='Failed to fetch categories')
     except requests.Timeout:
-        print("Timeout error fetching department categories")
         return jsonify({'error': 'Request timed out'}), 504
     except requests.ConnectionError:
-        print("Connection error fetching department categories")
         return jsonify({'error': 'Failed to connect to server'}), 503
     except Exception as e:
         print(f"Error fetching department categories: {e}")
@@ -243,23 +259,10 @@ def category_document_types_api(category_id):
             headers=headers,
             timeout=REQUEST_TIMEOUT
         )
-        
-        if response.status_code == 401:
-            return jsonify({'error': 'Authentication failed'}), 401
-        elif response.status_code == 403:
-            return jsonify({'error': 'Access forbidden'}), 403
-        elif response.status_code == 404:
-            return jsonify({'document_types': []}), 200
-        elif not response.ok:
-            error_message = handle_api_error(response, 'Failed to fetch document types')
-            return jsonify({'error': error_message}), response.status_code
-            
-        return response.json(), 200
+        return handle_api_response(response, error_message='Failed to fetch document types')
     except requests.Timeout:
-        print("Timeout error fetching category document types")
         return jsonify({'error': 'Request timed out'}), 504
     except requests.ConnectionError:
-        print("Connection error fetching category document types")
         return jsonify({'error': 'Failed to connect to server'}), 503
     except Exception as e:
         print(f"Error fetching category document types: {e}")
@@ -280,23 +283,10 @@ def users_api():
             headers=headers,
             timeout=REQUEST_TIMEOUT
         )
-        
-        if response.status_code == 401:
-            return jsonify({'error': 'Authentication failed'}), 401
-        elif response.status_code == 403:
-            return jsonify({'error': 'Access forbidden'}), 403
-        elif response.status_code == 404:
-            return jsonify({'users': []}), 200
-        elif not response.ok:
-            error_message = handle_api_error(response, 'Failed to fetch users')
-            return jsonify({'error': error_message}), response.status_code
-            
-        return response.json(), 200
+        return handle_api_response(response, error_message='Failed to fetch users')
     except requests.Timeout:
-        print("Timeout error fetching users")
         return jsonify({'error': 'Request timed out'}), 504
     except requests.ConnectionError:
-        print("Connection error fetching users")
         return jsonify({'error': 'Failed to connect to server'}), 503
     except Exception as e:
         print(f"Error fetching users: {e}")
@@ -312,7 +302,6 @@ def documents_api():
         return jsonify({'error': 'Company ID not found in session'}), 400
     
     try:
-        # Get query parameters for filtering
         params = {
             'page': request.args.get('page', 1),
             'per_page': request.args.get('per_page', 10),
@@ -331,29 +320,10 @@ def documents_api():
             params=params,
             timeout=REQUEST_TIMEOUT
         )
-        
-        if response.status_code == 401:
-            return jsonify({'error': 'Authentication failed'}), 401
-        elif response.status_code == 403:
-            return jsonify({'error': 'Access forbidden'}), 403
-        elif response.status_code == 404:
-            return jsonify({
-                'documents': [],
-                'total': 0,
-                'page': int(params.get('page', 1)),
-                'per_page': int(params.get('per_page', 10)),
-                'total_pages': 0
-            }), 200
-        elif not response.ok:
-            error_message = handle_api_error(response, 'Failed to fetch documents')
-            return jsonify({'error': error_message}), response.status_code
-            
-        return response.json(), 200
+        return handle_api_response(response, error_message='Failed to fetch documents')
     except requests.Timeout:
-        print("Timeout error fetching documents")
         return jsonify({'error': 'Request timed out'}), 504
     except requests.ConnectionError:
-        print("Connection error fetching documents")
         return jsonify({'error': 'Failed to connect to server'}), 503
     except Exception as e:
         print(f"Error fetching documents: {e}")
@@ -392,9 +362,8 @@ def create_document():
         if missing_fields:
             return jsonify({'error': f'Missing required fields: {", ".join(missing_fields)}'}), 400
             
-        files = {
-            'file': (file.filename, file.stream, file.content_type)
-        }
+        # Create files dictionary with proper file object
+        files = {'file': (secure_filename(file.filename), file, file.content_type)}
         
         response = requests.post(
             DOCUMENTS_URL,
@@ -403,17 +372,10 @@ def create_document():
             files=files,
             timeout=REQUEST_TIMEOUT * 2  # Double timeout for file upload
         )
-        
-        if not response.ok:
-            error_message = handle_api_error(response, 'Failed to create document')
-            return jsonify({'error': error_message}), response.status_code
-            
-        return response.json(), 201
+        return handle_api_response(response, success_code=201, error_message='Failed to create document')
     except requests.Timeout:
-        print("Timeout error creating document")
         return jsonify({'error': 'Request timed out'}), 504
     except requests.ConnectionError:
-        print("Connection error creating document")
         return jsonify({'error': 'Failed to connect to server'}), 503
     except Exception as e:
         print(f"Error creating document: {e}")
@@ -433,13 +395,10 @@ def delete_document(document_id):
         if response.status_code == 204:
             return '', 204
             
-        error_message = handle_api_error(response, 'Failed to delete document')
-        return jsonify({'error': error_message}), response.status_code
+        return handle_api_response(response, error_message='Failed to delete document')
     except requests.Timeout:
-        print("Timeout error deleting document")
         return jsonify({'error': 'Request timed out'}), 504
     except requests.ConnectionError:
-        print("Connection error deleting document")
         return jsonify({'error': 'Failed to connect to server'}), 503
     except Exception as e:
         print(f"Error deleting document: {e}")
