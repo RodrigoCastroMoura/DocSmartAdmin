@@ -1,0 +1,35 @@
+INFO:werkzeug:172.31.196.23 - - [11/Nov/2024 22:47:49] "GET /documents HTTP/1.1" 404 -
+INFO:werkzeug:172.31.196.23 - - [11/Nov/2024 22:48:21] "GET / HTTP/1.1" 500 -
+Traceback (most recent call last):
+  File "/home/runner/AdminDashboardSystem/.pythonlibs/lib/python3.11/site-packages/flask/app.py", line 1478, in __call__
+    return self.wsgi_app(environ, start_response)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/AdminDashboardSystem/.pythonlibs/lib/python3.11/site-packages/flask/app.py", line 1458, in wsgi_app
+    response = self.handle_exception(e)
+               ^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/AdminDashboardSystem/.pythonlibs/lib/python3.11/site-packages/flask/app.py", line 1455, in wsgi_app
+    response = self.full_dispatch_request()
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/AdminDashboardSystem/.pythonlibs/lib/python3.11/site-packages/flask/app.py", line 869, in full_dispatch_request
+    rv = self.handle_user_exception(e)
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/AdminDashboardSystem/.pythonlibs/lib/python3.11/site-packages/flask/app.py", line 867, in full_dispatch_request
+    rv = self.dispatch_request()
+         ^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/AdminDashboardSystem/.pythonlibs/lib/python3.11/site-packages/flask/app.py", line 852, in dispatch_request
+    return self.ensure_sync(self.view_functions[rule.endpoint])(**view_args)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/AdminDashboardSystem/app.py", line 123, in index
+    return redirect(url_for('login'))
+                    ^^^^^^^^^^^^^^^^^
+  File "/home/runner/AdminDashboardSystem/.pythonlibs/lib/python3.11/site-packages/flask/helpers.py", line 222, in url_for
+    return current_app.url_for(
+           ^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/AdminDashboardSystem/.pythonlibs/lib/python3.11/site-packages/flask/app.py", line 1071, in url_for
+    return self.handle_url_build_error(error, endpoint, values)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/AdminDashboardSystem/.pythonlibs/lib/python3.11/site-packages/flask/app.py", line 1060, in url_for
+    rv = url_adapter.build(  # type: ignore[union-attr]
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/AdminDashboardSystem/.pythonlibs/lib/python3.11/site-packages/werkzeug/routing/map.py", line 919, in build
+    raise BuildError(endpoint, values, method, self)

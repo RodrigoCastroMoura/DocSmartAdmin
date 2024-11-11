@@ -8,7 +8,7 @@ from werkzeug.utils import secure_filename
 import logging
 
 # Configure logging
-logging.basicConfig(level=logging.DEBUG)
+logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 app = Flask(__name__)
@@ -16,7 +16,10 @@ app.secret_key = os.urandom(24)
 app.permanent_session_lifetime = 3600  # 1 hour session lifetime
 
 # API endpoints
-API_BASE_URL = "https://document-manager-api-rodrigocastromo.replit.app/api"
+API_BASE_URL = os.getenv('API_BASE_URL')
+if not API_BASE_URL:
+    raise ValueError("API_BASE_URL environment variable is required")
+
 LOGIN_URL = f"{API_BASE_URL}/auth/login"
 LOGOUT_URL = f"{API_BASE_URL}/auth/logout"
 REFRESH_URL = f"{API_BASE_URL}/auth/refresh"
@@ -70,7 +73,7 @@ def get_auth_headers():
     
     return {
         'Authorization': f'Bearer {token}',
-        'accept': 'application/json',
+        'Accept': 'application/json',
         'Content-Type': 'application/json'
     }
 
@@ -116,66 +119,148 @@ def handle_api_response(response, error_message="Operation failed"):
         logger.error(f"Error handling API response: {e}")
         return jsonify({'error': error_message}), 500
 
+# Route handlers
 @app.route('/')
 def index():
     if 'access_token' in session:
         return redirect(url_for('dashboard'))
     return redirect(url_for('login'))
 
-@app.route('/departments/<department_id>/categories')
+@app.route('/login', methods=['GET', 'POST'])
+def login():
+    if request.method == 'POST':
+        data = {
+            'identifier': request.form.get('identifier'),
+            'password': request.form.get('password')
+        }
+        
+        try:
+            response = requests.post(LOGIN_URL, json=data, timeout=REQUEST_TIMEOUT)
+            if response.ok:
+                auth_data = response.json()
+                session['access_token'] = auth_data['access_token']
+                session['refresh_token'] = auth_data['refresh_token']
+                session['token_expiry'] = time.time() + 3600
+                session['user'] = auth_data.get('user', {})
+                return redirect(url_for('dashboard'))
+            else:
+                error = handle_api_error(response, 'Invalid credentials')
+                flash(error, 'error')
+        except requests.Timeout:
+            flash('Request timed out', 'error')
+        except requests.ConnectionError:
+            flash('Failed to connect to server', 'error')
+        except Exception as e:
+            logger.error(f"Login error: {e}")
+            flash('An unexpected error occurred', 'error')
+            
+    return render_template('login.html')
+
+@app.route('/logout')
+def logout():
+    if 'access_token' in session:
+        try:
+            headers = get_auth_headers()
+            requests.post(LOGOUT_URL, headers=headers, timeout=REQUEST_TIMEOUT)
+        except Exception as e:
+            logger.error(f"Logout error: {e}")
+    session.clear()
+    return redirect(url_for('login'))
+
+@app.route('/dashboard')
 @login_required
-def department_categories(department_id):
+def dashboard():
+    return render_template('dashboard.html')
+
+@app.route('/departments')
+@login_required
+def departments():
+    return render_template('departments.html')
+
+@app.route('/categories')
+@login_required
+def categories():
+    return render_template('categories.html')
+
+@app.route('/documents')
+@login_required
+def documents():
+    return render_template('documents.html')
+
+@app.route('/users')
+@login_required
+def users():
+    return render_template('users.html')
+
+@app.route('/document_types')
+@login_required
+def document_types():
+    return render_template('document_types.html')
+
+# API Routes
+@app.route('/api/users')
+@login_required
+def get_users():
     headers = get_auth_headers()
     try:
-        # Get department details
-        logger.info(f"Fetching department details for ID: {department_id}")
-        dept_response = requests.get(
-            f"{DEPARTMENTS_URL}/{department_id}",
-            headers=headers,
-            timeout=REQUEST_TIMEOUT
-        )
-        if not dept_response.ok:
-            logger.error(f"Failed to fetch department: {dept_response.status_code}")
-            flash('Department not found', 'error')
-            return redirect(url_for('departments'))
-        
-        department = dept_response.json()
-        
-        # Get categories for the department
-        logger.info(f"Fetching categories for department ID: {department_id}")
-        categories_response = requests.get(
-            f"{CATEGORIES_URL}/departments/{department_id}/categories",
-            headers=headers,
-            timeout=REQUEST_TIMEOUT
-        )
-        
-        if categories_response.ok:
-            data = categories_response.json()
-            categories = data.get('categories', [])
-            logger.info(f"Successfully fetched {len(categories)} categories")
-        else:
-            logger.error(f"Failed to fetch categories: {categories_response.status_code}")
-            categories = []
-            flash('Error loading categories', 'error')
-        
-        return render_template('department_categories.html',
-                             department=department,
-                             categories=categories)
+        response = requests.get(USERS_URL, headers=headers, timeout=REQUEST_TIMEOUT)
+        return handle_api_response(response, error_message='Failed to fetch users')
     except requests.Timeout:
-        logger.error("Request timed out while fetching department categories")
-        flash('Request timed out', 'error')
+        return jsonify({'error': 'Request timed out'}), 504
     except requests.ConnectionError:
-        logger.error("Connection error while fetching department categories")
-        flash('Failed to connect to server', 'error')
+        return jsonify({'error': 'Failed to connect to server'}), 503
     except Exception as e:
-        logger.error(f"Unexpected error in department_categories: {e}")
-        flash('An unexpected error occurred', 'error')
-    
-    return redirect(url_for('departments'))
+        logger.error(f"Error fetching users: {e}")
+        return jsonify({'error': 'An unexpected error occurred'}), 500
 
-@app.route('/api/departments/<department_id>/categories')
+@app.route('/api/document_types')
 @login_required
-def department_categories_api(department_id):
+def get_document_types():
+    headers = get_auth_headers()
+    try:
+        response = requests.get(DOCUMENT_TYPES_URL, headers=headers, timeout=REQUEST_TIMEOUT)
+        return handle_api_response(response, error_message='Failed to fetch document types')
+    except requests.Timeout:
+        return jsonify({'error': 'Request timed out'}), 504
+    except requests.ConnectionError:
+        return jsonify({'error': 'Failed to connect to server'}), 503
+    except Exception as e:
+        logger.error(f"Error fetching document types: {e}")
+        return jsonify({'error': 'An unexpected error occurred'}), 500
+
+@app.route('/api/departments')
+@login_required
+def get_departments():
+    headers = get_auth_headers()
+    try:
+        response = requests.get(DEPARTMENTS_URL, headers=headers, timeout=REQUEST_TIMEOUT)
+        return handle_api_response(response, error_message='Failed to fetch departments')
+    except requests.Timeout:
+        return jsonify({'error': 'Request timed out'}), 504
+    except requests.ConnectionError:
+        return jsonify({'error': 'Failed to connect to server'}), 503
+    except Exception as e:
+        logger.error(f"Error fetching departments: {e}")
+        return jsonify({'error': 'An unexpected error occurred'}), 500
+
+@app.route('/api/categories')
+@login_required
+def get_categories():
+    headers = get_auth_headers()
+    try:
+        response = requests.get(CATEGORIES_URL, headers=headers, timeout=REQUEST_TIMEOUT)
+        return handle_api_response(response, error_message='Failed to fetch categories')
+    except requests.Timeout:
+        return jsonify({'error': 'Request timed out'}), 504
+    except requests.ConnectionError:
+        return jsonify({'error': 'Failed to connect to server'}), 503
+    except Exception as e:
+        logger.error(f"Error fetching categories: {e}")
+        return jsonify({'error': 'An unexpected error occurred'}), 500
+
+@app.route('/api/categories/departments/<department_id>/categories')
+@login_required
+def get_department_categories(department_id):
     headers = get_auth_headers()
     try:
         response = requests.get(
@@ -192,65 +277,23 @@ def department_categories_api(department_id):
         logger.error(f"Error fetching department categories: {e}")
         return jsonify({'error': 'An unexpected error occurred'}), 500
 
-@app.route('/api/categories', methods=['POST'])
+@app.route('/api/document_types/categories/<category_id>/types')
 @login_required
-def create_category():
+def get_category_document_types(category_id):
     headers = get_auth_headers()
     try:
-        data = request.get_json()
-        response = requests.post(
-            CATEGORIES_URL,
+        response = requests.get(
+            f"{DOCUMENT_TYPES_URL}/categories/{category_id}/types",
             headers=headers,
-            json=data,
             timeout=REQUEST_TIMEOUT
         )
-        return handle_api_response(response, error_message='Failed to create category')
+        return handle_api_response(response, error_message='Failed to fetch document types')
     except requests.Timeout:
         return jsonify({'error': 'Request timed out'}), 504
     except requests.ConnectionError:
         return jsonify({'error': 'Failed to connect to server'}), 503
     except Exception as e:
-        logger.error(f"Error creating category: {e}")
-        return jsonify({'error': 'An unexpected error occurred'}), 500
-
-@app.route('/api/categories/<category_id>', methods=['PUT'])
-@login_required
-def update_category(category_id):
-    headers = get_auth_headers()
-    try:
-        data = request.get_json()
-        response = requests.put(
-            f"{CATEGORIES_URL}/{category_id}",
-            headers=headers,
-            json=data,
-            timeout=REQUEST_TIMEOUT
-        )
-        return handle_api_response(response, error_message='Failed to update category')
-    except requests.Timeout:
-        return jsonify({'error': 'Request timed out'}), 504
-    except requests.ConnectionError:
-        return jsonify({'error': 'Failed to connect to server'}), 503
-    except Exception as e:
-        logger.error(f"Error updating category: {e}")
-        return jsonify({'error': 'An unexpected error occurred'}), 500
-
-@app.route('/api/categories/<category_id>', methods=['DELETE'])
-@login_required
-def delete_category(category_id):
-    headers = get_auth_headers()
-    try:
-        response = requests.delete(
-            f"{CATEGORIES_URL}/{category_id}",
-            headers=headers,
-            timeout=REQUEST_TIMEOUT
-        )
-        return handle_api_response(response, error_message='Failed to delete category')
-    except requests.Timeout:
-        return jsonify({'error': 'Request timed out'}), 504
-    except requests.ConnectionError:
-        return jsonify({'error': 'Failed to connect to server'}), 503
-    except Exception as e:
-        logger.error(f"Error deleting category: {e}")
+        logger.error(f"Error fetching category document types: {e}")
         return jsonify({'error': 'An unexpected error occurred'}), 500
 
 if __name__ == "__main__":
