@@ -135,28 +135,66 @@ async function loadFilterOptions() {
     const contentDiv = document.getElementById('documentsContent');
     showLoading(contentDiv);
 
+    const resetSelect = (selectId, placeholder) => {
+        const select = document.getElementById(selectId);
+        if (select) {
+            select.innerHTML = `<option value="">${placeholder}</option>`;
+            select.disabled = false;
+        }
+    };
+
     try {
         // Load departments
         const deptResponse = await fetch('/api/departments');
         if (!deptResponse.ok) {
-            throw new Error('Failed to load departments');
+            const errorData = await deptResponse.json();
+            throw new Error(errorData.error || 'Failed to load departments');
         }
         const departments = await deptResponse.json();
+        if (!Array.isArray(departments)) {
+            throw new Error('Invalid departments data format');
+        }
         populateFilterSelect('filterDepartment', departments);
         populateFilterSelect('documentDepartment', departments);
         
         // Load users
         const userResponse = await fetch('/api/users');
         if (!userResponse.ok) {
-            throw new Error('Failed to load users');
+            const errorData = await userResponse.json();
+            throw new Error(errorData.error || 'Failed to load users');
         }
-        const users = await userResponse.json();
-        populateFilterSelect('filterUser', users.users);
-        populateFilterSelect('documentUser', users.users);
+        const userData = await userResponse.json();
+        if (!userData.users || !Array.isArray(userData.users)) {
+            throw new Error('Invalid users data format');
+        }
+        populateFilterSelect('filterUser', userData.users);
+        populateFilterSelect('documentUser', userData.users);
+
+        // Reset category and document type filters
+        resetSelect('filterCategory', 'Categories');
+        resetSelect('filterDocumentType', 'Types');
+        resetSelect('documentCategory', 'Select Category');
+        resetSelect('documentType', 'Select Document Type');
 
     } catch (error) {
         console.error('Error loading filter options:', error);
-        showNotification('Failed to load filter options. Please try again.', 'error');
+        showNotification(error.message || 'Failed to load filter options. Please try again.', 'error');
+        
+        // Reset all filters to a safe state with error indication
+        const filterIds = {
+            'filterDepartment': 'Departments',
+            'documentDepartment': 'Department',
+            'filterCategory': 'Categories',
+            'documentCategory': 'Category',
+            'filterDocumentType': 'Document Types',
+            'documentType': 'Document Type',
+            'filterUser': 'Users',
+            'documentUser': 'User'
+        };
+
+        Object.entries(filterIds).forEach(([id, label]) => {
+            resetSelect(id, `${label} (Error loading)`);
+        });
     } finally {
         hideLoading(contentDiv);
     }
@@ -164,12 +202,20 @@ async function loadFilterOptions() {
 
 function populateFilterSelect(selectId, items) {
     const select = document.getElementById(selectId);
-    if (!select || !items) return;
+    if (!select || !Array.isArray(items)) return;
     
     const currentValue = select.value;
-    const defaultOption = select.querySelector('option[value=""]');
     select.innerHTML = '';
-    if (defaultOption) select.appendChild(defaultOption);
+    
+    // Add default option
+    const defaultOption = document.createElement('option');
+    defaultOption.value = '';
+    defaultOption.textContent = selectId.includes('filter') ? 'All' : 'Select';
+    defaultOption.textContent += ' ' + (selectId.includes('User') ? 'Users' : 
+                                      selectId.includes('Department') ? 'Departments' : 
+                                      selectId.includes('Category') ? 'Categories' : 
+                                      'Types');
+    select.appendChild(defaultOption);
     
     items.forEach(item => {
         const option = document.createElement('option');
@@ -215,20 +261,26 @@ async function applyFiltersDepartment(departmentId) {
         }
 
         const response = await fetch(`/api/categories/departments/${departmentId}/categories`);
-        if (!response.ok) throw new Error('Failed to load categories');
+        if (!response.ok) {
+            const errorData = await response.json();
+            throw new Error(errorData.error || 'Failed to load categories');
+        }
         const data = await response.json();
+        
+        if (!data.categories || !Array.isArray(data.categories)) {
+            throw new Error('Invalid categories data format');
+        }
 
-        const categories = data.categories || [];
         categorySelect.innerHTML = `
-            <option value="">Select Category</option>
-            ${categories.map(cat => `
+            <option value="">All Categories</option>
+            ${data.categories.map(cat => `
                 <option value="${cat.id}">${cat.name}</option>
             `).join('')}`;
 
         await applyFilters();
     } catch (error) {
         console.error('Error loading categories:', error);
-        showNotification(error.message || 'Failed to load categories', 'error');
+        showNotification(error.message, 'error');
         categorySelect.innerHTML = '<option value="">Error loading categories</option>';
     } finally {
         categorySelect.disabled = false;
@@ -249,11 +301,18 @@ async function applyFiltersCategory(categoryId) {
         }
 
         const response = await fetch(`/api/document_types/categories/${categoryId}/types`);
-        if (!response.ok) throw new Error('Failed to load document types');
+        if (!response.ok) {
+            const errorData = await response.json();
+            throw new Error(errorData.error || 'Failed to load document types');
+        }
         const data = await response.json();
+        
+        if (!Array.isArray(data)) {
+            throw new Error('Invalid document types data format');
+        }
 
         typeSelect.innerHTML = `
-            <option value="">Select Document Type</option>
+            <option value="">All Document Types</option>
             ${data.map(type => 
                 `<option value="${type.id}">${type.name}</option>`
             ).join('')}`;
@@ -261,7 +320,7 @@ async function applyFiltersCategory(categoryId) {
         await applyFilters();
     } catch (error) {
         console.error('Error loading document types:', error);
-        showNotification(error.message || 'Failed to load document types', 'error');
+        showNotification(error.message, 'error');
         typeSelect.innerHTML = '<option value="">Error loading document types</option>';
     } finally {
         typeSelect.disabled = false;
@@ -311,8 +370,15 @@ async function loadDocumentTypes(categoryId) {
         }
 
         const response = await fetch(`/api/document_types/categories/${categoryId}/types`);
-        if (!response.ok) throw new Error('Failed to load document types');
+        if (!response.ok) {
+            const errorData = await response.json();
+            throw new Error(errorData.error || 'Failed to load document types');
+        }
         const data = await response.json();
+        
+        if (!Array.isArray(data)) {
+            throw new Error('Invalid document types data format');
+        }
         
         typeSelect.innerHTML = `
             <option value="">Select Document Type</option>
@@ -321,7 +387,7 @@ async function loadDocumentTypes(categoryId) {
             ).join('')}`;
     } catch (error) {
         console.error('Error loading document types:', error);
-        showNotification(error.message || 'Failed to load document types', 'error');
+        showNotification(error.message, 'error');
         typeSelect.innerHTML = '<option value="">Error loading document types</option>';
     } finally {
         typeSelect.disabled = false;
@@ -344,19 +410,24 @@ async function loadDepartmentCategories(departmentId) {
         }
 
         const response = await fetch(`/api/categories/departments/${departmentId}/categories`);
-        if (!response.ok) throw new Error('Failed to load categories');
+        if (!response.ok) {
+            const errorData = await response.json();
+            throw new Error(errorData.error || 'Failed to load categories');
+        }
         const data = await response.json();
         
-        const categories = data.categories || [];
+        if (!data.categories || !Array.isArray(data.categories)) {
+            throw new Error('Invalid categories data format');
+        }
         
         categorySelect.innerHTML = `
             <option value="">Select Category</option>
-            ${categories.map(cat => `
-                <option value="${cat.id}">${cat.name}</option>
-            `).join('')}`;
+            ${data.categories.map(cat => `
+                <option value="${cat.id}">${cat.name}</option>`
+            ).join('')}`;
     } catch (error) {
         console.error('Error loading categories:', error);
-        showNotification(error.message || 'Failed to load categories', 'error');
+        showNotification(error.message, 'error');
         categorySelect.innerHTML = '<option value="">Error loading categories</option>';
     } finally {
         categorySelect.disabled = false;
@@ -393,7 +464,7 @@ async function createDocument(event) {
         showNotification('Document created successfully', 'success');
     } catch (error) {
         console.error('Error creating document:', error);
-        showNotification(error.message || 'Failed to create document', 'error');
+        showNotification(error.message, 'error');
     } finally {
         hideLoading(submitButton);
     }
@@ -419,31 +490,18 @@ async function confirmDelete() {
         });
 
         if (!response.ok) {
-            const data = await response.json();
-            throw new Error(data.error || 'Failed to delete document');
+            const errorData = await response.json();
+            throw new Error(errorData.error || 'Failed to delete document');
         }
 
         await loadDocuments(currentPage);
         showNotification('Document deleted successfully', 'success');
     } catch (error) {
         console.error('Error deleting document:', error);
-        showNotification(error.message || 'Failed to delete document', 'error');
+        showNotification(error.message, 'error');
     } finally {
         hideLoading(card);
         itemToDelete = null;
-    }
-}
-
-function deleteDocument(id) {
-    showDeleteConfirmation(id);
-}
-
-async function downloadDocument(url) {
-    try {
-        window.open(url, '_blank');
-    } catch (error) {
-        console.error('Error downloading document:', error);
-        showNotification('Failed to download document', 'error');
     }
 }
 
@@ -461,11 +519,11 @@ async function loadDocuments(page = 1, filters = {}) {
         const response = await fetch(`/api/documents?${params}`);
         if (!response.ok) {
             const errorData = await response.json();
-            throw new Error(errorData.error || `Failed to load documents (${response.status})`);
+            throw new Error(errorData.error || 'Failed to load documents');
         }
 
         const data = await response.json();
-        if (!data || !data.documents) {
+        if (!data || !Array.isArray(data.documents)) {
             throw new Error('Invalid response format');
         }
         
@@ -579,6 +637,24 @@ function showAddDocumentModal() {
     showModal('addDocumentModal');
 }
 
+function deleteDocument(id) {
+    showDeleteConfirmation(id);
+}
+
+async function downloadDocument(url) {
+    if (!url) {
+        showNotification('Document URL is not available', 'error');
+        return;
+    }
+    
+    try {
+        window.open(url, '_blank');
+    } catch (error) {
+        console.error('Error downloading document:', error);
+        showNotification('Failed to download document', 'error');
+    }
+}
+
 // Initialize the page
 document.addEventListener('DOMContentLoaded', () => {
     loadFilterOptions();
@@ -600,6 +676,7 @@ document.addEventListener('DOMContentLoaded', () => {
     border-radius: 8px;
     padding: 1.5rem;
     transition: transform 0.2s;
+    position: relative;
 }
 
 .document-card:hover {

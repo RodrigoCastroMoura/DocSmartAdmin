@@ -173,6 +173,29 @@
             color: var(--danger-color);
         }
 
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            z-index: 1000;
+            animation: fadeIn 0.2s ease;
+        }
+
+        .modal-content {
+            position: relative;
+            background-color: var(--bg-secondary);
+            margin: 5% auto;
+            padding: 2rem;
+            border-radius: 12px;
+            max-width: 500px;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
+            animation: slideIn 0.3s ease;
+        }
+
         .notification-modal {
             max-width: 400px;
         }
@@ -181,28 +204,158 @@
             display: flex;
             align-items: center;
             gap: 1rem;
-            margin-bottom: 1rem;
+            margin-bottom: 1.5rem;
+            padding-bottom: 1rem;
+            border-bottom: 1px solid var(--border-color);
         }
 
         .notification-header i {
             font-size: 1.5rem;
+            padding: 0.5rem;
+            border-radius: 50%;
+            background-color: var(--bg-tertiary);
         }
 
         .notification-header.success i {
             color: var(--success-color);
+            background-color: rgba(var(--success-rgb), 0.1);
         }
 
         .notification-header.error i {
             color: var(--danger-color);
+            background-color: rgba(var(--danger-rgb), 0.1);
+        }
+
+        .notification-header h3 {
+            margin: 0;
+            flex: 1;
+        }
+
+        .close-btn {
+            background: none;
+            border: none;
+            color: var(--text-secondary);
+            cursor: pointer;
+            padding: 0.5rem;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+        }
+
+        .close-btn:hover {
+            background-color: var(--bg-tertiary);
+            color: var(--text-primary);
         }
 
         .notification-body {
-            margin-bottom: 1.5rem;
+            margin-bottom: 2rem;
+            color: var(--text-secondary);
+            line-height: 1.5;
         }
 
         .notification-actions {
             display: flex;
             justify-content: flex-end;
+            gap: 1rem;
+            padding-top: 1rem;
+            border-top: 1px solid var(--border-color);
+        }
+
+        .modal-actions {
+            display: flex;
+            justify-content: flex-end;
+            gap: 1rem;
+            margin-top: 2rem;
+            padding-top: 1rem;
+            border-top: 1px solid var(--border-color);
+        }
+
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            color: var(--text-secondary);
+        }
+
+        .form-group input,
+        .form-group select,
+        .form-group textarea {
+            width: 100%;
+            padding: 0.75rem;
+            background-color: var(--bg-tertiary);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            color: var(--text-primary);
+            transition: all 0.2s;
+        }
+
+        .form-group input:focus,
+        .form-group select:focus,
+        .form-group textarea:focus {
+            border-color: var(--accent-color);
+            box-shadow: 0 0 0 2px rgba(var(--accent-rgb), 0.1);
+            outline: none;
+        }
+
+        .action-btn {
+            padding: 0.75rem 1.5rem;
+            border: none;
+            border-radius: 8px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            transition: all 0.2s;
+        }
+
+        .action-btn.primary {
+            background-color: var(--accent-color);
+            color: white;
+        }
+
+        .action-btn.primary:hover {
+            background-color: var(--accent-hover);
+        }
+
+        .action-btn.danger {
+            background-color: var(--danger-color);
+            color: white;
+        }
+
+        .action-btn.danger:hover {
+            background-color: var(--danger-hover);
+        }
+
+        .action-btn:not(.primary):not(.danger) {
+            background-color: var(--bg-tertiary);
+            color: var(--text-primary);
+        }
+
+        .action-btn:not(.primary):not(.danger):hover {
+            background-color: var(--border-color);
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
         }
     </style>
 
