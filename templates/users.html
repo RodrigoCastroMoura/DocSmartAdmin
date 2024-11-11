@@ -165,8 +165,7 @@ async function loadUsers() {
     try {
         const response = await fetch('/api/users');
         if (!response.ok) {
-            const errorData = await response.json();
-            throw new Error(errorData.error || `HTTP error! status: ${response.status}`);
+            throw new Error(`HTTP error! status: ${response.status}`);
         }
         
         const data = await response.json();
@@ -180,13 +179,12 @@ async function loadUsers() {
         console.error('Error loading users:', error);
         tableBody.innerHTML = `
             <tr>
-                <td colspan="7" class="no-data error">
+                <td colspan="7" class="no-data">
                     <i data-feather="alert-circle"></i>
                     <p>${error.message || 'Failed to load users'}</p>
                 </td>
             </tr>`;
         feather.replace();
-        showErrorMessage(error.message || 'Failed to load users');
     } finally {
         hideLoading(contentDiv);
     }
@@ -207,17 +205,17 @@ function generateUsersHTML(users) {
         <tr data-id="${user.id}">
             <td>
                 <div class="user-cell">
-                    <div class="user-avatar">${user.name ? user.name.slice(0, 2).toUpperCase() : 'UN'}</div>
-                    <span>${user.name || 'Unknown'}</span>
+                    <div class="user-avatar">${user.name.slice(0, 2).toUpperCase()}</div>
+                    <span>${user.name}</span>
                 </div>
             </td>
-            <td>${user.email || '-'}</td>
-            <td>${user.cpf || '-'}</td>
+            <td>${user.email}</td>
+            <td>${user.cpf}</td>
             <td>${user.phone || '-'}</td>
-            <td>${user.role || 'user'}</td>
+            <td>${user.role}</td>
             <td>
                 <span class="status-badge ${user.status === 'active' ? 'active' : 'inactive'}">
-                    ${user.status || 'inactive'}
+                    ${user.status}
                 </span>
             </td>
             <td>
@@ -257,6 +255,7 @@ async function createUser(event) {
         });
 
         const responseData = await response.json();
+        
         if (!response.ok) {
             throw new Error(responseData.error || 'Failed to create user');
         }
@@ -264,10 +263,10 @@ async function createUser(event) {
         hideModal('addUserModal');
         form.reset();
         await loadUsers();
-        showNotification('User created successfully', 'success');
+        showErrorMessage('User created successfully', 'success');
     } catch (error) {
         console.error('Error creating user:', error);
-        showNotification(error.message);
+        showErrorMessage(error.message);
     } finally {
         hideLoading(submitButton);
     }
@@ -297,16 +296,17 @@ async function updateUser(event) {
         });
 
         const responseData = await response.json();
+        
         if (!response.ok) {
             throw new Error(responseData.error || 'Failed to update user');
         }
 
         hideModal('editUserModal');
         await loadUsers();
-        showNotification('User updated successfully', 'success');
+        showErrorMessage('User updated successfully', 'success');
     } catch (error) {
         console.error('Error updating user:', error);
-        showNotification(error.message);
+        showErrorMessage(error.message);
     } finally {
         hideLoading(submitButton);
     }
@@ -331,10 +331,10 @@ async function deleteUser(id) {
         }
 
         await loadUsers();
-        showNotification('User deleted successfully', 'success');
+        showErrorMessage('User deleted successfully', 'success');
     } catch (error) {
         console.error('Error deleting user:', error);
-        showNotification(error.message);
+        showErrorMessage(error.message);
     } finally {
         hideLoading(row);
     }
@@ -355,11 +355,11 @@ function showAddUserModal() {
 
 function showEditUserModal(id, user) {
     document.getElementById('editUserId').value = id;
-    document.getElementById('editUserName').value = user.name || '';
-    document.getElementById('editUserEmail').value = user.email || '';
-    document.getElementById('editUserCPF').value = user.cpf || '';
+    document.getElementById('editUserName').value = user.name;
+    document.getElementById('editUserEmail').value = user.email;
+    document.getElementById('editUserCPF').value = user.cpf;
     document.getElementById('editUserPhone').value = user.phone || '';
-    document.getElementById('editUserRole').value = user.role || 'user';
+    document.getElementById('editUserRole').value = user.role;
     showModal('editUserModal');
 }
 
@@ -447,12 +447,47 @@ document.addEventListener('DOMContentLoaded', loadUsers);
     opacity: 0.5;
 }
 
-.no-data.error {
-    color: var(--danger-color);
+.page-container {
+    padding: 2rem;
 }
 
-.no-data.error i {
-    color: var(--danger-color);
+.header-actions {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 2rem;
+}
+
+.header-actions h2 {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.content-grid {
+    background-color: var(--bg-secondary);
+    border-radius: 8px;
+    padding: 1.5rem;
+    position: relative;
+}
+
+tr.loading {
+    opacity: 0.5;
+    pointer-events: none;
+}
+
+tr.loading .loading-indicator {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background-color: var(--bg-secondary);
+    padding: 0.5rem 1rem;
+    border-radius: 4px;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    z-index: 2;
 }
 </style>
 {% endblock %}

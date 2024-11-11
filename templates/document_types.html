@@ -116,15 +116,8 @@ async function loadDepartments() {
     
     try {
         const response = await fetch('/api/departments');
-        if (!response.ok) {
-            const errorData = await response.json();
-            throw new Error(errorData.error || `Failed to load departments (${response.status})`);
-        }
+        if (!response.ok) throw new Error('Failed to load departments');
         const data = await response.json();
-        
-        if (!Array.isArray(data)) {
-            throw new Error('Invalid response format: expected an array');
-        }
         
         const departmentsOptions = `
             <option value="">Select Department</option>
@@ -137,42 +130,21 @@ async function loadDepartments() {
         });
     } catch (error) {
         console.error('Error loading departments:', error);
-        const errorMessage = error.message || 'Error loading departments';
         departmentSelects.forEach(select => {
-            if (select) select.innerHTML = `<option value="">${errorMessage}</option>`;
+            if (select) select.innerHTML = '<option value="">Error loading departments</option>';
         });
-        showNotification(errorMessage, 'error');
     }
 }
 
 async function loadDepartmentCategories(departmentId, targetId = 'documentTypeCategory') {
     const categorySelect = document.getElementById(targetId);
-    if (!departmentId) {
-        categorySelect.innerHTML = '<option value="">Select Department first</option>';
-        categorySelect.disabled = true;
-        return;
-    }
-    
     categorySelect.innerHTML = '<option value="">Loading categories...</option>';
     categorySelect.disabled = true;
 
     try {
         const response = await fetch(`/api/categories/departments/${departmentId}/categories`);
-        if (!response.ok) {
-            const errorData = await response.json();
-            throw new Error(errorData.error || `Failed to load categories (${response.status})`);
-        }
-        
+        if (!response.ok) throw new Error('Failed to load categories');
         const data = await response.json();
-        if (!data || !data.categories) {
-            throw new Error('Invalid response format');
-        }
-        
-        if (data.categories.length === 0) {
-            categorySelect.innerHTML = '<option value="">No categories found</option>';
-            showNotification('No categories found for this department', 'error');
-            return;
-        }
         
         categorySelect.innerHTML = `
             <option value="">Select Category</option>
@@ -181,9 +153,7 @@ async function loadDepartmentCategories(departmentId, targetId = 'documentTypeCa
             ).join('')}`;
     } catch (error) {
         console.error('Error loading categories:', error);
-        const errorMessage = error.message || 'Failed to load categories';
-        categorySelect.innerHTML = `<option value="">${errorMessage}</option>`;
-        showNotification(errorMessage, 'error');
+        categorySelect.innerHTML = '<option value="">Error loading categories</option>';
     } finally {
         categorySelect.disabled = false;
     }
@@ -196,8 +166,7 @@ async function loadDocumentTypes() {
     try {
         const response = await fetch('/api/document_types');
         if (!response.ok) {
-            const errorData = await response.json();
-            throw new Error(errorData.error || `Failed to load document types (${response.status})`);
+            throw new Error(`HTTP error! status: ${response.status}`);
         }
         
         const data = await response.json();
@@ -211,16 +180,12 @@ async function loadDocumentTypes() {
         console.error('Error loading document types:', error);
         contentDiv.innerHTML = `
             <div class="document-types-grid">
-                <div class="no-data error">
+                <div class="no-data">
                     <i data-feather="alert-circle"></i>
                     <p>${error.message || 'Failed to load document types'}</p>
-                    <button class="action-btn" onclick="loadDocumentTypes()">
-                        <i data-feather="refresh-cw"></i> Retry
-                    </button>
                 </div>
             </div>`;
         feather.replace();
-        showNotification(error.message || 'Failed to load document types', 'error');
     } finally {
         hideLoading(contentDiv);
     }
@@ -294,10 +259,10 @@ async function createDocumentType(event) {
         hideModal('addDocumentTypeModal');
         form.reset();
         await loadDocumentTypes();
-        showNotification('Document type created successfully', 'success');
+        showErrorMessage('Document type created successfully', 'success');
     } catch (error) {
         console.error('Error creating document type:', error);
-        showNotification(error.message, 'error');
+        showErrorMessage(error.message);
     } finally {
         hideLoading(submitButton);
     }
@@ -333,10 +298,10 @@ async function updateDocumentType(event) {
 
         hideModal('editDocumentTypeModal');
         await loadDocumentTypes();
-        showNotification('Document type updated successfully', 'success');
+        showErrorMessage('Document type updated successfully', 'success');
     } catch (error) {
         console.error('Error updating document type:', error);
-        showNotification(error.message, 'error');
+        showErrorMessage(error.message);
     } finally {
         hideLoading(submitButton);
     }
@@ -361,10 +326,10 @@ async function deleteDocumentType(id) {
         }
 
         await loadDocumentTypes();
-        showNotification('Document type deleted successfully', 'success');
+        showErrorMessage('Document type deleted successfully', 'success');
     } catch (error) {
         console.error('Error deleting document type:', error);
-        showNotification(error.message, 'error');
+        showErrorMessage(error.message);
     } finally {
         hideLoading(card);
     }
@@ -490,32 +455,6 @@ document.addEventListener('DOMContentLoaded', loadDocumentTypes);
     font-size: 2rem;
     margin-bottom: 0.5rem;
     opacity: 0.5;
-}
-
-.no-data.error {
-    color: var(--danger-color);
-}
-
-.no-data.error i {
-    color: var(--danger-color);
-}
-
-.no-data button {
-    margin-top: 1rem;
-}
-
-.loading-overlay {
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background-color: rgba(0, 0, 0, 0.5);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    border-radius: 8px;
-    z-index: 10;
 }
 </style>
 {% endblock %}
