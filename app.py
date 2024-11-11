@@ -261,7 +261,7 @@ def category_document_types_api(category_id):
     try:
         print(f"Fetching document types for category: {category_id}")
         response = requests.get(
-            f"{DOCUMENT_TYPES_URL}/categories/{category_id}/types",
+            f"{DOCUMENT_TYPES_URL}/categories/{category_id}/document_types",
             headers=headers,
             timeout=REQUEST_TIMEOUT
         )
@@ -274,7 +274,7 @@ def category_document_types_api(category_id):
             
         data = normalize_response(response.json(), 'document_types')
         print(f"Document types response: {data}")
-        return jsonify(data), 200
+        return jsonify(data.get('document_types', [])), 200
     except Exception as e:
         print(f"Error fetching document types: {e}")
         return jsonify({'document_types': []}), 200
@@ -350,13 +350,10 @@ def documents_api():
     
     try:
         # Parse and validate pagination parameters
-        page = 1
-        per_page = 10
-        try:
-            page = max(1, int(request.args.get('page', 1)))
-            per_page = max(1, min(100, int(request.args.get('per_page', 10))))
-        except (ValueError, TypeError) as e:
-            print(f"Error parsing pagination parameters: {e}")
+        page = request.args.get('page', 1, type=int)
+        per_page = request.args.get('per_page', 10, type=int)
+        page = max(1, page)
+        per_page = max(1, min(100, per_page))
         
         # Build query parameters
         params = {
@@ -413,8 +410,28 @@ def documents_api():
         
         return jsonify(result), 200
         
+    except requests.exceptions.Timeout:
+        print("documents_api: Request timed out")
+        return jsonify({
+            'error': 'Request timed out',
+            'documents': [],
+            'total': 0,
+            'page': page,
+            'per_page': per_page,
+            'total_pages': 1
+        }), 504
+    except requests.exceptions.ConnectionError:
+        print("documents_api: Connection error")
+        return jsonify({
+            'error': 'Connection error',
+            'documents': [],
+            'total': 0,
+            'page': page,
+            'per_page': per_page,
+            'total_pages': 1
+        }), 502
     except Exception as e:
-        print(f"Error in documents API: {str(e)}")
+        print(f"Error in documents_api: {str(e)}")
         return jsonify({
             'documents': [],
             'total': 0,
@@ -440,34 +457,40 @@ def create_document():
         if not file or not file.filename:
             return jsonify({'error': 'No file selected'}), 400
             
-        # Build form data with validation
-        form_data = request.form.to_dict()
-        form_data['company_id'] = company_id
-        
-        # Validate required fields
-        required_fields = ['titulo', 'department_id', 'category_id', 'document_type_id', 'user_id']
-        missing_fields = [field for field in required_fields if not form_data.get(field)]
-        if missing_fields:
-            return jsonify({'error': f'Missing required fields: {", ".join(missing_fields)}'}), 400
-        
         # Handle file upload
         filename = secure_filename(file.filename)
         
-        # Create the multipart form-data manually
+        # Create form data with all required fields
+        form_data = {
+            'titulo': request.form.get('titulo'),
+            'document_type_id': request.form.get('document_type_id'),
+            'category_id': request.form.get('category_id'),
+            'user_id': request.form.get('user_id'),
+            'company_id': company_id
+        }
+        
+        # Validate required fields
+        if not all([form_data['titulo'], form_data['document_type_id'], 
+                   form_data['category_id'], form_data['user_id']]):
+            return jsonify({'error': 'Missing required fields'}), 400
+        
+        # Create multipart form-data request
         files = {
             'file': (filename, file.stream, file.content_type)
         }
         
         # Remove content-type from headers for multipart request
-        upload_headers = {k: v for k, v in headers.items() if k.lower() != 'content-type'}
+        upload_headers = {k: v for k, v in headers.items() 
+                        if k.lower() != 'content-type'}
         
+        # Make request to create document
         print(f"Creating document with data: {form_data}")
         response = requests.post(
-            DOCUMENTS_URL,
+            f"{DOCUMENTS_URL}/companies/{company_id}/documents",
+            headers=upload_headers,
             data=form_data,
             files=files,
-            headers=upload_headers,
-            timeout=REQUEST_TIMEOUT * 2  # Double timeout for file upload
+            timeout=REQUEST_TIMEOUT
         )
         
         if not response.ok:
@@ -494,22 +517,34 @@ def create_document():
 @login_required
 def delete_document(document_id):
     headers = get_auth_headers()
+    company_id = session.get('company_id')
+    
+    if not company_id:
+        return jsonify({'error': 'Company ID not found in session'}), 400
     
     try:
         print(f"Deleting document: {document_id}")
         response = requests.delete(
-            f"{DOCUMENTS_URL}/{document_id}",
+            f"{DOCUMENTS_URL}/companies/{company_id}/documents/{document_id}",
             headers=headers,
             timeout=REQUEST_TIMEOUT
         )
         
         if not response.ok:
+            if response.status_code in [401, 403]:
+                return jsonify({'error': 'Authentication failed'}), response.status_code
             error_message = handle_api_error(response, 'Failed to delete document')
             print(f"Document deletion error: {error_message}")
             return jsonify({'error': error_message}), response.status_code
             
-        print("Document deleted successfully")
         return jsonify({'message': 'Document deleted successfully'}), 200
+        
+    except requests.exceptions.Timeout:
+        print(f"Timeout deleting document: {document_id}")
+        return jsonify({'error': 'Request timed out'}), 504
+    except requests.exceptions.ConnectionError:
+        print(f"Connection error deleting document: {document_id}")
+        return jsonify({'error': 'Connection error'}), 502
     except Exception as e:
         print(f"Error deleting document: {e}")
         return jsonify({'error': 'Failed to delete document'}), 500
