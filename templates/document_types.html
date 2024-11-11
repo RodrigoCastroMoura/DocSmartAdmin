@@ -196,14 +196,8 @@ async function loadDocumentTypes() {
     try {
         const response = await fetch('/api/document_types');
         if (!response.ok) {
-            let errorMessage = 'Failed to load document types';
-            try {
-                const errorData = await response.json();
-                errorMessage = errorData.error || errorData.message || 'Failed to load document types';
-            } catch (e) {
-                console.error('Error parsing error response:', e);
-            }
-            throw new Error(errorMessage);
+            const errorData = await response.json();
+            throw new Error(errorData.error || `Failed to load document types (${response.status})`);
         }
         
         const data = await response.json();
@@ -214,7 +208,7 @@ async function loadDocumentTypes() {
         contentDiv.innerHTML = generateDocumentTypesHTML(data.document_types);
         feather.replace();
     } catch (error) {
-        console.error('Error loading document types:', error.message || 'Unknown error');
+        console.error('Error loading document types:', error);
         contentDiv.innerHTML = `
             <div class="document-types-grid">
                 <div class="no-data error">
@@ -232,13 +226,296 @@ async function loadDocumentTypes() {
     }
 }
 
-// Remaining functions (generateDocumentTypesHTML, createDocumentType, updateDocumentType, deleteDocumentType, etc.) 
-// remain exactly the same as in the original code
+function generateDocumentTypesHTML(types) {
+    if (!Array.isArray(types) || types.length === 0) {
+        return `
+            <div class="document-types-grid">
+                <div class="no-data">
+                    <i data-feather="inbox"></i>
+                    <p>No document types found</p>
+                </div>
+            </div>`;
+    }
+
+    const typesHTML = types.map(type => `
+        <div class="document-type-card" data-id="${type.id}">
+            <div class="document-type-header">
+                <i data-feather="file"></i>
+                <h3>${type.name}</h3>
+            </div>
+            <div class="document-type-info">
+                <p class="description">${type.description || 'No description'}</p>
+                <p class="meta">
+                    <span>Documents: ${type.document_count || 0}</span>
+                    <span>Created: ${new Date(type.created_at).toLocaleDateString()}</span>
+                </p>
+            </div>
+            <div class="document-type-actions">
+                <button class="action-btn" onclick='showEditDocumentTypeModal("${type.id}", ${JSON.stringify(type)})'>
+                    <i data-feather="edit-2"></i>
+                </button>
+                <button class="action-btn danger" onclick="deleteDocumentType('${type.id}')">
+                    <i data-feather="trash-2"></i>
+                </button>
+            </div>
+        </div>
+    `).join('');
+
+    return `<div class="document-types-grid">${typesHTML}</div>`;
+}
+
+async function createDocumentType(event) {
+    event.preventDefault();
+    const form = event.target;
+    const submitButton = form.querySelector('button[type="submit"]');
+    
+    if (!validateForm(form)) {
+        return;
+    }
+    
+    const formData = new FormData(form);
+    const data = Object.fromEntries(formData);
+    showLoading(submitButton);
+
+    try {
+        const response = await fetch('/api/document_types', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(data)
+        });
+
+        if (!response.ok) {
+            const errorData = await response.json();
+            throw new Error(errorData.error || 'Failed to create document type');
+        }
+
+        hideModal('addDocumentTypeModal');
+        form.reset();
+        await loadDocumentTypes();
+        showNotification('Document type created successfully', 'success');
+    } catch (error) {
+        console.error('Error creating document type:', error);
+        showNotification(error.message, 'error');
+    } finally {
+        hideLoading(submitButton);
+    }
+}
+
+async function updateDocumentType(event) {
+    event.preventDefault();
+    const form = event.target;
+    const submitButton = form.querySelector('button[type="submit"]');
+    
+    if (!validateForm(form)) {
+        return;
+    }
+    
+    const id = document.getElementById('editDocumentTypeId').value;
+    const formData = new FormData(form);
+    const data = Object.fromEntries(formData);
+    showLoading(submitButton);
+
+    try {
+        const response = await fetch(`/api/document_types/${id}`, {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(data)
+        });
+
+        if (!response.ok) {
+            const errorData = await response.json();
+            throw new Error(errorData.error || 'Failed to update document type');
+        }
+
+        hideModal('editDocumentTypeModal');
+        await loadDocumentTypes();
+        showNotification('Document type updated successfully', 'success');
+    } catch (error) {
+        console.error('Error updating document type:', error);
+        showNotification(error.message, 'error');
+    } finally {
+        hideLoading(submitButton);
+    }
+}
+
+async function deleteDocumentType(id) {
+    if (!confirm('Are you sure you want to delete this document type?')) {
+        return;
+    }
+
+    const card = document.querySelector(`.document-type-card[data-id="${id}"]`);
+    showLoading(card);
+
+    try {
+        const response = await fetch(`/api/document_types/${id}`, {
+            method: 'DELETE'
+        });
+
+        if (!response.ok) {
+            const errorData = await response.json();
+            throw new Error(errorData.error || 'Failed to delete document type');
+        }
+
+        await loadDocumentTypes();
+        showNotification('Document type deleted successfully', 'success');
+    } catch (error) {
+        console.error('Error deleting document type:', error);
+        showNotification(error.message, 'error');
+    } finally {
+        hideLoading(card);
+    }
+}
+
+function showModal(modalId) {
+    document.getElementById(modalId).style.display = 'block';
+}
+
+function hideModal(modalId) {
+    document.getElementById(modalId).style.display = 'none';
+}
+
+function showAddDocumentTypeModal() {
+    document.getElementById('addDocumentTypeForm').reset();
+    loadDepartments();
+    showModal('addDocumentTypeModal');
+}
+
+function showEditDocumentTypeModal(id, type) {
+    document.getElementById('editDocumentTypeId').value = id;
+    document.getElementById('editDocumentTypeName').value = type.name;
+    document.getElementById('editDocumentTypeDescription').value = type.description || '';
+    loadDepartments().then(() => {
+        if (type.department_id) {
+            document.getElementById('editDocumentTypeDepartment').value = type.department_id;
+            loadDepartmentCategories(type.department_id, 'editDocumentTypeCategory').then(() => {
+                document.getElementById('editDocumentTypeCategory').value = type.category_id || '';
+            });
+        }
+    });
+    showModal('editDocumentTypeModal');
+}
 
 // Initialize document types list when page loads
 document.addEventListener('DOMContentLoaded', loadDocumentTypes);
 </script>
 
-<!-- Style and other sections remain the same as in the original code -->
+<style>
+.document-types-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 1rem;
+}
 
+.document-type-card {
+    background-color: var(--bg-tertiary);
+    border-radius: 8px;
+    padding: 1.5rem;
+    transition: transform 0.2s;
+}
+
+.document-type-card:hover {
+    transform: translateY(-2px);
+}
+
+.document-type-header {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    margin-bottom: 1rem;
+}
+
+.document-type-header i {
+    padding: 0.75rem;
+    background-color: var(--accent-color);
+    border-radius: 6px;
+}
+
+.document-type-info {
+    margin: 1rem 0;
+    color: var(--text-secondary);
+}
+
+.document-type-info .description {
+    margin-bottom: 0.5rem;
+    font-style: italic;
+}
+
+.document-type-info .meta {
+    display: flex;
+    gap: 1rem;
+    font-size: 0.875rem;
+}
+
+.document-type-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 0.5rem;
+    margin-top: 1rem;
+}
+
+.page-container {
+    padding: 2rem;
+}
+
+.header-actions {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 2rem;
+}
+
+.header-actions h2 {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.content-grid {
+    background-color: var(--bg-secondary);
+    border-radius: 8px;
+    padding: 1.5rem;
+}
+
+.no-data {
+    text-align: center;
+    padding: 2rem;
+    color: var(--text-secondary);
+}
+
+.no-data i {
+    font-size: 2rem;
+    margin-bottom: 0.5rem;
+    opacity: 0.5;
+}
+
+.no-data.error {
+    color: var(--danger-color);
+}
+
+.no-data.error i {
+    color: var(--danger-color);
+}
+
+.no-data button {
+    margin-top: 1rem;
+}
+
+.loading-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(0, 0, 0, 0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 8px;
+    z-index: 10;
+}
+</style>
 {% endblock %}
