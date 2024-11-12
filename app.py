@@ -5,6 +5,11 @@ import os
 import json
 import time
 from werkzeug.utils import secure_filename
+import logging
+
+# Configure logging
+logging.basicConfig(level=logging.DEBUG)
+logger = logging.getLogger(__name__)
 
 app = Flask(__name__)
 app.secret_key = os.urandom(24)
@@ -187,7 +192,18 @@ def departments():
 @app.route('/categories')
 @login_required
 def categories():
-    return render_template('categories.html')
+    headers = get_auth_headers()
+    company_id = session.get('company_id')  
+    if not company_id:
+        return jsonify({'error': 'Company ID not found in session'}), 400
+    
+    response = requests.get(
+        f"{DEPARTMENTS_URL}/companies/{company_id}/departments",
+        headers=headers,
+        timeout=REQUEST_TIMEOUT
+    )
+    departments = response.json()
+    return render_template('categories.html',departments=departments)
 
 @app.route('/documents')
 @login_required
@@ -204,7 +220,111 @@ def document_types():
 def users():
     return render_template('users.html')
 
-@app.route('/api/departments')
+@app.route('/departments/<department_id>/categories')
+@login_required
+def department_categories(department_id):
+    headers = get_auth_headers()
+    try:
+        # Get department details
+        logger.info(f"Fetching department details for ID: {department_id}")
+        dept_response = requests.get(
+            f"{DEPARTMENTS_URL}/{department_id}",
+            headers=headers,
+            timeout=REQUEST_TIMEOUT
+        )
+        if not dept_response.ok:
+            logger.error(f"Failed to fetch department: {dept_response.status_code}")
+            flash('Department not found', 'error')
+            return redirect(url_for('departments'))
+        
+        department = dept_response.json()
+        
+        # Get categories for the department
+        logger.info(f"Fetching categories for department ID: {department_id}")
+        categories_response = requests.get(
+            f"{CATEGORIES_URL}/departments/{department_id}/categories",
+            headers=headers,
+            timeout=REQUEST_TIMEOUT
+        )
+        
+        if categories_response.ok:
+            data = categories_response.json()
+            categories = data.get('categories', [])
+            logger.info(f"Successfully fetched {len(categories)} categories")
+        else:
+            logger.error(f"Failed to fetch categories: {categories_response.status_code}")
+            categories = []
+            flash('Error loading categories', 'error')
+        
+        return render_template('department_categories.html',
+                             department=department,
+                             categories=categories)
+    except requests.Timeout:
+        logger.error("Request timed out while fetching department categories")
+        flash('Request timed out', 'error')
+    except requests.ConnectionError:
+        logger.error("Connection error while fetching department categories")
+        flash('Failed to connect to server', 'error')
+    except Exception as e:
+        logger.error(f"Unexpected error in department_categories: {e}")
+        flash('An unexpected error occurred', 'error')
+    
+    return redirect(url_for('departments'))
+
+@app.route('/categories/<category_id>/document_types')
+@login_required
+def categories_document_types(category_id):
+    headers = get_auth_headers()
+    try:
+        # Get department details
+        logger.info(f"Fetching document types details for ID: {category_id}")
+        doc_response = requests.get(
+            f"{DOCUMENT_TYPES_URL}/categories/{category_id}/types",
+            headers=headers,
+            timeout=REQUEST_TIMEOUT
+        )
+        if not doc_response.ok:
+            logger.error(f"Failed to fetch document types: {doc_response.status_code}")
+            flash('Document types not found', 'error')
+            return redirect(url_for('categories'))
+        
+        document_types = doc_response.json()
+        
+        # Get categories for the department
+
+        categories_response = requests.get(
+            f"{CATEGORIES_URL}/{category_id}",
+            headers=headers,
+            timeout=REQUEST_TIMEOUT
+        )
+
+        if categories_response.ok:
+            logger.info(f"Successfully fetched {len(categories_response.json())} categories")
+        else:
+            logger.error(f"Failed to fetch categories: {categories_response.status_code}")
+            categories = []
+            flash('Error loading categories', 'error')
+        
+        category = categories_response.json()
+
+        
+        return render_template('category_document_types.html',
+                             document_types=document_types,
+                             category=category)
+    except requests.Timeout:
+        logger.error("Request timed out while fetching department categories")
+        flash('Request timed out', 'error')
+    except requests.ConnectionError:
+        logger.error("Connection error while fetching department categories")
+        flash('Failed to connect to server', 'error')
+    except Exception as e:
+        logger.error(f"Unexpected error in department_categories: {e}")
+        flash('An unexpected error occurred', 'error')
+    
+    return redirect(url_for('departments'))
+
+    
+@app.route('/api/departments',methods=['GET','POST'])
 @login_required
 def departments_api():
     headers = get_auth_headers()
@@ -213,20 +333,141 @@ def departments_api():
     if not company_id:
         return jsonify({'error': 'Company ID not found in session'}), 400
     
-    try:
+    if request.method == 'GET':  
         response = requests.get(
             f"{DEPARTMENTS_URL}/companies/{company_id}/departments",
             headers=headers,
             timeout=REQUEST_TIMEOUT
         )
         return handle_api_response(response, error_message='Failed to fetch departments')
-    except requests.Timeout:
-        return jsonify({'error': 'Request timed out'}), 504
-    except requests.ConnectionError:
-        return jsonify({'error': 'Failed to connect to server'}), 503
-    except Exception as e:
-        print(f"Error fetching departments: {e}")
-        return jsonify({'error': 'An unexpected error occurred'}), 500
+    
+    elif request.method == 'POST':
+        # Obter o JSON enviado no corpo da requisição
+        data = request.get_json()   
+        name = data.get('name')
+         # Build form data
+        form_data = {
+            "name": name,
+            'company_id': company_id
+        }
+        response = requests.post(
+            DEPARTMENTS_URL,
+            headers=headers,
+            json=form_data,
+            timeout=REQUEST_TIMEOUT * 2  # Double timeout for file upload
+        )
+
+        return handle_api_response(response, success_code=201, error_message='Failed to create document')
+    
+@app.route('/api/departments/<department_id>',methods=['PUT','DELETE'])
+@login_required
+def departments_id(department_id):
+    headers = get_auth_headers()
+    company_id = session.get('company_id')
+    
+    if not company_id:
+        return jsonify({'error': 'Company ID not found in session'}), 400
+    
+    if request.method == 'PUT': 
+          # Obter o JSON enviado no corpo da requisição
+        data = request.get_json()   
+        name = data.get('name')
+         # Build form data
+        form_data = {
+            "name": name,
+            'company_id': company_id
+        } 
+        response = requests.put(
+            f"{DEPARTMENTS_URL}/{department_id}",
+            headers=headers,
+            json=form_data,
+            timeout=REQUEST_TIMEOUT
+        )
+        return handle_api_response(response, error_message='Failed to fetch departments')
+    
+    elif request.method == 'DELETE':
+        response = requests.delete(
+            f"{DEPARTMENTS_URL}/{department_id}",
+            headers=headers,
+            timeout=REQUEST_TIMEOUT * 2  # Double timeout for file upload
+        )
+
+        return handle_api_response(response, success_code=201, error_message='Failed to create departments')
+    
+    
+@app.route('/api/categories',methods=['GET','POST'])
+@login_required
+def categories_api():
+    headers = get_auth_headers()
+    company_id = session.get('company_id')
+    
+    if not company_id:
+        return jsonify({'error': 'Company ID not found in session'}), 400
+    
+    if request.method == 'GET':  
+        response = requests.get(
+            f"{CATEGORIES_URL}/companies/{company_id}/categories",
+            headers=headers,
+            timeout=REQUEST_TIMEOUT
+        )
+        return handle_api_response(response, error_message='Failed to fetch departments')
+    
+    elif request.method == 'POST':
+        # Obter o JSON enviado no corpo da requisição
+        data = request.get_json()   
+        name = data.get('name')
+        department_id = data.get('department_id')
+         # Build form data
+        form_data = {
+            "name": name,
+            "department_id" : department_id,
+            'company_id': company_id
+        }
+        response = requests.post(
+            CATEGORIES_URL,
+            headers=headers,
+            json=form_data,
+            timeout=REQUEST_TIMEOUT * 2  # Double timeout for file upload
+        )
+
+        return handle_api_response(response, success_code=201, error_message='Failed to create document')
+    
+@app.route('/api/categories/<category_id>',methods=['PUT','DELETE'])
+@login_required
+def categories_id(category_id):
+    headers = get_auth_headers()
+    company_id = session.get('company_id')
+    
+    if not company_id:
+        return jsonify({'error': 'Company ID not found in session'}), 400
+    
+    if request.method == 'PUT': 
+          # Obter o JSON enviado no corpo da requisição
+        data = request.get_json()   
+        name = data.get('name')
+        department_id = data.get('department_id')
+         # Build form data
+        form_data = {
+            "name": name,
+            "department_id" : department_id,
+            'company_id': company_id
+        } 
+        response = requests.put(
+            f"{CATEGORIES_URL}/{category_id}",
+            headers=headers,
+            json=form_data,
+            timeout=REQUEST_TIMEOUT
+        )
+        return handle_api_response(response, error_message='Failed to fetch categories')
+    
+    elif request.method == 'DELETE':
+        response = requests.delete(
+            f"{CATEGORIES_URL}/{category_id}",
+            headers=headers,
+            timeout=REQUEST_TIMEOUT * 2  # Double timeout for file upload
+        )
+
+        return handle_api_response(response, success_code=204, error_message='Failed to create departments')
 
 @app.route('/api/categories/departments/<department_id>/categories')
 @login_required
@@ -247,6 +488,90 @@ def department_categories_api(department_id):
     except Exception as e:
         print(f"Error fetching department categories: {e}")
         return jsonify({'error': 'An unexpected error occurred'}), 500
+
+
+@app.route('/api/document_types',methods=['GET','POST'])
+@login_required
+def document_types_api():
+    headers = get_auth_headers()
+    company_id = session.get('company_id')
+    
+    if not company_id:
+        return jsonify({'error': 'Company ID not found in session'}), 400
+    
+    if request.method == 'GET':  
+        response = requests.get(
+            f"{DOCUMENT_TYPES_URL}/companies/{company_id}/types",
+            headers=headers,
+            timeout=REQUEST_TIMEOUT
+        )
+        return handle_api_response(response, error_message='Failed to fetch document types')
+    
+    elif request.method == 'POST':
+        # Obter o JSON enviado no corpo da requisição
+        data = request.get_json()   
+        name = data.get('name')
+        description = data.get('description')
+        department_id = data.get('department_id')
+        category_id = data.get('category_id')
+         # Build form data
+        form_data = {
+            "name": name,
+            "description" : description,
+            "department_id" : department_id,
+            "category_id" : category_id,
+            'company_id': company_id
+        }
+        response = requests.post(
+            DOCUMENT_TYPES_URL,
+            headers=headers,
+            json=form_data,
+            timeout=REQUEST_TIMEOUT * 2  # Double timeout for file upload
+        )
+
+        return handle_api_response(response, success_code=201, error_message='Failed to create document types')
+    
+@app.route('/api/document_types/<document_types_id>',methods=['PUT','DELETE'])
+@login_required
+def document_types_id(document_types_id):
+    headers = get_auth_headers()
+    company_id = session.get('company_id')
+    
+    if not company_id:
+        return jsonify({'error': 'Company ID not found in session'}), 400
+    
+    if request.method == 'PUT': 
+          # Obter o JSON enviado no corpo da requisição
+        data = request.get_json()   
+        name = data.get('name')
+        description = data.get('description')
+        department_id = data.get('department_id')
+        category_id = data.get('category_id')
+         # Build form data
+        form_data = {
+            "name": name,
+            "department_id" : department_id,
+            "description" : description,
+            "category_id" : category_id,
+            'company_id': company_id
+        } 
+        response = requests.put(
+            f"{DOCUMENT_TYPES_URL}/{document_types_id}",
+            headers=headers,
+            json=form_data,
+            timeout=REQUEST_TIMEOUT
+        )
+        return handle_api_response(response, error_message='Failed to fetch document types')
+    
+    elif request.method == 'DELETE':
+        response = requests.delete(
+            f"{DOCUMENT_TYPES_URL}/{document_types_id}",
+            headers=headers,
+            timeout=REQUEST_TIMEOUT * 2  # Double timeout for file upload
+        )
+
+        return handle_api_response(response, success_code=204, error_message='Failed to create document types')
+
 
 @app.route('/api/document_types/categories/<category_id>/types')
 @login_required
