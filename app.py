@@ -1,4 +1,5 @@
-from flask import Flask, render_template, redirect, url_for, request, flash, session, jsonify, Response
+from flask import Flask, render_template, redirect, url_for, request, flash, session, jsonify, Response, send_file
+
 from functools import wraps
 import requests
 import os
@@ -15,6 +16,13 @@ app = Flask(__name__)
 app.secret_key = os.urandom(24)
 app.permanent_session_lifetime = 3600  # 1 hour session lifetime
 
+# Configure upload folder
+UPLOAD_FOLDER = 'uploads'
+ALLOWED_EXTENSIONS = {'pdf', 'doc', 'docx', 'xls', 'xlsx', 'txt', 'jpg', 'jpeg', 'png'}
+app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
+# Ensure upload directory exists
+os.makedirs(UPLOAD_FOLDER, exist_ok=True)
+
 # API endpoints
 API_BASE_URL = "https://document-manager-api-rodrigocastromo.replit.app/api"
 LOGIN_URL = f"{API_BASE_URL}/auth/login"
@@ -30,6 +38,9 @@ DOCUMENT_TYPES_URL = f"{API_BASE_URL}/document_types"
 
 # Request timeout in seconds
 REQUEST_TIMEOUT = 30  # Increased timeout for better reliability
+
+def allowed_file(filename):
+    return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
 def refresh_token():
     """Attempt to refresh the access token"""
@@ -208,6 +219,18 @@ def categories():
 @app.route('/documents')
 @login_required
 def documents():
+    try:
+        company_id = session.get('company_id')
+        headers = get_auth_headers()
+        response = requests.get(
+            f"{DEPARTMENTS_URL}/companies/{company_id}/departments",
+            headers=headers,
+            timeout=REQUEST_TIMEOUT
+        )
+        departments = response.json()
+        return render_template('documents.html',departments=departments)
+    except Exception as e:
+        logger.error(f"Unexpected error in department_categories: {e}")
     return render_template('documents.html')
 
 @app.route('/document_types')
@@ -323,7 +346,6 @@ def categories_document_types(category_id):
     
     return redirect(url_for('departments'))
 
-    
 @app.route('/api/departments',methods=['GET','POST'])
 @login_required
 def departments_api():
@@ -393,7 +415,6 @@ def departments_id(department_id):
         )
 
         return handle_api_response(response, success_code=201, error_message='Failed to create departments')
-    
     
 @app.route('/api/categories',methods=['GET','POST'])
 @login_required
@@ -489,7 +510,6 @@ def department_categories_api(department_id):
         print(f"Error fetching department categories: {e}")
         return jsonify({'error': 'An unexpected error occurred'}), 500
 
-
 @app.route('/api/document_types',methods=['GET','POST'])
 @login_required
 def document_types_api():
@@ -570,8 +590,7 @@ def document_types_id(document_types_id):
             timeout=REQUEST_TIMEOUT * 2  # Double timeout for file upload
         )
 
-        return handle_api_response(response, success_code=204, error_message='Failed to create document types')
-
+        return handle_api_response(response, success_code=204, error_message='Failed to delete document types')
 
 @app.route('/api/document_types/categories/<category_id>/types')
 @login_required
@@ -593,7 +612,7 @@ def category_document_types_api(category_id):
         print(f"Error fetching category document types: {e}")
         return jsonify({'error': 'An unexpected error occurred'}), 500
 
-@app.route('/api/users')
+@app.route('/api/users',methods=['GET','POST'])
 @login_required
 def users_api():
     headers = get_auth_headers()
@@ -602,20 +621,110 @@ def users_api():
     if not company_id:
         return jsonify({'error': 'Company ID not found in session'}), 400
     
-    try:
+    if request.method == 'GET':  
+        params = {
+            'page': request.args.get('page', 1),
+            'per_page': request.args.get('per_page', 10),
+            'company_id': company_id,
+            'cpf': request.args.get('cpf'),
+            'email': request.args.get('email'),
+            'status': 'active'
+        }       
+        # Remove None values
+        params = {k: v for k, v in params.items() if v is not None}
+        
         response = requests.get(
-            f"{USERS_URL}/companies/{company_id}/users",
+            USERS_URL,
             headers=headers,
+            params=params,
             timeout=REQUEST_TIMEOUT
         )
         return handle_api_response(response, error_message='Failed to fetch users')
-    except requests.Timeout:
-        return jsonify({'error': 'Request timed out'}), 504
-    except requests.ConnectionError:
-        return jsonify({'error': 'Failed to connect to server'}), 503
-    except Exception as e:
-        print(f"Error fetching users: {e}")
-        return jsonify({'error': 'An unexpected error occurred'}), 500
+    
+    elif request.method == 'POST':
+        # Obter o JSON enviado no corpo da requisição
+        data = request.get_json()   
+        name = data.get('name')
+        email = data.get('email')
+        cpf = data.get('cpf')
+        phone = data.get('phone')
+        password = data.get('password')
+        role = data.get('role')
+         # Build form data
+        form_data = {
+            "name": name,
+            "email" : email,
+            "cpf" : cpf,
+            "phone" : phone,
+            "password" : password,
+            "role" : role,
+            "status": "active",
+            'company_id': company_id
+        }
+        response = requests.post(
+            USERS_URL,
+            headers=headers,
+            json=form_data,
+            timeout=REQUEST_TIMEOUT * 2  # Double timeout for file upload
+        )
+
+        return handle_api_response(response, success_code=201, error_message='Failed to create user')
+    
+@app.route('/api/users/<users_id>',methods=['PUT','DELETE'])
+@login_required
+def users_id(users_id):
+    headers = get_auth_headers()
+    company_id = session.get('company_id')
+    
+    if not company_id:
+        return jsonify({'error': 'Company ID not found in session'}), 400
+    
+    if request.method == 'PUT': 
+
+        response = requests.get(
+            f"{USERS_URL}/{users_id}",
+            headers=headers,
+            timeout=REQUEST_TIMEOUT
+        )
+        if not response.ok:
+            logger.error(f"Failed to fetch document types: {response.status_code}")
+            return jsonify({'error': 'USER not found '}), response.status_code
+        
+        user = response.json() 
+
+          # Obter o JSON enviado no corpo da requisição
+        data = request.get_json() 
+        name = data.get('name')
+        email = data.get('email')
+        phone = data.get('phone')
+        password = user['password']
+        role = data.get('role') 
+
+        form_data = {
+            "name": name,
+            "email" : email,
+            "phone" : phone,
+            "password" : password,
+            "role" : role,
+            "status": "active",
+            'company_id': company_id
+        }
+
+        response = requests.put(
+            f"{USERS_URL}/{users_id}",
+            headers=headers,
+            json=form_data,
+            timeout=REQUEST_TIMEOUT
+        )
+        return handle_api_response(response, error_message='Failed to fetch Users') 
+    elif request.method == 'DELETE':
+        response = requests.delete(
+            f"{USERS_URL}/{users_id}",
+            headers=headers,
+            timeout=REQUEST_TIMEOUT * 2  # Double timeout for file upload
+        )
+
+        return handle_api_response(response, success_code=204, error_message='Failed to Delete user')    
 
 @app.route('/api/documents')
 @login_required
@@ -670,7 +779,10 @@ def create_document():
         file = request.files['file']
         if not file.filename:
             return jsonify({'error': 'No file selected'}), 400
-            
+        
+        if not allowed_file(file.filename):
+            return jsonify({'error': 'File type not allowed'}), 400
+        
         # Build form data
         form_data = {
             'company_id': company_id,
@@ -682,21 +794,23 @@ def create_document():
         }
         
         # Validate required fields
-        required_fields = ['titulo', 'department_id', 'category_id', 'document_type_id', 'user_id']
+        required_fields = ['department_id', 'category_id', 'document_type_id', 'user_id']
         missing_fields = [field for field in required_fields if not form_data.get(field)]
         if missing_fields:
             return jsonify({'error': f'Missing required fields: {", ".join(missing_fields)}'}), 400
-            
+        
         # Create files dictionary with proper file object
         files = {'file': (secure_filename(file.filename), file, file.content_type)}
-        
+        upload_headers = headers.copy()
+        upload_headers.pop('Content-Type', None)
+            
         response = requests.post(
-            DOCUMENTS_URL,
-            headers=headers,
-            data=form_data,
-            files=files,
-            timeout=REQUEST_TIMEOUT * 2  # Double timeout for file upload
-        )
+                    DOCUMENTS_URL,
+                    headers=upload_headers,
+                    data=form_data,
+                    files=files,
+                    timeout=REQUEST_TIMEOUT * 2  # Double timeout for file upload
+                )
         return handle_api_response(response, success_code=201, error_message='Failed to create document')
     except requests.Timeout:
         return jsonify({'error': 'Request timed out'}), 504
