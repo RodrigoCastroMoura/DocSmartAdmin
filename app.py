@@ -1,4 +1,4 @@
-from flask import Flask, render_template, redirect, url_for, request, flash, session, jsonify, Response
+from flask import Flask, render_template, redirect, url_for, request, flash, session, jsonify, Response, send_file
 from functools import wraps
 import requests
 import os
@@ -9,6 +9,10 @@ from werkzeug.utils import secure_filename
 app = Flask(__name__)
 app.secret_key = os.urandom(24)
 app.permanent_session_lifetime = 3600  # 1 hour session lifetime
+
+# Configure upload folder
+UPLOAD_FOLDER = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'uploads')
+ALLOWED_EXTENSIONS = {'pdf', 'doc', 'docx', 'xls', 'xlsx', 'txt', 'jpg', 'jpeg', 'png'}
 
 # API endpoints
 API_BASE_URL = "https://document-manager-api-rodrigocastromo.replit.app/api"
@@ -29,6 +33,9 @@ REQUEST_TIMEOUT = 30  # Increased timeout for better reliability
 def refresh_token():
     """Attempt to refresh the access token"""
     try:
+        if 'refresh_token' not in session:
+            return False
+            
         headers = {'Authorization': f'Bearer {session.get("refresh_token")}'}
         response = requests.post(REFRESH_URL, headers=headers, timeout=REQUEST_TIMEOUT)
         
@@ -38,6 +45,10 @@ def refresh_token():
             session['refresh_token'] = data['refresh_token']
             session['token_expiry'] = time.time() + 3600
             return True
+    except requests.Timeout:
+        print("Token refresh timeout")
+    except requests.ConnectionError:
+        print("Token refresh connection error")
     except Exception as e:
         print(f"Token refresh error: {e}")
     return False
@@ -66,8 +77,19 @@ def get_auth_headers():
     
     return {
         'Authorization': f'Bearer {token}',
-        'accept': 'application/json',
+        'Accept': 'application/json',
         'Content-Type': 'application/json'
+    }
+
+def get_multipart_headers():
+    """Get headers for multipart form data requests"""
+    token = session.get('access_token')
+    if not token:
+        raise ValueError('No access token found')
+    
+    return {
+        'Authorization': f'Bearer {token}',
+        'Accept': 'application/json'
     }
 
 def handle_api_error(response, default_error="An error occurred"):
@@ -83,7 +105,9 @@ def handle_api_error(response, default_error="An error occurred"):
             error_data = response.json()
             if isinstance(error_data, dict):
                 return error_data.get('error') or error_data.get('message') or default_error
-        return default_error
+            return default_error
+    except json.JSONDecodeError:
+        return f"Server error: {response.status_code}"
     except Exception as e:
         print(f"Error parsing API response: {e}")
         return default_error
@@ -105,7 +129,7 @@ def handle_api_response(response, success_code=200, error_message="Operation fai
         
         try:
             return response.json(), success_code
-        except ValueError:
+        except json.JSONDecodeError:
             if response.status_code == 204:
                 return '', 204
             return jsonify({'error': 'Invalid JSON response'}), 500
@@ -332,7 +356,7 @@ def documents_api():
 @app.route('/api/documents', methods=['POST'])
 @login_required
 def create_document():
-    headers = get_auth_headers()
+    headers = get_multipart_headers()  # Use multipart headers for file uploads
     company_id = session.get('company_id')
     
     if not company_id:
@@ -405,4 +429,7 @@ def delete_document(document_id):
         return jsonify({'error': 'An unexpected error occurred'}), 500
 
 if __name__ == "__main__":
+    # Ensure upload folder exists
+    os.makedirs(UPLOAD_FOLDER, exist_ok=True)
+    app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
     app.run(host="0.0.0.0", port=5000, debug=True)
