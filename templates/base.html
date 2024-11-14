@@ -12,6 +12,7 @@
     <script src="{{ url_for('static', filename='js/validation.js') }}"></script>
     <!-- Load dashboard.js which contains common utilities -->
     <script src="{{ url_for('static', filename='js/dashboard.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/main.js') }}"></script>
 </head>
 <body>
     <div class="dashboard-container">
@@ -394,6 +395,16 @@
             <div class="notification-actions">
                 <button class="action-btn" onclick="hideModal('deleteConfirmModal')">Cancel</button>
                 <button class="action-btn danger" onclick="confirmDelete()">Delete</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Spinner Modal -->
+    <div id="spinnerModal" class="modal spinner-modal">
+        <div class="modal-content spinner-content">
+            <div class="spinner-wrapper">
+                <div class="spinner"></div>
+                <p class="spinner-text">Loading...</p>
             </div>
         </div>
     </div>
