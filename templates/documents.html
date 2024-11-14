@@ -71,7 +71,7 @@
         <form id="addDocumentForm" onsubmit="createDocument(event)">
             <div class="form-group">
                 <label for="documentTitle">Document Title</label>
-                <input type="text" id="documentTitle" name="titulo" >
+                <input type="text" id="documentTitle" name="titulo" required>
             </div>
             <div class="form-grid">
                 <div class="form-group">
@@ -100,10 +100,8 @@
                 <div class="form-group">
                     <label for="documentUserCPF">Assign to User (CPF)</label>
                     <div class="input-group">
-                        <input type="text" id="documentUserCPF" name="cpf" class="form-control" placeholder="Enter CPF" required onblur="searchUser(this.value)">
-                        <div id="cpfSearchLoader" class="search-loader" style="display: none;">
-                            <div class="spinner"></div>
-                        </div>
+                        <input type="text" id="documentUserCPF" name="cpf" required onblur="searchUser(this.value)">
+                        <span class="input-loader"></span>
                     </div>
                 </div>
             </div>
@@ -629,8 +627,8 @@ async function loadDocuments(page = 1, filters = {}) {
 }
 
 async function searchUser(cpf) {
-    // Show spinner modal
-    showSpinner();
+    const inputGroup = document.querySelector('.input-group');
+    inputGroup.classList.add('loading');
     
     try {
         const response = await fetch(`/api/users/cpf/${cpf}`);
@@ -640,7 +638,6 @@ async function searchUser(cpf) {
             throw new Error(data.error || 'User not found');
         }
         
-        // Update user fields
         document.getElementById('name-user').value = data.name || '';
         document.getElementById('user_id').value = data.id || '';
         
@@ -650,8 +647,7 @@ async function searchUser(cpf) {
         document.getElementById('user_id').value = '';
         showNotification(error.message || 'Failed to load user', 'error');
     } finally {
-        // Hide spinner modal
-        hideSpinner();
+        inputGroup.classList.remove('loading');
     }
 }
 
@@ -954,21 +950,23 @@ document.addEventListener('DOMContentLoaded', () => {
     align-items: center;
 }
 
-.search-loader {
+.input-loader {
     position: absolute;
     right: 10px;
-    display: none;
-    align-items: center;
-    justify-content: center;
-}
-
-.spinner {
     width: 20px;
     height: 20px;
     border: 2px solid var(--bg-tertiary);
     border-top: 2px solid var(--accent-color);
     border-radius: 50%;
     animation: spin 1s linear infinite;
+}
+
+.input-group.loading .input-loader {
+    display: block;
+}
+
+.input-group.loading input {
+    opacity: 0.5;
 }
 
 @keyframes spin {
