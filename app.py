@@ -31,13 +31,19 @@ DOCUMENT_TYPES_URL = f"{API_BASE_URL}/document_types"
 REQUEST_TIMEOUT = 30  # Increased timeout for better reliability
 
 def refresh_token():
-    """Attempt to refresh the access token"""
+    """Attempt to refresh the access token with enhanced error handling"""
     try:
         if 'refresh_token' not in session:
+            print("No refresh token found in session")
             return False
             
         headers = {'Authorization': f'Bearer {session.get("refresh_token")}'}
-        response = requests.post(REFRESH_URL, headers=headers, timeout=REQUEST_TIMEOUT)
+        response = requests.post(
+            REFRESH_URL, 
+            headers=headers, 
+            timeout=REQUEST_TIMEOUT,
+            verify=True  # Ensure SSL verification
+        )
         
         if response.ok:
             data = response.json()
@@ -45,12 +51,18 @@ def refresh_token():
             session['refresh_token'] = data['refresh_token']
             session['token_expiry'] = time.time() + 3600
             return True
+        else:
+            print(f"Token refresh failed with status: {response.status_code}")
+            return False
+            
     except requests.Timeout:
         print("Token refresh timeout")
     except requests.ConnectionError:
         print("Token refresh connection error")
+    except requests.RequestException as e:
+        print(f"Token refresh request error: {str(e)}")
     except Exception as e:
-        print(f"Token refresh error: {e}")
+        print(f"Token refresh error: {str(e)}")
     return False
 
 def login_required(f):
@@ -60,11 +72,16 @@ def login_required(f):
             return redirect(url_for('login'))
         
         # Check token expiration
-        if 'token_expiry' in session and session['token_expiry'] < time.time():
-            if not refresh_token():
-                session.clear()
-                flash('Your session has expired. Please log in again.', 'error')
-                return redirect(url_for('login'))
+        if 'token_expiry' in session:
+            current_time = time.time()
+            expiry_time = session.get('token_expiry', 0)
+            
+            # Refresh token if it's expired or about to expire in the next 5 minutes
+            if current_time >= (expiry_time - 300):
+                if not refresh_token():
+                    session.clear()
+                    flash('Your session has expired. Please log in again.', 'error')
+                    return redirect(url_for('login'))
             
         return f(*args, **kwargs)
     return decorated_function
@@ -93,32 +110,41 @@ def get_multipart_headers():
     }
 
 def handle_api_error(response, default_error="An error occurred"):
-    """Enhanced API error handling"""
+    """Enhanced API error handling with detailed logging"""
     try:
         if response.status_code == 401:
             # Try to refresh token on authentication failure
             if refresh_token():
                 return 'Token refreshed, please retry the operation'
-            return 'Authentication failed'
+            return 'Authentication failed, please login again'
         
         if not response.ok:
-            error_data = response.json()
-            if isinstance(error_data, dict):
-                return error_data.get('error') or error_data.get('message') or default_error
+            try:
+                error_data = response.json()
+                if isinstance(error_data, dict):
+                    error_msg = error_data.get('error') or error_data.get('message') or default_error
+                    print(f"API Error: {error_msg}")
+                    return error_msg
+            except json.JSONDecodeError:
+                error_msg = f"Server error: {response.status_code}"
+                print(f"API Error: {error_msg}")
+                return error_msg
+            
+            print(f"API Error: {default_error}")
             return default_error
-    except json.JSONDecodeError:
-        return f"Server error: {response.status_code}"
+            
     except Exception as e:
-        print(f"Error parsing API response: {e}")
+        error_msg = f"Error parsing API response: {str(e)}"
+        print(error_msg)
         return default_error
 
 def handle_api_response(response, success_code=200, error_message="Operation failed"):
-    """Enhanced API response handler with proper error handling"""
+    """Enhanced API response handler with proper error handling and logging"""
     try:
         if response.status_code == 401:
             if refresh_token():
                 return jsonify({'error': 'Please retry the operation'}), 401
-            return jsonify({'error': 'Authentication failed'}), 401
+            return jsonify({'error': 'Authentication failed, please login again'}), 401
         elif response.status_code == 403:
             return jsonify({'error': 'Access forbidden'}), 403
         elif response.status_code == 404:
@@ -128,14 +154,19 @@ def handle_api_response(response, success_code=200, error_message="Operation fai
             return jsonify({'error': error}), response.status_code
         
         try:
+            if response.status_code == 204:
+                return '', 204
             return response.json(), success_code
         except json.JSONDecodeError:
             if response.status_code == 204:
                 return '', 204
-            return jsonify({'error': 'Invalid JSON response'}), 500
+            error_msg = 'Invalid JSON response'
+            print(f"API Error: {error_msg}")
+            return jsonify({'error': error_msg}), 500
             
     except Exception as e:
-        print(f"Error handling API response: {e}")
+        error_msg = f"Error handling API response: {str(e)}"
+        print(error_msg)
         return jsonify({'error': error_message}), 500
 
 @app.route('/')
