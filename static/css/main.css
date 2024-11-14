@@ -66,7 +66,7 @@ body {
     margin-top: 0.25rem;
 }
 
-/* Input Group with Loading State */
+/* Input Group with Loader */
 .input-group {
     position: relative;
     display: flex;
@@ -78,20 +78,16 @@ body {
     right: 10px;
     width: 16px;
     height: 16px;
-    border: 2px solid var(--border-color);
+    border: 2px solid transparent;
     border-top-color: var(--accent-color);
     border-radius: 50%;
+    animation: spin 0.8s linear infinite;
     opacity: 0;
     transition: opacity 0.2s;
 }
 
 .input-group.loading .input-loader {
     opacity: 1;
-    animation: spin 0.8s linear infinite;
-}
-
-.input-group.loading input {
-    padding-right: 32px;
 }
 
 /* Error Toast */

@@ -628,37 +628,23 @@ async function loadDocuments(page = 1, filters = {}) {
 
 async function searchUser(cpf) {
     const inputGroup = document.querySelector('.input-group');
-    const nameField = document.getElementById('name-user');
-    const userIdField = document.getElementById('user_id');
-    
-    // Don't proceed if CPF is empty
-    if (!cpf || cpf.trim() === '') {
-        nameField.value = '';
-        userIdField.value = '';
-        return;
-    }
+    inputGroup.classList.add('loading');
     
     try {
-        inputGroup.classList.add('loading');
-        const response = await fetch(`/api/users/search?cpf=${encodeURIComponent(cpf)}`);
+        const response = await fetch(`/api/users/cpf/${cpf}`);
         const data = await response.json();
         
         if (!response.ok) {
             throw new Error(data.error || 'User not found');
         }
         
-        // Check if user data exists and has expected properties
-        if (data && data.users && data.users.length > 0) {
-            const user = data.users[0];
-            nameField.value = user.name || '';
-            userIdField.value = user.id || '';
-        } else {
-            throw new Error('User not found');
-        }
+        document.getElementById('name-user').value = data.name || '';
+        document.getElementById('user_id').value = data.id || '';
+        
     } catch (error) {
         console.error('Error loading user:', error);
-        nameField.value = '';
-        userIdField.value = '';
+        document.getElementById('name-user').value = '';
+        document.getElementById('user_id').value = '';
         showNotification(error.message || 'Failed to load user', 'error');
     } finally {
         inputGroup.classList.remove('loading');
