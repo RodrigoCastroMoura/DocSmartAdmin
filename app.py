@@ -843,5 +843,37 @@ def delete_document(document_id):
         print(f"Error deleting document: {e}")
         return jsonify({'error': 'An unexpected error occurred'}), 500
 
+# Add the user search endpoint after the existing endpoints
+@app.route('/api/users/search', methods=['GET'])
+@login_required
+def search_users_by_cpf():
+    headers = get_auth_headers()
+    company_id = session.get('company_id')
+    
+    if not company_id:
+        return jsonify({'error': 'Company ID not found in session'}), 400
+
+    try:
+        # Get CPF from query parameters
+        cpf = request.args.get('cpf')
+        if not cpf:
+            return jsonify({'error': 'CPF parameter is required'}), 400
+
+        response = requests.get(
+            f"{USERS_URL}",
+            params={'cpf': cpf, 'company_id': company_id},
+            headers=headers,
+            timeout=REQUEST_TIMEOUT
+        )
+        
+        if not response.ok:
+            error_data = response.json()
+            return jsonify({'error': error_data.get('error', 'User not found')}), response.status_code
+
+        return handle_api_response(response, error_message='Failed to fetch user')
+    except Exception as e:
+        logger.error(f"Error fetching user: {e}")
+        return jsonify({'error': 'Failed to fetch user'}), 500
+
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=5000, debug=True)
