@@ -629,32 +629,29 @@ async function loadDocuments(page = 1, filters = {}) {
 }
 
 async function searchUser(cpf) {
-    if (!cpf) return;
-
-    const searchLoader = document.getElementById('cpfSearchLoader');
-    const nameInput = document.getElementById('name-user');
-    const userIdInput = document.getElementById('user_id');
+    // Show spinner modal
+    showSpinner();
     
-    searchLoader.style.display = 'flex';
-    nameInput.value = '';
-    userIdInput.value = '';
-
     try {
         const response = await fetch(`/api/users/cpf/${cpf}`);
-        if (!response.ok) {
-            const errorData = await response.json();
-            throw new Error(errorData.error || 'User not found');
-        }
         const data = await response.json();
         
-        nameInput.value = data.name || '';
-        userIdInput.value = data.id || '';
+        if (!response.ok) {
+            throw new Error(data.error || 'User not found');
+        }
+        
+        // Update user fields
+        document.getElementById('name-user').value = data.name || '';
+        document.getElementById('user_id').value = data.id || '';
+        
     } catch (error) {
-        console.error('Error loading users:', error);
-        showNotification(error.message || 'Failed to find user', 'error');
-        nameInput.value = 'User not found';
+        console.error('Error loading user:', error);
+        document.getElementById('name-user').value = '';
+        document.getElementById('user_id').value = '';
+        showNotification(error.message || 'Failed to load user', 'error');
     } finally {
-        searchLoader.style.display = 'none';
+        // Hide spinner modal
+        hideSpinner();
     }
 }
 
