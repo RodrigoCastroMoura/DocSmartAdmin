@@ -101,6 +101,9 @@
                     <label for="documentUserCPF">Assign to User (CPF)</label>
                     <div class="input-group">
                         <input type="text" id="documentUserCPF" name="cpf" class="form-control" placeholder="Enter CPF" required onblur="searchUser(this.value)">
+                        <div id="cpfSearchLoader" class="search-loader" style="display: none;">
+                            <div class="spinner"></div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -626,27 +629,32 @@ async function loadDocuments(page = 1, filters = {}) {
 }
 
 async function searchUser(cpf) {
+    if (!cpf) return;
+
+    const searchLoader = document.getElementById('cpfSearchLoader');
+    const nameInput = document.getElementById('name-user');
+    const userIdInput = document.getElementById('user_id');
+    
+    searchLoader.style.display = 'flex';
+    nameInput.value = '';
+    userIdInput.value = '';
+
     try {
-        const params = new URLSearchParams({
-            cpf: cpf,
-        });
-        
-        const response = await fetch(`/api/users?${params}`);
+        const response = await fetch(`/api/users/cpf/${cpf}`);
         if (!response.ok) {
             const errorData = await response.json();
             throw new Error(errorData.error || 'User not found');
-            showNotification('User not found', 'error');
         }
         const data = await response.json();
-        usuario = data['users'][0]
-        document.getElementById('name-user').value = usuario['name'];
-        document.getElementById('user_id').value = usuario['id'];
+        
+        nameInput.value = data.name || '';
+        userIdInput.value = data.id || '';
     } catch (error) {
-        console.error('Error loading documents:', error);
-        showNotification(error.message || 'Failed to load documents', 'error');
-       
+        console.error('Error loading users:', error);
+        showNotification(error.message || 'Failed to find user', 'error');
+        nameInput.value = 'User not found';
     } finally {
-       
+        searchLoader.style.display = 'none';
     }
 }
 
@@ -943,6 +951,32 @@ document.addEventListener('DOMContentLoaded', () => {
     margin-top: 1rem;
 }
 
+.input-group {
+    position: relative;
+    display: flex;
+    align-items: center;
+}
 
+.search-loader {
+    position: absolute;
+    right: 10px;
+    display: none;
+    align-items: center;
+    justify-content: center;
+}
+
+.spinner {
+    width: 20px;
+    height: 20px;
+    border: 2px solid var(--bg-tertiary);
+    border-top: 2px solid var(--accent-color);
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
 </style>
 {% endblock %}
