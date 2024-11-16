@@ -479,16 +479,15 @@ def categories_id(category_id):
             json=form_data,
             timeout=REQUEST_TIMEOUT
         )
-        return handle_api_response(response, error_message='Failed to fetch categories')
+        return handle_api_response(response, error_message='Failed to update category')
 
     elif request.method == 'DELETE':
         response = requests.delete(
             f"{CATEGORIES_URL}/{category_id}",
             headers=headers,
-            timeout=REQUEST_TIMEOUT * 2  # Double timeout for file upload
+            timeout=REQUEST_TIMEOUT
         )
-
-        return handle_api_response(response, success_code=204, error_message='Failed to create departments')
+        return handle_api_response(response, success_code=204, error_message='Failed to delete category')
 
 @app.route('/api/categories/departments/<department_id>/categories')
 @login_required
@@ -841,6 +840,46 @@ def delete_document(document_id):
         return jsonify({'error': 'Failed to connect to server'}), 503
     except Exception as e:
         print(f"Error deleting document: {e}")
+        return jsonify({'error': 'An unexpected error occurred'}), 500
+
+# Add the following route after the categories_id route
+@app.route('/api/users/search')
+@login_required
+def search_user():
+    """Search for a user by CPF"""
+    headers = get_auth_headers()
+    cpf = request.args.get('cpf')
+    
+    if not cpf:
+        return jsonify({'error': 'CPF is required'}), 400
+
+    try:
+        response = requests.get(
+            f"{USERS_URL}/search",
+            params={'cpf': cpf},
+            headers=headers,
+            timeout=REQUEST_TIMEOUT
+        )
+        
+        if not response.ok:
+            error = handle_api_error(response, 'User not found')
+            return jsonify({'error': error}), response.status_code
+
+        data = response.json()
+        if not data:
+            return jsonify({'error': 'User not found'}), 404
+
+        return jsonify({
+            'id': data.get('id'),
+            'name': data.get('name')
+        }), 200
+
+    except requests.Timeout:
+        return jsonify({'error': 'Request timed out'}), 504
+    except requests.ConnectionError:
+        return jsonify({'error': 'Failed to connect to server'}), 503
+    except Exception as e:
+        logger.error(f"Error searching user: {e}")
         return jsonify({'error': 'An unexpected error occurred'}), 500
 
 if __name__ == "__main__":
