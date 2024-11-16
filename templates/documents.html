@@ -10,30 +10,48 @@
     </div>
     
     <div class="filter-section">
-        <div class="filter-row">
+        <div class="filter-header">
+            <h3><i data-feather="filter"></i> Filters</h3>
+            <button class="action-btn secondary" onclick="resetFilters()">
+                <i data-feather="refresh-cw"></i> Reset
+            </button>
+        </div>
+        <div class="filter-grid">
             <div class="filter-group">
                 <label for="filterDepartment">Department</label>
-                <select id="filterDepartment" onchange="applyFiltersDepartment(this.value)">
-                    <option value="">All Departments</option>
-                </select>
+                <div class="filter-input-wrapper">
+                    <select id="filterDepartment" onchange="applyFiltersDepartment(this.value)">
+                        <option value="">All Departments</option>
+                    </select>
+                    <i data-feather="chevron-down" class="select-icon"></i>
+                </div>
             </div>
             <div class="filter-group">
                 <label for="filterCategory">Category</label>
-                <select id="filterCategory" onchange="applyFiltersCategory(this.value)">
-                    <option value="">Categories</option>
-                </select>
+                <div class="filter-input-wrapper">
+                    <select id="filterCategory" onchange="applyFiltersCategory(this.value)">
+                        <option value="">All Categories</option>
+                    </select>
+                    <i data-feather="chevron-down" class="select-icon"></i>
+                </div>
             </div>
             <div class="filter-group">
                 <label for="filterDocumentType">Document Type</label>
-                <select id="filterDocumentType" onchange="applyFilters()">
-                    <option value="">Types</option>
-                </select>
+                <div class="filter-input-wrapper">
+                    <select id="filterDocumentType" onchange="applyFilters()">
+                        <option value="">All Types</option>
+                    </select>
+                    <i data-feather="chevron-down" class="select-icon"></i>
+                </div>
             </div>
             <div class="filter-group">
                 <label for="filterUser">User</label>
-                <select id="filterUser" onchange="applyFilters()">
-                    <option value="">Users</option>
-                </select>
+                <div class="filter-input-wrapper">
+                    <select id="filterUser" onchange="applyFilters()">
+                        <option value="">All Users</option>
+                    </select>
+                    <i data-feather="chevron-down" class="select-icon"></i>
+                </div>
             </div>
         </div>
     </div>
@@ -147,56 +165,52 @@ async function loadFilterOptions() {
         // Load departments
         const deptResponse = await fetch('/api/departments');
         if (!deptResponse.ok) {
-            const errorData = await deptResponse.json();
-            throw new Error(errorData.error || 'Failed to load departments');
+            throw new Error(`Failed to load departments: ${deptResponse.status}`);
         }
         const departments = await deptResponse.json();
-        if (!Array.isArray(departments)) {
-            throw new Error('Invalid departments data format');
-        }
         populateFilterSelect('filterDepartment', departments);
         populateFilterSelect('documentDepartment', departments);
         
-        // Load users
+        // Load users with better error handling
         const userResponse = await fetch('/api/users');
         if (!userResponse.ok) {
-            const errorData = await userResponse.json();
-            throw new Error(errorData.error || 'Failed to load users');
+            throw new Error(`Failed to load users: ${userResponse.status}`);
         }
         const userData = await userResponse.json();
-        if (!userData.users || !Array.isArray(userData.users)) {
+        if (!userData.users) {
             throw new Error('Invalid users data format');
         }
         populateFilterSelect('filterUser', userData.users);
         populateFilterSelect('documentUser', userData.users);
 
         // Reset category and document type filters
-        resetSelect('filterCategory', 'Categories');
-        resetSelect('filterDocumentType', 'Types');
+        resetSelect('filterCategory', 'All Categories');
+        resetSelect('filterDocumentType', 'All Types');
         resetSelect('documentCategory', 'Select Category');
         resetSelect('documentType', 'Select Document Type');
 
     } catch (error) {
         console.error('Error loading filter options:', error);
-        showNotification(error.message || 'Failed to load filter options. Please try again.', 'error');
+        showNotification(`Failed to load some filter options: ${error.message}`, 'error');
         
-        // Reset all filters to a safe state with error indication
+        // Reset filters to a safe state
         const filterIds = {
-            'filterDepartment': 'Departments',
-            'documentDepartment': 'Department',
-            'filterCategory': 'Categories',
-            'documentCategory': 'Category',
-            'filterDocumentType': 'Document Types',
-            'documentType': 'Document Type',
-            'filterUser': 'Users',
-            'documentUser': 'User'
+            'filterDepartment': 'All Departments',
+            'documentDepartment': 'Select Department',
+            'filterCategory': 'All Categories',
+            'documentCategory': 'Select Category',
+            'filterDocumentType': 'All Types',
+            'documentType': 'Select Document Type',
+            'filterUser': 'All Users',
+            'documentUser': 'Select User'
         };
 
         Object.entries(filterIds).forEach(([id, label]) => {
-            resetSelect(id, `${label} (Error loading)`);
+            resetSelect(id, label);
         });
     } finally {
         hideLoading(contentDiv);
+        feather.replace();
     }
 }
 
@@ -776,7 +790,25 @@ document.addEventListener('DOMContentLoaded', () => {
     margin-bottom: 1.5rem;
 }
 
-.filter-row {
+.filter-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1rem;
+    padding-bottom: 1rem;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.filter-header h3 {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin: 0;
+    font-size: 1.1rem;
+    color: var(--text-primary);
+}
+
+.filter-grid {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
     gap: 1rem;
@@ -789,8 +821,45 @@ document.addEventListener('DOMContentLoaded', () => {
 }
 
 .filter-group label {
+    font-size: 0.9rem;
     color: var(--text-secondary);
-    font-size: 0.875rem;
+}
+
+.filter-input-wrapper {
+    position: relative;
+    width: 100%;
+}
+
+.filter-input-wrapper select {
+    width: 100%;
+    padding: 0.5rem 2rem 0.5rem 0.75rem;
+    border: 1px solid var(--border-color);
+    border-radius: 4px;
+    background-color: var(--bg-primary);
+    color: var(--text-primary);
+    appearance: none;
+    cursor: pointer;
+}
+
+.filter-input-wrapper .select-icon {
+    position: absolute;
+    right: 0.75rem;
+    top: 50%;
+    transform: translateY(-50%);
+    pointer-events: none;
+    width: 16px;
+    height: 16px;
+    color: var(--text-secondary);
+}
+
+.filter-input-wrapper select:disabled {
+    opacity: 0.7;
+    cursor: not-allowed;
+}
+
+.filter-input-wrapper select:focus {
+    outline: none;
+    border-color: var(--accent-color);
 }
 
 .pagination-controls {
