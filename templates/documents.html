@@ -15,11 +15,6 @@
                 <label for="filterDepartment">Department</label>
                 <select id="filterDepartment" onchange="applyFiltersDepartment(this.value)">
                     <option value="">All Departments</option>
-                {% if departments %}
-                    {% for department in departments %}
-                    <option value="{{department.id}}">{{department.name}}</option>
-                    {% endfor %}
-                {% endif %}
                 </select>
             </div>
             <div class="filter-group">
@@ -70,60 +65,44 @@
         <h3>Add Document</h3>
         <form id="addDocumentForm" onsubmit="createDocument(event)">
             <div class="form-group">
-                <label for="documentTitle">Document Title</label>
+                <label for="documentTitle">Title</label>
                 <input type="text" id="documentTitle" name="titulo" required>
             </div>
-            <div class="form-grid">
-                <div class="form-group">
-                    <label for="documentDepartment">Select Department</label>
-                    <select id="documentDepartment" name="department_id" required onchange="loadDepartmentCategories(this.value)">
-                        <option value="">Select Department</option>
-                        {% if departments %}
-                            {% for department in departments %}
-                            <option value="{{department.id}}">{{department.name}}</option>
-                            {% endfor %}
-                        {% endif %}
-                    </select>
-                </div>
-                <div class="form-group">
-                    <label for="documentCategory">Select Category</label>
-                    <select id="documentCategory" name="category_id" required onchange="loadDocumentTypes(this.value)">
-                        <option value="">Select Category</option>
-                    </select>
-                </div>
-                <div class="form-group">
-                    <label for="documentType">Document Type</label>
-                    <select id="documentType" name="document_type_id" required>
-                        <option value="">Select Document Type</option>
-                    </select>
-                </div>
-                <div class="form-group">
-                    <label for="documentUserCPF">Assign to User (CPF)</label>
-                    <div class="input-group">
-                        <input type="text" id="documentUserCPF" name="cpf" required onblur="searchUser(this.value)">
-                        <span class="input-loader"></span>
-                    </div>
-                </div>
+            <div class="form-group">
+                <label for="documentDepartment">Department</label>
+                <select id="documentDepartment" name="department_id" required onchange="loadDepartmentCategories(this.value)">
+                    <option value="">Select Department</option>
+                </select>
             </div>
             <div class="form-group">
-                <label for="documentTitle">User Name</label>
-                <input type="text" id="name-user" name="name-user" disabled>
+                <label for="documentCategory">Category</label>
+                <select id="documentCategory" name="category_id" required onchange="loadDocumentTypes(this.value)">
+                    <option value="">Select Category</option>
+                </select>
             </div>
             <div class="form-group">
-                <label for="documentFile">Upload File</label>
+                <label for="documentType">Document Type</label>
+                <select id="documentType" name="document_type_id" required>
+                    <option value="">Select Document Type</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="documentUser">User</label>
+                <select id="documentUser" name="user_id" required>
+                    <option value="">Select User</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="documentFile">File</label>
                 <input type="file" id="documentFile" name="file" required>
             </div>
             <div class="modal-actions">
                 <button type="button" class="action-btn" onclick="hideModal('addDocumentModal')">Cancel</button>
                 <button type="submit" class="action-btn primary">Upload</button>
-                <input type="hidden" name="user_id" id="user_id">
             </div>
         </form>
     </div>
 </div>
-
-
-
 
 <!-- Delete Confirmation Modal -->
 <div id="deleteConfirmModal" class="modal">
@@ -467,7 +446,6 @@ async function createDocument(event) {
     
     showLoading(submitButton);
     const formData = new FormData(form);
-    console.log(formData);
 
     try {
         const response = await fetch('/api/documents', {
@@ -626,31 +604,6 @@ async function loadDocuments(page = 1, filters = {}) {
     }
 }
 
-async function searchUser(cpf) {
-    const inputGroup = document.querySelector('.input-group');
-    inputGroup.classList.add('loading');
-    
-    try {
-        const response = await fetch(`/api/users/cpf/${cpf}`);
-        const data = await response.json();
-        
-        if (!response.ok) {
-            throw new Error(data.error || 'User not found');
-        }
-        
-        document.getElementById('name-user').value = data.name || '';
-        document.getElementById('user_id').value = data.id || '';
-        
-    } catch (error) {
-        console.error('Error loading user:', error);
-        document.getElementById('name-user').value = '';
-        document.getElementById('user_id').value = '';
-        showNotification(error.message || 'Failed to load user', 'error');
-    } finally {
-        inputGroup.classList.remove('loading');
-    }
-}
-
 function updatePaginationControls() {
     document.getElementById('prevPage').disabled = currentPage <= 1;
     document.getElementById('nextPage').disabled = currentPage >= totalPages;
@@ -680,6 +633,7 @@ function hideModal(modalId) {
 
 function showAddDocumentModal() {
     document.getElementById('addDocumentForm').reset();
+    loadFilterOptions();
     showModal('addDocumentModal');
 }
 
@@ -703,6 +657,7 @@ async function downloadDocument(url) {
 
 // Initialize the page
 document.addEventListener('DOMContentLoaded', () => {
+    loadFilterOptions();
     loadDocuments();
     feather.replace();
 });
@@ -835,7 +790,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
 .filter-group label {
     color: var(--text-secondary);
-   
+    font-size: 0.875rem;
 }
 
 .pagination-controls {
@@ -881,13 +836,6 @@ document.addEventListener('DOMContentLoaded', () => {
     color: var(--danger-color);
 }
 
-.header-actions {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 2rem;
-}
-
 .loading-overlay {
     position: absolute;
     top: 0;
@@ -900,78 +848,6 @@ document.addEventListener('DOMContentLoaded', () => {
     justify-content: center;
     border-radius: 8px;
     z-index: 10;
-}
-
-.modal {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background-color: rgba(0, 0, 0, 0.5);
-}
-
-.modal-content {
-    position: relative;
-    background-color: var(--bg-secondary);
-    margin: 5% auto;
-    padding: 2rem;
-    border-radius: 12px;
-    max-width: 650px !important;
-    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
-    animation: slideIn 0.3s ease;
-}
-
-.form-group {
-    display: flex;
-    flex-direction: column;
-    margin-bottom: 0.5rem !important;
-}
-
-.form-grid {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 1rem;
-}
-
-.modal-actions {
-    display: flex;
-    justify-content: flex-end;
-    gap: 0.5rem;
-    margin-top: 1rem;
-}
-
-.input-group {
-    position: relative;
-    display: flex;
-    align-items: center;
-}
-
-.input-loader {
-    position: absolute;
-    right: 10px;
-    width: 20px;
-    height: 20px;
-    border: 2px solid var(--bg-tertiary);
-    border-top: 2px solid var(--accent-color);
-    border-radius: 50%;
-    animation: spin 1s linear infinite;
-}
-
-.input-group.loading .input-loader {
-    display: block;
-}
-
-.input-group.loading input {
-    opacity: 0.5;
-}
-
-@keyframes spin {
-    0% { transform: rotate(0deg); }
-    100% { transform: rotate(360deg); }
 }
 </style>
 {% endblock %}
