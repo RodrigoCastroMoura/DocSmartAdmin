@@ -88,9 +88,14 @@
             </div>
             <div class="form-group">
                 <label for="documentUser">User</label>
-                <select id="documentUser" name="user_id" required>
-                    <option value="">Select User</option>
-                </select>
+                <div class="select-with-loading">
+                    <select id="documentUser" name="user_id" required>
+                        <option value="">Select User</option>
+                    </select>
+                    <div class="loading-indicator" id="userLoadingIndicator" style="display: none;">
+                        <i data-feather="loader"></i>
+                    </div>
+                </div>
             </div>
             <div class="form-group">
                 <label for="documentFile">File</label>
@@ -144,6 +149,14 @@ async function loadFilterOptions() {
     };
 
     try {
+        // Show loading state for user select
+        const userSelect = document.getElementById('documentUser');
+        const userLoadingIndicator = document.getElementById('userLoadingIndicator');
+        if (userSelect && userLoadingIndicator) {
+            userSelect.disabled = true;
+            userLoadingIndicator.style.display = 'flex';
+        }
+
         // Load departments
         const deptResponse = await fetch('/api/departments');
         if (!deptResponse.ok) {
@@ -157,18 +170,31 @@ async function loadFilterOptions() {
         populateFilterSelect('filterDepartment', departments);
         populateFilterSelect('documentDepartment', departments);
         
-        // Load users
-        const userResponse = await fetch('/api/users');
-        if (!userResponse.ok) {
-            const errorData = await userResponse.json();
-            throw new Error(errorData.error || 'Failed to load users');
+        // Load users with loading state
+        try {
+            const userResponse = await fetch('/api/users');
+            if (!userResponse.ok) {
+                const errorData = await userResponse.json();
+                throw new Error(errorData.error || 'Failed to load users');
+            }
+            const userData = await userResponse.json();
+            if (!userData.users || !Array.isArray(userData.users)) {
+                throw new Error('Invalid users data format');
+            }
+            populateFilterSelect('filterUser', userData.users);
+            populateFilterSelect('documentUser', userData.users);
+        } catch (userError) {
+            console.error('Error loading users:', userError);
+            showNotification('Failed to load users. Please try again.', 'error');
+            resetSelect('filterUser', 'Error loading users');
+            resetSelect('documentUser', 'Error loading users');
+        } finally {
+            // Hide loading state for user select
+            if (userSelect && userLoadingIndicator) {
+                userSelect.disabled = false;
+                userLoadingIndicator.style.display = 'none';
+            }
         }
-        const userData = await userResponse.json();
-        if (!userData.users || !Array.isArray(userData.users)) {
-            throw new Error('Invalid users data format');
-        }
-        populateFilterSelect('filterUser', userData.users);
-        populateFilterSelect('documentUser', userData.users);
 
         // Reset category and document type filters
         resetSelect('filterCategory', 'Categories');
@@ -849,5 +875,34 @@ document.addEventListener('DOMContentLoaded', () => {
     border-radius: 8px;
     z-index: 10;
 }
+
+.select-with-loading {
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+
+.loading-indicator {
+    position: absolute;
+    right: 2.5rem;
+    display: none;
+    align-items: center;
+    justify-content: center;
+}
+
+.loading-indicator i {
+    animation: rotate 1s linear infinite;
+    color: var(--accent-color);
+}
+
+@keyframes rotate {
+    from {
+        transform: rotate(0deg);
+    }
+    to {
+        transform: rotate(360deg);
+    }
+}
+
 </style>
 {% endblock %}
