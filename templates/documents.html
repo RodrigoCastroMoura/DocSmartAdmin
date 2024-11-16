@@ -46,11 +46,11 @@
             </div>
             <div class="filter-group">
                 <label for="filterUser">User</label>
-                <div class="filter-input-wrapper">
-                    <select id="filterUser" onchange="applyFilters()">
-                        <option value="">All Users</option>
-                    </select>
-                    <i data-feather="chevron-down" class="select-icon"></i>
+                <div class="filter-input-wrapper search-input">
+                    <input type="text" id="filterUser" placeholder="Search user...">
+                    <button class="action-btn primary" onclick="searchUser()">
+                        <i data-feather="search"></i>
+                    </button>
                 </div>
             </div>
         </div>
@@ -148,6 +148,7 @@ let currentPage = 1;
 const perPage = 10;
 let totalPages = 1;
 let itemToDelete = null;
+let userSearchTimeout = null;
 
 async function loadFilterOptions() {
     const contentDiv = document.getElementById('documentsContent');
@@ -171,7 +172,7 @@ async function loadFilterOptions() {
         populateFilterSelect('filterDepartment', departments);
         populateFilterSelect('documentDepartment', departments);
         
-        // Load users with better error handling
+        // Load users for the Add Document modal only
         const userResponse = await fetch('/api/users');
         if (!userResponse.ok) {
             throw new Error(`Failed to load users: ${userResponse.status}`);
@@ -180,7 +181,6 @@ async function loadFilterOptions() {
         if (!userData.users) {
             throw new Error('Invalid users data format');
         }
-        populateFilterSelect('filterUser', userData.users);
         populateFilterSelect('documentUser', userData.users);
 
         // Reset category and document type filters
@@ -201,7 +201,6 @@ async function loadFilterOptions() {
             'documentCategory': 'Select Category',
             'filterDocumentType': 'All Types',
             'documentType': 'Select Document Type',
-            'filterUser': 'All Users',
             'documentUser': 'Select User'
         };
 
@@ -214,31 +213,25 @@ async function loadFilterOptions() {
     }
 }
 
-function populateFilterSelect(selectId, items) {
-    const select = document.getElementById(selectId);
-    if (!select || !Array.isArray(items)) return;
+function resetFilters() {
+    document.getElementById('filterDepartment').value = '';
+    document.getElementById('filterCategory').value = '';
+    document.getElementById('filterDocumentType').value = '';
+    document.getElementById('filterUser').value = '';
+    applyFilters();
+}
+
+async function searchUser() {
+    const searchInput = document.getElementById('filterUser');
+    const searchTerm = searchInput.value.trim();
     
-    const currentValue = select.value;
-    select.innerHTML = '';
-    
-    // Add default option
-    const defaultOption = document.createElement('option');
-    defaultOption.value = '';
-    defaultOption.textContent = selectId.includes('filter') ? 'All' : 'Select';
-    defaultOption.textContent += ' ' + (selectId.includes('User') ? 'Users' : 
-                                      selectId.includes('Department') ? 'Departments' : 
-                                      selectId.includes('Category') ? 'Categories' : 
-                                      'Types');
-    select.appendChild(defaultOption);
-    
-    items.forEach(item => {
-        const option = document.createElement('option');
-        option.value = item.id;
-        option.textContent = item.name;
-        select.appendChild(option);
-    });
-    
-    if (currentValue) select.value = currentValue;
+    if (userSearchTimeout) {
+        clearTimeout(userSearchTimeout);
+    }
+
+    userSearchTimeout = setTimeout(() => {
+        applyFilters();
+    }, 500);
 }
 
 async function applyFilters() {
@@ -246,7 +239,7 @@ async function applyFilters() {
         department_id: document.getElementById('filterDepartment').value,
         category_id: document.getElementById('filterCategory').value,
         document_type_id: document.getElementById('filterDocumentType').value,
-        user_id: document.getElementById('filterUser').value
+        user_search: document.getElementById('filterUser').value.trim()
     };
     
     // Store filters in URL params
@@ -631,7 +624,7 @@ function changePage(newPage) {
             department_id: urlParams.get('department_id') || '',
             category_id: urlParams.get('category_id') || '',
             document_type_id: urlParams.get('document_type_id') || '',
-            user_id: urlParams.get('user_id') || ''
+            user_search: urlParams.get('user_search') || ''
         };
         loadDocuments(newPage, filters);
     }
@@ -917,6 +910,23 @@ document.addEventListener('DOMContentLoaded', () => {
     justify-content: center;
     border-radius: 8px;
     z-index: 10;
+}
+
+.search-input {
+    display: flex;
+    gap: 0.5rem;
+}
+
+.search-input input {
+    flex: 1;
+    padding: 0.5rem;
+    border: 1px solid var(--border-color);
+    border-radius: 4px;
+    background: var(--bg-tertiary);
+}
+
+.search-input button {
+    padding: 0.5rem 1rem;
 }
 </style>
 {% endblock %}
