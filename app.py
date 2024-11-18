@@ -346,12 +346,60 @@ def categories_document_types(category_id):
     
     return redirect(url_for('departments'))
 
+@app.route('/document_type/<document_type_id>/documents')
+@login_required
+def document_type_documents(document_type_id):
+    headers = get_auth_headers()
+    company_id = session.get('company_id')
+    
+    if not company_id:
+        return jsonify({'error': 'Company ID not found in session'}), 400
+  
+    try:     
+        response = requests.get(
+             f"{DOCUMENT_TYPES_URL}/{document_type_id}",
+             headers=headers,
+             timeout=REQUEST_TIMEOUT
+        )
+
+        if not response.ok:
+            logger.error(f"Failed to fetch document types: {response.status_code}")
+            flash('Document types not found', 'error')
+            return redirect(url_for('document_types'))
+
+        document_type = response.json()
+
+        categories_response = requests.get(
+             f"{CATEGORIES_URL}/{document_type.get('category_id')}",
+             headers=headers,
+             timeout=REQUEST_TIMEOUT
+        )
+
+        if not categories_response.ok:
+            logger.error(f"Failed to fetch category: {categories_response.status_code}")
+            flash('Category not found', 'error')
+            return redirect(url_for('document_types'))
+
+        category = categories_response.json()
+
+        return render_template('document_types_departments.html', document_type=document_type, category=category)
+    except requests.Timeout:
+        logger.error("Request timed out while fetching department_types")
+        flash('Request timed out', 'error')
+    except requests.ConnectionError:
+        logger.error("Connection error while fetching department_types")
+        flash('Failed to connect to server', 'error')
+    except Exception as e:
+        logger.error(f"Unexpected error in document_type_documents: {e}")
+        flash('An unexpected error occurred', 'error')
+    
+    return redirect(url_for('departments'))
+
 @app.route('/api/departments',methods=['GET','POST'])
 @login_required
 def departments_api():
     headers = get_auth_headers()
     company_id = session.get('company_id')
-    
     if not company_id:
         return jsonify({'error': 'Company ID not found in session'}), 400
     
@@ -738,18 +786,19 @@ def documents_api():
     try:
         params = {
             'page': request.args.get('page', 1),
-            'per_page': request.args.get('per_page', 10),
+            'per_page': request.args.get('per_page', 9),
             'department_id': request.args.get('department_id'),
             'category_id': request.args.get('category_id'),
             'document_type_id': request.args.get('document_type_id'),
-            'user_id': request.args.get('user_id')
+            'user_cpf': request.args.get('user_cpf'),
+            'company_id': company_id
         }
         
         # Remove None values
         params = {k: v for k, v in params.items() if v is not None}
         
         response = requests.get(
-            f"{DOCUMENTS_URL}/companies/{company_id}/documents",
+            f"{DOCUMENTS_URL}",
             headers=headers,
             params=params,
             timeout=REQUEST_TIMEOUT

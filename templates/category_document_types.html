@@ -24,11 +24,16 @@
                 <div class="document-type-card" data-id="{{ type.id }}">
                     <div class="document-type-header">
                         <i data-feather="file"></i>
-                        <h3>{{ type.name }}</h3>
+                        <a href="/document_type/{{type.id}}/documents" class="document-type-link">
+                            <h3>{{ type.name }}</h3>
+                        </a>    
                     </div>
                     <div class="document-type-info">
                         <p class="description">{{ type.description or 'No description' }}</p>
-                        <p class="meta">Documents: {{ type.document_count|default(0) }}</p>
+                        <p class="meta">
+                            <span>Documents:  {{ type.document_count|default(0)}}</span>
+                            <span>Created:</span>
+                        </p>
                     </div>
                     <div class="document-type-actions">
                         <button class="action-btn" onclick='showEditDocumentTypeModal("{{ type.id }}", {{ type|tojson|safe }})'>
@@ -334,6 +339,15 @@ document.addEventListener('DOMContentLoaded', () => {
     margin-top: 1rem;
 }
 
+.document-type-link {
+    text-decoration: none;
+    color: var(--text-primary);
+}
+
+.document-type-link:hover h3 {
+    color: var(--accent-color);
+}
+
 .back-link {
     display: flex;
     align-items: center;
@@ -376,6 +390,32 @@ document.addEventListener('DOMContentLoaded', () => {
     font-size: 2rem;
     margin-bottom: 0.5rem;
     opacity: 0.5;
+}
+
+.content-grid {
+    background-color: var(--bg-secondary);
+    border-radius: 8px;
+    padding: 1.5rem;
+}
+
+.document-type-info {
+    margin: 1rem 0;
+    color: var(--text-secondary);
+}
+
+.document-type-info .description {
+    margin-bottom: 0.5rem;
+    font-style: italic;
+}
+
+.document-type-info .meta {
+    display: flex;
+    gap: 1rem;
+    font-size: 0.875rem;
+}
+
+.page-container {
+    padding: 2rem;
 }
 </style>
 {% endblock %}

@@ -2,43 +2,45 @@
 
 {% block content %}
 <div class="page-container">
-    <div class="header-actions">
-        <h2><i data-feather="file-text"></i> Documents</h2>
-        <button class="action-btn primary" onclick="showAddDocumentModal()">
-            <i data-feather="plus"></i> Add Document
-        </button>
-    </div>
-    
     <div class="filter-section">
-        <div class="filter-row">
-            <div class="filter-group">
+        <div class="filter-header">
+            <h2><i data-feather="file-text"></i> Documents</h2>
+            <button class="action-btn primary" onclick="showAddDocumentModal()">
+                <i data-feather="plus"></i> Add Document
+            </button>
+        </div>
+        <div class="filter-grid">
+            <div class="form-group">
                 <label for="filterDepartment">Department</label>
-                <select id="filterDepartment" onchange="applyFiltersDepartment(this.value)">
-                    <option value="">All Departments</option>
-                {% if departments %}
-                    {% for department in departments %}
-                    <option value="{{department.id}}">{{department.name}}</option>
-                    {% endfor %}
-                {% endif %}
+                <select id="filterDepartment" name="filterDepartment" onchange="applyFiltersDepartment(this.value)">
+                    <option value="">Select Department</option>
+                    {% if departments %}
+                        {% for department in departments %}
+                        <option value="{{department.id}}">{{department.name}}</option>
+                        {% endfor %}
+                    {% endif %}
                 </select>
             </div>
-            <div class="filter-group">
+            <div class="form-group">
                 <label for="filterCategory">Category</label>
-                <select id="filterCategory" onchange="applyFiltersCategory(this.value)">
-                    <option value="">Categories</option>
+                <select id="filterCategory" name="filterCategory" onchange="applyFiltersCategory(this.value)">
+                    <option value="">Select Category</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="filterDocumentType">Type</label>
+                <select id="filterDocumentType" name="filterDocumentType" onchange="applyFilters()">
+                    <option value="">Select Types</option>
                 </select>
             </div>
             <div class="filter-group">
-                <label for="filterDocumentType">Document Type</label>
-                <select id="filterDocumentType" onchange="applyFilters()">
-                    <option value="">Types</option>
-                </select>
-            </div>
-            <div class="filter-group">
-                <label for="filterUser">User</label>
-                <select id="filterUser" onchange="applyFilters()">
-                    <option value="">Users</option>
-                </select>
+                <label for="user-cpf-filter">User</label>
+                <div class="filter-input-wrapper search-input">
+                    <input type="text" id="user-cpf-filter" placeholder="Search user...">
+                    <button class="action-btn primary" onclick="applyFilters()">
+                        <i data-feather="search"></i>
+                    </button>
+                </div>
             </div>
         </div>
     </div>
@@ -62,6 +64,7 @@
             </div>
         </div>
     </div>
+</div>
 </div>
 
 <!-- Add Document Modal -->
@@ -98,15 +101,18 @@
                     </select>
                 </div>
                 <div class="form-group">
-                    <label for="documentUserCPF">Assign to User (CPF)</label>
-                    <div class="input-group">
-                        <input type="text" id="documentUserCPF" name="cpf" class="form-control" placeholder="Enter CPF" required onblur="searchUser(this.value)">
+                    <label for="user_cpf">CPF</label>
+                    <div class="filter-input-wrapper search-input">
+                        <input type="text" id="user_cpf" placeholder="Search user..." required>
+                        <button type="button" class="action-btn primary" onclick="searchUser()">
+                            <i data-feather="search"></i>
+                        </button>
                     </div>
                 </div>
             </div>
             <div class="form-group">
                 <label for="documentTitle">User Name</label>
-                <input type="text" id="name-user" name="name-user" disabled>
+                <input type="text" id="name-user" name="name-user" disabled required>
             </div>
             <div class="form-group">
                 <label for="documentFile">Upload File</label>
@@ -147,7 +153,7 @@
 
 <script>
 let currentPage = 1;
-const perPage = 10;
+const perPage = 9;
 let totalPages = 1;
 let itemToDelete = null;
 
@@ -252,12 +258,12 @@ async function applyFilters() {
         department_id: document.getElementById('filterDepartment').value,
         category_id: document.getElementById('filterCategory').value,
         document_type_id: document.getElementById('filterDocumentType').value,
-        user_id: document.getElementById('filterUser').value
+        user_cpf: document.getElementById('user-cpf-filter').value
     };
     
     // Store filters in URL params
     const params = new URLSearchParams(filters);
-    window.history.replaceState({}, '', `${window.location.pathname}?${params}`);
+
     
     // Reload documents with filters
     await loadDocuments(1, filters);
@@ -279,7 +285,7 @@ async function applyFiltersDepartment(departmentId) {
             await applyFilters();
             return;
         }
-
+        await applyFilters();
         const response = await fetch(`/api/categories/departments/${departmentId}/categories`);
         if (!response.ok) {
             const errorData = await response.json();
@@ -296,8 +302,6 @@ async function applyFiltersDepartment(departmentId) {
             ${data.categories.map(cat => `
                 <option value="${cat.id}">${cat.name}</option>
             `).join('')}`;
-
-        await applyFilters();
     } catch (error) {
         console.error('Error loading categories:', error);
         showNotification(error.message, 'error');
@@ -319,7 +323,7 @@ async function applyFiltersCategory(categoryId) {
             await applyFilters();
             return;
         }
-
+        await applyFilters();
         const response = await fetch(`/api/document_types/categories/${categoryId}/types`);
         if (!response.ok) {
             const errorData = await response.json();
@@ -336,8 +340,6 @@ async function applyFiltersCategory(categoryId) {
             ${data.map(type => 
                 `<option value="${type.id}">${type.name}</option>`
             ).join('')}`;
-
-        await applyFilters();
     } catch (error) {
         console.error('Error loading document types:', error);
         showNotification(error.message, 'error');
@@ -463,10 +465,14 @@ async function createDocument(event) {
     if (!validateForm(form)) {
         return;
     }
+
+    if(document.getElementById('user_id').value ==''){
+        showNotification('Enter with CPF', 'error');
+        return;
+    }
     
     showLoading(submitButton);
     const formData = new FormData(form);
-    console.log(formData);
 
     try {
         const response = await fetch('/api/documents', {
@@ -481,6 +487,7 @@ async function createDocument(event) {
 
         hideModal('addDocumentModal');
         form.reset();
+        document.getElementById('user_id').value =''
         await loadDocuments(currentPage);
         showNotification('Document created successfully', 'success');
     } catch (error) {
@@ -625,28 +632,47 @@ async function loadDocuments(page = 1, filters = {}) {
     }
 }
 
-async function searchUser(cpf) {
+async function searchUser() {
     try {
+
+        openPopup();
+        if(document.getElementById(`user_cpf`).value == ''){
+            closePopup();
+            showNotification('Enter with CPF', 'error');
+            return;
+        } 
+
         const params = new URLSearchParams({
-            cpf: cpf,
+            cpf: document.getElementById(`user_cpf`).value,
         });
         
         const response = await fetch(`/api/users?${params}`);
         if (!response.ok) {
-            const errorData = await response.json();
-            throw new Error(errorData.error || 'User not found');
+            closePopup();
             showNotification('User not found', 'error');
+            document.getElementById('name-user').value = '';
+            document.getElementById('user_id').value ='';
+            return;
         }
         const data = await response.json();
         usuario = data['users'][0]
+
+        if(!usuario){
+            closePopup();
+            showNotification('User not found', 'error');
+            document.getElementById('name-user').value = '';
+            document.getElementById('user_id').value ='';
+            return;
+        }
+
         document.getElementById('name-user').value = usuario['name'];
         document.getElementById('user_id').value = usuario['id'];
     } catch (error) {
         console.error('Error loading documents:', error);
-        showNotification(error.message || 'Failed to load documents', 'error');
+        showNotification(error.message || 'Failed to load users', 'error');
        
     } finally {
-       
+        closePopup();
     }
 }
 
@@ -820,7 +846,25 @@ document.addEventListener('DOMContentLoaded', () => {
     margin-bottom: 1.5rem;
 }
 
-.filter-row {
+.filter-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1rem;
+    padding-bottom: 1rem;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.filter-header h3 {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin: 0;
+    font-size: 1.1rem;
+    color: var(--text-primary);
+}
+
+.filter-grid {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
     gap: 1rem;
@@ -833,8 +877,45 @@ document.addEventListener('DOMContentLoaded', () => {
 }
 
 .filter-group label {
+    font-size: 0.9rem;
     color: var(--text-secondary);
-   
+}
+
+.filter-input-wrapper {
+    position: relative;
+    width: 100%;
+}
+
+.filter-input-wrapper select {
+    width: 100%;
+    padding: 0.5rem 2rem 0.5rem 0.75rem;
+    border: 1px solid var(--border-color);
+    border-radius: 4px;
+    background-color: var(--bg-primary);
+    color: var(--text-primary);
+    appearance: none;
+    cursor: pointer;
+}
+
+.filter-input-wrapper .select-icon {
+    position: absolute;
+    right: 0.75rem;
+    top: 50%;
+    transform: translateY(-50%);
+    pointer-events: none;
+    width: 16px;
+    height: 16px;
+    color: var(--text-secondary);
+}
+
+.filter-input-wrapper select:disabled {
+    opacity: 0.7;
+    cursor: not-allowed;
+}
+
+.filter-input-wrapper select:focus {
+    outline: none;
+    border-color: var(--accent-color);
 }
 
 .pagination-controls {
@@ -941,6 +1022,27 @@ document.addEventListener('DOMContentLoaded', () => {
     justify-content: flex-end;
     gap: 0.5rem;
     margin-top: 1rem;
+}
+
+.search-input {
+    display: flex;
+    gap: 0.5rem;
+}
+
+.search-input input {
+    flex: 1;
+    padding: 0.5rem;
+    border: 1px solid var(--border-color);
+    border-radius: 4px;
+    background: var(--bg-tertiary);
+    color: var(--text-primary);
+}
+
+.search-input button {
+    padding: 0.5rem 1rem;
+}
+.page-container {
+    padding: 2rem;
 }
 
 
