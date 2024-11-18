@@ -25,9 +25,9 @@
                     <div class="category-header">
                         <i data-feather="folder"></i>
                         <div class="category-title">
-                            <a href="/categories/{{category.id}}/document_types" class="category-link">
+                            <a href="{{ url_for('category_document_types', category_id=category.id) }}" class="category-link">
                                 <h3>{{ category.name }}</h3>
-                            </a>    
+                            </a>
                         </div>
                     </div>
                     <div class="category-info">
@@ -179,8 +179,8 @@ async function createCategory(event) {
 
         hideModal('addCategoryModal');
         form.reset();
-        await loadCategories();
-        showNotification('Categories created successfully', 'success');
+        window.location.reload(); // Reload to show new category
+        showErrorMessage('Category created successfully', 'success');
     } catch (error) {
         console.error('Error creating category:', error);
         showErrorMessage(error.message);
@@ -218,8 +218,8 @@ async function updateCategory(event) {
         }
 
         hideModal('editCategoryModal');
-        await loadCategories();
-        showNotification('Category updated successfully', 'success');
+        window.location.reload(); // Reload to show updated category
+        showErrorMessage('Category updated successfully', 'success');
     } catch (error) {
         console.error('Error updating category:', error);
         showErrorMessage(error.message);
@@ -228,13 +228,11 @@ async function updateCategory(event) {
     }
 }
 
-let itemToDelete = null;
+async function deleteCategory(id) {
+    if (!confirm('Are you sure you want to delete this category?')) {
+        return;
+    }
 
-async function confirmDelete() { 
-    if (!itemToDelete) return;
- 
-    const id = itemToDelete;
-    hideModal('deleteConfirmModal');
     const card = document.querySelector(`.category-card[data-id="${id}"]`);
     showLoading(card);
 
@@ -247,25 +245,15 @@ async function confirmDelete() {
             const errorData = await response.json();
             throw new Error(errorData.error || 'Failed to delete category');
         }
-        await loadCategories();
-        showNotification('Category deleted successfully', 'success');
 
+        window.location.reload(); // Reload to show updated list
+        showErrorMessage('Category deleted successfully', 'success');
     } catch (error) {
         console.error('Error deleting category:', error);
-        showNotification(error.message);
+        showErrorMessage(error.message);
     } finally {
         hideLoading(card);
     }
-}
-
-function deleteCategory(id) {
-    showDeleteConfirmation(id);
-}
-
-function showDeleteConfirmation(id) {
-    itemToDelete = id;
-    showModal('deleteConfirmModal');
-    feather.replace();
 }
 
 function showEditCategoryModal(id, category) {
@@ -281,20 +269,6 @@ document.addEventListener('DOMContentLoaded', () => {
 </script>
 
 <style>
-
-.header-actions {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 2rem;
-}
-
-.content-grid {
-    background-color: var(--bg-secondary);
-    border-radius: 8px;
-    padding: 1.5rem;
-}
-
 .categories-grid {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
@@ -336,11 +310,6 @@ document.addEventListener('DOMContentLoaded', () => {
     justify-content: flex-end;
     gap: 0.5rem;
     margin-top: 1rem;
-}
-
-.category-link {
-    text-decoration: none;
-    color: var(--text-primary);
 }
 
 .back-link {

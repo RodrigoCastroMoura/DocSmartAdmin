@@ -195,8 +195,8 @@ async function createDocumentType(event) {
 
         hideModal('addDocumentTypeModal');
         form.reset();
-        await loadDocumentTypes();
-        showNotification('Document type created successfully', 'success');
+        window.location.reload();
+        showErrorMessage('Document type created successfully', 'success');
     } catch (error) {
         console.error('Error creating document type:', error);
         showErrorMessage(error.message);
@@ -234,8 +234,8 @@ async function updateDocumentType(event) {
         }
 
         hideModal('editDocumentTypeModal');
-        await loadDocumentTypes();
-        showNotification('Document type updated successfully', 'success');
+        window.location.reload();
+        showErrorMessage('Document type updated successfully', 'success');
     } catch (error) {
         console.error('Error updating document type:', error);
         showErrorMessage(error.message);
@@ -244,13 +244,11 @@ async function updateDocumentType(event) {
     }
 }
 
-let itemToDelete = null;
+async function deleteDocumentType(id) {
+    if (!confirm('Are you sure you want to delete this document type?')) {
+        return;
+    }
 
-async function  confirmDelete() { 
-    if (!itemToDelete) return;
- 
-    const id = itemToDelete;
-    hideModal('deleteConfirmModal');
     const card = document.querySelector(`.document-type-card[data-id="${id}"]`);
     showLoading(card);
 
@@ -264,29 +262,19 @@ async function  confirmDelete() {
             throw new Error(errorData.error || 'Failed to delete document type');
         }
 
-        await loadDocumentTypes();
-        showNotification('Document type deleted successfully', 'success');
+        window.location.reload();
+        showErrorMessage('Document type deleted successfully', 'success');
     } catch (error) {
         console.error('Error deleting document type:', error);
-        showNotification(error.message);
+        showErrorMessage(error.message);
     } finally {
         hideLoading(card);
     }
 }
 
-function deleteDocumentType(id) {
-    showDeleteConfirmation(id);
-}
-
-function showDeleteConfirmation(id) {
-    itemToDelete = id;
-    showModal('deleteConfirmModal');
-    feather.replace();
-}
-
 // Initialize document types list when page loads
 document.addEventListener('DOMContentLoaded', () => {
-    
+    loadDocumentTypes();
     feather.replace();
 });
 </script>
@@ -371,13 +359,6 @@ document.addEventListener('DOMContentLoaded', () => {
     align-items: center;
     gap: 0.5rem;
     margin: 0;
-}
-
-.header-actions {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 2rem;
 }
 
 .no-data {
