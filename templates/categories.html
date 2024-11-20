@@ -208,18 +208,11 @@ async function createCategory(event) {
             body: JSON.stringify(data)
         });
 
-        const response_data = await response.json();
-        if (!response.ok) {
-            throw new Error(response_data.error || 'Failed to create categories');
-        }
-
-        hideModal('addCategoryModal');
-        form.reset();
-        await loadCategories();
-        showNotification('Categories created successfully', 'success');
-    } catch (error) {
-        console.error('Error creating categories:', error);
-        showErrorMessage(error.message || 'Failed to create categories', 'error');
+        await handleApiResponse(response, async () => {
+            hideModal('addCategoryModal');
+            form.reset();
+            await loadCategories();
+        });
     } finally {
         hideLoading(submitButton);
     }
@@ -248,30 +241,20 @@ async function updateCategory(event) {
             body: JSON.stringify(data)
         });
 
-        const response_data = await response.json();
-        if (!response.ok) {
-            throw new Error(response_data.error || 'Failed to update categories');
-        }
-
-        hideModal('editCategoryModal');
-        await loadCategories();
-        showNotification('Categories updated successfully', 'success');
-    } catch (error) {
-        console.error('Error updating categories:', error);
-        showNotification(error.message || 'Failed to update categories', 'error');
+        await handleApiResponse(response, async () => {
+            hideModal('editCategoryModal');
+            await loadCategories();
+        });
     } finally {
         hideLoading(submitButton);
     }
 }
 
-let itemToDelete = null;
+async function deleteCategory(id) {
+    if (!confirm('Are you sure you want to delete this category?')) {
+        return;
+    }
 
-async function confirmDelete() { 
-
-    if (!itemToDelete) return;
-
-    const id = itemToDelete;
-    hideModal('deleteConfirmModal');
     const card = document.querySelector(`.category-card[data-id="${id}"]`);
     showLoading(card);
 
@@ -279,35 +262,18 @@ async function confirmDelete() {
         const response = await fetch(`/api/categories/${id}`, {
             method: 'DELETE'
         });
-
+        
         if (!response.ok) {
                 const data = await response.json();
                 throw new Error(data.error || 'Failed to delete categories');
             }
 
             await loadCategories();
-            showNotification('Categories deleted successfully', 'success');
-    } 
-    catch (error) {
-        console.error('Error deleting categories:', error);
-        showNotification(error.message || 'Failed to delete categories', 'error');
-    } 
-    finally {
+        });
+    } finally {
         hideLoading(card);
-        itemToDelete = null;
     }
 }
-
-function deleteCategory(id) {
-    showDeleteConfirmation(id);
-}
-
-function showDeleteConfirmation(id) {
-    itemToDelete = id;
-    showModal('deleteConfirmModal');
-    feather.replace();
-}
-
 
 function showModal(modalId) {
     document.getElementById(modalId).style.display = 'block';
