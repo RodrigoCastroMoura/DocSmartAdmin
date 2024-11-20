@@ -9,7 +9,7 @@
                 Back to Departments
             </a>
             <h2>
-                <i data-feather="folder"></i> 
+                <i data-feather="grid"></i>
                 Categories for {{ department.name if department else 'Unknown Department' }}
             </h2>
         </div>
@@ -25,12 +25,16 @@
                     <div class="category-header">
                         <i data-feather="folder"></i>
                         <div class="category-title">
-                            <a href="/categories/{{category.id}}/document_types" class="category-link">
+                            <a href="{{ url_for('category_document_types', category_id=category.id) }}" class="category-link">
                                 <h3>{{ category.name }}</h3>
-                            </a>    
+                            </a>
                         </div>
                     </div>
                     <div class="category-info">
+                        <div class="department-badge">
+                            <i data-feather="briefcase"></i>
+                            <span>{{category.department_name}}</span>
+                        </div>
                         <p>{{ category.document_count|default(0) }} documents</p>
                     </div>
                     <div class="category-actions">
@@ -175,8 +179,8 @@ async function createCategory(event) {
 
         hideModal('addCategoryModal');
         form.reset();
-        await loadCategories();
-        showNotification('Categories created successfully', 'success');
+        window.location.reload(); // Reload to show new category
+        showErrorMessage('Category created successfully', 'success');
     } catch (error) {
         console.error('Error creating category:', error);
         showErrorMessage(error.message);
@@ -214,7 +218,7 @@ async function updateCategory(event) {
         }
 
         hideModal('editCategoryModal');
-        await loadCategories();
+        await loadCategories(); // Reload to show updated category
         showNotification('Category updated successfully', 'success');
     } catch (error) {
         console.error('Error updating category:', error);
@@ -245,15 +249,13 @@ async function confirmDelete() {
         }
         await loadCategories();
         showNotification('Category deleted successfully', 'success');
-
     } catch (error) {
         console.error('Error deleting category:', error);
-        showNotification(error.message);
+        showErrorMessage(error.message);
     } finally {
         hideLoading(card);
     }
 }
-
 function deleteCategory(id) {
     showDeleteConfirmation(id);
 }
@@ -263,7 +265,6 @@ function showDeleteConfirmation(id) {
     showModal('deleteConfirmModal');
     feather.replace();
 }
-
 function showEditCategoryModal(id, category) {
     document.getElementById('editCategoryId').value = id;
     document.getElementById('editCategoryName').value = category.name;
@@ -277,7 +278,6 @@ document.addEventListener('DOMContentLoaded', () => {
 </script>
 
 <style>
-
 .header-actions {
     display: flex;
     justify-content: space-between;
@@ -333,12 +333,10 @@ document.addEventListener('DOMContentLoaded', () => {
     gap: 0.5rem;
     margin-top: 1rem;
 }
-
 .category-link {
     text-decoration: none;
     color: var(--text-primary);
 }
-
 .back-link {
     display: flex;
     align-items: center;
@@ -389,14 +387,29 @@ document.addEventListener('DOMContentLoaded', () => {
 .category-title {
     flex: 1;
 }
-
 .category-link {
     text-decoration: none;
     color: var(--text-primary);
+}
+.page-container {
+    padding: 2rem;
 }
 
 .category-link:hover h3 {
     color: var(--accent-color);
 }
+
+.department-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.25rem 0.75rem;
+    background-color: var(--bg-secondary);
+    border-radius: 4px;
+    font-size: 0.875rem;
+    color: var(--text-secondary);
+    margin-bottom: 0.5rem;
+}
+
 </style>
 {% endblock %}

@@ -1,72 +1,54 @@
 {% extends "base.html" %}
 
 {% block content %}
+
 <div class="page-container">
-    <div class="filter-section">
-        <div class="filter-header">
-            <h2><i data-feather="file-text"></i> Documents</h2>
-            <button class="action-btn primary" onclick="showAddDocumentModal()">
-                <i data-feather="plus"></i> Add Document
-            </button>
+        <div class="header-title">
+            <a href="{{ url_for('categories_document_types', category_id=document_type.category_id) }}" class="back-link">
+                <i data-feather="arrow-left"></i>
+                Back to Document types
+            </a>
         </div>
-        <div class="filter-grid">
-            <div class="form-group">
-                <label for="filterDepartment">Department</label>
-                <select id="filterDepartment" name="filterDepartment" onchange="applyFiltersDepartment(this.value)">
-                    <option value="">Select Department</option>
-                    {% if departments %}
-                        {% for department in departments %}
-                        <option value="{{department.id}}">{{department.name}}</option>
-                        {% endfor %}
-                    {% endif %}
-                </select>
+        <div class="filter-section">
+            <div class="filter-header">
+                <h2><i data-feather="file-text"></i> Documents for {{ document_type.name if document_type else 'Unknown Document type' }}</h2>
+                <button class="action-btn primary" onclick="showAddDocumentModal()">
+                    <i data-feather="plus"></i> Add Document
+                </button>
             </div>
-            <div class="form-group">
-                <label for="filterCategory">Category</label>
-                <select id="filterCategory" name="filterCategory" onchange="applyFiltersCategory(this.value)">
-                    <option value="">Select Category</option>
-                </select>
+            <div class="filter-grid">
+                <div class="filter-group">
+                    <label for="user-cpf-filter">User</label>
+                    <div class="filter-input-wrapper search-input">
+                        <input type="text" id="user-cpf-filter" placeholder="Search user...">
+                        <button class="action-btn primary" onclick="applyFilters()">
+                            <i data-feather="search"></i>
+                        </button>
+                    </div>
+                </div>
             </div>
-            <div class="form-group">
-                <label for="filterDocumentType">Type</label>
-                <select id="filterDocumentType" name="filterDocumentType" onchange="applyFilters()">
-                    <option value="">Select Types</option>
-                </select>
-            </div>
-            <div class="filter-group">
-                <label for="user-cpf-filter">User</label>
-                <div class="filter-input-wrapper search-input">
-                    <input type="text" id="user-cpf-filter" placeholder="Search user...">
-                    <button class="action-btn primary" onclick="applyFilters()">
-                        <i data-feather="search"></i>
+        </div>
+        <div class="content-grid">
+            <div id="documentsContent">
+                <div class="documents-grid">
+                    <div class="no-data">
+                        <i data-feather="inbox"></i>
+                        <p>Loading documents...</p>
+                    </div>
+                </div>
+                <div class="pagination-controls">
+                    <button class="action-btn" onclick="changePage(currentPage - 1)" id="prevPage" disabled>
+                        <i data-feather="chevron-left"></i> Previous
+                    </button>
+                    <span id="pageInfo">Page 1</span>
+                    <button class="action-btn" onclick="changePage(currentPage + 1)" id="nextPage" disabled>
+                        Next <i data-feather="chevron-right"></i>
                     </button>
                 </div>
             </div>
         </div>
     </div>
-
-    <div class="content-grid">
-        <div id="documentsContent">
-            <div class="documents-grid">
-                <div class="no-data">
-                    <i data-feather="inbox"></i>
-                    <p>Loading documents...</p>
-                </div>
-            </div>
-            <div class="pagination-controls">
-                <button class="action-btn" onclick="changePage(currentPage - 1)" id="prevPage" disabled>
-                    <i data-feather="chevron-left"></i> Previous
-                </button>
-                <span id="pageInfo">Page 1</span>
-                <button class="action-btn" onclick="changePage(currentPage + 1)" id="nextPage" disabled>
-                    Next <i data-feather="chevron-right"></i>
-                </button>
-            </div>
-        </div>
-    </div>
 </div>
-</div>
-
 <!-- Add Document Modal -->
 <div id="addDocumentModal" class="modal">
     <div class="modal-content">
@@ -77,29 +59,6 @@
                 <input type="text" id="documentTitle" name="titulo" >
             </div>
             <div class="form-grid">
-                <div class="form-group">
-                    <label for="documentDepartment">Select Department</label>
-                    <select id="documentDepartment" name="department_id" required onchange="loadDepartmentCategories(this.value)">
-                        <option value="">Select Department</option>
-                        {% if departments %}
-                            {% for department in departments %}
-                            <option value="{{department.id}}">{{department.name}}</option>
-                            {% endfor %}
-                        {% endif %}
-                    </select>
-                </div>
-                <div class="form-group">
-                    <label for="documentCategory">Select Category</label>
-                    <select id="documentCategory" name="category_id" required onchange="loadDocumentTypes(this.value)">
-                        <option value="">Select Category</option>
-                    </select>
-                </div>
-                <div class="form-group">
-                    <label for="documentType">Document Type</label>
-                    <select id="documentType" name="document_type_id" required>
-                        <option value="">Select Document Type</option>
-                    </select>
-                </div>
                 <div class="form-group">
                     <label for="user_cpf">CPF</label>
                     <div class="filter-input-wrapper search-input">
@@ -115,12 +74,16 @@
                 <input type="text" id="name-user" name="name-user" disabled required>
             </div>
             <div class="form-group">
-                <label for="documentFile">File</label>
+                <label for="documentFile">Upload File</label>
                 <input type="file" id="documentFile" name="file" required>
             </div>
             <div class="modal-actions">
                 <button type="button" class="action-btn" onclick="hideModal('addDocumentModal')">Cancel</button>
                 <button type="submit" class="action-btn primary">Upload</button>
+                <input type="hidden" name="department_id" id="department_id" value="{{category.department_id}}">
+                <input type="hidden" name="category_id" id="category_id" value="{{category.id}}">
+                <input type="hidden" name="document_type_id" id="document_type_id" value="{{document_type.id}}">
+                <input type="hidden" name="user_id" id="user_id">
             </div>
         </form>
     </div>
@@ -130,7 +93,6 @@ let currentPage = 1;
 const perPage = 9;
 let totalPages = 1;
 let itemToDelete = null;
-let userSearchTimeout = null;
 
 async function loadFilterOptions() {
     const contentDiv = document.getElementById('documentsContent');
@@ -148,86 +110,95 @@ async function loadFilterOptions() {
         // Load departments
         const deptResponse = await fetch('/api/departments');
         if (!deptResponse.ok) {
-            throw new Error(`Failed to load departments: ${deptResponse.status}`);
+            const errorData = await deptResponse.json();
+            throw new Error(errorData.error || 'Failed to load departments');
         }
         const departments = await deptResponse.json();
+        if (!Array.isArray(departments)) {
+            throw new Error('Invalid departments data format');
+        }
         populateFilterSelect('filterDepartment', departments);
         populateFilterSelect('documentDepartment', departments);
         
-        // Load users for the Add Document modal only
+        // Load users
         const userResponse = await fetch('/api/users');
         if (!userResponse.ok) {
-            throw new Error(`Failed to load users: ${userResponse.status}`);
+            const errorData = await userResponse.json();
+            throw new Error(errorData.error || 'Failed to load users');
         }
         const userData = await userResponse.json();
-        if (!userData.users) {
+        if (!userData.users || !Array.isArray(userData.users)) {
             throw new Error('Invalid users data format');
         }
+        populateFilterSelect('filterUser', userData.users);
         populateFilterSelect('documentUser', userData.users);
 
         // Reset category and document type filters
-        resetSelect('filterCategory', 'All Categories');
-        resetSelect('filterDocumentType', 'All Types');
+        resetSelect('filterCategory', 'Categories');
+        resetSelect('filterDocumentType', 'Types');
         resetSelect('documentCategory', 'Select Category');
         resetSelect('documentType', 'Select Document Type');
 
     } catch (error) {
         console.error('Error loading filter options:', error);
-        showNotification(`Failed to load some filter options: ${error.message}`, 'error');
+        showNotification(error.message || 'Failed to load filter options. Please try again.', 'error');
         
-        // Reset filters to a safe state
+        // Reset all filters to a safe state with error indication
         const filterIds = {
-            'filterDepartment': 'All Departments',
-            'documentDepartment': 'Select Department',
-            'filterCategory': 'All Categories',
-            'documentCategory': 'Select Category',
-            'filterDocumentType': 'All Types',
-            'documentType': 'Select Document Type',
-            'documentUser': 'Select User'
+            'filterDepartment': 'Departments',
+            'documentDepartment': 'Department',
+            'filterCategory': 'Categories',
+            'documentCategory': 'Category',
+            'filterDocumentType': 'Document Types',
+            'documentType': 'Document Type',
+            'filterUser': 'Users',
+            'documentUser': 'User'
         };
 
         Object.entries(filterIds).forEach(([id, label]) => {
-            resetSelect(id, label);
+            resetSelect(id, `${label} (Error loading)`);
         });
     } finally {
         hideLoading(contentDiv);
-        feather.replace();
     }
 }
 
-function resetFilters() {
-    document.getElementById('filterDepartment').value = '';
-    document.getElementById('filterCategory').value = '';
-    document.getElementById('filterDocumentType').value = '';
-    document.getElementById('filterUser').value = '';
-    applyFilters();
-}
-
-async function searchUser() {
-    const searchInput = document.getElementById('filterUser');
-    const searchTerm = searchInput.value.trim();
+function populateFilterSelect(selectId, items) {
+    const select = document.getElementById(selectId);
+    if (!select || !Array.isArray(items)) return;
     
-    if (userSearchTimeout) {
-        clearTimeout(userSearchTimeout);
-    }
-
-    userSearchTimeout = setTimeout(() => {
-        applyFilters();
-    }, 500);
+    const currentValue = select.value;
+    select.innerHTML = '';
+    
+    // Add default option
+    const defaultOption = document.createElement('option');
+    defaultOption.value = '';
+    defaultOption.textContent = selectId.includes('filter') ? 'All' : 'Select';
+    defaultOption.textContent += ' ' + (selectId.includes('User') ? 'Users' : 
+                                      selectId.includes('Department') ? 'Departments' : 
+                                      selectId.includes('Category') ? 'Categories' : 
+                                      'Types');
+    select.appendChild(defaultOption);
+    
+    items.forEach(item => {
+        const option = document.createElement('option');
+        option.value = item.id;
+        option.textContent = item.name;
+        select.appendChild(option);
+    });
+    
+    if (currentValue) select.value = currentValue;
 }
 
 async function applyFilters() {
     const filters = {
-        department_id: document.getElementById('filterDepartment').value,
-        category_id: document.getElementById('filterCategory').value,
-        document_type_id: document.getElementById('filterDocumentType').value,
-        user_search: document.getElementById('filterUser').value.trim()
+        document_type_id: '{{document_type.id}}',
+        user_cpf: document.getElementById('user-cpf-filter').value
     };
     
     // Store filters in URL params
     const params = new URLSearchParams(filters);
-
-    
+       
     // Reload documents with filters
     await loadDocuments(1, filters);
 }
@@ -451,7 +422,11 @@ async function createDocument(event) {
         hideModal('addDocumentModal');
         form.reset();
         document.getElementById('user_id').value =''
-        await loadDocuments(currentPage);
+        const filters = {
+            document_type_id: '{{document_type.id}}',
+            user_cpf: document.getElementById('user-cpf-filter').value
+        };
+        await loadDocuments(currentPage,filters);
         showNotification('Document created successfully', 'success');
     } catch (error) {
         console.error('Error creating document:', error);
@@ -597,7 +572,7 @@ async function loadDocuments(page = 1, filters = {}) {
 
 async function searchUser() {
     try {
-
+        
         openPopup();
         if(document.getElementById(`user_cpf`).value == ''){
             closePopup();
@@ -630,6 +605,7 @@ async function searchUser() {
 
         document.getElementById('name-user').value = usuario['name'];
         document.getElementById('user_id').value = usuario['id'];
+        closePopup();
     } catch (error) {
         console.error('Error loading documents:', error);
         showNotification(error.message || 'Failed to load users', 'error');
@@ -638,6 +614,7 @@ async function searchUser() {
         closePopup();
     }
 }
+
 function updatePaginationControls() {
     document.getElementById('prevPage').disabled = currentPage <= 1;
     document.getElementById('nextPage').disabled = currentPage >= totalPages;
@@ -651,7 +628,7 @@ function changePage(newPage) {
             department_id: urlParams.get('department_id') || '',
             category_id: urlParams.get('category_id') || '',
             document_type_id: urlParams.get('document_type_id') || '',
-            user_search: urlParams.get('user_search') || ''
+            user_id: urlParams.get('user_id') || ''
         };
         loadDocuments(newPage, filters);
     }
@@ -667,7 +644,6 @@ function hideModal(modalId) {
 
 function showAddDocumentModal() {
     document.getElementById('addDocumentForm').reset();
-    loadFilterOptions();
     showModal('addDocumentModal');
 }
 
@@ -691,8 +667,10 @@ async function downloadDocument(url) {
 
 // Initialize the page
 document.addEventListener('DOMContentLoaded', () => {
-    loadFilterOptions();
-    loadDocuments();
+    const filters = {
+        document_type_id: '{{document_type.id}}',
+    };
+    loadDocuments(1,filters);
     feather.replace();
 });
 </script>
@@ -925,6 +903,31 @@ document.addEventListener('DOMContentLoaded', () => {
     color: var(--danger-color);
 }
 
+.back-link {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    color: var(--text-secondary);
+    text-decoration: none;
+    margin-bottom: 1rem;
+}
+
+.back-link:hover {
+    color: var(--accent-color);
+}
+
+.header-title {
+    display: flex;
+    flex-direction: column;
+}
+
+.header-actions {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 2rem;
+}
+
 .loading-overlay {
     position: absolute;
     top: 0;
@@ -939,42 +942,70 @@ document.addEventListener('DOMContentLoaded', () => {
     z-index: 10;
 }
 
+.modal {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+}
+
+.modal-content {
+    position: relative;
+    background-color: var(--bg-secondary);
+    margin: 5% auto;
+    padding: 2rem;
+    border-radius: 12px;
+    max-width: 650px !important;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
+    animation: slideIn 0.3s ease;
+}
+
+.form-group {
+    display: flex;
+    flex-direction: column;
+    margin-bottom: 0.5rem !important;
+}
+
+.form-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+}
+
+.modal-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 0.5rem;
+    margin-top: 1rem;
+}
+
 .search-input {
     display: flex;
     gap: 0.5rem;
 }
 
-<<<<<<< HEAD
-.search-input {
-    display: flex;
-    gap: 0.5rem;
-}
-
-=======
->>>>>>> 0f9c593c49ca20f774f03c01065d1fc26236637d
 .search-input input {
     flex: 1;
     padding: 0.5rem;
     border: 1px solid var(--border-color);
     border-radius: 4px;
     background: var(--bg-tertiary);
-<<<<<<< HEAD
     color: var(--text-primary);
 }
 
 .search-input button {
     padding: 0.5rem 1rem;
 }
+
 .page-container {
     padding: 2rem;
 }
 
-=======
-}
->>>>>>> 0f9c593c49ca20f774f03c01065d1fc26236637d
 
-.search-input button {
-    padding: 0.5rem 1rem;
-}
 </style>
 {% endblock %}

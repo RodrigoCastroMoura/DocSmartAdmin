@@ -161,7 +161,9 @@ function generateCategoriesHTML(categories) {
         <div class="category-card" data-id="${category.id}">
             <div class="category-header">
                 <i data-feather="folder"></i>
-                <h3>${category.name}</h3>
+                <a href="/categories/${category.id}/document_types" class="category-link">
+                    <h3>${category.name}</h3>
+                </a>    
             </div>
             <div class="category-info">
                 <div class="department-badge">
@@ -277,7 +279,7 @@ async function confirmDelete() {
         const response = await fetch(`/api/categories/${id}`, {
             method: 'DELETE'
         });
-        
+
         if (!response.ok) {
                 const data = await response.json();
                 throw new Error(data.error || 'Failed to delete categories');
@@ -417,6 +419,15 @@ document.addEventListener('DOMContentLoaded', loadCategories);
 .no-data i {
     font-size: 3rem;
     margin-bottom: 1rem;
+}
+
+.category-link {
+    text-decoration: none;
+    color: var(--text-primary);
+}
+
+.category-link:hover h3 {
+    color: var(--accent-color);
 }
 </style>
 {% endblock %}
