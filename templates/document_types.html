@@ -85,18 +85,6 @@
     </div>
 </div>
 
-<!-- Delete Confirmation Modal -->
-<div id="deleteConfirmModal" class="modal">
-    <div class="modal-content">
-        <h3>Confirmar Exclusão</h3>
-        <p>Tem certeza que deseja excluir este item?</p>
-        <div class="modal-actions">
-            <button type="button" class="action-btn" onclick="hideModal('deleteConfirmModal')">Cancelar</button>
-            <button type="button" class="action-btn danger" onclick="confirmDelete()">Excluir</button>
-        </div>
-    </div>
-</div>
-
 <script>
 setupFormValidation('addDocumentTypeForm', {
     'documentTypeName': [
@@ -491,31 +479,5 @@ document.addEventListener('DOMContentLoaded', loadDocumentTypes);
     color: var(--accent-color);
 }
 
-.modal {
-    display: none;
-    position: fixed;
-    z-index: 1;
-    left: 0;
-    top: 0;
-    width: 100%;
-    height: 100%;
-    overflow: auto;
-    background-color: rgba(0,0,0,0.4);
-}
-
-.modal-content {
-    background-color: #fefefe;
-    margin: 15% auto;
-    padding: 20px;
-    border: 1px solid #888;
-    width: 30%;
-    text-align: center;
-}
-
-.modal-actions {
-    margin-top: 1rem;
-    display: flex;
-    justify-content: space-around;
-}
 </style>
 {% endblock %}

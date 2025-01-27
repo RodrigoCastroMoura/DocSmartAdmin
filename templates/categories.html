@@ -97,18 +97,6 @@
     </div>
 </div>
 
-<!-- Delete Confirmation Modal -->
-<div id="deleteConfirmModal" class="modal">
-    <div class="modal-content">
-        <h3>Confirmar Exclusão</h3>
-        <p>Tem certeza que deseja excluir esta categoria?</p>
-        <div class="modal-actions">
-            <button type="button" class="action-btn" onclick="hideModal('deleteConfirmModal')">Cancelar</button>
-            <button type="button" class="action-btn danger" onclick="confirmDelete()">Excluir</button>
-        </div>
-    </div>
-</div>
-
 <script src="{{ url_for('static', filename='js/validation.js') }}"></script>
 <script>
 setupFormValidation('addCategoryForm', {
@@ -440,35 +428,6 @@ document.addEventListener('DOMContentLoaded', loadCategories);
 
 .category-link:hover h3 {
     color: var(--accent-color);
-}
-
-.modal {
-    display: none;
-    position: fixed;
-    z-index: 1;
-    left: 0;
-    top: 0;
-    width: 100%;
-    height: 100%;
-    overflow: auto;
-    background-color: rgba(0,0,0,0.4);
-}
-
-.modal-content {
-    background-color: var(--bg-primary);
-    color: var(--text-primary);
-    margin: 15% auto;
-    padding: 20px;
-    border: 1px solid var(--border-color);
-    border-radius: 8px;
-    width: 30%;
-    text-align: center;
-}
-
-.modal-actions {
-    margin-top: 1rem;
-    display: flex;
-    justify-content: space-around;
 }
 </style>
 {% endblock %}
