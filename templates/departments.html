@@ -3,16 +3,16 @@
 {% block content %}
 <div class="page-container">
     <div class="header-actions">
-        <h2><i data-feather="briefcase"></i> Departments</h2>
+        <h2><i data-feather="briefcase"></i> Departamentos</h2>
         <button class="action-btn primary" onclick="showAddDepartmentModal()">
-            <i data-feather="plus"></i> Add Department
+            <i data-feather="plus"></i> Adicionar Departamento
         </button>
     </div>
     <div class="content-grid" id="departmentsContent">
         <div class="departments-grid">
             <div class="no-data">
                 <i data-feather="inbox"></i>
-                <p>Loading departments...</p>
+                <p>Carregando departamentos...</p>
             </div>
         </div>
     </div>
@@ -21,15 +21,15 @@
 <!-- Add Department Modal -->
 <div id="addDepartmentModal" class="modal">
     <div class="modal-content">
-        <h3>Add Department</h3>
+        <h3>Adicionar Departamento</h3>
         <form id="addDepartmentForm" onsubmit="createDepartment(event)">
             <div class="form-group">
-                <label for="departmentName">Department Name</label>
+                <label for="departmentName">Nome do Departamento</label>
                 <input type="text" id="departmentName" name="name" required>
             </div>
             <div class="modal-actions">
-                <button type="button" class="action-btn" onclick="hideModal('addDepartmentModal')">Cancel</button>
-                <button type="submit" class="action-btn primary">Add</button>
+                <button type="button" class="action-btn" onclick="hideModal('addDepartmentModal')">Cancelar</button>
+                <button type="submit" class="action-btn primary">Adicionar</button>
             </div>
         </form>
     </div>
@@ -38,18 +38,30 @@
 <!-- Edit Department Modal -->
 <div id="editDepartmentModal" class="modal">
     <div class="modal-content">
-        <h3>Edit Department</h3>
+        <h3>Editar Departamento</h3>
         <form id="editDepartmentForm" onsubmit="updateDepartment(event)">
             <input type="hidden" id="editDepartmentId">
             <div class="form-group">
-                <label for="editDepartmentName">Department Name</label>
+                <label for="editDepartmentName">Nome do Departamento</label>
                 <input type="text" id="editDepartmentName" name="name" required>
             </div>
             <div class="modal-actions">
-                <button type="button" class="action-btn" onclick="hideModal('editDepartmentModal')">Cancel</button>
-                <button type="submit" class="action-btn primary">Update</button>
+                <button type="button" class="action-btn" onclick="hideModal('editDepartmentModal')">Cancelar</button>
+                <button type="submit" class="action-btn primary">Atualizar</button>
             </div>
         </form>
+    </div>
+</div>
+
+<!-- Delete Confirmation Modal -->
+<div id="deleteConfirmModal" class="modal">
+    <div class="modal-content">
+        <h3>Confirmar Exclusão</h3>
+        <p>Tem certeza que deseja excluir este departamento?</p>
+        <div class="modal-actions">
+            <button type="button" class="action-btn" onclick="hideModal('deleteConfirmModal')">Cancelar</button>
+            <button type="button" class="action-btn danger" onclick="confirmDelete()">Excluir</button>
+        </div>
     </div>
 </div>
 
@@ -80,7 +92,7 @@ function showDeleteConfirmation(id) {
 
 async function confirmDelete() {
     if (!itemToDelete) return;
-    
+
     const id = itemToDelete;
     hideModal('deleteConfirmModal');
     const card = document.querySelector(`.department-card[data-id="${id}"]`);
@@ -93,14 +105,14 @@ async function confirmDelete() {
 
         if (!response.ok) {
             const data = await response.json();
-            throw new Error(data.error || 'Failed to delete department');
+            throw new Error(data.error || 'Falha ao excluir departamento');
         }
 
         await loadDepartments();
-        showNotification('Department deleted successfully', 'success');
+        showNotification('Departamento excluído com sucesso', 'success');
     } catch (error) {
-        console.error('Error deleting department:', error);
-        showNotification(error.message || 'Failed to delete department', 'error');
+        console.error('Erro ao excluir departamento:', error);
+        showNotification(error.message || 'Falha ao excluir departamento', 'error');
     } finally {
         hideLoading(card);
         itemToDelete = null;
@@ -116,26 +128,26 @@ async function loadDepartments() {
         const data = await response.json();
 
         if (!response.ok) {
-            throw new Error(data.error || `Failed to load departments (${response.status})`);
+            throw new Error(data.error || `Falha ao carregar departamentos (${response.status})`);
         }
-        
+
         if (!Array.isArray(data)) {
-            throw new Error('Invalid response format: expected an array');
+            throw new Error('Formato de resposta inválido: esperado um array');
         }
-        
+
         contentDiv.innerHTML = generateDepartmentsHTML(data);
         feather.replace();
     } catch (error) {
-        console.error('Error loading departments:', error);
+        console.error('Erro ao carregar departamentos:', error);
         contentDiv.innerHTML = `
             <div class="departments-grid">
                 <div class="no-data error">
                     <i data-feather="alert-circle"></i>
-                    <p>${error.message || 'Failed to load departments. Please try again.'}</p>
+                    <p>${error.message || 'Falha ao carregar departamentos. Por favor, tente novamente.'}</p>
                 </div>
             </div>`;
         feather.replace();
-        showNotification(error.message || 'Failed to load departments. Please try again.', 'error');
+        showNotification(error.message || 'Falha ao carregar departamentos. Por favor, tente novamente.', 'error');
     } finally {
         hideLoading(contentDiv);
     }
@@ -147,7 +159,7 @@ function generateDepartmentsHTML(departments) {
             <div class="departments-grid">
                 <div class="no-data">
                     <i data-feather="inbox"></i>
-                    <p>No departments found</p>
+                    <p>Nenhum departamento encontrado</p>
                 </div>
             </div>`;
     }
@@ -167,14 +179,14 @@ function generateDepartmentsHTML(departments) {
                     <div class="stat">
                         <i data-feather="grid"></i>
                         <div class="stat-info">
-                            <span>Categories</span>
+                            <span>Categorias</span>
                             <p>${department.category_count || 0}</p>
                         </div>
                     </div>
                     <div class="stat">
                         <i data-feather="file-text"></i>
                         <div class="stat-info">
-                            <span>Documents</span>
+                            <span>Documentos</span>
                             <p>${department.document_count || 0}</p>
                         </div>
                     </div>
@@ -183,7 +195,7 @@ function generateDepartmentsHTML(departments) {
                     <button class="action-btn" onclick="showEditDepartmentModal('${department.id}', '${department.name}')">
                         <i data-feather="edit-2"></i>
                     </button>
-                    <button class="action-btn danger" onclick="deleteDepartment('${department.id}')">
+                    <button class="action-btn danger" onclick="showDeleteConfirmation('${department.id}')">
                         <i data-feather="trash-2"></i>
                     </button>
                 </div>
@@ -195,11 +207,11 @@ async function createDepartment(event) {
     event.preventDefault();
     const form = event.target;
     const submitButton = form.querySelector('button[type="submit"]');
-    
+
     if (!validateForm(form)) {
         return;
     }
-    
+
     const name = form.name.value;
     showLoading(submitButton);
 
@@ -214,16 +226,16 @@ async function createDepartment(event) {
 
         const data = await response.json();
         if (!response.ok) {
-            throw new Error(data.error || 'Failed to create department');
+            throw new Error(data.error || 'Falha ao criar departamento');
         }
 
         hideModal('addDepartmentModal');
         form.reset();
         await loadDepartments();
-        showNotification('Department created successfully', 'success');
+        showNotification('Departamento criado com sucesso', 'success');
     } catch (error) {
-        console.error('Error creating department:', error);
-        showNotification(error.message || 'Failed to create department', 'error');
+        console.error('Erro ao criar departamento:', error);
+        showNotification(error.message || 'Falha ao criar departamento', 'error');
     } finally {
         hideLoading(submitButton);
     }
@@ -233,11 +245,11 @@ async function updateDepartment(event) {
     event.preventDefault();
     const form = event.target;
     const submitButton = form.querySelector('button[type="submit"]');
-    
+
     if (!validateForm(form)) {
         return;
     }
-    
+
     const id = document.getElementById('editDepartmentId').value;
     const name = document.getElementById('editDepartmentName').value;
     showLoading(submitButton);
@@ -253,15 +265,15 @@ async function updateDepartment(event) {
 
         const data = await response.json();
         if (!response.ok) {
-            throw new Error(data.error || 'Failed to update department');
+            throw new Error(data.error || 'Falha ao atualizar departamento');
         }
 
         hideModal('editDepartmentModal');
         await loadDepartments();
-        showNotification('Department updated successfully', 'success');
+        showNotification('Departamento atualizado com sucesso', 'success');
     } catch (error) {
-        console.error('Error updating department:', error);
-        showNotification(error.message || 'Failed to update department', 'error');
+        console.error('Erro ao atualizar departamento:', error);
+        showNotification(error.message || 'Falha ao atualizar departamento', 'error');
     } finally {
         hideLoading(submitButton);
     }
@@ -424,5 +436,33 @@ document.addEventListener('DOMContentLoaded', loadDepartments);
     padding: 2rem;
 }
 
+.modal {
+    display: none;
+    position: fixed;
+    z-index: 1;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    overflow: auto;
+    background-color: rgba(0,0,0,0.4);
+}
+
+.modal-content {
+    background-color: var(--bg-primary);
+    color: var(--text-primary);
+    margin: 15% auto;
+    padding: 20px;
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    width: 30%;
+    text-align: center;
+}
+
+.modal-actions {
+    margin-top: 1rem;
+    display: flex;
+    justify-content: space-around;
+}
 </style>
 {% endblock %}
