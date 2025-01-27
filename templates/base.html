@@ -4,6 +4,41 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Admin Dashboard</title>
+
+    <!-- Theme Management - Must be first -->
+    <script>
+        // Initialize theme before page loads
+        const theme = localStorage.getItem('theme') || 'light';
+        document.documentElement.setAttribute('data-theme', theme);
+
+        // Theme management functions
+        function updateThemeIcon(theme) {
+            const icon = document.getElementById('themeIcon');
+            if (icon) {
+                icon.setAttribute('data-feather', theme === 'light' ? 'moon' : 'sun');
+                if (window.feather) feather.replace();
+            }
+        }
+
+        function setTheme(theme) {
+            document.documentElement.setAttribute('data-theme', theme);
+            localStorage.setItem('theme', theme);
+            updateThemeIcon(theme);
+        }
+
+        function toggleTheme() {
+            const currentTheme = document.documentElement.getAttribute('data-theme');
+            const newTheme = currentTheme === 'light' ? 'dark' : 'light';
+            setTheme(newTheme);
+        }
+
+        // Update icon on DOMContentLoaded
+        document.addEventListener('DOMContentLoaded', () => {
+            updateThemeIcon(theme);
+            feather.replace();
+        });
+    </script>
+
     <!-- Block rendering until theme is ready -->
     <style>
         html {
@@ -17,9 +52,8 @@
             transition: opacity 0.2s ease;
         }
 
-        /* Define theme variables */
+        /* Theme variables */
         :root {
-            /* Light theme (default) */
             --bg-primary: #ffffff;
             --bg-secondary: #f3f4f6;
             --bg-tertiary: #e5e7eb;
@@ -46,15 +80,7 @@
             --border-color: #333333;
         }
     </style>
-    <!-- Immediate theme application -->
-    <script>
-        (function() {
-            const savedTheme = localStorage.getItem('theme');
-            if (savedTheme) {
-                document.documentElement.setAttribute('data-theme', savedTheme);
-            }
-        })();
-    </script>
+
     <link rel="stylesheet" href="{{ url_for('static', filename='css/main.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/dashboard.css') }}">
     <script src="https://unpkg.com/feather-icons"></script>
@@ -189,33 +215,11 @@
             const customPopup = document.getElementById('customPopup');
             customPopup.classList.remove('active');
         }
-        // Theme handling
-        function setTheme(theme) {
-            document.documentElement.setAttribute('data-theme', theme);
-            localStorage.setItem('theme', theme);
 
-            // Update theme icon
-            const themeIcon = document.getElementById('themeIcon');
-            if (themeIcon) {
-                themeIcon.setAttribute('data-feather', theme === 'light' ? 'moon' : 'sun');
-                feather.replace();
-            }
-        }
-
-        function toggleTheme() {
-            const currentTheme = localStorage.getItem('theme') || 'light';
-            const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
-            setTheme(newTheme);
-        }
-
-        // Initialize theme icon on page load
+        // Initialize theme and icon on page load
         document.addEventListener('DOMContentLoaded', () => {
-            const currentTheme = localStorage.getItem('theme') || 'light';
-            const themeIcon = document.getElementById('themeIcon');
-            if (themeIcon) {
-                themeIcon.setAttribute('data-feather', currentTheme === 'light' ? 'moon' : 'sun');
-                feather.replace();
-            }
+            feather.replace();
+            initTheme();
         });
     </script>
 
