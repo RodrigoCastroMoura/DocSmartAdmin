@@ -1,29 +1,60 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-theme="light">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Admin Dashboard</title>
-    <!-- Prevent theme flash -->
-    <script>
-        // Immediately apply theme before any content loads
-        (function() {
-            function getInitialTheme() {
-                const persistedTheme = localStorage.getItem('theme');
-                return persistedTheme || 'light';
-            }
-            const theme = getInitialTheme();
-            document.documentElement.setAttribute('data-theme', theme);
-            // Store the theme to ensure consistency
-            localStorage.setItem('theme', theme);
-        })();
-    </script>
+    <!-- Block rendering until theme is ready -->
     <style>
-        /* Hide content until theme is applied */
-        html:not([data-theme]) {
+        html {
             visibility: hidden;
+            opacity: 0;
+            background-color: #ffffff;  /* Light theme default */
+        }
+        html[data-theme] {
+            visibility: visible;
+            opacity: 1;
+            transition: opacity 0.2s ease;
+        }
+
+        /* Define theme variables */
+        :root {
+            /* Light theme (default) */
+            --bg-primary: #ffffff;
+            --bg-secondary: #f3f4f6;
+            --bg-tertiary: #e5e7eb;
+            --text-primary: #111827;
+            --text-secondary: #4b5563;
+            --border-color: #d1d5db;
+            --accent-color: #3b82f6;
+            --accent-hover: #2563eb;
+            --danger-color: #ef4444;
+            --danger-hover: #dc2626;
+            --success-color: #22c55e;
+            --success-hover: #16a34a;
+            --danger-rgb: 239,68,68;
+            --success-rgb: 34,197,94;
+            --accent-rgb: 59,130,246;
+        }
+
+        [data-theme="dark"] {
+            --bg-primary: #1a1a1a;
+            --bg-secondary: #242424;
+            --bg-tertiary: #2a2a2a;
+            --text-primary: #ffffff;
+            --text-secondary: #a0a0a0;
+            --border-color: #333333;
         }
     </style>
+    <!-- Immediate theme application -->
+    <script>
+        (function() {
+            const savedTheme = localStorage.getItem('theme');
+            if (savedTheme) {
+                document.documentElement.setAttribute('data-theme', savedTheme);
+            }
+        })();
+    </script>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/main.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/dashboard.css') }}">
     <script src="https://unpkg.com/feather-icons"></script>
@@ -163,6 +194,7 @@
             document.documentElement.setAttribute('data-theme', theme);
             localStorage.setItem('theme', theme);
 
+            // Update theme icon
             const themeIcon = document.getElementById('themeIcon');
             if (themeIcon) {
                 themeIcon.setAttribute('data-feather', theme === 'light' ? 'moon' : 'sun');
@@ -176,7 +208,7 @@
             setTheme(newTheme);
         }
 
-        // Initialize theme icon on DOM content loaded
+        // Initialize theme icon on page load
         document.addEventListener('DOMContentLoaded', () => {
             const currentTheme = localStorage.getItem('theme') || 'light';
             const themeIcon = document.getElementById('themeIcon');
@@ -184,8 +216,6 @@
                 themeIcon.setAttribute('data-feather', currentTheme === 'light' ? 'moon' : 'sun');
                 feather.replace();
             }
-            // Ensure visibility after theme is applied
-            document.documentElement.style.visibility = 'visible';
         });
     </script>
 
@@ -520,51 +550,6 @@
             }
         }
 
-        :root {
-            /* Light theme variables (default) */
-            --bg-primary: #ffffff;
-            --bg-secondary: #f3f4f6;
-            --bg-tertiary: #e5e7eb;
-            --text-primary: #111827;
-            --text-secondary: #4b5563;
-            --border-color: #d1d5db;
-            --accent-color: #3b82f6;
-            --accent-hover: #2563eb;
-            --danger-color: #ef4444;
-            --danger-hover: #dc2626;
-            --success-color: #22c55e;
-            --success-hover: #16a34a;
-            --danger-rgb: 239,68,68;
-            --success-rgb: 34,197,94;
-            --accent-rgb: 59,130,246;
-        }
-
-        [data-theme="dark"] {
-            --bg-primary: #1a1a1a;
-            --bg-secondary: #242424;
-            --bg-tertiary: #2a2a2a;
-            --text-primary: #ffffff;
-            --text-secondary: #a0a0a0;
-            --border-color: #333333;
-        }
-
-        /* Theme toggle button styles */
-        .theme-toggle {
-            background: none;
-            border: none;
-            color: var(--text-primary);
-            cursor: pointer;
-            padding: 0.5rem;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            transition: background-color 0.2s;
-        }
-
-        .theme-toggle:hover {
-            background-color: var(--bg-tertiary);
-        }
         body {
             background-color: var(--bg-primary);
             color: var(--text-primary);
@@ -588,6 +573,22 @@
         .nav-item.active {
             background-color: var(--accent-color);
             color: white;
+        }
+        .theme-toggle {
+            background: none;
+            border: none;
+            color: var(--text-primary);
+            cursor: pointer;
+            padding: 0.5rem;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: background-color 0.2s;
+        }
+
+        .theme-toggle:hover {
+            background-color: var(--bg-tertiary);
         }
     </style>
 
