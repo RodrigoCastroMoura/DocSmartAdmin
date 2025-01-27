@@ -6,15 +6,15 @@
         <div class="header-title">
             <a href="{{ url_for('department_categories', department_id=category.department_id) }}" class="back-link">
                 <i data-feather="arrow-left"></i>
-                Back to Categories
+                Voltar para Categorias
             </a>
             <h2>
                 <i data-feather="file"></i> 
-                Document Types for {{ category.name if category else 'Unknown Category' }}
+                Tipos de Documentos para {{ category.name if category else 'Categoria Desconhecida' }}
             </h2>
         </div>
         <button class="action-btn primary" onclick="showAddDocumentTypeModal()">
-            <i data-feather="plus"></i> Add Document Type
+            <i data-feather="plus"></i> Adicionar Tipo de Documento
         </button>
     </div>
     <div class="content-grid">
@@ -29,10 +29,10 @@
                         </a>    
                     </div>
                     <div class="document-type-info">
-                        <p class="description">{{ type.description or 'No description' }}</p>
+                        <p class="description">{{ type.description or 'Sem descrição' }}</p>
                         <p class="meta">
-                            <span>Documents:  {{ type.document_count|default(0)}}</span>
-                            <span>Created:</span>
+                            <span>Documentos: {{ type.document_count|default(0)}}</span>
+                            <span>Criado em:</span>
                         </p>
                     </div>
                     <div class="document-type-actions">
@@ -48,7 +48,7 @@
             {% else %}
                 <div class="no-data">
                     <i data-feather="inbox"></i>
-                    <p>No document types found for this category</p>
+                    <p>Nenhum tipo de documento encontrado para esta categoria</p>
                 </div>
             {% endif %}
         </div>
@@ -58,20 +58,20 @@
 <!-- Add Document Type Modal -->
 <div id="addDocumentTypeModal" class="modal">
     <div class="modal-content">
-        <h3>Add Document Type</h3>
+        <h3>Adicionar Tipo de Documento</h3>
         <form id="addDocumentTypeForm" onsubmit="createDocumentType(event)">
             <div class="form-group">
-                <label for="documentTypeName">Name</label>
+                <label for="documentTypeName">Nome</label>
                 <input type="text" id="documentTypeName" name="name" required>
             </div>
             <div class="form-group">
-                <label for="documentTypeDescription">Description</label>
+                <label for="documentTypeDescription">Descrição</label>
                 <input type="text" id="documentTypeDescription" name="description">
             </div>
             <input type="hidden" name="category_id" value="{{ category.id }}">
             <div class="modal-actions">
-                <button type="button" class="action-btn" onclick="hideModal('addDocumentTypeModal')">Cancel</button>
-                <button type="submit" class="action-btn primary">Add</button>
+                <button type="button" class="action-btn" onclick="hideModal('addDocumentTypeModal')">Cancelar</button>
+                <button type="submit" class="action-btn primary">Adicionar</button>
             </div>
         </form>
     </div>
@@ -80,21 +80,21 @@
 <!-- Edit Document Type Modal -->
 <div id="editDocumentTypeModal" class="modal">
     <div class="modal-content">
-        <h3>Edit Document Type</h3>
+        <h3>Editar Tipo de Documento</h3>
         <form id="editDocumentTypeForm" onsubmit="updateDocumentType(event)">
             <input type="hidden" id="editDocumentTypeId">
             <input type="hidden" name="category_id" value="{{ category.id }}">
             <div class="form-group">
-                <label for="editDocumentTypeName">Name</label>
+                <label for="editDocumentTypeName">Nome</label>
                 <input type="text" id="editDocumentTypeName" name="name" required>
             </div>
             <div class="form-group">
-                <label for="editDocumentTypeDescription">Description</label>
+                <label for="editDocumentTypeDescription">Descrição</label>
                 <input type="text" id="editDocumentTypeDescription" name="description">
             </div>
             <div class="modal-actions">
-                <button type="button" class="action-btn" onclick="hideModal('editDocumentTypeModal')">Cancel</button>
-                <button type="submit" class="action-btn primary">Update</button>
+                <button type="button" class="action-btn" onclick="hideModal('editDocumentTypeModal')">Cancelar</button>
+                <button type="submit" class="action-btn primary">Atualizar</button>
             </div>
         </form>
     </div>
@@ -123,22 +123,22 @@ async function loadDocumentTypes() {
 
     try {
         const response = await fetch(window.location.pathname);
-        if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+        if (!response.ok) throw new Error(`Erro HTTP! status: ${response.status}`);
         const html = await response.text();
         const parser = new DOMParser();
         const doc = parser.parseFromString(html, 'text/html');
         const newContent = doc.querySelector('.document-types-grid');
-        
+
         if (newContent) {
             contentDiv.innerHTML = newContent.innerHTML;
             feather.replace();
         }
     } catch (error) {
-        console.error('Error loading document types:', error);
+        console.error('Erro ao carregar tipos de documentos:', error);
         contentDiv.innerHTML = `
             <div class="no-data">
                 <i data-feather="alert-circle"></i>
-                <p>${error.message || 'Failed to load document types'}</p>
+                <p>${error.message || 'Falha ao carregar tipos de documentos'}</p>
             </div>`;
         feather.replace();
     } finally {
@@ -170,11 +170,11 @@ async function createDocumentType(event) {
     event.preventDefault();
     const form = event.target;
     const submitButton = form.querySelector('button[type="submit"]');
-    
+
     if (!validateForm(form)) {
         return;
     }
-    
+
     const formData = new FormData(form);
     const data = Object.fromEntries(formData);
     showLoading(submitButton);
@@ -190,15 +190,15 @@ async function createDocumentType(event) {
 
         if (!response.ok) {
             const errorData = await response.json();
-            throw new Error(errorData.error || 'Failed to create document type');
+            throw new Error(errorData.error || 'Falha ao criar tipo de documento');
         }
 
         hideModal('addDocumentTypeModal');
         form.reset();
         await loadDocumentTypes();
-        showNotification('Document type created successfully', 'success');
+        showNotification('Tipo de documento criado com sucesso', 'success');
     } catch (error) {
-        console.error('Error creating document type:', error);
+        console.error('Erro ao criar tipo de documento:', error);
         showErrorMessage(error.message);
     } finally {
         hideLoading(submitButton);
@@ -209,11 +209,11 @@ async function updateDocumentType(event) {
     event.preventDefault();
     const form = event.target;
     const submitButton = form.querySelector('button[type="submit"]');
-    
+
     if (!validateForm(form)) {
         return;
     }
-    
+
     const id = document.getElementById('editDocumentTypeId').value;
     const formData = new FormData(form);
     const data = Object.fromEntries(formData);
@@ -230,14 +230,14 @@ async function updateDocumentType(event) {
 
         if (!response.ok) {
             const errorData = await response.json();
-            throw new Error(errorData.error || 'Failed to update document type');
+            throw new Error(errorData.error || 'Falha ao atualizar tipo de documento');
         }
 
         hideModal('editDocumentTypeModal');
         await loadDocumentTypes();
-        showNotification('Document type updated successfully', 'success');
+        showNotification('Tipo de documento atualizado com sucesso', 'success');
     } catch (error) {
-        console.error('Error updating document type:', error);
+        console.error('Erro ao atualizar tipo de documento:', error);
         showErrorMessage(error.message);
     } finally {
         hideLoading(submitButton);
@@ -246,9 +246,9 @@ async function updateDocumentType(event) {
 
 let itemToDelete = null;
 
-async function  confirmDelete() { 
+async function confirmDelete() { 
     if (!itemToDelete) return;
- 
+
     const id = itemToDelete;
     hideModal('deleteConfirmModal');
     const card = document.querySelector(`.document-type-card[data-id="${id}"]`);
@@ -261,13 +261,13 @@ async function  confirmDelete() {
 
         if (!response.ok) {
             const errorData = await response.json();
-            throw new Error(errorData.error || 'Failed to delete document type');
+            throw new Error(errorData.error || 'Falha ao excluir tipo de documento');
         }
 
         await loadDocumentTypes();
-        showNotification('Document type deleted successfully', 'success');
+        showNotification('Tipo de documento excluído com sucesso', 'success');
     } catch (error) {
-        console.error('Error deleting document type:', error);
+        console.error('Erro ao excluir tipo de documento:', error);
         showErrorMessage(error.message);
     } finally {
         hideLoading(card);

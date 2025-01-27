@@ -3,16 +3,16 @@
 {% block content %}
 <div class="page-container">
     <div class="header-actions">
-        <h2><i data-feather="file"></i> Document Types</h2>
+        <h2><i data-feather="file"></i> Tipos de Documentos</h2>
         <button class="action-btn primary" onclick="showAddDocumentTypeModal()">
-            <i data-feather="plus"></i> Add Document Type
+            <i data-feather="plus"></i> Adicionar Tipo de Documento
         </button>
     </div>
     <div class="content-grid" id="documentTypesContent">
         <div class="document-types-grid">
             <div class="no-data">
                 <i data-feather="inbox"></i>
-                <p>Loading document types...</p>
+                <p>Carregando tipos de documentos...</p>
             </div>
         </div>
     </div>
@@ -21,31 +21,31 @@
 <!-- Add Document Type Modal -->
 <div id="addDocumentTypeModal" class="modal">
     <div class="modal-content">
-        <h3>Add Document Type</h3>
+        <h3>Adicionar Tipo de Documento</h3>
         <form id="addDocumentTypeForm" onsubmit="createDocumentType(event)">
             <div class="form-group">
-                <label for="documentTypeName">Name</label>
+                <label for="documentTypeName">Nome</label>
                 <input type="text" id="documentTypeName" name="name" required>
             </div>
             <div class="form-group">
-                <label for="documentTypeDescription">Description</label>
+                <label for="documentTypeDescription">Descrição</label>
                 <input type="text" id="documentTypeDescription" name="description">
             </div>
             <div class="form-group">
-                <label for="documentTypeDepartment">Department</label>
+                <label for="documentTypeDepartment">Departamento</label>
                 <select id="documentTypeDepartment" onchange="loadDepartmentCategories(this.value)">
-                    <option value="">Select Department</option>
+                    <option value="">Selecionar Departamento</option>
                 </select>
             </div>
             <div class="form-group">
-                <label for="documentTypeCategory">Category</label>
+                <label for="documentTypeCategory">Categoria</label>
                 <select id="documentTypeCategory" name="category_id" required>
-                    <option value="">Select Category</option>
+                    <option value="">Selecionar Categoria</option>
                 </select>
             </div>
             <div class="modal-actions">
-                <button type="button" class="action-btn" onclick="hideModal('addDocumentTypeModal')">Cancel</button>
-                <button type="submit" class="action-btn primary">Add</button>
+                <button type="button" class="action-btn" onclick="hideModal('addDocumentTypeModal')">Cancelar</button>
+                <button type="submit" class="action-btn primary">Adicionar</button>
             </div>
         </form>
     </div>
@@ -54,32 +54,32 @@
 <!-- Edit Document Type Modal -->
 <div id="editDocumentTypeModal" class="modal">
     <div class="modal-content">
-        <h3>Edit Document Type</h3>
+        <h3>Editar Tipo de Documento</h3>
         <form id="editDocumentTypeForm" onsubmit="updateDocumentType(event)">
             <input type="hidden" id="editDocumentTypeId">
             <div class="form-group">
-                <label for="editDocumentTypeName">Name</label>
+                <label for="editDocumentTypeName">Nome</label>
                 <input type="text" id="editDocumentTypeName" name="name" required>
             </div>
             <div class="form-group">
-                <label for="editDocumentTypeDescription">Description</label>
+                <label for="editDocumentTypeDescription">Descrição</label>
                 <input type="text" id="editDocumentTypeDescription" name="description">
             </div>
             <div class="form-group">
-                <label for="editDocumentTypeDepartment">Department</label>
+                <label for="editDocumentTypeDepartment">Departamento</label>
                 <select id="editDocumentTypeDepartment" onchange="loadDepartmentCategories(this.value, 'editDocumentTypeCategory')">
-                    <option value="">Select Department</option>
+                    <option value="">Selecionar Departamento</option>
                 </select>
             </div>
             <div class="form-group">
-                <label for="editDocumentTypeCategory">Category</label>
+                <label for="editDocumentTypeCategory">Categoria</label>
                 <select id="editDocumentTypeCategory" name="category_id" required>
-                    <option value="">Select Category</option>
+                    <option value="">Selecionar Categoria</option>
                 </select>
             </div>
             <div class="modal-actions">
-                <button type="button" class="action-btn" onclick="hideModal('editDocumentTypeModal')">Cancel</button>
-                <button type="submit" class="action-btn primary">Update</button>
+                <button type="button" class="action-btn" onclick="hideModal('editDocumentTypeModal')">Cancelar</button>
+                <button type="submit" class="action-btn primary">Atualizar</button>
             </div>
         </form>
     </div>
@@ -113,47 +113,47 @@ async function loadDepartments() {
         document.getElementById('documentTypeDepartment'),
         document.getElementById('editDocumentTypeDepartment')
     ];
-    
+
     try {
         const response = await fetch('/api/departments');
-        if (!response.ok) throw new Error('Failed to load departments');
+        if (!response.ok) throw new Error('Falha ao carregar departamentos');
         const data = await response.json();
-        
+
         const departmentsOptions = `
-            <option value="">Select Department</option>
+            <option value="">Selecionar Departamento</option>
             ${data.map(dept => 
                 `<option value="${dept.id}">${dept.name}</option>`
             ).join('')}`;
-            
+
         departmentSelects.forEach(select => {
             if (select) select.innerHTML = departmentsOptions;
         });
     } catch (error) {
-        console.error('Error loading departments:', error);
+        console.error('Erro ao carregar departamentos:', error);
         departmentSelects.forEach(select => {
-            if (select) select.innerHTML = '<option value="">Error loading departments</option>';
+            if (select) select.innerHTML = '<option value="">Erro ao carregar departamentos</option>';
         });
     }
 }
 
 async function loadDepartmentCategories(departmentId, targetId = 'documentTypeCategory') {
     const categorySelect = document.getElementById(targetId);
-    categorySelect.innerHTML = '<option value="">Loading categories...</option>';
+    categorySelect.innerHTML = '<option value="">Carregando categorias...</option>';
     categorySelect.disabled = true;
 
     try {
         const response = await fetch(`/api/categories/departments/${departmentId}/categories`);
-        if (!response.ok) throw new Error('Failed to load categories');
+        if (!response.ok) throw new Error('Falha ao carregar categorias');
         const data = await response.json();
-        
+
         categorySelect.innerHTML = `
-            <option value="">Select Category</option>
+            <option value="">Selecionar Categoria</option>
             ${data.categories.map(cat => 
                 `<option value="${cat.id}">${cat.name}</option>`
             ).join('')}`;
     } catch (error) {
-        console.error('Error loading categories:', error);
-        categorySelect.innerHTML = '<option value="">Error loading categories</option>';
+        console.error('Erro ao carregar categorias:', error);
+        categorySelect.innerHTML = '<option value="">Erro ao carregar categorias</option>';
     } finally {
         categorySelect.disabled = false;
     }
@@ -166,23 +166,23 @@ async function loadDocumentTypes() {
     try {
         const response = await fetch('/api/document_types');
         if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status}`);
+            throw new Error(`Erro HTTP! status: ${response.status}`);
         }
-        
+
         const data = await response.json();
         if (!data || !data.document_types) {
-            throw new Error('Invalid response format');
+            throw new Error('Formato de resposta inválido');
         }
 
         contentDiv.innerHTML = generateDocumentTypesHTML(data.document_types);
         feather.replace();
     } catch (error) {
-        console.error('Error loading document types:', error);
+        console.error('Erro ao carregar tipos de documentos:', error);
         contentDiv.innerHTML = `
             <div class="document-types-grid">
                 <div class="no-data">
                     <i data-feather="alert-circle"></i>
-                    <p>${error.message || 'Failed to load document types'}</p>
+                    <p>${error.message || 'Falha ao carregar tipos de documentos'}</p>
                 </div>
             </div>`;
         feather.replace();
@@ -197,7 +197,7 @@ function generateDocumentTypesHTML(types) {
             <div class="document-types-grid">
                 <div class="no-data">
                     <i data-feather="inbox"></i>
-                    <p>No document types found</p>
+                    <p>Nenhum tipo de documento encontrado</p>
                 </div>
             </div>`;
     }
@@ -211,10 +211,10 @@ function generateDocumentTypesHTML(types) {
                 </a>   
             </div>
             <div class="document-type-info">
-                <p class="description">${type.description || 'No description'}</p>
+                <p class="description">${type.description || 'Sem descrição'}</p>
                 <p class="meta">
-                    <span>Documents: ${type.document_count || 0}</span>
-                    <span>Created: ${new Date(type.created_at).toLocaleDateString()}</span>
+                    <span>Documentos: ${type.document_count || 0}</span>
+                    <span>Criado em: ${new Date(type.created_at).toLocaleDateString()}</span>
                 </p>
             </div>
             <div class="document-type-actions">
@@ -235,11 +235,11 @@ async function createDocumentType(event) {
     event.preventDefault();
     const form = event.target;
     const submitButton = form.querySelector('button[type="submit"]');
-    
+
     if (!validateForm(form)) {
         return;
     }
-    
+
     const formData = new FormData(form);
     const data = Object.fromEntries(formData);
     showLoading(submitButton);
@@ -255,15 +255,15 @@ async function createDocumentType(event) {
 
         if (!response.ok) {
             const errorData = await response.json();
-            throw new Error(errorData.error || 'Failed to create document type');
+            throw new Error(errorData.error || 'Falha ao criar tipo de documento');
         }
 
         hideModal('addDocumentTypeModal');
         form.reset();
         await loadDocumentTypes();
-        showNotification('Document type created successfully', 'success');
+        showNotification('Tipo de documento criado com sucesso', 'success');
     } catch (error) {
-        console.error('Error creating document type:', error);
+        console.error('Erro ao criar tipo de documento:', error);
         showErrorMessage(error.message);
     } finally {
         hideLoading(submitButton);
@@ -274,11 +274,11 @@ async function updateDocumentType(event) {
     event.preventDefault();
     const form = event.target;
     const submitButton = form.querySelector('button[type="submit"]');
-    
+
     if (!validateForm(form)) {
         return;
     }
-    
+
     const id = document.getElementById('editDocumentTypeId').value;
     const formData = new FormData(form);
     const data = Object.fromEntries(formData);
@@ -295,14 +295,14 @@ async function updateDocumentType(event) {
 
         if (!response.ok) {
             const errorData = await response.json();
-            throw new Error(errorData.error || 'Failed to update document type');
+            throw new Error(errorData.error || 'Falha ao atualizar tipo de documento');
         }
 
         hideModal('editDocumentTypeModal');
         await loadDocumentTypes();
-        showNotification('Document type updated successfully', 'success');
+        showNotification('Tipo de documento atualizado com sucesso', 'success');
     } catch (error) {
-        console.error('Error updating document type:', error);
+        console.error('Erro ao atualizar tipo de documento:', error);
         showErrorMessage(error.message);
     } finally {
         hideLoading(submitButton);
@@ -312,7 +312,6 @@ async function updateDocumentType(event) {
 let itemToDelete = null;
 
 async function confirmDelete() { 
-
     if (!itemToDelete) return;
 
     const id = itemToDelete;
@@ -327,18 +326,19 @@ async function confirmDelete() {
 
         if (!response.ok) {
             const errorData = await response.json();
-            throw new Error(errorData.error || 'Failed to delete document type');
+            throw new Error(errorData.error || 'Falha ao excluir tipo de documento');
         }
 
         await loadDocumentTypes();
-        showNotification('Document type deleted successfully', 'success');
+        showNotification('Tipo de documento excluído com sucesso', 'success');
     } catch (error) {
-        console.error('Error deleting document type:', error);
+        console.error('Erro ao excluir tipo de documento:', error);
         showErrorMessage(error.message);
     } finally {
         hideLoading(card);
     }
 }
+
 function deleteDocumentType(id) {
     showDeleteConfirmation(id);
 }
