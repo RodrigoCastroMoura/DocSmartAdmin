@@ -154,16 +154,17 @@
         }
 
         function toggleTheme() {
-            const currentTheme = localStorage.getItem('theme') || 'dark';
+            const currentTheme = localStorage.getItem('theme') || 'light';
             const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
             setTheme(newTheme);
         }
 
-        // Initialize theme from localStorage or default to dark
+        // Initialize theme from localStorage or default to light
         document.addEventListener('DOMContentLoaded', () => {
-            const savedTheme = localStorage.getItem('theme') || 'dark';
+            const savedTheme = localStorage.getItem('theme') || 'light';
             setTheme(savedTheme);
         });
+
     </script>
 
     <style>
