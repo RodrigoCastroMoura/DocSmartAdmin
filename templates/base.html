@@ -9,10 +9,58 @@
         function setTheme(theme) {
             document.documentElement.setAttribute('data-theme', theme);
             localStorage.setItem('theme', theme);
+
+            // Update theme icon
+            const themeIcon = document.getElementById('themeIcon');
+            if (themeIcon) {
+                if (theme === 'dark') {
+                    themeIcon.setAttribute('data-feather', 'sun');
+                } else {
+                    themeIcon.setAttribute('data-feather', 'moon');
+                }
+                feather.replace();
+            }
         }
-        // Initialize theme immediately
-        const savedTheme = localStorage.getItem('theme') || 'light';
-        setTheme(savedTheme);
+
+        function toggleTheme() {
+            const currentTheme = localStorage.getItem('theme') || 'light';
+            const newTheme = currentTheme === 'light' ? 'dark' : 'light';
+            setTheme(newTheme);
+        }
+
+        // Initialize theme from localStorage or default to light
+        document.addEventListener('DOMContentLoaded', () => {
+            const savedTheme = localStorage.getItem('theme') || 'light';
+            setTheme(savedTheme);
+
+            // Initialize the theme icon
+            const themeIcon = document.getElementById('themeIcon');
+            if (themeIcon) {
+                themeIcon.setAttribute('data-feather', savedTheme === 'light' ? 'moon' : 'sun');
+                feather.replace();
+            }
+        });
+
+        function toggleDropdown() {
+            const dropdown = document.querySelector('.dropdown-menu');
+            dropdown.classList.toggle('show');
+
+            // Close dropdown when clicking outside
+            document.addEventListener('click', function closeDropdown(e) {
+                if (!e.target.closest('.user-profile')) {
+                    dropdown.classList.remove('show');
+                    document.removeEventListener('click', closeDropdown);
+                }
+            });
+        }
+
+        function hideModal(modalId) {
+            document.getElementById(modalId).style.display = 'none';
+        }
+
+        function confirmDelete() {
+            hideModal('deleteConfirmModal');
+        }
     </script>
     <style>
         :root {
@@ -595,50 +643,7 @@
             customPopup.classList.remove('active');
         }
 
-        // Theme toggle functionality
-        function setTheme(theme) {
-            document.documentElement.setAttribute('data-theme', theme);
-            localStorage.setItem('theme', theme);
 
-            const themeIcon = document.getElementById('themeIcon');
-            if (themeIcon) {
-                themeIcon.setAttribute('data-feather', theme === 'light' ? 'moon' : 'sun');
-                feather.replace();
-            }
-        }
-
-        function toggleTheme() {
-            const currentTheme = localStorage.getItem('theme') || 'light';
-            const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
-            setTheme(newTheme);
-        }
-
-        // Initialize theme from localStorage or default to light
-        document.addEventListener('DOMContentLoaded', () => {
-            const savedTheme = localStorage.getItem('theme') || 'light';
-            setTheme(savedTheme);
-        });
-
-        function toggleDropdown() {
-            const dropdown = document.querySelector('.dropdown-menu');
-            dropdown.classList.toggle('show');
-
-            // Close dropdown when clicking outside
-            document.addEventListener('click', function closeDropdown(e) {
-                if (!e.target.closest('.user-profile')) {
-                    dropdown.classList.remove('show');
-                    document.removeEventListener('click', closeDropdown);
-                }
-            });
-        }
-
-        function hideModal(modalId) {
-            document.getElementById(modalId).style.display = 'none';
-        }
-
-        function confirmDelete() {
-            hideModal('deleteConfirmModal');
-        }
     </script>
 </body>
 </html>
