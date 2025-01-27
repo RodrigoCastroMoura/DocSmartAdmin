@@ -14,227 +14,48 @@
         const savedTheme = localStorage.getItem('theme') || 'light';
         setTheme(savedTheme);
     </script>
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/main.css') }}">
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/dashboard.css') }}">
-    <!-- Load Feather Icons first -->
-    <script src="https://unpkg.com/feather-icons"></script>
-    <!-- Load validation.js before any other scripts -->
-    <script src="{{ url_for('static', filename='js/validation.js') }}"></script>
-    <!-- Load dashboard.js which contains common utilities -->
-    <script src="{{ url_for('static', filename='js/dashboard.js') }}"></script>
-</head>
-<body>
-    <div class="dashboard-container">
-        <!-- Sidebar -->
-        <aside class="sidebar" id="sidebar">
-            <div class="sidebar-header">
-                <img src="{{ url_for('static', filename='img/logo.svg') }}" alt="Logo" class="logo">
-                <button id="sidebar-toggle" class="sidebar-toggle">
-                    <i data-feather="menu"></i>
-                </button>
-            </div>
-            <nav class="sidebar-nav">
-                <a href="{{ url_for('dashboard') }}" class="nav-item {% if request.endpoint == 'dashboard' %}active{% endif %}">
-                    <i data-feather="home"></i>
-                    <span>Painel</span>
-                </a>
-                <a href="{{ url_for('departments') }}" class="nav-item {% if request.endpoint == 'departments' %}active{% endif %}">
-                    <i data-feather="briefcase"></i>
-                    <span>Departamentos</span>
-                </a>
-                <a href="{{ url_for('categories') }}" class="nav-item {% if request.endpoint == 'categories' %}active{% endif %}">
-                    <i data-feather="grid"></i>
-                    <span>Categorias</span>
-                </a>
-                <a href="{{ url_for('documents') }}" class="nav-item {% if request.endpoint == 'documents' %}active{% endif %}">
-                    <i data-feather="file-text"></i>
-                    <span>Documentos</span>
-                </a>
-                <a href="{{ url_for('document_types') }}" class="nav-item {% if request.endpoint == 'document_types' %}active{% endif %}">
-                    <i data-feather="file"></i>
-                    <span>Tipos de Documentos</span>
-                </a>
-                <a href="{{ url_for('users') }}" class="nav-item {% if request.endpoint == 'users' %}active{% endif %}">
-                    <i data-feather="users"></i>
-                    <span>Usuários</span>
-                </a>
-            </nav>
-        </aside>
-
-        <!-- Main Content -->
-        <main class="main-content">
-            <header class="top-bar">
-                <div class="search-bar">
-                    <i data-feather="search"></i>
-                    <input type="text" placeholder="Pesquisar...">
-                </div>
-                <div class="user-menu">
-                    <button class="notifications">
-                        <i data-feather="bell"></i>
-                    </button>
-                    <button class="theme-toggle" onclick="toggleTheme()" title="Alternar tema">
-                        <i data-feather="sun" id="themeIcon"></i>
-                    </button>
-                    <div class="user-profile" onclick="toggleDropdown()">
-                        <span>{{ session.get('user', {}).get('name', 'Usuário Admin') }}</span>
-                        <i data-feather="user"></i>
-                        <div class="dropdown-menu">
-                            <a href="{{ url_for('logout') }}" class="dropdown-item">
-                                <i data-feather="log-out"></i>
-                                <span>Sair</span>
-                            </a>
-                        </div>
-                    </div>
-                </div>
-            </header>
-
-            <div class="content">
-                {% block content %}{% endblock %}
-            </div>
-        </main>
-    </div>
-
-    <!-- Notification Modal -->
-    <div id="notificationModal" class="modal">
-        <div class="modal-content notification-modal">
-            <div class="notification-header">
-                <i data-feather="info" id="notificationIcon"></i>
-                <h3 id="notificationTitle">Notificação</h3>
-                <button class="close-btn" onclick="hideNotificationModal()">
-                    <i data-feather="x"></i>
-                </button>
-            </div>
-            <div class="notification-body">
-                <p id="notificationMessage"></p>
-            </div>
-            <div class="notification-actions">
-                <button class="action-btn" onclick="hideNotificationModal()">Fechar</button>
-            </div>
-        </div>
-    </div>
-
-    <!-- Delete Confirmation Modal -->
-    <div id="deleteConfirmModal" class="modal">
-        <div class="modal-content notification-modal">
-            <div class="notification-header">
-                <i data-feather="alert-triangle" style="color: var(--danger-color);"></i>
-                <h3>Confirmar Exclusão</h3>
-                <button class="close-btn" onclick="hideModal('deleteConfirmModal')">
-                    <i data-feather="x"></i>
-                </button>
-            </div>
-            <div class="notification-body">
-                <p>Tem certeza que deseja excluir este item?</p>
-                <p>Esta ação não pode ser desfeita.</p>
-            </div>
-            <div class="notification-actions">
-                <button class="action-btn" onclick="hideModal('deleteConfirmModal')">Cancelar</button>
-                <button class="action-btn danger" onclick="confirmDelete()">Excluir</button>
-            </div>
-        </div>
-    </div>
-
-    <!-- Loading Popup -->
-    <div id="customPopup" class="custom-popup">
-        <div class="custom-popup-content">
-            <h2 class="custom-popup-title">Ação em Progresso</h2>
-            <p class="custom-popup-text">Por favor, aguarde enquanto processamos sua solicitação.</p>
-            <div class="loader"></div>
-        </div>
-    </div>
-
-    <!-- Scripts -->
-    <script src="{{ url_for('static', filename='js/sidebar.js') }}"></script>
-    <script>
-        // Initialize Feather icons
-        feather.replace();
-
-        function showNotification(message, type = 'error') {
-            const modal = document.getElementById('notificationModal');
-            const header = modal.querySelector('.notification-header');
-            const icon = document.getElementById('notificationIcon');
-            const title = document.getElementById('notificationTitle');
-            const messageEl = document.getElementById('notificationMessage');
-
-            header.classList.remove('success', 'error');
-
-            if (type === 'success') {
-                header.classList.add('success');
-                title.textContent = 'Sucesso';
-                icon.setAttribute('data-feather', 'check-circle');
-            } else {
-                header.classList.add('error');
-                title.textContent = 'Erro';
-                icon.setAttribute('data-feather', 'alert-circle');
-            }
-
-            messageEl.textContent = message;
-            modal.style.display = 'block';
-            feather.replace();
-        }
-
-        function hideNotificationModal() {
-            document.getElementById('notificationModal').style.display = 'none';
-        }
-
-        function openPopup() {
-            const customPopup = document.getElementById('customPopup');
-            customPopup.classList.add('active');
-        }
-
-        function closePopup() {
-            const customPopup = document.getElementById('customPopup');
-            customPopup.classList.remove('active');
-        }
-
-        // Theme toggle functionality
-        function setTheme(theme) {
-            document.documentElement.setAttribute('data-theme', theme);
-            localStorage.setItem('theme', theme);
-
-            const themeIcon = document.getElementById('themeIcon');
-            if (themeIcon) {
-                themeIcon.setAttribute('data-feather', theme === 'light' ? 'moon' : 'sun');
-                feather.replace();
-            }
-        }
-
-        function toggleTheme() {
-            const currentTheme = localStorage.getItem('theme') || 'light';
-            const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
-            setTheme(newTheme);
-        }
-
-        // Initialize theme from localStorage or default to light
-        document.addEventListener('DOMContentLoaded', () => {
-            const savedTheme = localStorage.getItem('theme') || 'light';
-            setTheme(savedTheme);
-        });
-
-        function toggleDropdown() {
-            const dropdown = document.querySelector('.dropdown-menu');
-            dropdown.classList.toggle('show');
-
-            // Close dropdown when clicking outside
-            document.addEventListener('click', function closeDropdown(e) {
-                if (!e.target.closest('.user-profile')) {
-                    dropdown.classList.remove('show');
-                    document.removeEventListener('click', closeDropdown);
-                }
-            });
-        }
-
-        function hideModal(modalId) {
-            document.getElementById(modalId).style.display = 'none';
-        }
-
-        function confirmDelete() {
-            // Add your delete confirmation logic here
-            hideModal('deleteConfirmModal');
-        }
-    </script>
-
     <style>
+        :root {
+            /* Light theme variables (default) */
+            --bg-primary: #ffffff;
+            --bg-secondary: #f3f4f6;
+            --bg-tertiary: #e5e7eb;
+            --text-primary: #111827;
+            --text-secondary: #4b5563;
+            --border-color: #d1d5db;
+            --accent-color: #3b82f6;
+            --accent-hover: #2563eb;
+            --danger-color: #ef4444;
+            --danger-hover: #dc2626;
+            --success-color: #22c55e;
+            --success-hover: #16a34a;
+            --danger-rgb: 239,68,68;
+            --success-rgb: 34,197,94;
+            --accent-rgb: 59,130,246;
+        }
+
+        [data-theme="dark"] {
+            --bg-primary: #1a1a1a;
+            --bg-secondary: #242424;
+            --bg-tertiary: #2a2a2a;
+            --text-primary: #ffffff;
+            --text-secondary: #a0a0a0;
+            --border-color: #333333;
+            --accent-color: #3b82f6;
+            --accent-hover: #2563eb;
+            --danger-color: #ef4444;
+            --danger-hover: #dc2626;
+            --success-color: #22c55e;
+            --success-hover: #16a34a;
+            --danger-rgb: 239,68,68;
+            --success-rgb: 34,197,94;
+            --accent-rgb: 59,130,246;
+        }
+
+        body {
+            background-color: var(--bg-primary);
+            color: var(--text-primary);
+        }
         .user-profile {
             position: relative;
             cursor: pointer;
@@ -601,48 +422,223 @@
             color: white;
         }
     </style>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/main.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/dashboard.css') }}">
+    <!-- Load Feather Icons first -->
+    <script src="https://unpkg.com/feather-icons"></script>
+    <!-- Load validation.js before any other scripts -->
+    <script src="{{ url_for('static', filename='js/validation.js') }}"></script>
+    <!-- Load dashboard.js which contains common utilities -->
+    <script src="{{ url_for('static', filename='js/dashboard.js') }}"></script>
+</head>
+<body>
+    <div class="dashboard-container">
+        <!-- Sidebar -->
+        <aside class="sidebar" id="sidebar">
+            <div class="sidebar-header">
+                <img src="{{ url_for('static', filename='img/logo.svg') }}" alt="Logo" class="logo">
+                <button id="sidebar-toggle" class="sidebar-toggle">
+                    <i data-feather="menu"></i>
+                </button>
+            </div>
+            <nav class="sidebar-nav">
+                <a href="{{ url_for('dashboard') }}" class="nav-item {% if request.endpoint == 'dashboard' %}active{% endif %}">
+                    <i data-feather="home"></i>
+                    <span>Painel</span>
+                </a>
+                <a href="{{ url_for('departments') }}" class="nav-item {% if request.endpoint == 'departments' %}active{% endif %}">
+                    <i data-feather="briefcase"></i>
+                    <span>Departamentos</span>
+                </a>
+                <a href="{{ url_for('categories') }}" class="nav-item {% if request.endpoint == 'categories' %}active{% endif %}">
+                    <i data-feather="grid"></i>
+                    <span>Categorias</span>
+                </a>
+                <a href="{{ url_for('documents') }}" class="nav-item {% if request.endpoint == 'documents' %}active{% endif %}">
+                    <i data-feather="file-text"></i>
+                    <span>Documentos</span>
+                </a>
+                <a href="{{ url_for('document_types') }}" class="nav-item {% if request.endpoint == 'document_types' %}active{% endif %}">
+                    <i data-feather="file"></i>
+                    <span>Tipos de Documentos</span>
+                </a>
+                <a href="{{ url_for('users') }}" class="nav-item {% if request.endpoint == 'users' %}active{% endif %}">
+                    <i data-feather="users"></i>
+                    <span>Usuários</span>
+                </a>
+            </nav>
+        </aside>
 
-    :root {
-        /* Light theme variables (default) */
-        --bg-primary: #ffffff;
-        --bg-secondary: #f3f4f6;
-        --bg-tertiary: #e5e7eb;
-        --text-primary: #111827;
-        --text-secondary: #4b5563;
-        --border-color: #d1d5db;
-        --accent-color: #3b82f6;
-        --accent-hover: #2563eb;
-        --danger-color: #ef4444;
-        --danger-hover: #dc2626;
-        --success-color: #22c55e;
-        --success-hover: #16a34a;
-        --danger-rgb: 239,68,68;
-        --success-rgb: 34,197,94;
-        --accent-rgb: 59,130,246;
-    }
+        <!-- Main Content -->
+        <main class="main-content">
+            <header class="top-bar">
+                <div class="search-bar">
+                    <i data-feather="search"></i>
+                    <input type="text" placeholder="Pesquisar...">
+                </div>
+                <div class="user-menu">
+                    <button class="notifications">
+                        <i data-feather="bell"></i>
+                    </button>
+                    <button class="theme-toggle" onclick="toggleTheme()" title="Alternar tema">
+                        <i data-feather="sun" id="themeIcon"></i>
+                    </button>
+                    <div class="user-profile" onclick="toggleDropdown()">
+                        <span>{{ session.get('user', {}).get('name', 'Usuário Admin') }}</span>
+                        <i data-feather="user"></i>
+                        <div class="dropdown-menu">
+                            <a href="{{ url_for('logout') }}" class="dropdown-item">
+                                <i data-feather="log-out"></i>
+                                <span>Sair</span>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </header>
 
-    [data-theme="dark"] {
-        --bg-primary: #1a1a1a;
-        --bg-secondary: #242424;
-        --bg-tertiary: #2a2a2a;
-        --text-primary: #ffffff;
-        --text-secondary: #a0a0a0;
-        --border-color: #333333;
-        --accent-color: #3b82f6;
-        --accent-hover: #2563eb;
-        --danger-color: #ef4444;
-        --danger-hover: #dc2626;
-        --success-color: #22c55e;
-        --success-hover: #16a34a;
-        --danger-rgb: 239,68,68;
-        --success-rgb: 34,197,94;
-        --accent-rgb: 59,130,246;
-    }
+            <div class="content">
+                {% block content %}{% endblock %}
+            </div>
+        </main>
+    </div>
 
-    body {
-        background-color: var(--bg-primary);
-        color: var(--text-primary);
-    }
-</style>
+    <!-- Notification Modal -->
+    <div id="notificationModal" class="modal">
+        <div class="modal-content notification-modal">
+            <div class="notification-header">
+                <i data-feather="info" id="notificationIcon"></i>
+                <h3 id="notificationTitle">Notificação</h3>
+                <button class="close-btn" onclick="hideNotificationModal()">
+                    <i data-feather="x"></i>
+                </button>
+            </div>
+            <div class="notification-body">
+                <p id="notificationMessage"></p>
+            </div>
+            <div class="notification-actions">
+                <button class="action-btn" onclick="hideNotificationModal()">Fechar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Delete Confirmation Modal -->
+    <div id="deleteConfirmModal" class="modal">
+        <div class="modal-content notification-modal">
+            <div class="notification-header">
+                <i data-feather="alert-triangle" style="color: var(--danger-color);"></i>
+                <h3>Confirmar Exclusão</h3>
+                <button class="close-btn" onclick="hideModal('deleteConfirmModal')">
+                    <i data-feather="x"></i>
+                </button>
+            </div>
+            <div class="notification-body">
+                <p>Tem certeza que deseja excluir este item?</p>
+                <p>Esta ação não pode ser desfeita.</p>
+            </div>
+            <div class="notification-actions">
+                <button class="action-btn" onclick="hideModal('deleteConfirmModal')">Cancelar</button>
+                <button class="action-btn danger" onclick="confirmDelete()">Excluir</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Loading Popup -->
+    <div id="customPopup" class="custom-popup">
+        <div class="custom-popup-content">
+            <h2 class="custom-popup-title">Ação em Progresso</h2>
+            <p class="custom-popup-text">Por favor, aguarde enquanto processamos sua solicitação.</p>
+            <div class="loader"></div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="{{ url_for('static', filename='js/sidebar.js') }}"></script>
+    <script>
+        // Initialize Feather icons
+        feather.replace();
+
+        function showNotification(message, type = 'error') {
+            const modal = document.getElementById('notificationModal');
+            const header = modal.querySelector('.notification-header');
+            const icon = document.getElementById('notificationIcon');
+            const title = document.getElementById('notificationTitle');
+            const messageEl = document.getElementById('notificationMessage');
+
+            header.classList.remove('success', 'error');
+
+            if (type === 'success') {
+                header.classList.add('success');
+                title.textContent = 'Sucesso';
+                icon.setAttribute('data-feather', 'check-circle');
+            } else {
+                header.classList.add('error');
+                title.textContent = 'Erro';
+                icon.setAttribute('data-feather', 'alert-circle');
+            }
+
+            messageEl.textContent = message;
+            modal.style.display = 'block';
+            feather.replace();
+        }
+
+        function hideNotificationModal() {
+            document.getElementById('notificationModal').style.display = 'none';
+        }
+
+        function openPopup() {
+            const customPopup = document.getElementById('customPopup');
+            customPopup.classList.add('active');
+        }
+
+        function closePopup() {
+            const customPopup = document.getElementById('customPopup');
+            customPopup.classList.remove('active');
+        }
+
+        // Theme toggle functionality
+        function setTheme(theme) {
+            document.documentElement.setAttribute('data-theme', theme);
+            localStorage.setItem('theme', theme);
+
+            const themeIcon = document.getElementById('themeIcon');
+            if (themeIcon) {
+                themeIcon.setAttribute('data-feather', theme === 'light' ? 'moon' : 'sun');
+                feather.replace();
+            }
+        }
+
+        function toggleTheme() {
+            const currentTheme = localStorage.getItem('theme') || 'light';
+            const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+            setTheme(newTheme);
+        }
+
+        // Initialize theme from localStorage or default to light
+        document.addEventListener('DOMContentLoaded', () => {
+            const savedTheme = localStorage.getItem('theme') || 'light';
+            setTheme(savedTheme);
+        });
+
+        function toggleDropdown() {
+            const dropdown = document.querySelector('.dropdown-menu');
+            dropdown.classList.toggle('show');
+
+            // Close dropdown when clicking outside
+            document.addEventListener('click', function closeDropdown(e) {
+                if (!e.target.closest('.user-profile')) {
+                    dropdown.classList.remove('show');
+                    document.removeEventListener('click', closeDropdown);
+                }
+            });
+        }
+
+        function hideModal(modalId) {
+            document.getElementById(modalId).style.display = 'none';
+        }
+
+        function confirmDelete() {
+            hideModal('deleteConfirmModal');
+        }
+    </script>
 </body>
 </html>
