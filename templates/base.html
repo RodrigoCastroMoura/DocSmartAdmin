@@ -4,21 +4,30 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Admin Dashboard</title>
-    <!-- Add theme initialization before any styles -->
+    <!-- Prevent theme flash -->
     <script>
-        // Initialize theme immediately to avoid flash
+        // Immediately apply theme before any content loads
         (function() {
-            const savedTheme = localStorage.getItem('theme') || 'light';
-            document.documentElement.setAttribute('data-theme', savedTheme);
+            function getInitialTheme() {
+                const persistedTheme = localStorage.getItem('theme');
+                return persistedTheme || 'light';
+            }
+            const theme = getInitialTheme();
+            document.documentElement.setAttribute('data-theme', theme);
+            // Store the theme to ensure consistency
+            localStorage.setItem('theme', theme);
         })();
     </script>
+    <style>
+        /* Hide content until theme is applied */
+        html:not([data-theme]) {
+            visibility: hidden;
+        }
+    </style>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/main.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/dashboard.css') }}">
-    <!-- Load Feather Icons first -->
     <script src="https://unpkg.com/feather-icons"></script>
-    <!-- Load validation.js before any other scripts -->
     <script src="{{ url_for('static', filename='js/validation.js') }}"></script>
-    <!-- Load dashboard.js which contains common utilities -->
     <script src="{{ url_for('static', filename='js/dashboard.js') }}"></script>
 </head>
 <body>
@@ -149,7 +158,7 @@
             const customPopup = document.getElementById('customPopup');
             customPopup.classList.remove('active');
         }
-        // Theme handling script
+        // Theme handling
         function setTheme(theme) {
             document.documentElement.setAttribute('data-theme', theme);
             localStorage.setItem('theme', theme);
@@ -167,7 +176,7 @@
             setTheme(newTheme);
         }
 
-        // Update icon on page load
+        // Initialize theme icon on DOM content loaded
         document.addEventListener('DOMContentLoaded', () => {
             const currentTheme = localStorage.getItem('theme') || 'light';
             const themeIcon = document.getElementById('themeIcon');
@@ -175,6 +184,8 @@
                 themeIcon.setAttribute('data-feather', currentTheme === 'light' ? 'moon' : 'sun');
                 feather.replace();
             }
+            // Ensure visibility after theme is applied
+            document.documentElement.style.visibility = 'visible';
         });
     </script>
 
