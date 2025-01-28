@@ -1,22 +1,70 @@
 <!DOCTYPE html>
-<html lang="pt-BR" data-theme="light">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Painel Administrativo</title>
+    <title>Admin Dashboard</title>
+    <!-- Theme initialization script -->
     <script>
-        // Inicializar tema imediatamente
-        (function() {
-            const savedTheme = localStorage.getItem('theme') || 'light';
-            document.documentElement.setAttribute('data-theme', savedTheme);
-        })();
+        function setTheme(theme) {
+            document.documentElement.setAttribute('data-theme', theme);
+            localStorage.setItem('theme', theme);
+        }
+        // Initialize theme immediately
+        const savedTheme = localStorage.getItem('theme') || 'light';
+        setTheme(savedTheme);
     </script>
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/theme.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/main.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/dashboard.css') }}">
+    <!-- Load Feather Icons first -->
     <script src="https://unpkg.com/feather-icons"></script>
+    <!-- Load validation.js before any other scripts -->
     <script src="{{ url_for('static', filename='js/validation.js') }}"></script>
+    <!-- Load dashboard.js which contains common utilities -->
     <script src="{{ url_for('static', filename='js/dashboard.js') }}"></script>
+    <style>
+        :root {
+            /* Light theme variables (default) */
+            --bg-primary: #ffffff;
+            --bg-secondary: #f3f4f6;
+            --bg-tertiary: #e5e7eb;
+            --text-primary: #111827;
+            --text-secondary: #4b5563;
+            --border-color: #d1d5db;
+            --accent-color: #3b82f6;
+            --accent-hover: #2563eb;
+            --danger-color: #ef4444;
+            --danger-hover: #dc2626;
+            --success-color: #22c55e;
+            --success-hover: #16a34a;
+            --danger-rgb: 239,68,68;
+            --success-rgb: 34,197,94;
+            --accent-rgb: 59,130,246;
+        }
+
+        [data-theme="dark"] {
+            --bg-primary: #1a1a1a;
+            --bg-secondary: #242424;
+            --bg-tertiary: #2a2a2a;
+            --text-primary: #ffffff;
+            --text-secondary: #a0a0a0;
+            --border-color: #333333;
+            --accent-color: #3b82f6;
+            --accent-hover: #2563eb;
+            --danger-color: #ef4444;
+            --danger-hover: #dc2626;
+            --success-color: #22c55e;
+            --success-hover: #16a34a;
+            --danger-rgb: 239,68,68;
+            --success-rgb: 34,197,94;
+            --accent-rgb: 59,130,246;
+        }
+
+        body {
+            background-color: var(--bg-primary);
+            color: var(--text-primary);
+        }
+    </style>
 </head>
 <body>
     <div class="dashboard-container">
@@ -31,27 +79,27 @@
             <nav class="sidebar-nav">
                 <a href="{{ url_for('dashboard') }}" class="nav-item {% if request.endpoint == 'dashboard' %}active{% endif %}">
                     <i data-feather="home"></i>
-                    <span>Painel</span>
+                    <span>Dashboard</span>
                 </a>
                 <a href="{{ url_for('departments') }}" class="nav-item {% if request.endpoint == 'departments' %}active{% endif %}">
                     <i data-feather="briefcase"></i>
-                    <span>Departamentos</span>
+                    <span>Departments</span>
                 </a>
                 <a href="{{ url_for('categories') }}" class="nav-item {% if request.endpoint == 'categories' %}active{% endif %}">
                     <i data-feather="grid"></i>
-                    <span>Categorias</span>
+                    <span>Categories</span>
                 </a>
                 <a href="{{ url_for('documents') }}" class="nav-item {% if request.endpoint == 'documents' %}active{% endif %}">
                     <i data-feather="file-text"></i>
-                    <span>Documentos</span>
+                    <span>Documents</span>
                 </a>
                 <a href="{{ url_for('document_types') }}" class="nav-item {% if request.endpoint == 'document_types' %}active{% endif %}">
                     <i data-feather="file"></i>
-                    <span>Tipos de Documentos</span>
+                    <span>Document Types</span>
                 </a>
                 <a href="{{ url_for('users') }}" class="nav-item {% if request.endpoint == 'users' %}active{% endif %}">
                     <i data-feather="users"></i>
-                    <span>Usuários</span>
+                    <span>Users</span>
                 </a>
             </nav>
         </aside>
@@ -61,22 +109,22 @@
             <header class="top-bar">
                 <div class="search-bar">
                     <i data-feather="search"></i>
-                    <input type="text" placeholder="Pesquisar...">
+                    <input type="text" placeholder="Search...">
                 </div>
                 <div class="user-menu">
                     <button class="notifications">
                         <i data-feather="bell"></i>
                     </button>
-                    <button class="theme-toggle" onclick="toggleTheme()" title="Alternar tema claro/escuro">
-                        <i data-feather="moon" id="themeIcon"></i>
+                    <button class="theme-toggle" onclick="toggleTheme()" title="Toggle theme">
+                        <i data-feather="sun" id="themeIcon"></i>
                     </button>
                     <div class="user-profile" onclick="toggleDropdown()">
-                        <span>{{ session.get('user', {}).get('name', 'Usuário Admin') }}</span>
+                        <span>{{ session.get('user', {}).get('name', 'Admin User') }}</span>
                         <i data-feather="user"></i>
                         <div class="dropdown-menu">
                             <a href="{{ url_for('logout') }}" class="dropdown-item">
                                 <i data-feather="log-out"></i>
-                                <span>Sair</span>
+                                <span>Logout</span>
                             </a>
                         </div>
                     </div>
@@ -89,56 +137,23 @@
         </main>
     </div>
 
-    <!-- Scripts -->
+    <!-- Load sidebar.js after DOM is ready -->
     <script src="{{ url_for('static', filename='js/sidebar.js') }}"></script>
     <script>
-        function initTheme() {
-            const savedTheme = localStorage.getItem('theme') || 'light';
-            const themeIcon = document.getElementById('themeIcon');
-            if (themeIcon) {
-                themeIcon.setAttribute('data-feather', savedTheme === 'light' ? 'moon' : 'sun');
-                feather.replace();
-            }
-            document.documentElement.setAttribute('data-theme', savedTheme);
-        }
-
-        function toggleTheme() {
-            const currentTheme = document.documentElement.getAttribute('data-theme');
-            const newTheme = currentTheme === 'light' ? 'dark' : 'light';
-            document.documentElement.setAttribute('data-theme', newTheme);
-            localStorage.setItem('theme', newTheme);
-
-            const themeIcon = document.getElementById('themeIcon');
-            if (themeIcon) {
-                themeIcon.setAttribute('data-feather', newTheme === 'light' ? 'moon' : 'sun');
-                feather.replace();
-            }
-        }
-
-        document.addEventListener('DOMContentLoaded', function() {
-            initTheme();
-            feather.replace();
-        });
+        // Initialize Feather icons
+        feather.replace();
 
         function toggleDropdown() {
             const dropdown = document.querySelector('.dropdown-menu');
-            if (dropdown) {
-                dropdown.classList.toggle('show');
-            }
-        }
+            dropdown.classList.toggle('show');
 
-        // Close dropdown when clicking outside
-        document.addEventListener('click', function(e) {
-            if (!e.target.closest('.user-profile')) {
-                const dropdown = document.querySelector('.dropdown-menu');
-                if (dropdown) {
+            // Close dropdown when clicking outside
+            document.addEventListener('click', function closeDropdown(e) {
+                if (!e.target.closest('.user-profile')) {
                     dropdown.classList.remove('show');
+                    document.removeEventListener('click', closeDropdown);
                 }
-            }
-        });
-
-        function hideModal(modalId) {
-            document.getElementById(modalId).style.display = 'none';
+            });
         }
 
         function showNotification(message, type = 'error') {
@@ -148,10 +163,19 @@
             const title = document.getElementById('notificationTitle');
             const messageEl = document.getElementById('notificationMessage');
 
+            // Reset classes
             header.classList.remove('success', 'error');
-            header.classList.add(type);
-            title.textContent = type === 'success' ? 'Sucesso' : 'Erro';
-            icon.setAttribute('data-feather', type === 'success' ? 'check-circle' : 'alert-circle');
+
+            if (type === 'success') {
+                header.classList.add('success');
+                title.textContent = 'Success';
+                icon.setAttribute('data-feather', 'check-circle');
+            } else {
+                header.classList.add('error');
+                title.textContent = 'Error';
+                icon.setAttribute('data-feather', 'alert-circle');
+            }
+
             messageEl.textContent = message;
             modal.style.display = 'block';
             feather.replace();
@@ -160,6 +184,454 @@
         function hideNotificationModal() {
             document.getElementById('notificationModal').style.display = 'none';
         }
+
+        function openPopup() {
+            const customPopup = document.getElementById('customPopup');
+            customPopup.classList.add('active');
+        }
+
+        function closePopup() {
+            const customPopup = document.getElementById('customPopup');
+            customPopup.classList.remove('active');
+        }
+        // Theme toggle functionality
+        function setTheme(theme) {
+            document.documentElement.setAttribute('data-theme', theme);
+            localStorage.setItem('theme', theme);
+
+            const themeIcon = document.getElementById('themeIcon');
+            if (themeIcon) {
+                themeIcon.setAttribute('data-feather', theme === 'light' ? 'moon' : 'sun');
+                feather.replace();
+            }
+        }
+
+        function toggleTheme() {
+            const currentTheme = localStorage.getItem('theme') || 'light';
+            const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+            setTheme(newTheme);
+        }
+
+        // Initialize theme from localStorage or default to light
+        document.addEventListener('DOMContentLoaded', () => {
+            const savedTheme = localStorage.getItem('theme') || 'light';
+            setTheme(savedTheme);
+        });
+
     </script>
+
+    <style>
+        .user-profile {
+            position: relative;
+            cursor: pointer;
+        }
+
+        .dropdown-menu {
+            display: none;
+            position: absolute;
+            top: 100%;
+            right: 0;
+            background-color: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            padding: 0.5rem;
+            margin-top: 0.5rem;
+            min-width: 150px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+        }
+
+        .dropdown-menu.show {
+            display: block;
+        }
+
+        .dropdown-item {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.5rem;
+            color: var(--text-primary);
+            text-decoration: none;
+            border-radius: 4px;
+            transition: background-color 0.2s;
+        }
+
+        .dropdown-item:hover {
+            background-color: var(--bg-tertiary);
+        }
+
+        .dropdown-item i {
+            color: var(--danger-color);
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            z-index: 1000;
+            animation: fadeIn 0.2s ease;
+        }
+
+        .modal-content {
+            position: relative;
+            background-color: var(--bg-secondary);
+            margin: 5% auto;
+            padding: 2rem;
+            border-radius: 12px;
+            max-width: 500px;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
+            animation: slideIn 0.3s ease;
+        }
+
+        .notification-modal {
+            max-width: 400px;
+        }
+
+        .notification-header {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+            padding-bottom: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .notification-header i {
+            font-size: 1.5rem;
+            padding: 0.5rem;
+            border-radius: 50%;
+            background-color: var(--bg-tertiary);
+        }
+
+        .notification-header.success i {
+            color: var(--success-color);
+            background-color: rgba(var(--success-rgb), 0.1);
+        }
+
+        .notification-header.error i {
+            color: var(--danger-color);
+            background-color: rgba(var(--danger-rgb), 0.1);
+        }
+
+        .notification-header h3 {
+            margin: 0;
+            flex: 1;
+        }
+
+        .close-btn {
+            background: none;
+            border: none;
+            color: var(--text-secondary);
+            cursor: pointer;
+            padding: 0.5rem;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+        }
+
+        .close-btn:hover {
+            background-color: var(--bg-tertiary);
+            color: var(--text-primary);
+        }
+
+        .notification-body {
+            margin-bottom: 2rem;
+            color: var(--text-secondary);
+            line-height: 1.5;
+        }
+
+        .notification-actions {
+            display: flex;
+            justify-content: flex-end;
+            gap: 1rem;
+            padding-top: 1rem;
+            border-top: 1px solid var(--border-color);
+        }
+
+        .modal-actions {
+            display: flex;
+            justify-content: flex-end;
+            gap: 1rem;
+            margin-top: 2rem;
+            padding-top: 1rem;
+            border-top: 1px solid var(--border-color);
+        }
+
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            color: var(--text-secondary);
+        }
+
+        .form-group input,
+        .form-group select,
+        .form-group textarea {
+            width: 100%;
+            padding: 0.75rem;
+            background-color: var(--bg-tertiary);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            color: var(--text-primary);
+            transition: all 0.2s;
+        }
+
+        .form-group input:focus,
+        .form-group select:focus,
+        .form-group textarea:focus {
+            border-color: var(--accent-color);
+            box-shadow: 0 0 0 2px rgba(var(--accent-rgb), 0.1);
+            outline: none;
+        }
+
+        .action-btn {
+            padding: 0.75rem 1.5rem;
+            border: none;
+            border-radius: 8px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            transition: all 0.2s;
+        }
+
+        .action-btn.primary {
+            background-color: var(--accent-color);
+            color: white;
+        }
+
+        .action-btn.primary:hover {
+            background-color: var(--accent-hover);
+        }
+
+        .action-btn.danger {
+            background-color: var(--danger-color);
+            color: white;
+        }
+
+        .action-btn.danger:hover {
+            background-color: var(--danger-hover);
+        }
+
+        .action-btn:not(.primary):not(.danger) {
+            background-color: var(--bg-tertiary);
+            color: var(--text-primary);
+        }
+
+        .action-btn:not(.primary):not(.danger):hover {
+            background-color: var(--border-color);
+        }
+
+        .custom-popup {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.7);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+            opacity: 0;
+            transition: opacity 0.3s ease-in-out;
+        }
+
+        .custom-popup.active {
+            display: flex;
+            opacity: 1;
+        }
+
+        .custom-popup-content {
+            background-color: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            border-radius: 10px;
+            padding: 20px;
+            width: 350px;
+            text-align: center;
+            position: relative;
+            animation: popup-appear 0.4s ease;
+            box-shadow: 0px 4px 15px rgba(0, 0, 0, 0.5);
+        }
+
+        @keyframes popup-appear {
+            from {
+                transform: scale(0.9);
+                opacity: 0;
+            }
+            to {
+                transform: scale(1);
+                opacity: 1;
+            }
+        }
+
+        .custom-popup-title {
+            margin: 0 0 10px;
+            color: var(--text-primary);
+            font-size: 20px;
+        }
+
+        .custom-popup-text {
+            margin: 10px 0;
+            color: var(--text-secondary);
+            font-size: 16px;
+        }
+
+        .close {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            color: var(--danger-color);
+            font-size: 24px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+
+        .close:hover {
+            color: var(--accent-color);
+        }
+
+        .loader {
+            border: 4px solid var(--bg-tertiary);
+            border-top: 4px solid var(--accent-color);
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 20px auto;
+        }
+
+        @keyframes spin {
+            0% {
+                transform: rotate(0deg);
+            }
+            100% {
+                transform: rotate(360deg);
+            }
+        }
+
+        .btn-close {
+            margin-top: 20px;
+            padding: 10px 20px;
+            background-color: var(--danger-color);
+            border: none;
+            border-radius: 4px;
+            color: var(--text-primary);
+            font-size: 14px;
+            transition: background-color 0.3s;
+        }
+
+        .btn-close:hover {
+            background-color: #dc2626;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .theme-toggle {
+            background: none;
+            border: none;
+            color: var(--text-primary);
+            cursor: pointer;
+            padding: 0.5rem;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: background-color 0.2s;
+        }
+
+        .theme-toggle:hover {
+            background-color: var(--bg-tertiary);
+        }
+
+        .sidebar {
+            background-color: var(--bg-secondary);
+            border-right: 1px solid var(--border-color);
+        }
+
+        .nav-item {
+            color: var(--text-secondary);
+        }
+
+        .nav-item:hover {
+            background-color: var(--bg-tertiary);
+            color: var(--text-primary);
+        }
+
+        .nav-item.active {
+            background-color: var(--accent-color);
+            color: white;
+        }
+    </style>
+
+    <!-- Notification Modal -->
+    <div id="notificationModal" class="modal">
+        <div class="modal-content notification-modal">
+            <div class="notification-header">
+                <i data-feather="info" id="notificationIcon"></i>
+                <h3 id="notificationTitle">Notification</h3>
+                <button class="close-btn" onclick="hideNotificationModal()">
+                    <i data-feather="x"></i>
+                </button>
+            </div>
+            <div class="notification-body">
+                <p id="notificationMessage"></p>
+            </div>
+            <div class="notification-actions">
+                <button class="action-btn" onclick="hideNotificationModal()">Close</button>
+            </div>
+        </div>
+    </div>
+    <!-- Delete Confirmation Modal -->
+    <div id="deleteConfirmModal" class="modal">
+        <div class="modal-content notification-modal">
+            <div class="notification-header">
+                <i data-feather="alert-triangle" style="color: var(--danger-color);"></i>
+                <h3>Confirm Delete</h3>
+                <button class="close-btn" onclick="hideModal('deleteConfirmModal')">
+                    <i data-feather="x"></i>
+                </button>
+            </div>
+            <div class="notification-body">
+                <p>Are you sure you want to delete this item?</p>
+                <p>This action cannot be undone.</p>
+            </div>
+            <div class="notification-actions">
+                <button class="action-btn" onclick="hideModal('deleteConfirmModal')">Cancel</button>
+                <button class="action-btn danger" onclick="confirmDelete()">Delete</button>
+            </div>
+        </div>
+    </div>
+    <div id="customPopup" class="custom-popup">
+        <div class="custom-popup-content">
+            <h2 class="custom-popup-title">Ação em Progresso</h2>
+            <p class="custom-popup-text">Por favor, aguarde enquanto processamos sua solicitação.</p>
+            <div class="loader"></div>
+        </div>
+    </div>
 </body>
 </html>

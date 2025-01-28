@@ -4,16 +4,16 @@
 <div class="page-container">
     <div class="filter-section">
         <div class="filter-header">
-            <h2><i data-feather="file-text"></i> Documentos</h2>
+            <h2><i data-feather="file-text"></i> Documents</h2>
             <button class="action-btn primary" onclick="showAddDocumentModal()">
-                <i data-feather="plus"></i> Adicionar Documento
+                <i data-feather="plus"></i> Add Document
             </button>
         </div>
         <div class="filter-grid">
             <div class="form-group">
-                <label for="filterDepartment">Departamento</label>
+                <label for="filterDepartment">Department</label>
                 <select id="filterDepartment" name="filterDepartment" onchange="applyFiltersDepartment(this.value)">
-                    <option value="">Selecionar Departamento</option>
+                    <option value="">Select Department</option>
                     {% if departments %}
                         {% for department in departments %}
                         <option value="{{department.id}}">{{department.name}}</option>
@@ -22,21 +22,21 @@
                 </select>
             </div>
             <div class="form-group">
-                <label for="filterCategory">Categoria</label>
+                <label for="filterCategory">Category</label>
                 <select id="filterCategory" name="filterCategory" onchange="applyFiltersCategory(this.value)">
-                    <option value="">Selecionar Categoria</option>
+                    <option value="">Select Category</option>
                 </select>
             </div>
             <div class="form-group">
-                <label for="filterDocumentType">Tipo</label>
+                <label for="filterDocumentType">Type</label>
                 <select id="filterDocumentType" name="filterDocumentType" onchange="applyFilters()">
-                    <option value="">Selecionar Tipos</option>
+                    <option value="">Select Types</option>
                 </select>
             </div>
             <div class="filter-group">
-                <label for="user-cpf-filter">Usuário</label>
+                <label for="user-cpf-filter">User</label>
                 <div class="filter-input-wrapper search-input">
-                    <input type="text" id="user-cpf-filter" placeholder="Buscar usuário...">
+                    <input type="text" id="user-cpf-filter" placeholder="Search user...">
                     <button class="action-btn primary" onclick="applyFilters()">
                         <i data-feather="search"></i>
                     </button>
@@ -50,36 +50,37 @@
             <div class="documents-grid">
                 <div class="no-data">
                     <i data-feather="inbox"></i>
-                    <p>Carregando documentos...</p>
+                    <p>Loading documents...</p>
                 </div>
             </div>
             <div class="pagination-controls">
                 <button class="action-btn" onclick="changePage(currentPage - 1)" id="prevPage" disabled>
-                    <i data-feather="chevron-left"></i> Anterior
+                    <i data-feather="chevron-left"></i> Previous
                 </button>
-                <span id="pageInfo">Página 1</span>
+                <span id="pageInfo">Page 1</span>
                 <button class="action-btn" onclick="changePage(currentPage + 1)" id="nextPage" disabled>
-                    Próximo <i data-feather="chevron-right"></i>
+                    Next <i data-feather="chevron-right"></i>
                 </button>
             </div>
         </div>
     </div>
 </div>
+</div>
 
 <!-- Add Document Modal -->
 <div id="addDocumentModal" class="modal">
     <div class="modal-content">
-        <h3>Adicionar Documento</h3>
+        <h3>Add Document</h3>
         <form id="addDocumentForm" onsubmit="createDocument(event)">
             <div class="form-group">
-                <label for="documentTitle">Título do Documento</label>
+                <label for="documentTitle">Document Title</label>
                 <input type="text" id="documentTitle" name="titulo" >
             </div>
             <div class="form-grid">
                 <div class="form-group">
-                    <label for="documentDepartment">Selecionar Departamento</label>
+                    <label for="documentDepartment">Select Department</label>
                     <select id="documentDepartment" name="department_id" required onchange="loadDepartmentCategories(this.value)">
-                        <option value="">Selecionar Departamento</option>
+                        <option value="">Select Department</option>
                         {% if departments %}
                             {% for department in departments %}
                             <option value="{{department.id}}">{{department.name}}</option>
@@ -88,21 +89,21 @@
                     </select>
                 </div>
                 <div class="form-group">
-                    <label for="documentCategory">Selecionar Categoria</label>
+                    <label for="documentCategory">Select Category</label>
                     <select id="documentCategory" name="category_id" required onchange="loadDocumentTypes(this.value)">
-                        <option value="">Selecionar Categoria</option>
+                        <option value="">Select Category</option>
                     </select>
                 </div>
                 <div class="form-group">
-                    <label for="documentType">Tipo de Documento</label>
+                    <label for="documentType">Document Type</label>
                     <select id="documentType" name="document_type_id" required>
-                        <option value="">Selecionar Tipo de Documento</option>
+                        <option value="">Select Document Type</option>
                     </select>
                 </div>
                 <div class="form-group">
                     <label for="user_cpf">CPF</label>
                     <div class="filter-input-wrapper search-input">
-                        <input type="text" id="user_cpf" placeholder="Buscar usuário..." required>
+                        <input type="text" id="user_cpf" placeholder="Search user..." required>
                         <button type="button" class="action-btn primary" onclick="searchUser()">
                             <i data-feather="search"></i>
                         </button>
@@ -110,21 +111,20 @@
                 </div>
             </div>
             <div class="form-group">
-                <label for="documentTitle">Nome do Usuário</label>
+                <label for="documentTitle">User Name</label>
                 <input type="text" id="name-user" name="name-user" disabled required>
             </div>
             <div class="form-group">
-                <label for="documentFile">Arquivo</label>
+                <label for="documentFile">File</label>
                 <input type="file" id="documentFile" name="file" required>
             </div>
             <div class="modal-actions">
-                <button type="button" class="action-btn" onclick="hideModal('addDocumentModal')">Cancelar</button>
-                <button type="submit" class="action-btn primary">Enviar</button>
+                <button type="button" class="action-btn" onclick="hideModal('addDocumentModal')">Cancel</button>
+                <button type="submit" class="action-btn primary">Upload</button>
             </div>
         </form>
     </div>
 </div>
-
 <script>
 let currentPage = 1;
 const perPage = 9;
@@ -166,24 +166,24 @@ async function loadFilterOptions() {
         populateFilterSelect('documentUser', userData.users);
 
         // Reset category and document type filters
-        resetSelect('filterCategory', 'Todas as Categorias');
-        resetSelect('filterDocumentType', 'Todos os Tipos');
-        resetSelect('documentCategory', 'Selecionar Categoria');
-        resetSelect('documentType', 'Selecionar Tipo de Documento');
+        resetSelect('filterCategory', 'All Categories');
+        resetSelect('filterDocumentType', 'All Types');
+        resetSelect('documentCategory', 'Select Category');
+        resetSelect('documentType', 'Select Document Type');
 
     } catch (error) {
         console.error('Error loading filter options:', error);
-        showNotification(`Falha ao carregar algumas opções de filtro: ${error.message}`, 'error');
+        showNotification(`Failed to load some filter options: ${error.message}`, 'error');
         
         // Reset filters to a safe state
         const filterIds = {
-            'filterDepartment': 'Todos os Departamentos',
-            'documentDepartment': 'Selecionar Departamento',
-            'filterCategory': 'Todas as Categorias',
-            'documentCategory': 'Selecionar Categoria',
-            'filterDocumentType': 'Todos os Tipos',
-            'documentType': 'Selecionar Tipo de Documento',
-            'documentUser': 'Selecionar Usuário'
+            'filterDepartment': 'All Departments',
+            'documentDepartment': 'Select Department',
+            'filterCategory': 'All Categories',
+            'documentCategory': 'Select Category',
+            'filterDocumentType': 'All Types',
+            'documentType': 'Select Document Type',
+            'documentUser': 'Select User'
         };
 
         Object.entries(filterIds).forEach(([id, label]) => {
@@ -236,15 +236,15 @@ async function applyFiltersDepartment(departmentId) {
     const categorySelect = document.getElementById('filterCategory');
     const typeSelect = document.getElementById('filterDocumentType');
     
-    categorySelect.innerHTML = '<option value="">Carregando categorias...</option>';
+    categorySelect.innerHTML = '<option value="">Loading categories...</option>';
     categorySelect.disabled = true;
-    typeSelect.innerHTML = '<option value="">Tipos</option>';
+    typeSelect.innerHTML = '<option value="">Types</option>';
     typeSelect.disabled = true;
 
     try {
         if (!departmentId) {
-            categorySelect.innerHTML = '<option value="">Categorias</option>';
-            typeSelect.innerHTML = '<option value="">Tipos</option>';
+            categorySelect.innerHTML = '<option value="">Categories</option>';
+            typeSelect.innerHTML = '<option value="">Types</option>';
             await applyFilters();
             return;
         }
@@ -252,23 +252,23 @@ async function applyFiltersDepartment(departmentId) {
         const response = await fetch(`/api/categories/departments/${departmentId}/categories`);
         if (!response.ok) {
             const errorData = await response.json();
-            throw new Error(errorData.error || 'Falha ao carregar categorias');
+            throw new Error(errorData.error || 'Failed to load categories');
         }
         const data = await response.json();
         
         if (!data.categories || !Array.isArray(data.categories)) {
-            throw new Error('Formato de dados de categorias inválido');
+            throw new Error('Invalid categories data format');
         }
 
         categorySelect.innerHTML = `
-            <option value="">Todas as Categorias</option>
+            <option value="">All Categories</option>
             ${data.categories.map(cat => `
                 <option value="${cat.id}">${cat.name}</option>
             `).join('')}`;
     } catch (error) {
         console.error('Error loading categories:', error);
         showNotification(error.message, 'error');
-        categorySelect.innerHTML = '<option value="">Erro ao carregar categorias</option>';
+        categorySelect.innerHTML = '<option value="">Error loading categories</option>';
     } finally {
         categorySelect.disabled = false;
         typeSelect.disabled = false;
@@ -277,12 +277,12 @@ async function applyFiltersDepartment(departmentId) {
 
 async function applyFiltersCategory(categoryId) {
     const typeSelect = document.getElementById('filterDocumentType');
-    typeSelect.innerHTML = '<option value="">Carregando tipos de documento...</option>';
+    typeSelect.innerHTML = '<option value="">Loading document types...</option>';
     typeSelect.disabled = true;
 
     try {
         if (!categoryId) {
-            typeSelect.innerHTML = '<option value="">Tipos</option>';
+            typeSelect.innerHTML = '<option value="">Types</option>';
             await applyFilters();
             return;
         }
@@ -290,23 +290,23 @@ async function applyFiltersCategory(categoryId) {
         const response = await fetch(`/api/document_types/categories/${categoryId}/types`);
         if (!response.ok) {
             const errorData = await response.json();
-            throw new Error(errorData.error || 'Falha ao carregar tipos de documento');
+            throw new Error(errorData.error || 'Failed to load document types');
         }
         const data = await response.json();
         
         if (!Array.isArray(data)) {
-            throw new Error('Formato de dados de tipos de documento inválido');
+            throw new Error('Invalid document types data format');
         }
 
         typeSelect.innerHTML = `
-            <option value="">Todos os Tipos de Documento</option>
+            <option value="">All Document Types</option>
             ${data.map(type => 
                 `<option value="${type.id}">${type.name}</option>`
             ).join('')}`;
     } catch (error) {
         console.error('Error loading document types:', error);
         showNotification(error.message, 'error');
-        typeSelect.innerHTML = '<option value="">Erro ao carregar tipos de documento</option>';
+        typeSelect.innerHTML = '<option value="">Error loading document types</option>';
     } finally {
         typeSelect.disabled = false;
     }
@@ -345,35 +345,35 @@ setupFormValidation('addDocumentForm', {
 
 async function loadDocumentTypes(categoryId) {
     const typeSelect = document.getElementById('documentType');
-    typeSelect.innerHTML = '<option value="">Carregando tipos de documento...</option>';
+    typeSelect.innerHTML = '<option value="">Loading document types...</option>';
     typeSelect.disabled = true;
 
     try {
         if (!categoryId) {
-            typeSelect.innerHTML = '<option value="">Selecionar Tipo de Documento</option>';
+            typeSelect.innerHTML = '<option value="">Select Document Type</option>';
             return;
         }
 
         const response = await fetch(`/api/document_types/categories/${categoryId}/types`);
         if (!response.ok) {
             const errorData = await response.json();
-            throw new Error(errorData.error || 'Falha ao carregar tipos de documento');
+            throw new Error(errorData.error || 'Failed to load document types');
         }
         const data = await response.json();
         
         if (!Array.isArray(data)) {
-            throw new Error('Formato de dados de tipos de documento inválido');
+            throw new Error('Invalid document types data format');
         }
         
         typeSelect.innerHTML = `
-            <option value="">Selecionar Tipo de Documento</option>
+            <option value="">Select Document Type</option>
             ${data.map(type => 
                 `<option value="${type.id}">${type.name}</option>`
             ).join('')}`;
     } catch (error) {
         console.error('Error loading document types:', error);
         showNotification(error.message, 'error');
-        typeSelect.innerHTML = '<option value="">Erro ao carregar tipos de documento</option>';
+        typeSelect.innerHTML = '<option value="">Error loading document types</option>';
     } finally {
         typeSelect.disabled = false;
     }
@@ -383,37 +383,37 @@ async function loadDepartmentCategories(departmentId) {
     const categorySelect = document.getElementById('documentCategory');
     const typeSelect = document.getElementById('documentType');
     
-    categorySelect.innerHTML = '<option value="">Carregando categorias...</option>';
+    categorySelect.innerHTML = '<option value="">Loading categories...</option>';
     categorySelect.disabled = true;
-    typeSelect.innerHTML = '<option value="">Selecionar Tipo de Documento</option>';
+    typeSelect.innerHTML = '<option value="">Select Document Type</option>';
     typeSelect.disabled = true;
 
     try {
         if (!departmentId) {
-            categorySelect.innerHTML = '<option value="">Selecionar Categoria</option>';
+            categorySelect.innerHTML = '<option value="">Select Category</option>';
             return;
         }
 
         const response = await fetch(`/api/categories/departments/${departmentId}/categories`);
         if (!response.ok) {
             const errorData = await response.json();
-            throw new Error(errorData.error || 'Falha ao carregar categorias');
+            throw new Error(errorData.error || 'Failed to load categories');
         }
         const data = await response.json();
         
         if (!data.categories || !Array.isArray(data.categories)) {
-            throw new Error('Formato de dados de categorias inválido');
+            throw new Error('Invalid categories data format');
         }
         
         categorySelect.innerHTML = `
-            <option value="">Selecionar Categoria</option>
+            <option value="">Select Category</option>
             ${data.categories.map(cat => `
                 <option value="${cat.id}">${cat.name}</option>`
             ).join('')}`;
     } catch (error) {
         console.error('Error loading categories:', error);
         showNotification(error.message, 'error');
-        categorySelect.innerHTML = '<option value="">Erro ao carregar categorias</option>';
+        categorySelect.innerHTML = '<option value="">Error loading categories</option>';
     } finally {
         categorySelect.disabled = false;
         typeSelect.disabled = false;
@@ -430,7 +430,7 @@ async function createDocument(event) {
     }
 
     if(document.getElementById('user_id').value ==''){
-        showNotification('Preencha o CPF', 'error');
+        showNotification('Enter with CPF', 'error');
         return;
     }
     
@@ -445,14 +445,14 @@ async function createDocument(event) {
 
         if (!response.ok) {
             const errorData = await response.json();
-            throw new Error(errorData.error || 'Falha ao criar documento');
+            throw new Error(errorData.error || 'Failed to create document');
         }
 
         hideModal('addDocumentModal');
         form.reset();
         document.getElementById('user_id').value =''
         await loadDocuments(currentPage);
-        showNotification('Documento criado com sucesso', 'success');
+        showNotification('Document created successfully', 'success');
     } catch (error) {
         console.error('Error creating document:', error);
         showNotification(error.message, 'error');
@@ -482,11 +482,11 @@ async function confirmDelete() {
 
         if (!response.ok) {
             const errorData = await response.json();
-            throw new Error(errorData.error || 'Falha ao excluir documento');
+            throw new Error(errorData.error || 'Failed to delete document');
         }
 
         await loadDocuments(currentPage);
-        showNotification('Documento excluído com sucesso', 'success');
+        showNotification('Document deleted successfully', 'success');
     } catch (error) {
         console.error('Error deleting document:', error);
         showNotification(error.message, 'error');
@@ -510,12 +510,12 @@ async function loadDocuments(page = 1, filters = {}) {
         const response = await fetch(`/api/documents?${params}`);
         if (!response.ok) {
             const errorData = await response.json();
-            throw new Error(errorData.error || 'Falha ao carregar documentos');
+            throw new Error(errorData.error || 'Failed to load documents');
         }
 
         const data = await response.json();
         if (!data || !Array.isArray(data.documents)) {
-            throw new Error('Formato de resposta inválido');
+            throw new Error('Invalid response format');
         }
         
         currentPage = page;
@@ -525,7 +525,7 @@ async function loadDocuments(page = 1, filters = {}) {
             <div class="documents-grid">
                 <div class="no-data">
                     <i data-feather="inbox"></i>
-                    <p>Nenhum documento encontrado</p>
+                    <p>No documents found</p>
                 </div>
             </div>` : `
             <div class="documents-grid">
@@ -534,7 +534,7 @@ async function loadDocuments(page = 1, filters = {}) {
                         <div class="document-header">
                             <i data-feather="${getFileIcon(doc.name)}"></i>
                             <div class="document-title">
-                                <h3>${doc.document_type_name || 'Tipo Desconhecido'}</h3>
+                                <h3>${doc.document_type_name || 'Unknown Type'}</h3>
                                 <p class="document-subtitle">${doc.titulo || doc.name}</p>
                             </div>
                         </div>
@@ -544,13 +544,13 @@ async function loadDocuments(page = 1, filters = {}) {
                                     <i data-feather="user"></i>
                                 </div>
                                 <div class="user-details">
-                                    <p class="user-name">${doc.user_name || 'Usuário Desconhecido'}</p>
-                                    <p class="user-cpf">${doc.user_cpf || 'Sem CPF'}</p>
+                                    <p class="user-name">${doc.user_name || 'Unknown User'}</p>
+                                    <p class="user-cpf">${doc.user_cpf || 'No CPF'}</p>
                                 </div>
                             </div>
                             <div class="document-meta">
                                 <p><i data-feather="calendar"></i> ${new Date(doc.created_at).toLocaleDateString()}</p>
-                                <p><i data-feather="eye"></i> Visualizações: ${doc.view_count || 0}</p>
+                                <p><i data-feather="eye"></i> Views: ${doc.view_count || 0}</p>
                                 <p><i data-feather="download"></i> Downloads: ${doc.download_count || 0}</p>
                             </div>
                         </div>
@@ -569,27 +569,27 @@ async function loadDocuments(page = 1, filters = {}) {
         contentDiv.innerHTML = gridHTML + `
             <div class="pagination-controls">
                 <button class="action-btn" onclick="changePage(currentPage - 1)" id="prevPage" ${currentPage <= 1 ? 'disabled' : ''}>
-                    <i data-feather="chevron-left"></i> Anterior
+                    <i data-feather="chevron-left"></i> Previous
                 </button>
-                <span id="pageInfo">Página ${currentPage} de ${totalPages}</span>
+                <span id="pageInfo">Page ${currentPage} of ${totalPages}</span>
                 <button class="action-btn" onclick="changePage(currentPage + 1)" id="nextPage" ${currentPage >= totalPages ? 'disabled' : ''}>
-                    Próximo <i data-feather="chevron-right"></i>
+                    Next <i data-feather="chevron-right"></i>
                 </button>
             </div>`;
         
         feather.replace();
         updatePaginationControls();
     } catch (error) {
-        console.error('Erro ao carregar documentos:', error);
+        console.error('Error loading documents:', error);
         contentDiv.innerHTML = `
             <div class="documents-grid">
                 <div class="no-data error">
                     <i data-feather="alert-circle"></i>
-                    <p>${error.message || 'Erro ao carregar documentos. Por favor, tente novamente.'}</p>
+                    <p>${error.message || 'Error loading documents. Please try again.'}</p>
                 </div>
             </div>`;
         feather.replace();
-        showNotification(error.message || 'Falha ao carregar documentos', 'error');
+        showNotification(error.message || 'Failed to load documents', 'error');
     } finally {
         hideLoading(contentDiv);
     }
@@ -601,7 +601,7 @@ async function searchUser() {
         openPopup();
         if(document.getElementById(`user_cpf`).value == ''){
             closePopup();
-            showNotification('Preencha o CPF', 'error');
+            showNotification('Enter with CPF', 'error');
             return;
         } 
 
@@ -612,7 +612,7 @@ async function searchUser() {
         const response = await fetch(`/api/users?${params}`);
         if (!response.ok) {
             closePopup();
-            showNotification('Usuário não encontrado', 'error');
+            showNotification('User not found', 'error');
             document.getElementById('name-user').value = '';
             document.getElementById('user_id').value ='';
             return;
@@ -622,7 +622,7 @@ async function searchUser() {
 
         if(!usuario){
             closePopup();
-            showNotification('Usuário não encontrado', 'error');
+            showNotification('User not found', 'error');
             document.getElementById('name-user').value = '';
             document.getElementById('user_id').value ='';
             return;
@@ -631,8 +631,8 @@ async function searchUser() {
         document.getElementById('name-user').value = usuario['name'];
         document.getElementById('user_id').value = usuario['id'];
     } catch (error) {
-        console.error('Erro ao carregar usuários:', error);
-        showNotification(error.message || 'Falha ao carregar usuários', 'error');
+        console.error('Error loading documents:', error);
+        showNotification(error.message || 'Failed to load users', 'error');
        
     } finally {
         closePopup();
@@ -642,7 +642,7 @@ async function searchUser() {
 function updatePaginationControls() {
     document.getElementById('prevPage').disabled = currentPage <= 1;
     document.getElementById('nextPage').disabled = currentPage >= totalPages;
-    document.getElementById('pageInfo').textContent = `Página ${currentPage} de ${totalPages}`;
+    document.getElementById('pageInfo').textContent = `Page ${currentPage} of ${totalPages}`;
 }
 
 function changePage(newPage) {
@@ -677,15 +677,15 @@ function deleteDocument(id) {
 
 async function downloadDocument(url) {
     if (!url) {
-        showNotification('URL do documento não disponível', 'error');
+        showNotification('Document URL is not available', 'error');
         return;
     }
     
     try {
         window.open(url, '_blank');
     } catch (error) {
-        console.error('Erro ao baixar documento:', error);
-        showNotification('Falha ao baixar documento', 'error');
+        console.error('Error downloading document:', error);
+        showNotification('Failed to download document', 'error');
     }
 }
 
@@ -695,32 +695,6 @@ document.addEventListener('DOMContentLoaded', () => {
     loadDocuments();
     feather.replace();
 });
-
-function showNotification(message, type = 'error') {
-    const modal = document.getElementById('notificationModal');
-    const header = modal.querySelector('.notification-header');
-    const icon = document.getElementById('notificationIcon');
-    const title = document.getElementById('notificationTitle');
-    const messageEl = document.getElementById('notificationMessage');
-
-    header.classList.remove('success', 'error');
-
-    if (type === 'success') {
-        header.classList.add('success');
-        title.textContent = 'Sucesso';
-        icon.setAttribute('data-feather', 'check-circle');
-    } else {
-        header.classList.add('error');
-        title.textContent = 'Erro';
-        icon.setAttribute('data-feather', 'alert-circle');
-    }
-
-    messageEl.textContent = message;
-    modal.style.display = 'block';
-    feather.replace();
-}
-
-
 </script>
 
 <style>
@@ -1055,5 +1029,5 @@ function showNotification(message, type = 'error') {
     }
     
     
-</style>
+    </style>
 {% endblock %}

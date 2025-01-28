@@ -3,9 +3,9 @@
 {% block content %}
 <div class="page-container">
     <div class="header-actions">
-        <h2><i data-feather="users"></i> Usuários</h2>
+        <h2><i data-feather="users"></i> Users</h2>
         <button class="action-btn primary" onclick="showAddUserModal()">
-            <i data-feather="plus"></i> Adicionar Usuário
+            <i data-feather="plus"></i> Add User
         </button>
     </div>
     <div class="content-grid">
@@ -14,20 +14,20 @@
                 <table class="users-table">
                     <thead>
                         <tr>
-                            <th>Nome</th>
+                            <th>Name</th>
                             <th>Email</th>
                             <th>CPF</th>
-                            <th>Telefone</th>
-                            <th>Função</th>
+                            <th>Phone</th>
+                            <th>Role</th>
                             <th>Status</th>
-                            <th>Ações</th>
+                            <th>Actions</th>
                         </tr>
                     </thead>
                     <tbody id="usersTableBody">
                         <tr>
                             <td colspan="7" class="no-data">
                                 <i data-feather="inbox"></i>
-                                <p>Carregando usuários...</p>
+                                <p>Loading users...</p>
                             </td>
                         </tr>
                     </tbody>
@@ -39,10 +39,10 @@
 <!-- Add Document Modal -->
 <div id="addUserModal" class="modal">
     <div class="modal-content">
-        <h3>Adicionar Usuário</h3>
+        <h3>Add User</h3>
         <form id="addUserForm" onsubmit="createUser(event)">
             <div class="form-group">
-                <label for="userName">Nome</label>
+                <label for="userName">Name</label>
                 <input type="text" id="userName" name="name" required>
             </div>
             <div class="form-group">
@@ -55,24 +55,24 @@
                     <input type="text" id="userCPF" name="cpf" required>
                 </div>
                 <div class="form-group">
-                    <label for="userPhone">Telefone</label>
+                    <label for="userPhone">Phone</label>
                     <input type="text" id="userPhone" name="phone">
                 </div>
                 <div class="form-group">
-                    <label for="userPassword">Senha</label>
+                    <label for="userPassword">Password</label>
                     <input type="password" id="userPassword" name="password" required>
                 </div>
                 <div class="form-group">
-                    <label for="userRole">Função</label>
+                    <label for="userRole">Role</label>
                     <select id="userRole" name="role" required>
-                        <option value="user">Usuário</option>
-                        <option value="admin">Administrador</option>
+                        <option value="user">User</option>
+                        <option value="admin">Admin</option>
                     </select>
                 </div>
             </div>
             <div class="modal-actions">
-                <button type="button" class="action-btn" onclick="hideModal('addUserModal')">Cancelar</button>
-                <button type="submit" class="action-btn primary">Adicionar</button>
+                <button type="button" class="action-btn" onclick="hideModal('addUserModal')">Cancel</button>
+                <button type="submit" class="action-btn primary">Add</button>
             </div>
         </form>
     </div>
@@ -80,11 +80,11 @@
 <!-- Edit User Modal -->
 <div id="editUserModal" class="modal">
     <div class="modal-content">
-        <h3>Editar Usuário</h3>
+        <h3>Add User</h3>
         <form id="editUserForm" onsubmit="updateUser(event)">
             <input type="hidden" id="editUserId">
             <div class="form-group">
-                <label for="editUserName">Nome</label>
+                <label for="editUserName">Name</label>
                 <input type="text" id="editUserName" name="name" required>
             </div>
             <div class="form-group">
@@ -97,20 +97,21 @@
                     <input type="text" id="editUserCPF" name="cpf" required disabled>
                 </div>
                 <div class="form-group">
-                    <label for="editUserPhone">Telefone</label>
+                    <label for="editUserPhone">Phone</label>
                     <input type="text" id="editUserPhone" name="phone">
                 </div>
                 <div class="form-group">
-                    <label for="editUserRole">Função</label>
+                    <label for="editUserRole">Role</label>
                     <select id="editUserRole" name="role" required>
-                        <option value="user">Usuário</option>
-                        <option value="admin">Administrador</option>
+                        <option value="user">User</option>
+                        <option value="admin">Admin</option>
                     </select>
                 </div>
+
             </div>
             <div class="modal-actions">
-                <button type="button" class="action-btn" onclick="hideModal('editUserModal')">Cancelar</button>
-                <button type="submit" class="action-btn primary">Atualizar</button>
+                <button type="button" class="action-btn" onclick="hideModal('editUserModal')">Cancel</button>
+                <button type="submit" class="action-btn primary">Update</button>
             </div>
         </form>
     </div>
@@ -166,23 +167,23 @@ async function loadUsers() {
     try {
         const response = await fetch('/api/users');
         if (!response.ok) {
-            throw new Error(`Erro HTTP! status: ${response.status}`);
+            throw new Error(`HTTP error! status: ${response.status}`);
         }
-
+        
         const data = await response.json();
         if (!data || !data.users) {
-            throw new Error('Formato de resposta inválido');
+            throw new Error('Invalid response format');
         }
-
+        
         tableBody.innerHTML = generateUsersHTML(data.users);
         feather.replace();
     } catch (error) {
-        console.error('Erro ao carregar usuários:', error);
+        console.error('Error loading users:', error);
         tableBody.innerHTML = `
             <tr>
                 <td colspan="7" class="no-data">
                     <i data-feather="alert-circle"></i>
-                    <p>${error.message || 'Falha ao carregar usuários'}</p>
+                    <p>${error.message || 'Failed to load users'}</p>
                 </td>
             </tr>`;
         feather.replace();
@@ -197,7 +198,7 @@ function generateUsersHTML(users) {
             <tr>
                 <td colspan="7" class="no-data">
                     <i data-feather="inbox"></i>
-                    <p>Nenhum usuário encontrado</p>
+                    <p>No users found</p>
                 </td>
             </tr>`;
     }
@@ -213,10 +214,10 @@ function generateUsersHTML(users) {
             <td>${user.email}</td>
             <td>${user.cpf}</td>
             <td>${user.phone || '-'}</td>
-            <td>${user.role === 'admin' ? 'Administrador' : 'Usuário'}</td>
+            <td>${user.role}</td>
             <td>
                 <span class="status-badge ${user.status === 'active' ? 'active' : 'inactive'}">
-                    ${user.status === 'active' ? 'Ativo' : 'Inativo'}
+                    ${user.status}
                 </span>
             </td>
             <td>
@@ -237,11 +238,11 @@ async function createUser(event) {
     event.preventDefault();
     const form = event.target;
     const submitButton = form.querySelector('button[type="submit"]');
-
+    
     if (!validateForm(form)) {
         return;
     }
-
+    
     const formData = new FormData(form);
     const data = Object.fromEntries(formData);
     showLoading(submitButton);
@@ -256,17 +257,17 @@ async function createUser(event) {
         });
 
         const responseData = await response.json();
-
+        
         if (!response.ok) {
-            throw new Error(responseData.error || 'Falha ao criar usuário');
+            throw new Error(responseData.error || 'Failed to create user');
         }
 
         hideModal('addUserModal');
         form.reset();
         await loadUsers();
-        showNotification('Usuário criado com sucesso', 'success');
+        showNotification('User created successfully', 'success');
     } catch (error) {
-        console.error('Erro ao criar usuário:', error);
+        console.error('Error creating user:', error);
         showErrorMessage(error.message);
     } finally {
         hideLoading(submitButton);
@@ -277,11 +278,11 @@ async function updateUser(event) {
     event.preventDefault();
     const form = event.target;
     const submitButton = form.querySelector('button[type="submit"]');
-
+    
     if (!validateForm(form)) {
         return;
     }
-
+    
     const id = document.getElementById('editUserId').value;
     const formData = new FormData(form);
     const data = Object.fromEntries(formData);
@@ -297,16 +298,16 @@ async function updateUser(event) {
         });
 
         const responseData = await response.json();
-
+        
         if (!response.ok) {
-            throw new Error(responseData.error || 'Falha ao atualizar usuário');
+            throw new Error(responseData.error || 'Failed to update user');
         }
 
         hideModal('editUserModal');
         await loadUsers();
-        showNotification('Usuário atualizado com sucesso', 'success');
+        showNotification('User updated successfully', 'success');
     } catch (error) {
-        console.error('Erro ao atualizar usuário:', error);
+        console.error('Error updating user:', error);
         showErrorMessage(error.message);
     } finally {
         hideLoading(submitButton);
@@ -316,7 +317,7 @@ async function updateUser(event) {
 let itemToDelete = null;
 
 async function confirmDelete() {
-
+    
     const row = document.querySelector(`tr[data-id="${itemToDelete}"]`);
     showLoading(row);
 
@@ -327,13 +328,13 @@ async function confirmDelete() {
 
         if (!response.ok) {
             const errorData = await response.json();
-            throw new Error(errorData.error || 'Falha ao excluir usuário');
+            throw new Error(errorData.error || 'Failed to delete user');
         }
 
         await loadUsers();
-        showNotification('Usuário excluído com sucesso', 'success');
+        showNotification('User deleted successfully', 'success');
     } catch (error) {
-        console.error('Erro ao excluir usuário:', error);
+        console.error('Error deleting user:', error);
         showErrorMessage(error.message);
     } finally {
         hideLoading(row);
