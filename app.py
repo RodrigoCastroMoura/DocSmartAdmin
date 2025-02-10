@@ -289,6 +289,11 @@ def document_types():
 def users():
     return render_template('users.html')
 
+@app.route('/admins')
+@login_required
+def admins():
+    return render_template('admins.html')
+
 @app.route('/departments/<department_id>/categories')
 @login_required
 def department_categories(department_id):
