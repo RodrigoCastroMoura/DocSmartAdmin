@@ -101,6 +101,10 @@
                     <i data-feather="users"></i>
                     <span>Users</span>
                 </a>
+                <a href="{{ url_for('admins') }}" class="nav-item {% if request.endpoint == 'admins' %}active{% endif %}">
+                    <i data-feather="shield"></i>
+                    <span>Administrators</span>
+                </a>
             </nav>
         </aside>
 

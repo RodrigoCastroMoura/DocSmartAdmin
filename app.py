@@ -289,6 +289,11 @@ def document_types():
 def users():
     return render_template('users.html')
 
+@app.route('/admins')
+@login_required
+def admins():
+    return render_template('admins.html')
+
 @app.route('/departments/<department_id>/categories')
 @login_required
 def department_categories(department_id):
@@ -721,8 +726,7 @@ def users_api():
             'company_id': company_id,
             'cpf': request.args.get('cpf'),
             'email': request.args.get('email'),
-            'status': 'active',
-            'role':'user'
+            'status': 'active'
         }       
         # Remove None values
         params = {k: v for k, v in params.items() if v is not None}
@@ -743,6 +747,7 @@ def users_api():
         cpf = data.get('cpf')
         phone = data.get('phone')
         password = data.get('password')
+        role = data.get('role')
          # Build form data
         form_data = {
             "name": name,
@@ -750,7 +755,7 @@ def users_api():
             "cpf" : cpf,
             "phone" : phone,
             "password" : password,
-            "role" : "user",
+            "role" : role,
             "status": "active",
             'company_id': company_id
         }
@@ -791,13 +796,14 @@ def users_id(users_id):
         email = data.get('email')
         phone = data.get('phone')
         password = user['password']
+        role = data.get('role') 
 
         form_data = {
             "name": name,
             "email" : email,
             "phone" : phone,
             "password" : password,
-            "role" : "user",
+            "role" : role,
             "status": "active",
             'company_id': company_id
         }

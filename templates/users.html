@@ -18,6 +18,7 @@
                             <th>Email</th>
                             <th>CPF</th>
                             <th>Phone</th>
+                            <th>Role</th>
                             <th>Status</th>
                             <th>Actions</th>
                         </tr>
@@ -61,6 +62,13 @@
                     <label for="userPassword">Password</label>
                     <input type="password" id="userPassword" name="password" required>
                 </div>
+                <div class="form-group">
+                    <label for="userRole">Role</label>
+                    <select id="userRole" name="role" required>
+                        <option value="user">User</option>
+                        <option value="admin">Admin</option>
+                    </select>
+                </div>
             </div>
             <div class="modal-actions">
                 <button type="button" class="action-btn" onclick="hideModal('addUserModal')">Cancel</button>
@@ -92,6 +100,14 @@
                     <label for="editUserPhone">Phone</label>
                     <input type="text" id="editUserPhone" name="phone">
                 </div>
+                <div class="form-group">
+                    <label for="editUserRole">Role</label>
+                    <select id="editUserRole" name="role" required>
+                        <option value="user">User</option>
+                        <option value="admin">Admin</option>
+                    </select>
+                </div>
+
             </div>
             <div class="modal-actions">
                 <button type="button" class="action-btn" onclick="hideModal('editUserModal')">Cancel</button>
@@ -198,6 +214,7 @@ function generateUsersHTML(users) {
             <td>${user.email}</td>
             <td>${user.cpf}</td>
             <td>${user.phone || '-'}</td>
+            <td>${user.role}</td>
             <td>
                 <span class="status-badge ${user.status === 'active' ? 'active' : 'inactive'}">
                     ${user.status}
@@ -353,6 +370,7 @@ function showEditUserModal(id, user) {
     document.getElementById('editUserEmail').value = user.email;
     document.getElementById('editUserCPF').value = user.cpf;
     document.getElementById('editUserPhone').value = user.phone || '';
+    document.getElementById('editUserRole').value = user.role;
     showModal('editUserModal');
 }
 
