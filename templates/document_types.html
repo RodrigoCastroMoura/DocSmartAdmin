@@ -32,16 +32,14 @@
                 <input type="text" id="documentTypeDescription" name="description">
             </div>
             <div class="form-group">
-                <label for="documentTypeDepartment">Department</label>
-                <select id="documentTypeDepartment" onchange="loadDepartmentCategories(this.value)">
-                    <option value="">Select Department</option>
-                </select>
-            </div>
-            <div class="form-group">
                 <label for="documentTypeCategory">Category</label>
                 <select id="documentTypeCategory" name="category_id" required>
                     <option value="">Select Category</option>
                 </select>
+            </div>
+            <div class="form-group">
+                <label for="documentTypePublic">Public</label>
+                <input type="checkbox" id="documentTypePublic" name="public" checked>
             </div>
             <div class="modal-actions">
                 <button type="button" class="action-btn" onclick="hideModal('addDocumentTypeModal')">Cancel</button>
@@ -66,16 +64,14 @@
                 <input type="text" id="editDocumentTypeDescription" name="description">
             </div>
             <div class="form-group">
-                <label for="editDocumentTypeDepartment">Department</label>
-                <select id="editDocumentTypeDepartment" onchange="loadDepartmentCategories(this.value, 'editDocumentTypeCategory')">
-                    <option value="">Select Department</option>
-                </select>
-            </div>
-            <div class="form-group">
                 <label for="editDocumentTypeCategory">Category</label>
                 <select id="editDocumentTypeCategory" name="category_id" required>
                     <option value="">Select Category</option>
                 </select>
+            </div>
+            <div class="form-group">
+                <label for="editDocumentTypePublic">Public</label>
+                <input type="checkbox" id="editDocumentTypePublic" name="public">
             </div>
             <div class="modal-actions">
                 <button type="button" class="action-btn" onclick="hideModal('editDocumentTypeModal')">Cancel</button>
