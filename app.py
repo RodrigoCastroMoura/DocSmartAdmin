@@ -632,7 +632,7 @@ def document_types_api():
         description = data.get('description')
         department_id = data.get('department_id')
         category_id = data.get('category_id')
-        public = data.get('public') 
+        public = data.get('public') # # Adiciona a chave 'public' com o valor True ou False
          # Build form data
         form_data = {
             "name": name,
@@ -640,7 +640,7 @@ def document_types_api():
             "department_id" : department_id,
             "category_id" : category_id,
             'company_id': company_id,
-            'public' : public
+            'public' : public 
         }
         response = requests.post(
             DOCUMENT_TYPES_URL,
@@ -667,13 +667,15 @@ def document_types_id(document_types_id):
         description = data.get('description')
         department_id = data.get('department_id')
         category_id = data.get('category_id')
+        public = data.get('public')  # Adiciona a chave 'public' com o valor True ou False
          # Build form data
         form_data = {
             "name": name,
             "department_id" : department_id,
             "description" : description,
             "category_id" : category_id,
-            'company_id': company_id
+            'company_id': company_id,
+            'public' : public 
         } 
         response = requests.put(
             f"{DOCUMENT_TYPES_URL}/{document_types_id}",
