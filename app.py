@@ -632,13 +632,15 @@ def document_types_api():
         description = data.get('description')
         department_id = data.get('department_id')
         category_id = data.get('category_id')
+        public = data.get('public') 
          # Build form data
         form_data = {
             "name": name,
             "description" : description,
             "department_id" : department_id,
             "category_id" : category_id,
-            'company_id': company_id
+            'company_id': company_id,
+            'public' : public
         }
         response = requests.post(
             DOCUMENT_TYPES_URL,
