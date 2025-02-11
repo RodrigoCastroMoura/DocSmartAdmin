@@ -43,6 +43,19 @@
                     <option value="">Select Category</option>
                 </select>
             </div>
+            <div class="form-group">
+                <label>Visibility</label>
+                <div class="radio-group">
+                    <label class="radio-label">
+                        <input type="radio" name="public" value="true" checked>
+                        Public
+                    </label>
+                    <label class="radio-label">
+                        <input type="radio" name="public" value="false">
+                        Private
+                    </label>
+                </div>
+            </div>
             <div class="modal-actions">
                 <button type="button" class="action-btn" onclick="hideModal('addDocumentTypeModal')">Cancel</button>
                 <button type="submit" class="action-btn primary">Add</button>
@@ -76,6 +89,19 @@
                 <select id="editDocumentTypeCategory" name="category_id" required>
                     <option value="">Select Category</option>
                 </select>
+            </div>
+            <div class="form-group">
+                <label>Visibility</label>
+                <div class="radio-group">
+                    <label class="radio-label">
+                        <input type="radio" name="public" value="true" id="editPublicTrue">
+                        Public
+                    </label>
+                    <label class="radio-label">
+                        <input type="radio" name="public" value="false" id="editPublicFalse">
+                        Private
+                    </label>
+                </div>
             </div>
             <div class="modal-actions">
                 <button type="button" class="action-btn" onclick="hideModal('editDocumentTypeModal')">Cancel</button>
@@ -367,6 +393,8 @@ function showEditDocumentTypeModal(id, type) {
     document.getElementById('editDocumentTypeId').value = id;
     document.getElementById('editDocumentTypeName').value = type.name;
     document.getElementById('editDocumentTypeDescription').value = type.description || '';
+    document.getElementById('editPublicTrue').checked = type.public === true;
+    document.getElementById('editPublicFalse').checked = type.public === false;
     loadDepartments().then(() => {
         if (type.department_id) {
             document.getElementById('editDocumentTypeDepartment').value = type.department_id;
@@ -469,6 +497,23 @@ document.addEventListener('DOMContentLoaded', loadDocumentTypes);
     font-size: 2rem;
     margin-bottom: 0.5rem;
     opacity: 0.5;
+}
+
+.radio-group {
+    display: flex;
+    gap: 1rem;
+    margin-top: 0.5rem;
+}
+
+.radio-label {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    cursor: pointer;
+}
+
+.radio-label input[type="radio"] {
+    cursor: pointer;
 }
 .document-type-link {
     text-decoration: none;
