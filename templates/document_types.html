@@ -139,18 +139,18 @@ async function loadDepartments() {
         document.getElementById('documentTypeDepartment'),
         document.getElementById('editDocumentTypeDepartment')
     ];
-    
+
     try {
         const response = await fetch('/api/departments');
         if (!response.ok) throw new Error('Failed to load departments');
         const data = await response.json();
-        
+
         const departmentsOptions = `
             <option value="">Select Department</option>
             ${data.map(dept => 
                 `<option value="${dept.id}">${dept.name}</option>`
             ).join('')}`;
-            
+
         departmentSelects.forEach(select => {
             if (select) select.innerHTML = departmentsOptions;
         });
@@ -171,7 +171,7 @@ async function loadDepartmentCategories(departmentId, targetId = 'documentTypeCa
         const response = await fetch(`/api/categories/departments/${departmentId}/categories`);
         if (!response.ok) throw new Error('Failed to load categories');
         const data = await response.json();
-        
+
         categorySelect.innerHTML = `
             <option value="">Select Category</option>
             ${data.categories.map(cat => 
@@ -194,7 +194,7 @@ async function loadDocumentTypes() {
         if (!response.ok) {
             throw new Error(`HTTP error! status: ${response.status}`);
         }
-        
+
         const data = await response.json();
         if (!data || !data.document_types) {
             throw new Error('Invalid response format');
@@ -261,11 +261,11 @@ async function createDocumentType(event) {
     event.preventDefault();
     const form = event.target;
     const submitButton = form.querySelector('button[type="submit"]');
-    
+
     if (!validateForm(form)) {
         return;
     }
-    
+
     const formData = new FormData(form);
     const data = Object.fromEntries(formData);
     showLoading(submitButton);
@@ -300,11 +300,11 @@ async function updateDocumentType(event) {
     event.preventDefault();
     const form = event.target;
     const submitButton = form.querySelector('button[type="submit"]');
-    
+
     if (!validateForm(form)) {
         return;
     }
-    
+
     const id = document.getElementById('editDocumentTypeId').value;
     const formData = new FormData(form);
     const data = Object.fromEntries(formData);
@@ -524,5 +524,30 @@ document.addEventListener('DOMContentLoaded', loadDocumentTypes);
     color: var(--accent-color);
 }
 
+.modal {
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+    overflow-y: auto;
+    padding: 20px;
+}
+
+.modal-content {
+    position: relative;
+    background-color: var(--bg-secondary);
+    margin: 20px auto;
+    padding: 2rem;
+    border-radius: 12px;
+    width: 100%;
+    max-width: 650px !important;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
+    animation: slideIn 0.3s ease;
+}
 </style>
 {% endblock %}
