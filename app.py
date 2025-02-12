@@ -187,10 +187,13 @@ def index():
 def change_password():
     try:
         data = request.get_json()
+        logger.info("Received password change request")
+
         current_password = data.get('current_password')
         new_password = data.get('new_password')
 
         if not current_password or not new_password:
+            logger.error("Missing required password fields")
             return jsonify({'error': 'Both current and new passwords are required'}), 400
 
         headers = get_auth_headers()
@@ -204,7 +207,15 @@ def change_password():
             timeout=REQUEST_TIMEOUT
         )
 
-        return handle_api_response(response, error_message='Failed to change password')
+        if response.ok:
+            logger.info("Password changed successfully")
+            # Clear the requires_password_change flag from session
+            session.pop('requires_password_change', None)
+            return jsonify({'message': 'Password changed successfully'}), 200
+        else:
+            error_msg = handle_api_error(response, 'Failed to change password')
+            logger.error(f"Password change failed: {error_msg}")
+            return jsonify({'error': error_msg}), response.status_code
 
     except Exception as e:
         logger.error(f"Password change error: {str(e)}")
@@ -241,20 +252,21 @@ def login():
 
                 # Check if password change is required
                 if data['user'].get('requires_password_change'):
+                    logger.info(f"User {identifier} requires password change")
                     session['requires_password_change'] = True
                     flash('You must change your password before continuing', 'warning')
-                    # The password change modal will be shown automatically via JavaScript
 
                 return redirect(url_for('dashboard'))
             else:
                 error_message = handle_api_error(response, 'Invalid credentials')
+                logger.error(f"Login failed for user {identifier}: {error_message}")
                 flash(error_message, 'error')
         except requests.Timeout:
             flash('Login request timed out. Please try again.', 'error')
         except requests.ConnectionError:
             flash('Could not connect to the server. Please try again later.', 'error')
         except Exception as e:
-            print(f"Login error: {e}")
+            logger.error(f"Login error: {e}")
             flash('An error occurred during login', 'error')
 
     return render_template('login.html')
@@ -274,9 +286,9 @@ def logout():
 @app.route('/dashboard')
 @login_required
 def dashboard():
-    if session.get('requires_password_change'):
-        return render_template('dashboard.html', show_password_modal=True)
-    return render_template('dashboard.html')
+    requires_password_change = session.get('requires_password_change', False)
+    logger.info(f"Dashboard access - requires_password_change: {requires_password_change}")
+    return render_template('dashboard.html', show_password_modal=requires_password_change)
 
 @app.route('/departments')
 @login_required

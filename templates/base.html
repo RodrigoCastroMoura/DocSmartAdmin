@@ -222,6 +222,52 @@
             setTheme(savedTheme);
         });
 
+        // Add this to your existing script section
+        function showPasswordChangeModal() {
+            document.getElementById('passwordChangeModal').style.display = 'block';
+        }
+
+        function hidePasswordChangeModal() {
+            document.getElementById('passwordChangeModal').style.display = 'none';
+        }
+
+        async function handlePasswordChange(event) {
+            event.preventDefault();
+            const form = event.target;
+            const currentPassword = form.currentPassword.value;
+            const newPassword = form.newPassword.value;
+            const confirmPassword = form.confirmPassword.value;
+
+            if (newPassword !== confirmPassword) {
+                showNotification('New passwords do not match', 'error');
+                return;
+            }
+
+            try {
+                const response = await fetch('/api/change-password', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        current_password: currentPassword,
+                        new_password: newPassword
+                    })
+                });
+
+                if (response.ok) {
+                    showNotification('Password changed successfully', 'success');
+                    hidePasswordChangeModal();
+                    // Reload page after successful password change
+                    setTimeout(() => window.location.reload(), 1500);
+                } else {
+                    const data = await response.json();
+                    showNotification(data.error || 'Failed to change password', 'error');
+                }
+            } catch (error) {
+                showNotification('An error occurred while changing password', 'error');
+            }
+        }
     </script>
 
     <style>
@@ -659,7 +705,7 @@
                         <input type="password" id="confirmPassword" name="confirmPassword" required>
                     </div>
                     <div class="notification-actions">
-                        <button type="button" class="action-btn" onclick="hideModal('passwordChangeModal')">Cancel</button>
+                        <button type="button" class="action-btn" onclick="hidePasswordChangeModal()">Cancel</button>
                         <button type="submit" class="action-btn primary">Change Password</button>
                     </div>
                 </form>
@@ -715,6 +761,3 @@
             }
         }
     </script>
-
-</body>
-</html>
