@@ -224,6 +224,8 @@ def change_password():
 @app.route('/login', methods=['GET', 'POST'])
 def login():
     if 'access_token' in session:
+        if session.get('requires_password_change'):
+            return redirect(url_for('change_password_page'))
         return redirect(url_for('dashboard'))
 
     if request.method == 'POST':
@@ -243,19 +245,18 @@ def login():
 
             if response.status_code == 200:
                 data = response.json()
-                logger.info(f"Login response: {data}")  # Log the entire response for debugging
+                logger.info(f"Login response: {data}")
                 session.permanent = True
                 session['access_token'] = data['access_token']
                 session['refresh_token'] = data['refresh_token']
                 session['user'] = data['user']
                 session['company_id'] = data['user'].get('company_id')
-                session['token_expiry'] = time.time() + 3600  # Set token expiry to 1 hour
+                session['token_expiry'] = time.time() + 3600
 
-                # Check if password change is required
                 if data.get('requires_password_change'):
                     logger.info(f"User {identifier} requires password change")
                     session['requires_password_change'] = True
-                    flash('You must change your password before continuing', 'warning')
+                    return redirect(url_for('change_password_page'))
 
                 return redirect(url_for('dashboard'))
             else:
@@ -996,6 +997,13 @@ def delete_document(document_id):
     except Exception as e:
         print(f"Error deleting document: {e}")
         return jsonify({'error': 'An unexpected error occurred'}), 500
+
+@app.route('/change-password-page')
+@login_required
+def change_password_page():
+    if not session.get('requires_password_change'):
+        return redirect(url_for('dashboard'))
+    return render_template('change_password.html')
 
 if __name__ == "__main__":
     # Ensure upload folder exists

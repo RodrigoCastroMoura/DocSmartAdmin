@@ -220,59 +220,7 @@
         document.addEventListener('DOMContentLoaded', () => {
             const savedTheme = localStorage.getItem('theme') || 'light';
             setTheme(savedTheme);
-
-            // Check if password change is required
-            {% if show_password_modal %}
-                showPasswordChangeModal();
-            {% endif %}
         });
-
-        // Add this to your existing script section
-        function showPasswordChangeModal() {
-            document.getElementById('passwordChangeModal').style.display = 'block';
-        }
-
-        function hidePasswordChangeModal() {
-            document.getElementById('passwordChangeModal').style.display = 'none';
-        }
-
-        async function handlePasswordChange(event) {
-            event.preventDefault();
-            const form = event.target;
-            const currentPassword = form.currentPassword.value;
-            const newPassword = form.newPassword.value;
-            const confirmPassword = form.confirmPassword.value;
-
-            if (newPassword !== confirmPassword) {
-                showNotification('New passwords do not match', 'error');
-                return;
-            }
-
-            try {
-                const response = await fetch('/api/change-password', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({
-                        current_password: currentPassword,
-                        new_password: newPassword
-                    })
-                });
-
-                if (response.ok) {
-                    showNotification('Password changed successfully', 'success');
-                    hidePasswordChangeModal();
-                    // Reload page after successful password change
-                    setTimeout(() => window.location.reload(), 1500);
-                } else {
-                    const data = await response.json();
-                    showNotification(data.error || 'Failed to change password', 'error');
-                }
-            } catch (error) {
-                showNotification('An error occurred while changing password', 'error');
-            }
-        }
     </script>
 
     <style>
@@ -686,34 +634,5 @@
             <h2 class="custom-popup-title">Ação em Progresso</h2>
             <p class="custom-popup-text">Por favor, aguarde enquanto processamos sua solicitação.</p>
             <div class="loader"></div>
-        </div>
-    </div>
-    <!-- Password Change Modal -->
-    <div id="passwordChangeModal" class="modal">
-        <div class="modal-content notification-modal">
-            <div class="notification-header">
-                <i data-feather="key" style="color: var(--accent-color);"></i>
-                <h3>Change Password</h3>
-            </div>
-            <div class="notification-body">
-                <form id="passwordChangeForm" onsubmit="handlePasswordChange(event)">
-                    <div class="form-group">
-                        <label for="currentPassword">Current Password</label>
-                        <input type="password" id="currentPassword" name="currentPassword" required>
-                    </div>
-                    <div class="form-group">
-                        <label for="newPassword">New Password</label>
-                        <input type="password" id="newPassword" name="newPassword" required>
-                    </div>
-                    <div class="form-group">
-                        <label for="confirmPassword">Confirm New Password</label>
-                        <input type="password" id="confirmPassword" name="confirmPassword" required>
-                    </div>
-                    <div class="notification-actions">
-                        <button type="button" class="action-btn" onclick="hidePasswordChangeModal()">Cancel</button>
-                        <button type="submit" class="action-btn primary">Change Password</button>
-                    </div>
-                </form>
-            </div>
         </div>
     </div>
