@@ -71,4 +71,13 @@
     font-weight: bold;
 }
 </style>
+
+<script>
+    // Show password change modal automatically if required
+    document.addEventListener('DOMContentLoaded', function() {
+        {% if show_password_modal %}
+            showPasswordChangeModal();
+        {% endif %}
+    });
+</script>
 {% endblock %}

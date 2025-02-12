@@ -43,15 +43,15 @@ def refresh_token():
         if 'refresh_token' not in session:
             print("No refresh token found in session")
             return False
-            
+
         headers = {'Authorization': f'Bearer {session.get("refresh_token")}'}
         response = requests.post(
-            REFRESH_URL, 
-            headers=headers, 
+            REFRESH_URL,
+            headers=headers,
             timeout=REQUEST_TIMEOUT,
             verify=True  # Ensure SSL verification
         )
-        
+
         if response.ok:
             data = response.json()
             session['access_token'] = data['access_token']
@@ -61,7 +61,7 @@ def refresh_token():
         else:
             print(f"Token refresh failed with status: {response.status_code}")
             return False
-            
+
     except requests.Timeout:
         print("Token refresh timeout")
     except requests.ConnectionError:
@@ -77,19 +77,19 @@ def login_required(f):
     def decorated_function(*args, **kwargs):
         if 'access_token' not in session:
             return redirect(url_for('login'))
-        
+
         # Check token expiration
         if 'token_expiry' in session:
             current_time = time.time()
             expiry_time = session.get('token_expiry', 0)
-            
+
             # Refresh token if it's expired or about to expire in the next 5 minutes
             if current_time >= (expiry_time - 300):
                 if not refresh_token():
                     session.clear()
                     flash('Your session has expired. Please log in again.', 'error')
                     return redirect(url_for('login'))
-            
+
         return f(*args, **kwargs)
     return decorated_function
 
@@ -98,7 +98,7 @@ def get_auth_headers():
     token = session.get('access_token')
     if not token:
         raise ValueError('No access token found')
-    
+
     return {
         'Authorization': f'Bearer {token}',
         'Accept': 'application/json',
@@ -110,7 +110,7 @@ def get_multipart_headers():
     token = session.get('access_token')
     if not token:
         raise ValueError('No access token found')
-    
+
     return {
         'Authorization': f'Bearer {token}',
         'Accept': 'application/json'
@@ -124,7 +124,7 @@ def handle_api_error(response, default_error="An error occurred"):
             if refresh_token():
                 return 'Token refreshed, please retry the operation'
             return 'Authentication failed, please login again'
-        
+
         if not response.ok:
             try:
                 error_data = response.json()
@@ -136,10 +136,10 @@ def handle_api_error(response, default_error="An error occurred"):
                 error_msg = f"Server error: {response.status_code}"
                 print(f"API Error: {error_msg}")
                 return error_msg
-            
+
             print(f"API Error: {default_error}")
             return default_error
-            
+
     except Exception as e:
         error_msg = f"Error parsing API response: {str(e)}"
         print(error_msg)
@@ -159,7 +159,7 @@ def handle_api_response(response, success_code=200, error_message="Operation fai
         elif not response.ok:
             error = handle_api_error(response, error_message)
             return jsonify({'error': error}), response.status_code
-        
+
         try:
             if response.status_code == 204:
                 return '', 204
@@ -170,7 +170,7 @@ def handle_api_response(response, success_code=200, error_message="Operation fai
             error_msg = 'Invalid JSON response'
             print(f"API Error: {error_msg}")
             return jsonify({'error': error_msg}), 500
-            
+
     except Exception as e:
         error_msg = f"Error handling API response: {str(e)}"
         print(error_msg)
@@ -182,26 +182,54 @@ def index():
         return redirect(url_for('dashboard'))
     return redirect(url_for('login'))
 
+@app.route('/api/change-password', methods=['POST'])
+@login_required
+def change_password():
+    try:
+        data = request.get_json()
+        current_password = data.get('current_password')
+        new_password = data.get('new_password')
+
+        if not current_password or not new_password:
+            return jsonify({'error': 'Both current and new passwords are required'}), 400
+
+        headers = get_auth_headers()
+        response = requests.post(
+            f"{API_BASE_URL}/auth/change-password",
+            headers=headers,
+            json={
+                'current_password': current_password,
+                'new_password': new_password
+            },
+            timeout=REQUEST_TIMEOUT
+        )
+
+        return handle_api_response(response, error_message='Failed to change password')
+
+    except Exception as e:
+        logger.error(f"Password change error: {str(e)}")
+        return jsonify({'error': 'An error occurred while changing password'}), 500
+
 @app.route('/login', methods=['GET', 'POST'])
 def login():
     if 'access_token' in session:
         return redirect(url_for('dashboard'))
-    
+
     if request.method == 'POST':
         identifier = request.form.get('identifier')
         password = request.form.get('password')
-        
+
         if not identifier or not password:
             flash('Please provide both identifier and password', 'error')
             return render_template('login.html')
-        
+
         try:
             response = requests.post(
                 LOGIN_URL,
                 json={'identifier': identifier, 'password': password},
                 timeout=REQUEST_TIMEOUT
             )
-            
+
             if response.status_code == 200:
                 data = response.json()
                 session.permanent = True
@@ -210,6 +238,13 @@ def login():
                 session['user'] = data['user']
                 session['company_id'] = data['user'].get('company_id')
                 session['token_expiry'] = time.time() + 3600  # Set token expiry to 1 hour
+
+                # Check if password change is required
+                if data['user'].get('requires_password_change'):
+                    session['requires_password_change'] = True
+                    flash('You must change your password before continuing', 'warning')
+                    # The password change modal will be shown automatically via JavaScript
+
                 return redirect(url_for('dashboard'))
             else:
                 error_message = handle_api_error(response, 'Invalid credentials')
@@ -221,7 +256,7 @@ def login():
         except Exception as e:
             print(f"Login error: {e}")
             flash('An error occurred during login', 'error')
-    
+
     return render_template('login.html')
 
 @app.route('/logout')
@@ -232,13 +267,15 @@ def logout():
         requests.post(LOGOUT_URL, headers=headers, timeout=REQUEST_TIMEOUT)
     except Exception as e:
         print(f"Logout error: {e}")
-    
+
     session.clear()
     return redirect(url_for('login'))
 
 @app.route('/dashboard')
 @login_required
 def dashboard():
+    if session.get('requires_password_change'):
+        return render_template('dashboard.html', show_password_modal=True)
     return render_template('dashboard.html')
 
 @app.route('/departments')
@@ -380,7 +417,6 @@ def categories_document_types(category_id):
             flash('Error loading categories', 'error')
 
         category = categories_response.json()
-
 
         return render_template('category_document_types.html',
                              document_types=document_types,
@@ -651,6 +687,7 @@ def document_types_api():
 
         return handle_api_response(response, success_code=201, error_message='Failed to create document types')
     
+
 @app.route('/api/document_types/<document_types_id>',methods=['PUT','DELETE'])
 @login_required
 def document_types_id(document_types_id):
@@ -772,6 +809,7 @@ def users_api():
 
         return handle_api_response(response, success_code=201, error_message='Failed to create user')
     
+
 @app.route('/api/users/<users_id>',methods=['PUT','DELETE'])
 @login_required
 def users_id(users_id):
