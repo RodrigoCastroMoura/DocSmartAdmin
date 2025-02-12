@@ -22,6 +22,10 @@
     <script src="{{ url_for('static', filename='js/validation.js') }}"></script>
     <!-- Load dashboard.js which contains common utilities -->
     <script src="{{ url_for('static', filename='js/dashboard.js') }}"></script>
+    <link rel="stylesheet" href="https://unpkg.com/intro.js/minified/introjs.min.css">
+    <link rel="stylesheet" href="https://unpkg.com/intro.js/themes/introjs-modern.css">
+    <script src="https://unpkg.com/intro.js/minified/intro.min.js"></script>
+    <script src="{{ url_for('static', filename='js/onboarding.js') }}"></script>
     <style>
         :root {
             /* Light theme variables (default) */
@@ -64,166 +68,56 @@
             background-color: var(--bg-primary);
             color: var(--text-primary);
         }
-    </style>
-</head>
-<body>
-    <div class="dashboard-container">
-        <!-- Sidebar -->
-        <aside class="sidebar" id="sidebar">
-            <div class="sidebar-header">
-                <img src="{{ url_for('static', filename='img/logo.svg') }}" alt="Logo" class="logo">
-                <button id="sidebar-toggle" class="sidebar-toggle">
-                    <i data-feather="menu"></i>
-                </button>
-            </div>
-            <nav class="sidebar-nav">
-                <a href="{{ url_for('dashboard') }}" class="nav-item {% if request.endpoint == 'dashboard' %}active{% endif %}">
-                    <i data-feather="home"></i>
-                    <span>Dashboard</span>
-                </a>
-                <a href="{{ url_for('departments') }}" class="nav-item {% if request.endpoint == 'departments' %}active{% endif %}">
-                    <i data-feather="briefcase"></i>
-                    <span>Departments</span>
-                </a>
-                <a href="{{ url_for('categories') }}" class="nav-item {% if request.endpoint == 'categories' %}active{% endif %}">
-                    <i data-feather="grid"></i>
-                    <span>Categories</span>
-                </a>
-                <a href="{{ url_for('documents') }}" class="nav-item {% if request.endpoint == 'documents' %}active{% endif %}">
-                    <i data-feather="file-text"></i>
-                    <span>Documents</span>
-                </a>
-                <a href="{{ url_for('document_types') }}" class="nav-item {% if request.endpoint == 'document_types' %}active{% endif %}">
-                    <i data-feather="file"></i>
-                    <span>Document Types</span>
-                </a>
-                <a href="{{ url_for('users') }}" class="nav-item {% if request.endpoint == 'users' %}active{% endif %}">
-                    <i data-feather="users"></i>
-                    <span>Users</span>
-                </a>
-                <a href="{{ url_for('admins') }}" class="nav-item {% if request.endpoint == 'admins' %}active{% endif %}">
-                    <i data-feather="shield"></i>
-                    <span>Administrators</span>
-                </a>
-            </nav>
-        </aside>
-
-        <!-- Main Content -->
-        <main class="main-content">
-            <header class="top-bar">
-                <div class="search-bar">
-                    <i data-feather="search"></i>
-                    <input type="text" placeholder="Search...">
-                </div>
-                <div class="user-menu">
-                    <button class="notifications">
-                        <i data-feather="bell"></i>
-                    </button>
-                    <button class="theme-toggle" onclick="toggleTheme()" title="Toggle theme">
-                        <i data-feather="sun" id="themeIcon"></i>
-                    </button>
-                    <div class="user-profile" onclick="toggleDropdown()">
-                        <span>{{ session.get('user', {}).get('name', 'Admin User') }}</span>
-                        <i data-feather="user"></i>
-                        <div class="dropdown-menu">
-                            <a href="{{ url_for('logout') }}" class="dropdown-item">
-                                <i data-feather="log-out"></i>
-                                <span>Logout</span>
-                            </a>
-                        </div>
-                    </div>
-                </div>
-            </header>
-
-            <div class="content">
-                {% block content %}{% endblock %}
-            </div>
-        </main>
-    </div>
-
-    <!-- Load sidebar.js after DOM is ready -->
-    <script src="{{ url_for('static', filename='js/sidebar.js') }}"></script>
-    <script>
-        // Initialize Feather icons
-        feather.replace();
-
-        function toggleDropdown() {
-            const dropdown = document.querySelector('.dropdown-menu');
-            dropdown.classList.toggle('show');
-
-            // Close dropdown when clicking outside
-            document.addEventListener('click', function closeDropdown(e) {
-                if (!e.target.closest('.user-profile')) {
-                    dropdown.classList.remove('show');
-                    document.removeEventListener('click', closeDropdown);
-                }
-            });
+        .tutorial-toggle {
+            background: none;
+            border: none;
+            color: var(--text-primary);
+            cursor: pointer;
+            padding: 0.5rem;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: background-color 0.2s;
         }
 
-        function showNotification(message, type = 'error') {
-            const modal = document.getElementById('notificationModal');
-            const header = modal.querySelector('.notification-header');
-            const icon = document.getElementById('notificationIcon');
-            const title = document.getElementById('notificationTitle');
-            const messageEl = document.getElementById('notificationMessage');
-
-            // Reset classes
-            header.classList.remove('success', 'error');
-
-            if (type === 'success') {
-                header.classList.add('success');
-                title.textContent = 'Success';
-                icon.setAttribute('data-feather', 'check-circle');
-            } else {
-                header.classList.add('error');
-                title.textContent = 'Error';
-                icon.setAttribute('data-feather', 'alert-circle');
-            }
-
-            messageEl.textContent = message;
-            modal.style.display = 'block';
-            feather.replace();
+        .tutorial-toggle:hover {
+            background-color: var(--bg-tertiary);
         }
 
-        function hideNotificationModal() {
-            document.getElementById('notificationModal').style.display = 'none';
+        /* IntroJS custom styling */
+        .introjs-tooltip {
+            background-color: var(--bg-secondary);
+            color: var(--text-primary);
+            border: 1px solid var(--border-color);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
         }
 
-        function openPopup() {
-            const customPopup = document.getElementById('customPopup');
-            customPopup.classList.add('active');
+        .introjs-button {
+            background-color: var(--accent-color);
+            color: white;
+            border: none;
+            padding: 0.5rem 1rem;
+            border-radius: 4px;
+            transition: background-color 0.2s;
         }
 
-        function closePopup() {
-            const customPopup = document.getElementById('customPopup');
-            customPopup.classList.remove('active');
-        }
-        // Theme toggle functionality
-        function setTheme(theme) {
-            document.documentElement.setAttribute('data-theme', theme);
-            localStorage.setItem('theme', theme);
-
-            const themeIcon = document.getElementById('themeIcon');
-            if (themeIcon) {
-                themeIcon.setAttribute('data-feather', theme === 'light' ? 'moon' : 'sun');
-                feather.replace();
-            }
+        .introjs-button:hover {
+            background-color: var(--accent-hover);
         }
 
-        function toggleTheme() {
-            const currentTheme = localStorage.getItem('theme') || 'light';
-            const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
-            setTheme(newTheme);
+        .introjs-skipbutton {
+            color: var(--text-secondary);
         }
 
-        // Initialize theme from localStorage or default to light
-        document.addEventListener('DOMContentLoaded', () => {
-            const savedTheme = localStorage.getItem('theme') || 'light';
-            setTheme(savedTheme);
-        });
-    </script>
+        .introjs-helperLayer {
+            background-color: rgba(255, 255, 255, 0.1);
+            border: none;
+        }
 
-    <style>
+        .introjs-overlay {
+            background-color: rgba(0, 0, 0, 0.7);
+        }
         .user-profile {
             position: relative;
             cursor: pointer;
@@ -590,6 +484,174 @@
             color: white;
         }
     </style>
+</head>
+<body>
+    <div class="dashboard-container">
+        <!-- Sidebar -->
+        <aside class="sidebar" id="sidebar">
+            <div class="sidebar-header">
+                <img src="{{ url_for('static', filename='img/logo.svg') }}" alt="Logo" class="logo">
+                <button id="sidebar-toggle" class="sidebar-toggle">
+                    <i data-feather="menu"></i>
+                </button>
+            </div>
+            <nav class="sidebar-nav">
+                <a href="{{ url_for('dashboard') }}" class="nav-item {% if request.endpoint == 'dashboard' %}active{% endif %}">
+                    <i data-feather="home"></i>
+                    <span>Dashboard</span>
+                </a>
+                <a href="{{ url_for('departments') }}" class="nav-item {% if request.endpoint == 'departments' %}active{% endif %}">
+                    <i data-feather="briefcase"></i>
+                    <span>Departments</span>
+                </a>
+                <a href="{{ url_for('categories') }}" class="nav-item {% if request.endpoint == 'categories' %}active{% endif %}">
+                    <i data-feather="grid"></i>
+                    <span>Categories</span>
+                </a>
+                <a href="{{ url_for('documents') }}" class="nav-item {% if request.endpoint == 'documents' %}active{% endif %}">
+                    <i data-feather="file-text"></i>
+                    <span>Documents</span>
+                </a>
+                <a href="{{ url_for('document_types') }}" class="nav-item {% if request.endpoint == 'document_types' %}active{% endif %}">
+                    <i data-feather="file"></i>
+                    <span>Document Types</span>
+                </a>
+                <a href="{{ url_for('users') }}" class="nav-item {% if request.endpoint == 'users' %}active{% endif %}">
+                    <i data-feather="users"></i>
+                    <span>Users</span>
+                </a>
+                <a href="{{ url_for('admins') }}" class="nav-item {% if request.endpoint == 'admins' %}active{% endif %}">
+                    <i data-feather="shield"></i>
+                    <span>Administrators</span>
+                </a>
+            </nav>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <header class="top-bar">
+                <div class="search-bar">
+                    <i data-feather="search"></i>
+                    <input type="text" placeholder="Search...">
+                </div>
+                <div class="user-menu">
+                    <button class="notifications">
+                        <i data-feather="bell"></i>
+                    </button>
+                    <button class="theme-toggle" onclick="toggleTheme()" title="Toggle theme">
+                        <i data-feather="sun" id="themeIcon"></i>
+                    </button>
+                    <button class="tutorial-toggle" onclick="startOnboardingTutorial()" title="Start Tutorial">
+                        <i data-feather="help-circle"></i>
+                    </button>
+                    <div class="user-profile" onclick="toggleDropdown()">
+                        <span>{{ session.get('user', {}).get('name', 'Admin User') }}</span>
+                        <i data-feather="user"></i>
+                        <div class="dropdown-menu">
+                            <a href="{{ url_for('logout') }}" class="dropdown-item">
+                                <i data-feather="log-out"></i>
+                                <span>Logout</span>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </header>
+
+            <div class="content">
+                {% block content %}{% endblock %}
+            </div>
+        </main>
+    </div>
+
+    <!-- Load sidebar.js after DOM is ready -->
+    <script src="{{ url_for('static', filename='js/sidebar.js') }}"></script>
+    <script>
+        // Initialize Feather icons
+        feather.replace();
+
+        function toggleDropdown() {
+            const dropdown = document.querySelector('.dropdown-menu');
+            dropdown.classList.toggle('show');
+
+            // Close dropdown when clicking outside
+            document.addEventListener('click', function closeDropdown(e) {
+                if (!e.target.closest('.user-profile')) {
+                    dropdown.classList.remove('show');
+                    document.removeEventListener('click', closeDropdown);
+                }
+            });
+        }
+
+        function showNotification(message, type = 'error') {
+            const modal = document.getElementById('notificationModal');
+            const header = modal.querySelector('.notification-header');
+            const icon = document.getElementById('notificationIcon');
+            const title = document.getElementById('notificationTitle');
+            const messageEl = document.getElementById('notificationMessage');
+
+            // Reset classes
+            header.classList.remove('success', 'error');
+
+            if (type === 'success') {
+                header.classList.add('success');
+                title.textContent = 'Success';
+                icon.setAttribute('data-feather', 'check-circle');
+            } else {
+                header.classList.add('error');
+                title.textContent = 'Error';
+                icon.setAttribute('data-feather', 'alert-circle');
+            }
+
+            messageEl.textContent = message;
+            modal.style.display = 'block';
+            feather.replace();
+        }
+
+        function hideNotificationModal() {
+            document.getElementById('notificationModal').style.display = 'none';
+        }
+
+        // Theme toggle functionality
+        function setTheme(theme) {
+            document.documentElement.setAttribute('data-theme', theme);
+            localStorage.setItem('theme', theme);
+
+            const themeIcon = document.getElementById('themeIcon');
+            if (themeIcon) {
+                themeIcon.setAttribute('data-feather', theme === 'light' ? 'moon' : 'sun');
+                feather.replace();
+            }
+        }
+
+        function toggleTheme() {
+            const currentTheme = localStorage.getItem('theme') || 'light';
+            const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+            setTheme(newTheme);
+        }
+
+        // Initialize theme from localStorage or default to light
+        document.addEventListener('DOMContentLoaded', () => {
+            const savedTheme = localStorage.getItem('theme') || 'light';
+            setTheme(savedTheme);
+
+            // Start tutorial only on dashboard page and when no password change is required
+            if (window.location.pathname === '/dashboard' && !{{ session.get('requires_password_change', False)|tojson }}) {
+                checkAndStartTutorial();
+            }
+        });
+
+        function checkAndStartTutorial() {
+            // Only start tutorial if it hasn't been completed and we're not changing password
+            if (localStorage.getItem('tutorialCompleted') !== 'true') {
+                startOnboardingTutorial();
+            }
+        }
+
+        function startOnboardingTutorial() {
+            //This function would be defined in onboarding.js
+            introJs().start();
+        }
+    </script>
 
     <!-- Notification Modal -->
     <div id="notificationModal" class="modal">
