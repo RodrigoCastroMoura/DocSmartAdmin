@@ -191,6 +191,13 @@
         .action-btn.primary:hover {
             background-color: var(--accent-hover);
         }
+        .action-btn.secondary {
+            background-color: var(--bg-tertiary);
+            color: var(--text-primary);
+        }
+        .action-btn.secondary:hover {
+            background-color: var(--bg-secondary);
+        }
     </style>
 </head>
 <body>
@@ -249,6 +256,7 @@
                     <input type="password" id="confirmPassword" name="confirmPassword" required>
                 </div>
                 <div style="display: flex; gap: 1rem; justify-content: flex-end;">
+                    <button type="button" class="action-btn secondary" onclick="hidePasswordChangeModal()">Cancel</button>
                     <button type="submit" class="action-btn primary">Change Password</button>
                 </div>
             </form>
