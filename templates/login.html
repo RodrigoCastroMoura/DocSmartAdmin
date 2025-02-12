@@ -198,6 +198,21 @@
         .action-btn.secondary:hover {
             background-color: var(--bg-secondary);
         }
+
+        .forgot-password-container {
+            text-align: center;
+            margin-top: 1rem;
+        }
+
+        .forgot-password-link {
+            color: var(--accent-color);
+            text-decoration: none;
+            font-size: 0.875rem;
+        }
+
+        .forgot-password-link:hover {
+            text-decoration: underline;
+        }
     </style>
 </head>
 <body>
@@ -233,6 +248,9 @@
                     </div>
                 </div>
                 <button type="submit" class="login-button">Sign In</button>
+                <div class="forgot-password-container">
+                    <a href="#" onclick="showForgotPasswordModal()" class="forgot-password-link">Forgot Password?</a>
+                </div>
             </form>
         </div>
     </div>
@@ -258,6 +276,24 @@
                 <div style="display: flex; gap: 1rem; justify-content: flex-end;">
                     <button type="button" class="action-btn secondary" onclick="hidePasswordChangeModal()">Cancel</button>
                     <button type="submit" class="action-btn primary">Change Password</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Forgot Password Modal -->
+    <div id="forgotPasswordModal" class="modal">
+        <div class="modal-content">
+            <h2>Forgot Password</h2>
+            <p>Enter your identifier to reset your password.</p>
+            <form id="forgotPasswordForm" onsubmit="handleForgotPassword(event)">
+                <div class="form-group">
+                    <label for="forgotPasswordIdentifier">Identifier</label>
+                    <input type="text" id="forgotPasswordIdentifier" name="identifier" required>
+                </div>
+                <div style="display: flex; gap: 1rem; justify-content: flex-end;">
+                    <button type="button" class="action-btn secondary" onclick="hideForgotPasswordModal()">Cancel</button>
+                    <button type="submit" class="action-btn primary">Reset Password</button>
                 </div>
             </form>
         </div>
@@ -334,6 +370,44 @@
         {% if show_password_modal %}
             showPasswordChangeModal();
         {% endif %}
+
+
+        // Forgot password modal functions
+        function showForgotPasswordModal() {
+            document.getElementById('forgotPasswordModal').style.display = 'block';
+        }
+
+        function hideForgotPasswordModal() {
+            document.getElementById('forgotPasswordModal').style.display = 'none';
+        }
+
+        async function handleForgotPassword(event) {
+            event.preventDefault();
+            const form = event.target;
+            const identifier = form.identifier.value;
+
+            try {
+                const response = await fetch('/api/forgot-password', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        identifier: identifier
+                    })
+                });
+
+                if (response.ok) {
+                    alert('If the identifier exists in our system, you will receive instructions to reset your password.');
+                    hideForgotPasswordModal();
+                } else {
+                    const data = await response.json();
+                    alert(data.error || 'Failed to process password reset request');
+                }
+            } catch (error) {
+                alert('An error occurred while processing your request');
+            }
+        }
     </script>
 </body>
 </html>

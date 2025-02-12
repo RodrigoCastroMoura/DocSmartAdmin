@@ -1002,6 +1002,34 @@ def delete_document(document_id):
         print(f"Error deleting document: {e}")
         return jsonify({'error': 'An unexpected error occurred'}), 500
 
+@app.route('/api/forgot-password', methods=['POST'])
+def forgot_password():
+    try:
+        data = request.get_json()
+        identifier = data.get('identifier')
+        logger.info(f"Password reset requested for identifier: {identifier}")
+
+        if not identifier:
+            return jsonify({'error': 'Identifier is required'}), 400
+
+        # Call the API endpoint to initiate password reset
+        response = requests.post(
+            f"{API_BASE_URL}/auth/forgot-password",
+            json={'identifier': identifier},
+            timeout=REQUEST_TIMEOUT
+        )
+
+        if response.ok:
+            return jsonify({'message': 'Password reset instructions sent'}), 200
+        else:
+            error_msg = handle_api_error(response, 'Failed to process password reset')
+            logger.error(f"Password reset failed: {error_msg}")
+            return jsonify({'error': error_msg}), response.status_code
+
+    except Exception as e:
+        logger.error(f"Password reset error: {str(e)}")
+        return jsonify({'error': 'An error occurred while processing your request'}), 500
+
 if __name__ == "__main__":
     # Ensure upload folder exists
     os.makedirs(UPLOAD_FOLDER, exist_ok=True)
