@@ -243,6 +243,7 @@ def login():
 
             if response.status_code == 200:
                 data = response.json()
+                logger.info(f"Login response: {data}")  # Log the entire response for debugging
                 session.permanent = True
                 session['access_token'] = data['access_token']
                 session['refresh_token'] = data['refresh_token']
@@ -251,7 +252,7 @@ def login():
                 session['token_expiry'] = time.time() + 3600  # Set token expiry to 1 hour
 
                 # Check if password change is required
-                if data['user'].get('requires_password_change'):
+                if data.get('requires_password_change'):
                     logger.info(f"User {identifier} requires password change")
                     session['requires_password_change'] = True
                     flash('You must change your password before continuing', 'warning')
@@ -263,25 +264,15 @@ def login():
                 flash(error_message, 'error')
         except requests.Timeout:
             flash('Login request timed out. Please try again.', 'error')
+            logger.error("Login request timed out")
         except requests.ConnectionError:
             flash('Could not connect to the server. Please try again later.', 'error')
+            logger.error("Connection error during login")
         except Exception as e:
             logger.error(f"Login error: {e}")
             flash('An error occurred during login', 'error')
 
     return render_template('login.html')
-
-@app.route('/logout')
-@login_required
-def logout():
-    try:
-        headers = get_auth_headers()
-        requests.post(LOGOUT_URL, headers=headers, timeout=REQUEST_TIMEOUT)
-    except Exception as e:
-        print(f"Logout error: {e}")
-
-    session.clear()
-    return redirect(url_for('login'))
 
 @app.route('/dashboard')
 @login_required
