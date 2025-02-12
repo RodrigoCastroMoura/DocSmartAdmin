@@ -254,9 +254,16 @@ def login():
                 # Check if password change is required
                 if data.get('requires_password_change'):
                     logger.info(f"User {identifier} requires password change")
+                    session['requires_password_change'] = True
                     return render_template('login.html', show_password_modal=True)
 
-                return redirect(url_for('dashboard'))
+                # Only allow proceeding if password change is not required
+                if not session.get('requires_password_change'):
+                    return redirect(url_for('dashboard'))
+                else:
+                    # If somehow we got here with requires_password_change still True,
+                    # show the modal again
+                    return render_template('login.html', show_password_modal=True)
             else:
                 error_message = handle_api_error(response, 'Invalid credentials')
                 logger.error(f"Login failed for user {identifier}: {error_message}")
@@ -288,7 +295,6 @@ def logout():
 @app.route('/dashboard')
 @login_required
 def dashboard():
-    #Removed show_password_modal - handled in login now.
     logger.info(f"Dashboard access")
     return render_template('dashboard.html')
 

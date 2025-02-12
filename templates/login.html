@@ -283,6 +283,15 @@
 
         function hidePasswordChangeModal() {
             document.getElementById('passwordChangeModal').style.display = 'none';
+            // Se o usuário cancelar a troca de senha, fazer logout
+            fetch('/logout', {
+                method: 'GET'
+            }).then(() => {
+                window.location.href = '/login';
+            }).catch(error => {
+                console.error('Error:', error);
+                window.location.href = '/login';
+            });
         }
 
         async function handlePasswordChange(event) {
