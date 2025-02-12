@@ -209,8 +209,8 @@ def change_password():
 
         if response.ok:
             logger.info("Password changed successfully")
-            # Clear the requires_password_change flag from session
-            session.pop('requires_password_change', None)
+            # Clear the session to force re-login
+            session.clear()
             return jsonify({'message': 'Password changed successfully'}), 200
         else:
             error_msg = handle_api_error(response, 'Failed to change password')
@@ -254,8 +254,7 @@ def login():
                 # Check if password change is required
                 if data.get('requires_password_change'):
                     logger.info(f"User {identifier} requires password change")
-                    session['requires_password_change'] = True
-                    flash('You must change your password before continuing', 'warning')
+                    return render_template('login.html', show_password_modal=True)
 
                 return redirect(url_for('dashboard'))
             else:
@@ -289,9 +288,9 @@ def logout():
 @app.route('/dashboard')
 @login_required
 def dashboard():
-    requires_password_change = session.get('requires_password_change', False)
-    logger.info(f"Dashboard access - requires_password_change: {requires_password_change}")
-    return render_template('dashboard.html', show_password_modal=requires_password_change)
+    #Removed show_password_modal - handled in login now.
+    logger.info(f"Dashboard access")
+    return render_template('dashboard.html')
 
 @app.route('/departments')
 @login_required

@@ -142,6 +142,55 @@
         .alert.success {
             background-color: var(--success-color);
         }
+        .modal {
+            display: none; /* Hidden by default */
+            position: fixed; /* Stay in place */
+            z-index: 1; /* Sit on top */
+            left: 0;
+            top: 0;
+            width: 100%; /* Full width */
+            height: 100%; /* Full height */
+            overflow: auto; /* Enable scroll if needed */
+            background-color: rgb(0,0,0); /* Fallback color */
+            background-color: rgba(0,0,0,0.4); /* Black w/ opacity */
+        }
+
+        .modal-content {
+            background-color: #fefefe;
+            margin: 15% auto; /* 15% from the top and centered */
+            padding: 20px;
+            border: 1px solid #888;
+            width: 30%; /* Could be percentage or pixels */
+            box-shadow: 0 4px 8px 0 rgba(0,0,0,0.2);
+        }
+
+        .close {
+            color: #aaa;
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+        }
+
+        .close:hover,
+        .close:focus {
+            color: black;
+            text-decoration: none;
+            cursor: pointer;
+        }
+
+        .action-btn{
+            padding: 0.75rem;
+            background-color: var(--accent-color);
+            color: white;
+            border: none;
+            border-radius: 6px;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+        .action-btn.primary:hover {
+            background-color: var(--accent-hover);
+        }
     </style>
 </head>
 <body>
@@ -181,6 +230,31 @@
         </div>
     </div>
 
+    <!-- Password Change Modal -->
+    <div id="passwordChangeModal" class="modal">
+        <div class="modal-content">
+            <h2>Change Password</h2>
+            <p>You must change your password before continuing.</p>
+            <form id="passwordChangeForm" onsubmit="handlePasswordChange(event)">
+                <div class="form-group">
+                    <label for="currentPassword">Current Password</label>
+                    <input type="password" id="currentPassword" name="currentPassword" required>
+                </div>
+                <div class="form-group">
+                    <label for="newPassword">New Password</label>
+                    <input type="password" id="newPassword" name="newPassword" required>
+                </div>
+                <div class="form-group">
+                    <label for="confirmPassword">Confirm New Password</label>
+                    <input type="password" id="confirmPassword" name="confirmPassword" required>
+                </div>
+                <div style="display: flex; gap: 1rem; justify-content: flex-end;">
+                    <button type="submit" class="action-btn primary">Change Password</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
     <script>
         feather.replace();
 
@@ -193,6 +267,56 @@
                 ValidationRules.required
             ]
         });
+
+        // Password change modal functions
+        function showPasswordChangeModal() {
+            document.getElementById('passwordChangeModal').style.display = 'block';
+        }
+
+        function hidePasswordChangeModal() {
+            document.getElementById('passwordChangeModal').style.display = 'none';
+        }
+
+        async function handlePasswordChange(event) {
+            event.preventDefault();
+            const form = event.target;
+            const currentPassword = form.currentPassword.value;
+            const newPassword = form.newPassword.value;
+            const confirmPassword = form.confirmPassword.value;
+
+            if (newPassword !== confirmPassword) {
+                alert('New passwords do not match');
+                return;
+            }
+
+            try {
+                const response = await fetch('/api/change-password', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        current_password: currentPassword,
+                        new_password: newPassword
+                    })
+                });
+
+                if (response.ok) {
+                    alert('Password changed successfully. Please login with your new password.');
+                    window.location.href = '/login';
+                } else {
+                    const data = await response.json();
+                    alert(data.error || 'Failed to change password');
+                }
+            } catch (error) {
+                alert('An error occurred while changing password');
+            }
+        }
+
+        // Show password change modal if required
+        {% if show_password_modal %}
+            showPasswordChangeModal();
+        {% endif %}
     </script>
 </body>
 </html>
