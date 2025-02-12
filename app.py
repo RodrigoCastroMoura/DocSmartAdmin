@@ -274,6 +274,18 @@ def login():
 
     return render_template('login.html')
 
+@app.route('/logout')
+@login_required
+def logout():
+    try:
+        headers = get_auth_headers()
+        requests.post(LOGOUT_URL, headers=headers, timeout=REQUEST_TIMEOUT)
+    except Exception as e:
+        logger.error(f"Logout error: {e}")
+
+    session.clear()
+    return redirect(url_for('login'))
+
 @app.route('/dashboard')
 @login_required
 def dashboard():
@@ -864,7 +876,7 @@ def users_id(users_id):
         response = requests.delete(
             f"{USERS_URL}/{users_id}",
             headers=headers,
-            timeout=REQUEST_TIMEOUT * 2  # Double timeout for file upload
+            timeout=REQUEST_TIMEOUT * 2  # Double timeout for fileupload
         )
 
         return handle_api_response(response, success_code=204, error_message='Failed to Delete user')    
