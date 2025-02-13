@@ -333,20 +333,25 @@
         async function handlePasswordChange(event) {
             event.preventDefault();
             const form = event.target;
+            const submitButton = form.querySelector('button[type="submit"]');
             const currentPassword = form.currentPassword.value;
             const newPassword = form.newPassword.value;
             const confirmPassword = form.confirmPassword.value;
 
             if (newPassword !== confirmPassword) {
-                alert('New passwords do not match');
+                showNotification('New passwords do not match', 'error');
                 return;
             }
 
+            showLoading(submitButton);
+            openPopup();
+
             try {
-                const response = await fetch('/api/change-password', {
+                const response = await fetch('/api/password/change', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
+                        'accept': 'application/json'
                     },
                     body: JSON.stringify({
                         current_password: currentPassword,
@@ -354,15 +359,20 @@
                     })
                 });
 
-                if (response.ok) {
-                    alert('Password changed successfully. Please login with your new password.');
-                    window.location.href = '/login';
-                } else {
-                    const data = await response.json();
-                    alert(data.error || 'Failed to change password');
-                }
+                await handleApiResponse(response, 
+                    async () => {
+                        showNotification('Password changed successfully. Please login with your new password.', 'success');
+                        setTimeout(() => window.location.href = '/login', 1500);
+                    },
+                    async (error) => {
+                        showNotification(error.error || 'Failed to change password', 'error');
+                    }
+                );
             } catch (error) {
-                alert('An error occurred while changing password');
+                showNotification('An error occurred while changing password', 'error');
+            } finally {
+                hideLoading(submitButton);
+                closePopup();
             }
         }
 
@@ -370,7 +380,6 @@
         {% if show_password_modal %}
             showPasswordChangeModal();
         {% endif %}
-
 
         // Forgot password modal functions
         function showForgotPasswordModal() {
@@ -384,29 +393,55 @@
         async function handleForgotPassword(event) {
             event.preventDefault();
             const form = event.target;
+            const submitButton = form.querySelector('button[type="submit"]');
             const identifier = form.identifier.value;
 
+            showLoading(submitButton);
+            openPopup();
+
             try {
-                const response = await fetch('/api/forgot-password', {
+                const response = await fetch('/api/password/recover', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
+                        'accept': 'application/json'
                     },
                     body: JSON.stringify({
                         identifier: identifier
                     })
                 });
 
-                if (response.ok) {
-                    alert('If the identifier exists in our system, you will receive instructions to reset your password.');
-                    hideForgotPasswordModal();
-                } else {
-                    const data = await response.json();
-                    alert(data.error || 'Failed to process password reset request');
-                }
+                await handleApiResponse(response, 
+                    async () => {
+                        showNotification('If the identifier exists in our system, you will receive instructions to reset your password.', 'success');
+                        hideForgotPasswordModal();
+                    },
+                    async (error) => {
+                        showNotification(error.error || 'Failed to process password reset request', 'error');
+                    }
+                );
             } catch (error) {
-                alert('An error occurred while processing your request');
+                showNotification('An error occurred while processing your request', 'error');
+            } finally {
+                hideLoading(submitButton);
+                closePopup();
             }
+        }
+
+        function showNotification(message, type) {
+            const modal = document.getElementById('notificationModal');
+            const header = modal.querySelector('.notification-header');
+            const icon = document.getElementById('notificationIcon');
+            const title = document.getElementById('notificationTitle');
+            const messageEl = document.getElementById('notificationMessage');
+
+            header.classList.remove('success', 'error');
+            header.classList.add(type);
+            title.textContent = type === 'success' ? 'Success' : 'Error';
+            icon.setAttribute('data-feather', type === 'success' ? 'check-circle' : 'alert-circle');
+            messageEl.textContent = message;
+            modal.style.display = 'block';
+            feather.replace();
         }
     </script>
 </body>
