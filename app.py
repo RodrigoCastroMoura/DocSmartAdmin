@@ -1030,6 +1030,41 @@ def forgot_password():
         logger.error(f"Password reset error: {str(e)}")
         return jsonify({'error': 'An error occurred while processing your request'}), 500
 
+@app.route('/reset-password/<token>')
+def reset_password_page(token):
+    return render_template('reset_password.html', token=token)
+
+@app.route('/api/reset-password', methods=['POST'])
+def reset_password():
+    try:
+        data = request.get_json()
+        token = data.get('token')
+        new_password = data.get('new_password')
+
+        if not token or not new_password:
+            return jsonify({'error': 'Token and new password are required'}), 400
+
+        # Call the API endpoint to reset password
+        response = requests.post(
+            f"{API_BASE_URL}/auth/password/reset",
+            json={
+                'token': token,
+                'new_password': new_password
+            },
+            timeout=REQUEST_TIMEOUT
+        )
+
+        if response.ok:
+            return jsonify({'message': 'Password reset successful'}), 200
+        else:
+            error_msg = handle_api_error(response, 'Failed to reset password')
+            logger.error(f"Password reset failed: {error_msg}")
+            return jsonify({'error': error_msg}), response.status_code
+
+    except Exception as e:
+        logger.error(f"Password reset error: {str(e)}")
+        return jsonify({'error': 'An error occurred while resetting password'}), 500
+
 if __name__ == "__main__":
     # Ensure upload folder exists
     os.makedirs(UPLOAD_FOLDER, exist_ok=True)
