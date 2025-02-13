@@ -1014,24 +1014,31 @@ def delete_document(document_id):
         return jsonify({'error': 'An unexpected error occurred'}), 500
 
 @app.route('/api/forgot-password', methods=['POST'])
+@login_required
 def forgot_password():
     try:
         data = request.get_json()
+        logger.info("Received forgot password request")
+
         identifier = data.get('identifier')
-        logger.info(f"Password reset requested for identifier: {identifier}")
 
         if not identifier:
+            logger.error("Missing identifier field")
             return jsonify({'error': 'Identifier is required'}), 400
 
-        # Call the API endpoint to initiate password reset
+        headers = get_auth_headers()
+        headers['accept'] = 'application/json'
         response = requests.post(
-            f"{API_BASE_URL}/auth/password/recover",
-            headers={'accept': 'application/json', 'Content-Type': 'application/json'},
-            json={'identifier': identifier},
+            f"{API_BASE_URL}/auth/password/reset",
+            headers=headers,
+            json={
+                'identifier': identifier
+            },
             timeout=REQUEST_TIMEOUT
         )
 
         if response.ok:
+            logger.info("Password reset request successful")
             return jsonify({'message': 'Password reset instructions sent'}), 200
         else:
             error_msg = handle_api_error(response, 'Failed to process password reset')
@@ -1040,7 +1047,7 @@ def forgot_password():
 
     except Exception as e:
         logger.error(f"Password reset error: {str(e)}")
-        return jsonify({'error': 'An error occurred while processing your request'}), 500
+        return jsonify({'error': 'An error occurred while processing password reset'}), 500
 
 if __name__ == "__main__":
     try:

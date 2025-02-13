@@ -439,15 +439,23 @@
             modal.classList.remove('show');
             setTimeout(() => {
                 modal.style.display = 'none';
-                // Se o usuário cancelar a troca de senha, fazer logout
-                fetch('/logout', {
-                    method: 'GET'
-                }).then(() => {
-                    window.location.href = '/login';
-                }).catch(error => {
-                    console.error('Error:', error);
-                    window.location.href = '/login';
-                });
+                document.getElementById('passwordChangeForm').reset();
+            }, 300);
+        }
+
+        // Forgot password modal functions
+        function showForgotPasswordModal() {
+            const modal = document.getElementById('forgotPasswordModal');
+            modal.style.display = 'block';
+            setTimeout(() => modal.classList.add('show'), 100);
+        }
+
+        function hideForgotPasswordModal() {
+            const modal = document.getElementById('forgotPasswordModal');
+            modal.classList.remove('show');
+            setTimeout(() => {
+                modal.style.display = 'none';
+                document.getElementById('forgotPasswordForm').reset();
             }, 300);
         }
 
@@ -478,10 +486,8 @@
                 });
 
                 if (response.ok) {
-                    showDialogMessage('Password changed successfully');
-                    setTimeout(() => {
-                        window.location.href = '/login';
-                    }, 1500);
+                    showDialogMessage('Password changed successfully', 'success');
+                    hidePasswordChangeModal();
                 } else {
                     const data = await response.json();
                     showDialogMessage(data.error || 'Failed to change password', 'error');
@@ -491,22 +497,6 @@
             } finally {
                 hideLoading('passwordChangeModal');
             }
-        }
-
-        // Forgot password modal functions
-        function showForgotPasswordModal() {
-            const modal = document.getElementById('forgotPasswordModal');
-            modal.style.display = 'block';
-            setTimeout(() => modal.classList.add('show'), 100);
-        }
-
-        function hideForgotPasswordModal() {
-            const modal = document.getElementById('forgotPasswordModal');
-            modal.classList.remove('show');
-            setTimeout(() => {
-                modal.style.display = 'none';
-                document.getElementById('forgotPasswordForm').reset();
-            }, 300);
         }
 
         async function handleForgotPassword(event) {
@@ -528,7 +518,7 @@
                 });
 
                 if (response.ok) {
-                    showDialogMessage('Password reset instructions sent');
+                    showDialogMessage('Password reset instructions sent', 'success');
                     hideForgotPasswordModal();
                 } else {
                     const data = await response.json();
