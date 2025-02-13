@@ -1,3 +1,5 @@
+import logging
+import sys
 from flask import Flask, render_template, redirect, url_for, request, flash, session, jsonify, Response, send_file
 from functools import wraps
 import requests
@@ -5,11 +7,19 @@ import os
 import json
 import time
 from werkzeug.utils import secure_filename
-import logging
+import socket
 
-# Configure logging
-logging.basicConfig(level=logging.DEBUG)
+# Configure logging to show detailed debug information
+logging.basicConfig(
+    level=logging.DEBUG,
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+    stream=sys.stdout
+)
 logger = logging.getLogger(__name__)
+
+def is_port_in_use(port):
+    with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+        return s.connect_ex(('localhost', port)) == 0
 
 app = Flask(__name__)
 app.secret_key = os.urandom(24)
@@ -866,7 +876,7 @@ def users_id(users_id):
             "email" : email,
             "phone" : phone,
             "password" : password,
-            "role" : role,
+            "role": role,
             "status": "active",
             'company_id': company_id
         }
@@ -882,7 +892,7 @@ def users_id(users_id):
         response = requests.delete(
             f"{USERS_URL}/{users_id}",
             headers=headers,
-            timeout=REQUEST_TIMEOUT * 2  # Double timeout for fileupload
+            timeout=REQUEST_TIMEOUT * 2  # Double timeout for file upload
         )
 
         return handle_api_response(response, success_code=204, error_message='Failed to Delete user')    
@@ -1033,7 +1043,30 @@ def forgot_password():
         return jsonify({'error': 'An error occurred while processing your request'}), 500
 
 if __name__ == "__main__":
-    # Ensure upload folder exists
-    os.makedirs(UPLOAD_FOLDER, exist_ok=True)
-    app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
-    app.run(host="0.0.0.0", port=5000, debug=True)
+    try:
+        logger.info("Starting Flask application...")
+
+        # Configure upload folder
+        logger.info("Configuring upload folder...")
+        os.makedirs(UPLOAD_FOLDER, exist_ok=True)
+        app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
+
+        # Check if port is available
+        port = 3000
+        if is_port_in_use(port):
+            logger.error(f"Port {port} is already in use")
+            # Try to find an available port
+            for test_port in range(3001, 3010):
+                if not is_port_in_use(test_port):
+                    port = test_port
+                    logger.info(f"Found available port: {port}")
+                    break
+            else:
+                logger.error("No available ports found")
+                sys.exit(1)
+
+        logger.info(f"Starting server on port {port}...")
+        app.run(host='0.0.0.0', port=port, debug=True)
+    except Exception as e:
+        logger.error(f"Failed to start server: {str(e)}", exc_info=True)
+        sys.exit(1)
