@@ -213,6 +213,82 @@
         .forgot-password-link:hover {
             text-decoration: underline;
         }
+
+        .notification-modal {
+            max-width: 400px;
+        }
+
+        .notification-header {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+            padding-bottom: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .notification-header i {
+            font-size: 1.5rem;
+            padding: 0.5rem;
+            border-radius: 50%;
+            background-color: var(--bg-tertiary);
+        }
+
+        .notification-header.success i {
+            color: var(--success-color);
+            background-color: rgba(var(--success-rgb), 0.1);
+        }
+
+        .notification-header.error i {
+            color: var(--danger-color);
+            background-color: rgba(var(--danger-rgb), 0.1);
+        }
+
+        .notification-header h3 {
+            margin: 0;
+            flex: 1;
+        }
+
+        .close-btn {
+            background: none;
+            border: none;
+            color: var(--text-secondary);
+            cursor: pointer;
+            padding: 0.5rem;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+        }
+
+        .close-btn:hover {
+            background-color: var(--bg-tertiary);
+            color: var(--text-primary);
+        }
+
+        .notification-body {
+            margin-bottom: 2rem;
+            color: var(--text-secondary);
+            line-height: 1.5;
+        }
+
+        .notification-actions {
+            display: flex;
+            justify-content: flex-end;
+            gap: 1rem;
+            padding-top: 1rem;
+            border-top: 1px solid var(--border-color);
+        }
+
+        .modal-actions {
+            display: flex;
+            justify-content: flex-end;
+            gap: 1rem;
+            margin-top: 2rem;
+            padding-top: 1rem;
+            border-top: 1px solid var(--border-color);
+        }
     </style>
 </head>
 <body>
@@ -299,6 +375,25 @@
         </div>
     </div>
 
+     <!-- Notification Modal -->
+     <div id="notificationModal" class="modal">
+        <div class="modal-content notification-modal">
+            <div class="notification-header">
+                <i data-feather="info" id="notificationIcon"></i>
+                <h3 id="notificationTitle">Notification</h3>
+                <button class="close-btn" onclick="hideNotificationModal()">
+                    <i data-feather="x"></i>
+                </button>
+            </div>
+            <div class="notification-body">
+                <p id="notificationMessage"></p>
+            </div>
+            <div class="notification-actions">
+                <button class="action-btn" onclick="hideNotificationModal()">Close</button>
+            </div>
+        </div>
+    </div>
+
     <script>
         feather.replace();
 
@@ -337,8 +432,12 @@
             const newPassword = form.newPassword.value;
             const confirmPassword = form.confirmPassword.value;
 
+            const submitButton = form.querySelector('button[type="submit"]');
+            showLoading(submitButton);
+
             if (newPassword !== confirmPassword) {
-                alert('New passwords do not match');
+                showNotification('New passwords do not match', 'error');
+                hideLoading(submitButton);
                 return;
             }
 
@@ -355,14 +454,16 @@
                 });
 
                 if (response.ok) {
-                    alert('Password changed successfully. Please login with your new password.');
+                    showNotification('Password changed successfully. Please login with your new password.', 'success');
                     window.location.href = '/login';
                 } else {
                     const data = await response.json();
-                    alert(data.error || 'Failed to change password');
+                    showNotification(data.error || 'Failed to change password', 'error');
                 }
             } catch (error) {
-                alert('An error occurred while changing password');
+                showNotification('An error occurred while changing password', 'error');
+            }finally{
+                hideLoading(submitButton);
             }
         }
 
@@ -386,6 +487,9 @@
             const form = event.target;
             const identifier = form.identifier.value;
 
+            const submitButton = form.querySelector('button[type="submit"]');
+            showLoading(submitButton);
+
             try {
                 const response = await fetch('/api/forgot-password', {
                     method: 'POST',
@@ -398,15 +502,69 @@
                 });
 
                 if (response.ok) {
-                    alert('If the identifier exists in our system, you will receive instructions to reset your password.');
+                    showNotification('If the identifier exists in our system, you will receive instructions to reset your password.', 'success');
                     hideForgotPasswordModal();
                 } else {
                     const data = await response.json();
-                    alert(data.error || 'Failed to process password reset request');
+                    showNotification(data.error || 'Failed to process password reset request', 'error');
                 }
             } catch (error) {
-                alert('An error occurred while processing your request');
+                showNotification('An error occurred while processing your request', 'error');
+            }finally{
+                hideLoading(submitButton);
             }
+        }
+
+        window.hideLoading = function(element) {
+        if (!element) return;
+        const loadingIndicator = element.querySelector('.loading-indicator');
+        if (loadingIndicator) {
+            loadingIndicator.remove();
+        }
+        element.classList.remove('loading');
+        element.removeAttribute('disabled');
+        }
+
+        window.showLoading = function(element) {
+        if (!element) return;
+        const loadingDiv = document.createElement('div');
+        loadingDiv.className = 'loading-indicator';
+        loadingDiv.innerHTML = `
+            <div class="spinner"></div>
+            <span>Loading...</span>
+        `;
+        element.classList.add('loading');
+        element.appendChild(loadingDiv);
+        element.setAttribute('disabled', 'true');
+        }
+
+        function showNotification(message, type = 'error') {
+            const modal = document.getElementById('notificationModal');
+            const header = modal.querySelector('.notification-header');
+            const icon = document.getElementById('notificationIcon');
+            const title = document.getElementById('notificationTitle');
+            const messageEl = document.getElementById('notificationMessage');
+
+            // Reset classes
+            header.classList.remove('success', 'error');
+
+            if (type === 'success') {
+                header.classList.add('success');
+                title.textContent = 'Success';
+                icon.setAttribute('data-feather', 'check-circle');
+            } else {
+                header.classList.add('error');
+                title.textContent = 'Error';
+                icon.setAttribute('data-feather', 'alert-circle');
+            }
+
+            messageEl.textContent = message;
+            modal.style.display = 'block';
+            feather.replace();
+        }
+
+        function hideNotificationModal() {
+            document.getElementById('notificationModal').style.display = 'none';
         }
     </script>
 </body>
