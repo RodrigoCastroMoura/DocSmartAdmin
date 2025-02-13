@@ -143,135 +143,58 @@
             background-color: var(--success-color);
         }
         .modal {
-            display: none;
-            position: fixed;
-            z-index: 1000;
+            display: none; /* Hidden by default */
+            position: fixed; /* Stay in place */
+            z-index: 1; /* Sit on top */
             left: 0;
             top: 0;
-            width: 100%;
-            height: 100%;
-            background-color: rgba(0, 0, 0, 0.5);
-            opacity: 0;
-            transition: opacity 0.3s ease;
-        }
-
-        .modal.show {
-            opacity: 1;
+            width: 100%; /* Full width */
+            height: 100%; /* Full height */
+            overflow: auto; /* Enable scroll if needed */
+            background-color: rgb(0,0,0); /* Fallback color */
+            background-color: rgba(0,0,0,0.4); /* Black w/ opacity */
         }
 
         .modal-content {
-            background-color: var(--bg-secondary);
-            border-radius: 8px;
-            padding: 2rem;
-            width: 90%;
-            max-width: 400px;
-            margin: 50px auto;
-            position: relative;
-            transform: translateY(-20px);
-            transition: transform 0.3s ease;
+            background-color: #fefefe;
+            margin: 15% auto; /* 15% from the top and centered */
+            padding: 20px;
+            border: 1px solid #888;
+            width: 30%; /* Could be percentage or pixels */
+            box-shadow: 0 4px 8px 0 rgba(0,0,0,0.2);
         }
 
-        .modal.show .modal-content {
-            transform: translateY(0);
+        .close {
+            color: #aaa;
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
         }
 
-        .modal h2 {
-            color: var(--text-primary);
-            margin-bottom: 1rem;
-            font-size: 1.5rem;
+        .close:hover,
+        .close:focus {
+            color: black;
+            text-decoration: none;
+            cursor: pointer;
         }
 
-        .modal p {
-            color: var(--text-secondary);
-            margin-bottom: 1.5rem;
-        }
-
-        .loading-overlay {
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background-color: rgba(0, 0, 0, 0.5);
-            display: none;
-            justify-content: center;
-            align-items: center;
-            border-radius: 8px;
-        }
-
-        .loading-overlay.show {
-            display: flex;
-        }
-
-        .spinner {
-            width: 40px;
-            height: 40px;
-            border: 3px solid var(--bg-tertiary);
-            border-top-color: var(--accent-color);
-            border-radius: 50%;
-            animation: spin 1s linear infinite;
-        }
-
-        .dialog-message {
-            position: fixed;
-            bottom: 2rem;
-            left: 50%;
-            transform: translateX(-50%) translateY(100%);
-            padding: 1rem 2rem;
-            border-radius: 6px;
+        .action-btn{
+            padding: 0.75rem;
+            background-color: var(--accent-color);
             color: white;
-            opacity: 0;
-            transition: all 0.3s ease;
-            z-index: 1100;
-        }
-
-        .dialog-message.success {
-            background-color: var(--success-color);
-        }
-
-        .dialog-message.error {
-            background-color: var(--danger-color);
-        }
-
-        .dialog-message.show {
-            transform: translateX(-50%) translateY(0);
-            opacity: 1;
-        }
-
-        @keyframes spin {
-            to { transform: rotate(360deg); }
-        }
-
-        .button-group {
-            display: flex;
-            gap: 1rem;
-            justify-content: flex-end;
-            margin-top: 1.5rem;
-        }
-
-        .action-btn {
-            padding: 0.75rem 1.5rem;
             border: none;
             border-radius: 6px;
             font-size: 1rem;
             cursor: pointer;
             transition: background-color 0.2s;
         }
-
-        .action-btn.primary {
-            background-color: var(--accent-color);
-            color: white;
-        }
-
         .action-btn.primary:hover {
             background-color: var(--accent-hover);
         }
-
         .action-btn.secondary {
             background-color: var(--bg-tertiary);
             color: var(--text-primary);
         }
-
         .action-btn.secondary:hover {
             background-color: var(--bg-secondary);
         }
@@ -350,14 +273,11 @@
                     <label for="confirmPassword">Confirm New Password</label>
                     <input type="password" id="confirmPassword" name="confirmPassword" required>
                 </div>
-                <div class="button-group">
+                <div style="display: flex; gap: 1rem; justify-content: flex-end;">
                     <button type="button" class="action-btn secondary" onclick="hidePasswordChangeModal()">Cancel</button>
                     <button type="submit" class="action-btn primary">Change Password</button>
                 </div>
             </form>
-            <div class="loading-overlay">
-                <div class="spinner"></div>
-            </div>
         </div>
     </div>
 
@@ -371,24 +291,17 @@
                     <label for="forgotPasswordIdentifier">Identifier</label>
                     <input type="text" id="forgotPasswordIdentifier" name="identifier" required>
                 </div>
-                <div class="button-group">
+                <div style="display: flex; gap: 1rem; justify-content: flex-end;">
                     <button type="button" class="action-btn secondary" onclick="hideForgotPasswordModal()">Cancel</button>
                     <button type="submit" class="action-btn primary">Reset Password</button>
                 </div>
             </form>
-            <div class="loading-overlay">
-                <div class="spinner"></div>
-            </div>
         </div>
     </div>
-
-    <!-- Dialog Message -->
-    <div id="dialogMessage" class="dialog-message"></div>
 
     <script>
         feather.replace();
 
-        // Setup form validation
         setupFormValidation('loginForm', {
             'identifier': [
                 ValidationRules.required,
@@ -399,64 +312,22 @@
             ]
         });
 
-        // Show dialog message function
-        function showDialogMessage(message, type = 'success') {
-            const dialog = document.getElementById('dialogMessage');
-            dialog.textContent = message;
-            dialog.className = `dialog-message ${type}`;
-            setTimeout(() => dialog.classList.add('show'), 100);
-            setTimeout(() => {
-                dialog.classList.remove('show');
-                setTimeout(() => {
-                    dialog.className = 'dialog-message';
-                }, 300);
-            }, 3000);
-        }
-
-        // Show loading overlay
-        function showLoading(modalId) {
-            const modal = document.getElementById(modalId);
-            const overlay = modal.querySelector('.loading-overlay');
-            overlay.classList.add('show');
-        }
-
-        // Hide loading overlay
-        function hideLoading(modalId) {
-            const modal = document.getElementById(modalId);
-            const overlay = modal.querySelector('.loading-overlay');
-            overlay.classList.remove('show');
-        }
-
         // Password change modal functions
         function showPasswordChangeModal() {
-            const modal = document.getElementById('passwordChangeModal');
-            modal.style.display = 'block';
-            setTimeout(() => modal.classList.add('show'), 100);
+            document.getElementById('passwordChangeModal').style.display = 'block';
         }
 
         function hidePasswordChangeModal() {
-            const modal = document.getElementById('passwordChangeModal');
-            modal.classList.remove('show');
-            setTimeout(() => {
-                modal.style.display = 'none';
-                document.getElementById('passwordChangeForm').reset();
-            }, 300);
-        }
-
-        // Forgot password modal functions
-        function showForgotPasswordModal() {
-            const modal = document.getElementById('forgotPasswordModal');
-            modal.style.display = 'block';
-            setTimeout(() => modal.classList.add('show'), 100);
-        }
-
-        function hideForgotPasswordModal() {
-            const modal = document.getElementById('forgotPasswordModal');
-            modal.classList.remove('show');
-            setTimeout(() => {
-                modal.style.display = 'none';
-                document.getElementById('forgotPasswordForm').reset();
-            }, 300);
+            document.getElementById('passwordChangeModal').style.display = 'none';
+            // Se o usuário cancelar a troca de senha, fazer logout
+            fetch('/logout', {
+                method: 'GET'
+            }).then(() => {
+                window.location.href = '/login';
+            }).catch(error => {
+                console.error('Error:', error);
+                window.location.href = '/login';
+            });
         }
 
         async function handlePasswordChange(event) {
@@ -467,11 +338,9 @@
             const confirmPassword = form.confirmPassword.value;
 
             if (newPassword !== confirmPassword) {
-                showDialogMessage('New passwords do not match', 'error');
+                alert('New passwords do not match');
                 return;
             }
-
-            showLoading('passwordChangeModal');
 
             try {
                 const response = await fetch('/api/change-password', {
@@ -486,25 +355,36 @@
                 });
 
                 if (response.ok) {
-                    showDialogMessage('Password changed successfully', 'success');
-                    hidePasswordChangeModal();
+                    alert('Password changed successfully. Please login with your new password.');
+                    window.location.href = '/login';
                 } else {
                     const data = await response.json();
-                    showDialogMessage(data.error || 'Failed to change password', 'error');
+                    alert(data.error || 'Failed to change password');
                 }
             } catch (error) {
-                showDialogMessage('An error occurred while changing password', 'error');
-            } finally {
-                hideLoading('passwordChangeModal');
+                alert('An error occurred while changing password');
             }
+        }
+
+        // Show password change modal if required
+        {% if show_password_modal %}
+            showPasswordChangeModal();
+        {% endif %}
+
+
+        // Forgot password modal functions
+        function showForgotPasswordModal() {
+            document.getElementById('forgotPasswordModal').style.display = 'block';
+        }
+
+        function hideForgotPasswordModal() {
+            document.getElementById('forgotPasswordModal').style.display = 'none';
         }
 
         async function handleForgotPassword(event) {
             event.preventDefault();
             const form = event.target;
             const identifier = form.identifier.value;
-
-            showLoading('forgotPasswordModal');
 
             try {
                 const response = await fetch('/api/forgot-password', {
@@ -518,23 +398,16 @@
                 });
 
                 if (response.ok) {
-                    showDialogMessage('Password reset instructions sent', 'success');
+                    alert('If the identifier exists in our system, you will receive instructions to reset your password.');
                     hideForgotPasswordModal();
                 } else {
                     const data = await response.json();
-                    showDialogMessage(data.error || 'Failed to process password reset request', 'error');
+                    alert(data.error || 'Failed to process password reset request');
                 }
             } catch (error) {
-                showDialogMessage('An error occurred while processing your request', 'error');
-            } finally {
-                hideLoading('forgotPasswordModal');
+                alert('An error occurred while processing your request');
             }
         }
-
-        // Show password change modal if required
-        {% if show_password_modal %}
-            showPasswordChangeModal();
-        {% endif %}
     </script>
 </body>
 </html>

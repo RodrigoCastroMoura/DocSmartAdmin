@@ -7,6 +7,3 @@ flask-login>=0.6.3
 psycopg2-binary>=2.9.9
 email-validator>=2.1.0
 oauthlib>=3.2.2
-flask
-requests
-werkzeug

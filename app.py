@@ -1,5 +1,3 @@
-import logging
-import sys
 from flask import Flask, render_template, redirect, url_for, request, flash, session, jsonify, Response, send_file
 from functools import wraps
 import requests
@@ -7,19 +5,11 @@ import os
 import json
 import time
 from werkzeug.utils import secure_filename
-import socket
+import logging
 
-# Configure logging to show detailed debug information
-logging.basicConfig(
-    level=logging.DEBUG,
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
-    stream=sys.stdout
-)
+# Configure logging
+logging.basicConfig(level=logging.DEBUG)
 logger = logging.getLogger(__name__)
-
-def is_port_in_use(port):
-    with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
-        return s.connect_ex(('localhost', port)) == 0
 
 app = Flask(__name__)
 app.secret_key = os.urandom(24)
@@ -207,9 +197,8 @@ def change_password():
             return jsonify({'error': 'Both current and new passwords are required'}), 400
 
         headers = get_auth_headers()
-        headers['accept'] = 'application/json'
         response = requests.post(
-            f"{API_BASE_URL}/auth/password/change",
+            f"{API_BASE_URL}/auth/change-password",
             headers=headers,
             json={
                 'current_password': current_password,
@@ -876,7 +865,7 @@ def users_id(users_id):
             "email" : email,
             "phone" : phone,
             "password" : password,
-            "role": role,
+            "role" : role,
             "status": "active",
             'company_id': company_id
         }
@@ -892,7 +881,7 @@ def users_id(users_id):
         response = requests.delete(
             f"{USERS_URL}/{users_id}",
             headers=headers,
-            timeout=REQUEST_TIMEOUT * 2  # Double timeout for file upload
+            timeout=REQUEST_TIMEOUT * 2  # Double timeout for fileupload
         )
 
         return handle_api_response(response, success_code=204, error_message='Failed to Delete user')    
@@ -1014,31 +1003,23 @@ def delete_document(document_id):
         return jsonify({'error': 'An unexpected error occurred'}), 500
 
 @app.route('/api/forgot-password', methods=['POST'])
-@login_required
 def forgot_password():
     try:
         data = request.get_json()
-        logger.info("Received forgot password request")
-
         identifier = data.get('identifier')
+        logger.info(f"Password reset requested for identifier: {identifier}")
 
         if not identifier:
-            logger.error("Missing identifier field")
             return jsonify({'error': 'Identifier is required'}), 400
 
-        headers = get_auth_headers()
-        headers['accept'] = 'application/json'
+        # Call the API endpoint to initiate password reset
         response = requests.post(
-            f"{API_BASE_URL}/auth/password/reset",
-            headers=headers,
-            json={
-                'identifier': identifier
-            },
+            f"{API_BASE_URL}/auth/forgot-password",
+            json={'identifier': identifier},
             timeout=REQUEST_TIMEOUT
         )
 
         if response.ok:
-            logger.info("Password reset request successful")
             return jsonify({'message': 'Password reset instructions sent'}), 200
         else:
             error_msg = handle_api_error(response, 'Failed to process password reset')
@@ -1047,33 +1028,10 @@ def forgot_password():
 
     except Exception as e:
         logger.error(f"Password reset error: {str(e)}")
-        return jsonify({'error': 'An error occurred while processing password reset'}), 500
+        return jsonify({'error': 'An error occurred while processing your request'}), 500
 
 if __name__ == "__main__":
-    try:
-        logger.info("Starting Flask application...")
-
-        # Configure upload folder
-        logger.info("Configuring upload folder...")
-        os.makedirs(UPLOAD_FOLDER, exist_ok=True)
-        app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
-
-        # Check if port is available
-        port = 3000
-        if is_port_in_use(port):
-            logger.error(f"Port {port} is already in use")
-            # Try to find an available port
-            for test_port in range(3001, 3010):
-                if not is_port_in_use(test_port):
-                    port = test_port
-                    logger.info(f"Found available port: {port}")
-                    break
-            else:
-                logger.error("No available ports found")
-                sys.exit(1)
-
-        logger.info(f"Starting server on port {port}...")
-        app.run(host='0.0.0.0', port=port, debug=True)
-    except Exception as e:
-        logger.error(f"Failed to start server: {str(e)}", exc_info=True)
-        sys.exit(1)
+    # Ensure upload folder exists
+    os.makedirs(UPLOAD_FOLDER, exist_ok=True)
+    app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
+    app.run(host="0.0.0.0", port=5000, debug=True)
