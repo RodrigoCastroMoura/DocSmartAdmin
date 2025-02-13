@@ -1015,7 +1015,8 @@ def forgot_password():
 
         # Call the API endpoint to initiate password reset
         response = requests.post(
-            f"{API_BASE_URL}/auth/forgot-password",
+            f"{API_BASE_URL}/auth/password/recover",
+            headers={'accept': 'application/json', 'Content-Type': 'application/json'},
             json={'identifier': identifier},
             timeout=REQUEST_TIMEOUT
         )
