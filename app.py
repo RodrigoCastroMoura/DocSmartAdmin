@@ -198,7 +198,7 @@ def change_password():
 
         headers = get_auth_headers()
         response = requests.post(
-            f"{API_BASE_URL}/auth/change-password",
+            f"{API_BASE_URL}/auth/password/change",
             headers=headers,
             json={
                 'current_password': current_password,
@@ -1014,7 +1014,7 @@ def forgot_password():
 
         # Call the API endpoint to initiate password reset
         response = requests.post(
-            f"{API_BASE_URL}/auth/forgot-password",
+            f"{API_BASE_URL}/auth/password/recover",
             json={'identifier': identifier},
             timeout=REQUEST_TIMEOUT
         )
