@@ -197,8 +197,9 @@ def change_password():
             return jsonify({'error': 'Both current and new passwords are required'}), 400
 
         headers = get_auth_headers()
+        headers['accept'] = 'application/json'
         response = requests.post(
-            f"{API_BASE_URL}/auth/change-password",
+            f"{API_BASE_URL}/auth/password/change",
             headers=headers,
             json={
                 'current_password': current_password,
