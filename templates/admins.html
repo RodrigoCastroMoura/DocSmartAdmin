@@ -324,10 +324,59 @@
 </style>
 
 <script>
+async function loadPermissions() {
+    try {
+        const response = await fetch('/api/permissions');
+        const data = await response.json();
+        return data.permissions || [];
+    } catch (error) {
+        console.error('Error loading permissions:', error);
+        return [];
+    }
+}
+
+async function populatePermissionsGrid(containerId, selectedPermissions = []) {
+    const container = document.getElementById(containerId);
+    const permissions = await loadPermissions();
+    
+    // Group permissions by category
+    const groupedPermissions = permissions.reduce((groups, perm) => {
+        const category = perm.category || 'Other';
+        if (!groups[category]) {
+            groups[category] = [];
+        }
+        groups[category].push(perm);
+        return groups;
+    }, {});
+
+    let html = '';
+    for (const [category, perms] of Object.entries(groupedPermissions)) {
+        html += `
+            <div class="permission-group">
+                <h4>${category}</h4>
+                ${perms.map(perm => `
+                    <div class="checkbox-container">
+                        <input type="checkbox" 
+                               name="permissions" 
+                               value="${perm._id}" 
+                               id="${perm._id}"
+                               ${selectedPermissions.includes(perm._id) ? 'checked' : ''}>
+                        <label for="${perm._id}">${perm.name}</label>
+                    </div>
+                `).join('')}
+            </div>
+        `;
+    }
+    container.innerHTML = html;
+}
+
 function loadAdmins() {
     const contentDiv = document.getElementById('adminsContent');
     const tableBody = document.getElementById('adminsTableBody');
     showLoading(contentDiv);
+
+    // Load permissions for the add form
+    populatePermissionsGrid('permissionsGrid');
 
     fetch('/api/users?role=admin')
         .then(response => response.json())
@@ -516,17 +565,14 @@ function showAddAdminModal() {
     showModal('addAdminModal');
 }
 
-function showEditAdminModal(id, admin) {
+async function showEditAdminModal(id, admin) {
     document.getElementById('editAdminId').value = id;
     document.getElementById('editAdminName').value = admin.name;
     document.getElementById('editAdminEmail').value = admin.email;
 
-    // Reset and set permissions
-    const checkboxes = document.querySelectorAll('#editAdminForm input[name="permissions"]');
-    checkboxes.forEach(checkbox => {
-        checkbox.checked = admin.permissions && admin.permissions.includes(checkbox.value);
-    });
-
+    // Load and populate permissions with selected ones
+    await populatePermissionsGrid('editPermissionsGrid', admin.permissions || []);
+    
     showModal('editAdminModal');
 }
 
