@@ -54,8 +54,116 @@
             </div>
             <div class="form-group">
                 <label for="adminPermissions">Permissions</label>
-                <div id="permissionsGrid" class="permissions-grid">
-                    <!-- Permissions will be loaded dynamically -->
+                <div class="permissions-container">
+                    <div class="permissions-group">
+                        <h4>Document Permissions</h4>
+                        <div class="permission-items">
+                            <label class="permission-item">
+                                <input type="checkbox" name="permissions" value="document_read">
+                                <span>View Documents</span>
+                            </label>
+                            <label class="permission-item">
+                                <input type="checkbox" name="permissions" value="document_write">
+                                <span>Create Documents</span>
+                            </label>
+                            <label class="permission-item">
+                                <input type="checkbox" name="permissions" value="document_update">
+                                <span>Edit Documents</span>
+                            </label>
+                            <label class="permission-item">
+                                <input type="checkbox" name="permissions" value="document_delete">
+                                <span>Delete Documents</span>
+                            </label>
+                        </div>
+                    </div>
+
+                    <div class="permissions-group">
+                        <h4>Category Permissions</h4>
+                        <div class="permission-items">
+                            <label class="permission-item">
+                                <input type="checkbox" name="permissions" value="category_read">
+                                <span>View Categories</span>
+                            </label>
+                            <label class="permission-item">
+                                <input type="checkbox" name="permissions" value="category_write">
+                                <span>Create Categories</span>
+                            </label>
+                            <label class="permission-item">
+                                <input type="checkbox" name="permissions" value="category_update">
+                                <span>Edit Categories</span>
+                            </label>
+                            <label class="permission-item">
+                                <input type="checkbox" name="permissions" value="category_delete">
+                                <span>Delete Categories</span>
+                            </label>
+                        </div>
+                    </div>
+
+                    <div class="permissions-group">
+                        <h4>Department Permissions</h4>
+                        <div class="permission-items">
+                            <label class="permission-item">
+                                <input type="checkbox" name="permissions" value="department_read">
+                                <span>View Departments</span>
+                            </label>
+                            <label class="permission-item">
+                                <input type="checkbox" name="permissions" value="department_write">
+                                <span>Create Departments</span>
+                            </label>
+                            <label class="permission-item">
+                                <input type="checkbox" name="permissions" value="department_update">
+                                <span>Edit Departments</span>
+                            </label>
+                            <label class="permission-item">
+                                <input type="checkbox" name="permissions" value="department_delete">
+                                <span>Delete Departments</span>
+                            </label>
+                        </div>
+                    </div>
+
+                    <div class="permissions-group">
+                        <h4>User Permissions</h4>
+                        <div class="permission-items">
+                            <label class="permission-item">
+                                <input type="checkbox" name="permissions" value="user_read">
+                                <span>View Users</span>
+                            </label>
+                            <label class="permission-item">
+                                <input type="checkbox" name="permissions" value="user_write">
+                                <span>Create Users</span>
+                            </label>
+                            <label class="permission-item">
+                                <input type="checkbox" name="permissions" value="user_update">
+                                <span>Edit Users</span>
+                            </label>
+                            <label class="permission-item">
+                                <input type="checkbox" name="permissions" value="user_delete">
+                                <span>Delete Users</span>
+                            </label>
+                        </div>
+                    </div>
+
+                    <div class="permissions-group">
+                        <h4>Company Permissions</h4>
+                        <div class="permission-items">
+                            <label class="permission-item">
+                                <input type="checkbox" name="permissions" value="company_read">
+                                <span>View Companies</span>
+                            </label>
+                            <label class="permission-item">
+                                <input type="checkbox" name="permissions" value="company_write">
+                                <span>Create Companies</span>
+                            </label>
+                            <label class="permission-item">
+                                <input type="checkbox" name="permissions" value="company_update">
+                                <span>Edit Companies</span>
+                            </label>
+                            <label class="permission-item">
+                                <input type="checkbox" name="permissions" value="company_delete">
+                                <span>Delete Companies</span>
+                            </label>
+                        </div>
+                    </div>
                 </div>
             </div>
             <div class="modal-actions">
@@ -82,8 +190,116 @@
             </div>
             <div class="form-group">
                 <label for="editAdminPermissions">Permissions</label>
-                <div id="permissionsGrid" class="permissions-grid">
-                    <!-- Permissions will be loaded dynamically -->
+                <div class="permissions-container">
+                    <div class="permissions-group">
+                        <h4>Document Permissions</h4>
+                        <div class="permission-items">
+                            <label class="permission-item">
+                                <input type="checkbox" name="permissions" value="document_read">
+                                <span>View Documents</span>
+                            </label>
+                            <label class="permission-item">
+                                <input type="checkbox" name="permissions" value="document_write">
+                                <span>Create Documents</span>
+                            </label>
+                            <label class="permission-item">
+                                <input type="checkbox" name="permissions" value="document_update">
+                                <span>Edit Documents</span>
+                            </label>
+                            <label class="permission-item">
+                                <input type="checkbox" name="permissions" value="document_delete">
+                                <span>Delete Documents</span>
+                            </label>
+                        </div>
+                    </div>
+
+                    <div class="permissions-group">
+                        <h4>Category Permissions</h4>
+                        <div class="permission-items">
+                            <label class="permission-item">
+                                <input type="checkbox" name="permissions" value="category_read">
+                                <span>View Categories</span>
+                            </label>
+                            <label class="permission-item">
+                                <input type="checkbox" name="permissions" value="category_write">
+                                <span>Create Categories</span>
+                            </label>
+                            <label class="permission-item">
+                                <input type="checkbox" name="permissions" value="category_update">
+                                <span>Edit Categories</span>
+                            </label>
+                            <label class="permission-item">
+                                <input type="checkbox" name="permissions" value="category_delete">
+                                <span>Delete Categories</span>
+                            </label>
+                        </div>
+                    </div>
+
+                    <div class="permissions-group">
+                        <h4>Department Permissions</h4>
+                        <div class="permission-items">
+                            <label class="permission-item">
+                                <input type="checkbox" name="permissions" value="department_read">
+                                <span>View Departments</span>
+                            </label>
+                            <label class="permission-item">
+                                <input type="checkbox" name="permissions" value="department_write">
+                                <span>Create Departments</span>
+                            </label>
+                            <label class="permission-item">
+                                <input type="checkbox" name="permissions" value="department_update">
+                                <span>Edit Departments</span>
+                            </label>
+                            <label class="permission-item">
+                                <input type="checkbox" name="permissions" value="department_delete">
+                                <span>Delete Departments</span>
+                            </label>
+                        </div>
+                    </div>
+
+                    <div class="permissions-group">
+                        <h4>User Permissions</h4>
+                        <div class="permission-items">
+                            <label class="permission-item">
+                                <input type="checkbox" name="permissions" value="user_read">
+                                <span>View Users</span>
+                            </label>
+                            <label class="permission-item">
+                                <input type="checkbox" name="permissions" value="user_write">
+                                <span>Create Users</span>
+                            </label>
+                            <label class="permission-item">
+                                <input type="checkbox" name="permissions" value="user_update">
+                                <span>Edit Users</span>
+                            </label>
+                            <label class="permission-item">
+                                <input type="checkbox" name="permissions" value="user_delete">
+                                <span>Delete Users</span>
+                            </label>
+                        </div>
+                    </div>
+
+                    <div class="permissions-group">
+                        <h4>Company Permissions</h4>
+                        <div class="permission-items">
+                            <label class="permission-item">
+                                <input type="checkbox" name="permissions" value="company_read">
+                                <span>View Companies</span>
+                            </label>
+                            <label class="permission-item">
+                                <input type="checkbox" name="permissions" value="company_write">
+                                <span>Create Companies</span>
+                            </label>
+                            <label class="permission-item">
+                                <input type="checkbox" name="permissions" value="company_update">
+                                <span>Edit Companies</span>
+                            </label>
+                            <label class="permission-item">
+                                <input type="checkbox" name="permissions" value="company_delete">
+                                <span>Delete Companies</span>
+                            </label>
+                        </div>
+                    </div>
                 </div>
             </div>
             <div class="modal-actions">
@@ -143,6 +359,330 @@
     background-color: var(--bg-tertiary);
     color: var(--text-secondary);
     margin: 0.125rem;
+}
+
+.permissions-container {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 20px;
+}
+
+.permissions-group {
+    border: 1px solid #ccc;
+    padding: 10px;
+    border-radius: 5px;
+}
+
+.permission-items {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 10px;
+}
+
+.permission-item {
+    display: flex;
+    align-items: center;
+}
+
+.permission-item input[type="checkbox"] {
+    margin-right: 5px;
+}
+</style>
+
+<script>
+function loadAdmins() {
+    const contentDiv = document.getElementById('adminsContent');
+    const tableBody = document.getElementById('adminsTableBody');
+    showLoading(contentDiv);
+
+    fetch('/api/users?role=admin')
+        .then(response => response.json())
+        .then(data => {
+            if (!data || !data.users) {
+                throw new Error('Invalid response format');
+            }
+            tableBody.innerHTML = generateAdminsHTML(data.users);
+            feather.replace();
+        })
+        .catch(error => {
+            console.error('Error loading admins:', error);
+            tableBody.innerHTML = `
+                <tr>
+                    <td colspan="5" class="no-data error">
+                        <i data-feather="alert-circle"></i>
+                        <p>${error.message || 'Failed to load administrators'}</p>
+                    </td>
+                </tr>`;
+            feather.replace();
+        })
+        .finally(() => {
+            hideLoading(contentDiv);
+        });
+}
+
+function generateAdminsHTML(admins) {
+    if (!admins || admins.length === 0) {
+        return `
+            <tr>
+                <td colspan="5" class="no-data">
+                    <i data-feather="inbox"></i>
+                    <p>No administrators found</p>
+                </td>
+            </tr>`;
+    }
+
+    return admins.map(admin => `
+        <tr data-id="${admin.id}">
+            <td>
+                <div class="user-cell">
+                    <div class="user-avatar">${admin.name.slice(0, 2).toUpperCase()}</div>
+                    <span>${admin.name}</span>
+                </div>
+            </td>
+            <td>${admin.email}</td>
+            <td>
+                <span class="status-badge ${admin.status === 'active' ? 'active' : 'inactive'}">
+                    ${admin.status}
+                </span>
+            </td>
+            <td>
+                ${admin.permissions ? admin.permissions.map(perm => 
+                    `<span class="permission-badge">${perm}</span>`
+                ).join('') : ''}
+            </td>
+            <td>
+                <div class="table-actions">
+                    <button class="action-btn" onclick='showEditAdminModal("${admin.id}", ${JSON.stringify(admin)})'>
+                        <i data-feather="edit-2"></i>
+                    </button>
+                    <button class="action-btn danger" onclick="deleteAdmin('${admin.id}')">
+                        <input type="checkbox" name="permissions" value="company_delete">
+                                <span>Delete Companies</span>
+                            </label>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-actions">
+                <button type="button" class="action-btn" onclick="hideModal('addAdminModal')">Cancel</button>
+                <button type="submit" class="action-btn primary">Add</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Edit Admin Modal -->
+<div id="editAdminModal" class="modal">
+    <div class="modal-content">
+        <h3>Edit Administrator</h3>
+        <form id="editAdminForm" onsubmit="updateAdmin(event)">
+            <input type="hidden" id="editAdminId">
+            <div class="form-group">
+                <label for="editAdminName">Name</label>
+                <input type="text" id="editAdminName" name="name" required>
+            </div>
+            <div class="form-group">
+                <label for="editAdminEmail">Email</label>
+                <input type="email" id="editAdminEmail" name="email" required>
+            </div>
+            <div class="form-group">
+                <label for="editAdminPermissions">Permissions</label>
+                <div class="permissions-container">
+                    <div class="permissions-group">
+                        <h4>Document Permissions</h4>
+                        <div class="permission-items">
+                            <label class="permission-item">
+                                <input type="checkbox" name="permissions" value="document_read">
+                                <span>View Documents</span>
+                            </label>
+                            <label class="permission-item">
+                                <input type="checkbox" name="permissions" value="document_write">
+                                <span>Create Documents</span>
+                            </label>
+                            <label class="permission-item">
+                                <input type="checkbox" name="permissions" value="document_update">
+                                <span>Edit Documents</span>
+                            </label>
+                            <label class="permission-item">
+                                <input type="checkbox" name="permissions" value="document_delete">
+                                <span>Delete Documents</span>
+                            </label>
+                        </div>
+                    </div>
+
+                    <div class="permissions-group">
+                        <h4>Category Permissions</h4>
+                        <div class="permission-items">
+                            <label class="permission-item">
+                                <input type="checkbox" name="permissions" value="category_read">
+                                <span>View Categories</span>
+                            </label>
+                            <label class="permission-item">
+                                <input type="checkbox" name="permissions" value="category_write">
+                                <span>Create Categories</span>
+                            </label>
+                            <label class="permission-item">
+                                <input type="checkbox" name="permissions" value="category_update">
+                                <span>Edit Categories</span>
+                            </label>
+                            <label class="permission-item">
+                                <input type="checkbox" name="permissions" value="category_delete">
+                                <span>Delete Categories</span>
+                            </label>
+                        </div>
+                    </div>
+
+                    <div class="permissions-group">
+                        <h4>Department Permissions</h4>
+                        <div class="permission-items">
+                            <label class="permission-item">
+                                <input type="checkbox" name="permissions" value="department_read">
+                                <span>View Departments</span>
+                            </label>
+                            <label class="permission-item">
+                                <input type="checkbox" name="permissions" value="department_write">
+                                <span>Create Departments</span>
+                            </label>
+                            <label class="permission-item">
+                                <input type="checkbox" name="permissions" value="department_update">
+                                <span>Edit Departments</span>
+                            </label>
+                            <label class="permission-item">
+                                <input type="checkbox" name="permissions" value="department_delete">
+                                <span>Delete Departments</span>
+                            </label>
+                        </div>
+                    </div>
+
+                    <div class="permissions-group">
+                        <h4>User Permissions</h4>
+                        <div class="permission-items">
+                            <label class="permission-item">
+                                <input type="checkbox" name="permissions" value="user_read">
+                                <span>View Users</span>
+                            </label>
+                            <label class="permission-item">
+                                <input type="checkbox" name="permissions" value="user_write">
+                                <span>Create Users</span>
+                            </label>
+                            <label class="permission-item">
+                                <input type="checkbox" name="permissions" value="user_update">
+                                <span>Edit Users</span>
+                            </label>
+                            <label class="permission-item">
+                                <input type="checkbox" name="permissions" value="user_delete">
+                                <span>Delete Users</span>
+                            </label>
+                        </div>
+                    </div>
+
+                    <div class="permissions-group">
+                        <h4>Company Permissions</h4>
+                        <div class="permission-items">
+                            <label class="permission-item">
+                                <input type="checkbox" name="permissions" value="company_read">
+                                <span>View Companies</span>
+                            </label>
+                            <label class="permission-item">
+                                <input type="checkbox" name="permissions" value="company_write">
+                                <span>Create Companies</span>
+                            </label>
+                            <label class="permission-item">
+                                <input type="checkbox" name="permissions" value="company_update">
+                                <span>Edit Companies</span>
+                            </label>
+                            <label class="permission-item">
+                                <input type="checkbox" name="permissions" value="company_delete">
+                                <span>Delete Companies</span>
+                            </label>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-actions">
+                <button type="button" class="action-btn" onclick="hideModal('editAdminModal')">Cancel</button>
+                <button type="submit" class="action-btn primary">Update</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<style>
+.permissions-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1rem;
+    margin-top: 0.5rem;
+}
+
+.checkbox-container {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    cursor: pointer;
+}
+
+.checkbox-container input[type="checkbox"] {
+    width: auto;
+}
+
+.admins-table {
+    width: 100%;
+    border-collapse: collapse;
+    min-width: 800px;
+}
+
+.admins-table th,
+.admins-table td {
+    padding: 1rem;
+    text-align: left;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.admins-table th {
+    font-weight: 500;
+    color: var(--text-secondary);
+    background-color: var(--bg-tertiary);
+    position: sticky;
+    top: 0;
+    z-index: 1;
+}
+
+.permission-badge {
+    display: inline-block;
+    padding: 0.25rem 0.5rem;
+    border-radius: 4px;
+    font-size: 0.75rem;
+    background-color: var(--bg-tertiary);
+    color: var(--text-secondary);
+    margin: 0.125rem;
+}
+
+.permissions-container {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 20px;
+}
+
+.permissions-group {
+    border: 1px solid #ccc;
+    padding: 10px;
+    border-radius: 5px;
+}
+
+.permission-items {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 10px;
+}
+
+.permission-item {
+    display: flex;
+    align-items: center;
+}
+
+.permission-item input[type="checkbox"] {
+    margin-right: 5px;
 }
 </style>
 
