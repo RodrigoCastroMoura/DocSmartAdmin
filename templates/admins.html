@@ -49,60 +49,13 @@
                 <input type="email" id="adminEmail" name="email" required>
             </div>
             <div class="form-group">
-                <label for="adminCPF">CPF</label>
-                <input type="text" id="adminCPF" name="cpf" required pattern="\d{11}" title="CPF deve conter 11 dígitos">
-            </div>
-            <div class="form-group">
-                <label for="adminPhone">Phone</label>
-                <input type="text" id="adminPhone" name="phone" required>
-            </div>
-            <div class="form-group">
                 <label for="adminPassword">Password</label>
                 <input type="password" id="adminPassword" name="password" required>
             </div>
             <div class="form-group">
                 <label for="adminPermissions">Permissions</label>
-                <div id="permissionsContainer" class="permissions-container">
-                    <div id="permissionsGrid" class="permissions-grid">
-                        <!-- Permissions will be loaded dynamically -->
-                        <div class="permission-group">
-                            <h4>Document Permissions</h4>
-                            <div class="checkbox-container">
-                                <input type="checkbox" name="permissions" value="document_read" id="document_read">
-                                <label for="document_read">Read Documents</label>
-                            </div>
-                            <div class="checkbox-container">
-                                <input type="checkbox" name="permissions" value="document_write" id="document_write">
-                                <label for="document_write">Write Documents</label>
-                            </div>
-                            <div class="checkbox-container">
-                                <input type="checkbox" name="permissions" value="document_delete" id="document_delete">
-                                <label for="document_delete">Delete Documents</label>
-                            </div>
-                        </div>
-                        <div class="permission-group">
-                            <h4>User Management</h4>
-                            <div class="checkbox-container">
-                                <input type="checkbox" name="permissions" value="user_read" id="user_read">
-                                <label for="user_read">View Users</label>
-                            </div>
-                            <div class="checkbox-container">
-                                <input type="checkbox" name="permissions" value="user_write" id="user_write">
-                                <label for="user_write">Manage Users</label>
-                            </div>
-                        </div>
-                        <div class="permission-group">
-                            <h4>System Settings</h4>
-                            <div class="checkbox-container">
-                                <input type="checkbox" name="permissions" value="settings_read" id="settings_read">
-                                <label for="settings_read">View Settings</label>
-                            </div>
-                            <div class="checkbox-container">
-                                <input type="checkbox" name="permissions" value="settings_write" id="settings_write">
-                                <label for="settings_write">Modify Settings</label>
-                            </div>
-                        </div>
-                    </div>
+                <div id="permissionsGrid" class="permissions-grid">
+                    <!-- Permissions will be loaded dynamically -->
                 </div>
             </div>
             <div class="modal-actions">
@@ -128,14 +81,6 @@
                 <input type="email" id="editAdminEmail" name="email" required>
             </div>
             <div class="form-group">
-                <label for="editAdminCPF">CPF</label>
-                <input type="text" id="editAdminCPF" name="cpf" required pattern="\d{11}" title="CPF deve conter 11 dígitos">
-            </div>
-            <div class="form-group">
-                <label for="editAdminPhone">Phone</label>
-                <input type="text" id="editAdminPhone" name="phone" required>
-            </div>
-            <div class="form-group">
                 <label for="editAdminPermissions">Permissions</label>
                 <div id="permissionsGrid" class="permissions-grid">
                     <!-- Permissions will be loaded dynamically -->
@@ -150,149 +95,11 @@
 </div>
 
 <style>
-.page-container {
-    padding: 2rem;
-}
-
-.header-actions {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 2rem;
-}
-
-.header-actions h2 {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    margin: 0;
-}
-
-.permissions-container {
-    max-height: 400px;
-    overflow-y: auto;
-    border: 1px solid var(--border-color);
-    border-radius: 8px;
-    padding: 1.5rem;
-    background-color: var(--bg-tertiary);
-}
-
-.table-container {
-    background: var(--bg-secondary);
-    border-radius: 8px;
-    padding: 1rem;
-    overflow-x: auto;
-}
-
-.user-cell {
-    display: flex;
-    align-items: center;
-    gap: 1rem;
-}
-
-.user-avatar {
-    width: 32px;
-    height: 32px;
-    background: var(--accent-color);
-    color: white;
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 0.875rem;
-    font-weight: 500;
-}
-
-.status-badge {
-    padding: 0.25rem 0.75rem;
-    border-radius: 1rem;
-    font-size: 0.75rem;
-    font-weight: 500;
-    text-transform: capitalize;
-}
-
-.status-badge.active {
-    background-color: rgba(var(--success-rgb), 0.1);
-    color: var(--success-color);
-}
-
-.status-badge.inactive {
-    background-color: rgba(var(--danger-rgb), 0.1);
-    color: var(--danger-color);
-}
-
 .permissions-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-    gap: 1.5rem;
-}
-
-.permission-group {
-    background-color: var(--bg-primary);
-    padding: 1.25rem;
-    border-radius: 8px;
-    border: 1px solid var(--border-color);
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-}
-
-.permission-group h4 {
-    color: var(--text-primary);
-    font-size: 1rem;
-    font-weight: 600;
-    margin-bottom: 1rem;
-    padding-bottom: 0.5rem;
-    border-bottom: 1px solid var(--border-color);
-}
-
-.checkbox-container {
-    display: flex;
-    align-items: center;
-    padding: 0.5rem 0;
-    transition: background-color 0.2s;
-}
-
-.checkbox-container:hover {
-    background-color: var(--bg-tertiary);
-    border-radius: 4px;
-}
-
-.permission-group {
-    background-color: var(--bg-secondary);
-    padding: 1rem;
-    border-radius: 6px;
-    border: 1px solid var(--border-color);
-}
-
-.permission-group h4 {
-    margin: 0 0 1rem 0;
-    color: var(--text-primary);
-    font-size: 0.9rem;
-    font-weight: 500;
-}
-
-.checkbox-container {
-    display: flex;
-    align-items: center;
-    gap: 0.75rem;
-    margin-bottom: 0.75rem;
-    cursor: pointer;
-}
-
-.checkbox-container:last-child {
-    margin-bottom: 0;
-}
-
-.checkbox-container input[type="checkbox"] {
-    width: 16px;
-    height: 16px;
-    cursor: pointer;
-}
-
-.checkbox-container label {
-    color: var(--text-secondary);
-    font-size: 0.875rem;
-    cursor: pointer;
-    margin: 0;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1rem;
+    margin-top: 0.5rem;
 }
 
 .checkbox-container {
@@ -340,59 +147,10 @@
 </style>
 
 <script>
-async function loadPermissions() {
-    try {
-        const response = await fetch('/api/permissions');
-        const data = await response.json();
-        return data.permissions || [];
-    } catch (error) {
-        console.error('Error loading permissions:', error);
-        return [];
-    }
-}
-
-async function populatePermissionsGrid(containerId, selectedPermissions = []) {
-    const container = document.getElementById(containerId);
-    const permissions = await loadPermissions();
-    
-    // Group permissions by category
-    const groupedPermissions = permissions.reduce((groups, perm) => {
-        const category = perm.category || 'Other';
-        if (!groups[category]) {
-            groups[category] = [];
-        }
-        groups[category].push(perm);
-        return groups;
-    }, {});
-
-    let html = '';
-    for (const [category, perms] of Object.entries(groupedPermissions)) {
-        html += `
-            <div class="permission-group">
-                <h4>${category}</h4>
-                ${perms.map(perm => `
-                    <div class="checkbox-container">
-                        <input type="checkbox" 
-                               name="permissions" 
-                               value="${perm._id}" 
-                               id="${perm._id}"
-                               ${selectedPermissions.includes(perm._id) ? 'checked' : ''}>
-                        <label for="${perm._id}">${perm.name}</label>
-                    </div>
-                `).join('')}
-            </div>
-        `;
-    }
-    container.innerHTML = html;
-}
-
 function loadAdmins() {
     const contentDiv = document.getElementById('adminsContent');
     const tableBody = document.getElementById('adminsTableBody');
     showLoading(contentDiv);
-
-    // Load permissions for the add form
-    populatePermissionsGrid('permissionsGrid');
 
     fetch('/api/users?role=admin')
         .then(response => response.json())
@@ -473,41 +231,19 @@ function createAdmin(event) {
         .map(input => input.value);
 
     const data = {
-        name: formData.get('name'),
-        email: formData.get('email'),
-        cpf: formData.get('cpf'),
-        phone: formData.get('phone'),
-        password: formData.get('password'),
-        role: 'admin'
+        ...Object.fromEntries(formData),
+        role: 'admin',
+        permissions: permissions
     };
 
     showLoading(submitButton);
 
-    // First create the admin user
     fetch('/api/users', {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
         },
         body: JSON.stringify(data)
-    })
-    .then(response => response.json())
-    .then(userData => {
-        if (!userData.id) {
-            throw new Error(userData.error || 'Failed to create administrator');
-        }
-
-        // Then assign permissions
-        if (permissions.length > 0) {
-            return fetch(`/api/permissions/admin/${userData.id}/permissions`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({ permissions })
-            });
-        }
-        return userData;
     })
     .then(response => response.json())
     .then(data => {
@@ -603,14 +339,17 @@ function showAddAdminModal() {
     showModal('addAdminModal');
 }
 
-async function showEditAdminModal(id, admin) {
+function showEditAdminModal(id, admin) {
     document.getElementById('editAdminId').value = id;
     document.getElementById('editAdminName').value = admin.name;
     document.getElementById('editAdminEmail').value = admin.email;
 
-    // Load and populate permissions with selected ones
-    await populatePermissionsGrid('editPermissionsGrid', admin.permissions || []);
-    
+    // Reset and set permissions
+    const checkboxes = document.querySelectorAll('#editAdminForm input[name="permissions"]');
+    checkboxes.forEach(checkbox => {
+        checkbox.checked = admin.permissions && admin.permissions.includes(checkbox.value);
+    });
+
     showModal('editAdminModal');
 }
 
