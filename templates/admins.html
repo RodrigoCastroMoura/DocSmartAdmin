@@ -49,6 +49,14 @@
                 <input type="email" id="adminEmail" name="email" required>
             </div>
             <div class="form-group">
+                <label for="adminCPF">CPF</label>
+                <input type="text" id="adminCPF" name="cpf" required pattern="\d{11}" title="CPF deve conter 11 dígitos">
+            </div>
+            <div class="form-group">
+                <label for="adminPhone">Phone</label>
+                <input type="text" id="adminPhone" name="phone" required>
+            </div>
+            <div class="form-group">
                 <label for="adminPassword">Password</label>
                 <input type="password" id="adminPassword" name="password" required>
             </div>
@@ -118,6 +126,14 @@
             <div class="form-group">
                 <label for="editAdminEmail">Email</label>
                 <input type="email" id="editAdminEmail" name="email" required>
+            </div>
+            <div class="form-group">
+                <label for="editAdminCPF">CPF</label>
+                <input type="text" id="editAdminCPF" name="cpf" required pattern="\d{11}" title="CPF deve conter 11 dígitos">
+            </div>
+            <div class="form-group">
+                <label for="editAdminPhone">Phone</label>
+                <input type="text" id="editAdminPhone" name="phone" required>
             </div>
             <div class="form-group">
                 <label for="editAdminPermissions">Permissions</label>
@@ -457,19 +473,41 @@ function createAdmin(event) {
         .map(input => input.value);
 
     const data = {
-        ...Object.fromEntries(formData),
-        role: 'admin',
-        permissions: permissions
+        name: formData.get('name'),
+        email: formData.get('email'),
+        cpf: formData.get('cpf'),
+        phone: formData.get('phone'),
+        password: formData.get('password'),
+        role: 'admin'
     };
 
     showLoading(submitButton);
 
+    // First create the admin user
     fetch('/api/users', {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
         },
         body: JSON.stringify(data)
+    })
+    .then(response => response.json())
+    .then(userData => {
+        if (!userData.id) {
+            throw new Error(userData.error || 'Failed to create administrator');
+        }
+
+        // Then assign permissions
+        if (permissions.length > 0) {
+            return fetch(`/api/permissions/admin/${userData.id}/permissions`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ permissions })
+            });
+        }
+        return userData;
     })
     .then(response => response.json())
     .then(data => {
