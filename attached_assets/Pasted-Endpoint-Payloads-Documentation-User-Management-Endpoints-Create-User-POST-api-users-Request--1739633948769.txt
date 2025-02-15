@@ -1,0 +1,140 @@
+Endpoint Payloads Documentation
+User Management Endpoints
+Create User
+POST /api/users
+
+Request Payload:
+
+{
+  "name": "John Doe",
+  "email": "john.doe@example.com",
+  "cpf": "12345678901",
+  "phone": "11999999999",
+  "password": "SecurePass@123",
+  "role": "user",
+  "company_id": "65c3a5c7890abcdef1234567"
+}
+Success Response (201 Created):
+
+{
+  "id": "65c3a5c7890abcdef1234568",
+  "name": "John Doe",
+  "email": "john.doe@example.com",
+  "cpf": "12345678901",
+  "phone": "11999999999",
+  "role": "user",
+  "status": "active",
+  "permissions": [],
+  "company_id": "65c3a5c7890abcdef1234567",
+  "created_at": "2024-02-07T14:30:00.000Z",
+  "created_by": "65c3a5c7890abcdef1234566",
+  "updated_at": "2024-02-07T14:30:00.000Z",
+  "updated_by": "65c3a5c7890abcdef1234566"
+}
+Permission Endpoints
+List Permissions
+GET /api/permissions
+
+Success Response (200 OK):
+
+[
+  {
+    "id": "65c3a5c7890abcdef1234569",
+    "name": "document_read",
+    "description": "Permission to read documents",
+    "resource_type": "document",
+    "action_type": "read",
+    "created_at": "2024-02-07T14:30:00.000Z",
+    "created_by": "65c3a5c7890abcdef1234566",
+    "updated_at": "2024-02-07T14:30:00.000Z",
+    "updated_by": "65c3a5c7890abcdef1234566"
+  }
+]
+Assign Permissions to User
+POST /api/permissions/users/{user_id}/permissions
+
+Request Payload:
+
+{
+  "permissions": [
+    "65c3a5c7890abcdef1234569",
+    "65c3a5c7890abcdef1234570"
+  ]
+}
+Success Response (200 OK):
+
+{
+  "id": "65c3a5c7890abcdef1234568",
+  "name": "John Doe",
+  "email": "john.doe@example.com",
+  "cpf": "12345678901",
+  "phone": "11999999999",
+  "role": "user",
+  "status": "active",
+  "permissions": [
+    "65c3a5c7890abcdef1234569",
+    "65c3a5c7890abcdef1234570"
+  ],
+  "company_id": "65c3a5c7890abcdef1234567",
+  "created_at": "2024-02-07T14:30:00.000Z",
+  "created_by": "65c3a5c7890abcdef1234566",
+  "updated_at": "2024-02-07T14:30:00.000Z",
+  "updated_by": "65c3a5c7890abcdef1234566"
+}
+Assign Permissions to Admin
+POST /api/permissions/admin/{admin_id}/permissions
+
+Request Payload:
+
+{
+  "permissions": [
+    "65c3a5c7890abcdef1234569",
+    "65c3a5c7890abcdef1234570"
+  ]
+}
+Success Response (200 OK):
+
+{
+  "id": "65c3a5c7890abcdef1234571",
+  "name": "Admin User",
+  "email": "admin@example.com",
+  "cpf": "98765432101",
+  "phone": "11988888888",
+  "role": "admin",
+  "status": "active",
+  "permissions": [
+    "65c3a5c7890abcdef1234569",
+    "65c3a5c7890abcdef1234570"
+  ],
+  "company_id": "65c3a5c7890abcdef1234567",
+  "created_at": "2024-02-07T14:30:00.000Z",
+  "created_by": "65c3a5c7890abcdef1234566",
+  "updated_at": "2024-02-07T14:30:00.000Z",
+  "updated_by": "65c3a5c7890abcdef1234566"
+}
+Error Responses
+400 Bad Request
+{
+  "message": "Dados inválidos"
+}
+401 Unauthorized
+{
+  "message": "Token não fornecido"
+}
+403 Forbidden
+{
+  "message": "Permissão insuficiente",
+  "required_permission": "user_write"
+}
+404 Not Found
+{
+  "message": "Usuário não encontrado"
+}
+409 Conflict
+{
+  "message": "Email já cadastrado"
+}
+500 Internal Server Error
+{
+  "message": "Erro interno do servidor"
+}
