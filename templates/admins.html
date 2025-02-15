@@ -54,8 +54,47 @@
             </div>
             <div class="form-group">
                 <label for="adminPermissions">Permissions</label>
-                <div id="permissionsGrid" class="permissions-grid">
-                    <!-- Permissions will be loaded dynamically -->
+                <div id="permissionsContainer" class="permissions-container">
+                    <div id="permissionsGrid" class="permissions-grid">
+                        <!-- Permissions will be loaded dynamically -->
+                        <div class="permission-group">
+                            <h4>Document Permissions</h4>
+                            <div class="checkbox-container">
+                                <input type="checkbox" name="permissions" value="document_read" id="document_read">
+                                <label for="document_read">Read Documents</label>
+                            </div>
+                            <div class="checkbox-container">
+                                <input type="checkbox" name="permissions" value="document_write" id="document_write">
+                                <label for="document_write">Write Documents</label>
+                            </div>
+                            <div class="checkbox-container">
+                                <input type="checkbox" name="permissions" value="document_delete" id="document_delete">
+                                <label for="document_delete">Delete Documents</label>
+                            </div>
+                        </div>
+                        <div class="permission-group">
+                            <h4>User Management</h4>
+                            <div class="checkbox-container">
+                                <input type="checkbox" name="permissions" value="user_read" id="user_read">
+                                <label for="user_read">View Users</label>
+                            </div>
+                            <div class="checkbox-container">
+                                <input type="checkbox" name="permissions" value="user_write" id="user_write">
+                                <label for="user_write">Manage Users</label>
+                            </div>
+                        </div>
+                        <div class="permission-group">
+                            <h4>System Settings</h4>
+                            <div class="checkbox-container">
+                                <input type="checkbox" name="permissions" value="settings_read" id="settings_read">
+                                <label for="settings_read">View Settings</label>
+                            </div>
+                            <div class="checkbox-container">
+                                <input type="checkbox" name="permissions" value="settings_write" id="settings_write">
+                                <label for="settings_write">Modify Settings</label>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
             <div class="modal-actions">
@@ -95,11 +134,58 @@
 </div>
 
 <style>
+.permissions-container {
+    max-height: 300px;
+    overflow-y: auto;
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    padding: 1rem;
+    background-color: var(--bg-tertiary);
+}
+
 .permissions-grid {
     display: grid;
-    grid-template-columns: repeat(2, 1fr);
-    gap: 1rem;
-    margin-top: 0.5rem;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 1.5rem;
+}
+
+.permission-group {
+    background-color: var(--bg-secondary);
+    padding: 1rem;
+    border-radius: 6px;
+    border: 1px solid var(--border-color);
+}
+
+.permission-group h4 {
+    margin: 0 0 1rem 0;
+    color: var(--text-primary);
+    font-size: 0.9rem;
+    font-weight: 500;
+}
+
+.checkbox-container {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    margin-bottom: 0.75rem;
+    cursor: pointer;
+}
+
+.checkbox-container:last-child {
+    margin-bottom: 0;
+}
+
+.checkbox-container input[type="checkbox"] {
+    width: 16px;
+    height: 16px;
+    cursor: pointer;
+}
+
+.checkbox-container label {
+    color: var(--text-secondary);
+    font-size: 0.875rem;
+    cursor: pointer;
+    margin: 0;
 }
 
 .checkbox-container {
