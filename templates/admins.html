@@ -1,4 +1,3 @@
-
 {% extends "base.html" %}
 
 {% block content %}
@@ -55,23 +54,8 @@
             </div>
             <div class="form-group">
                 <label for="adminPermissions">Permissions</label>
-                <div class="permissions-grid">
-                    <label class="checkbox-container">
-                        <input type="checkbox" name="permissions" value="manage_users">
-                        <span>Manage Users</span>
-                    </label>
-                    <label class="checkbox-container">
-                        <input type="checkbox" name="permissions" value="manage_documents">
-                        <span>Manage Documents</span>
-                    </label>
-                    <label class="checkbox-container">
-                        <input type="checkbox" name="permissions" value="manage_departments">
-                        <span>Manage Departments</span>
-                    </label>
-                    <label class="checkbox-container">
-                        <input type="checkbox" name="permissions" value="manage_categories">
-                        <span>Manage Categories</span>
-                    </label>
+                <div id="permissionsGrid" class="permissions-grid">
+                    <!-- Permissions will be loaded dynamically -->
                 </div>
             </div>
             <div class="modal-actions">
@@ -98,23 +82,8 @@
             </div>
             <div class="form-group">
                 <label for="editAdminPermissions">Permissions</label>
-                <div class="permissions-grid">
-                    <label class="checkbox-container">
-                        <input type="checkbox" name="permissions" value="manage_users">
-                        <span>Manage Users</span>
-                    </label>
-                    <label class="checkbox-container">
-                        <input type="checkbox" name="permissions" value="manage_documents">
-                        <span>Manage Documents</span>
-                    </label>
-                    <label class="checkbox-container">
-                        <input type="checkbox" name="permissions" value="manage_departments">
-                        <span>Manage Departments</span>
-                    </label>
-                    <label class="checkbox-container">
-                        <input type="checkbox" name="permissions" value="manage_categories">
-                        <span>Manage Categories</span>
-                    </label>
+                <div id="permissionsGrid" class="permissions-grid">
+                    <!-- Permissions will be loaded dynamically -->
                 </div>
             </div>
             <div class="modal-actions">
@@ -256,17 +225,17 @@ function createAdmin(event) {
     event.preventDefault();
     const form = event.target;
     const submitButton = form.querySelector('button[type="submit"]');
-    
+
     const formData = new FormData(form);
     const permissions = Array.from(form.querySelectorAll('input[name="permissions"]:checked'))
         .map(input => input.value);
-    
+
     const data = {
         ...Object.fromEntries(formData),
         role: 'admin',
         permissions: permissions
     };
-    
+
     showLoading(submitButton);
 
     fetch('/api/users', {
@@ -300,16 +269,16 @@ function updateAdmin(event) {
     const form = event.target;
     const submitButton = form.querySelector('button[type="submit"]');
     const id = document.getElementById('editAdminId').value;
-    
+
     const formData = new FormData(form);
     const permissions = Array.from(form.querySelectorAll('input[name="permissions"]:checked'))
         .map(input => input.value);
-    
+
     const data = {
         ...Object.fromEntries(formData),
         permissions: permissions
     };
-    
+
     showLoading(submitButton);
 
     fetch(`/api/users/${id}`, {
@@ -374,13 +343,13 @@ function showEditAdminModal(id, admin) {
     document.getElementById('editAdminId').value = id;
     document.getElementById('editAdminName').value = admin.name;
     document.getElementById('editAdminEmail').value = admin.email;
-    
+
     // Reset and set permissions
     const checkboxes = document.querySelectorAll('#editAdminForm input[name="permissions"]');
     checkboxes.forEach(checkbox => {
         checkbox.checked = admin.permissions && admin.permissions.includes(checkbox.value);
     });
-    
+
     showModal('editAdminModal');
 }
 
