@@ -8,6 +8,24 @@
     </div>
 </div>
 
+<!-- Modal -->
+<div id="permissionModal" class="modal">
+  <div class="modal-content">
+    <span class="close">&times;</span>
+    <p>Some modal content here</p>
+    <div class="input-wrapper">
+      <i data-feather="user"></i>
+      <input type="text" placeholder="Username">
+    </div>
+    <div class="input-wrapper">
+      <i data-feather="lock"></i>
+      <input type="password" placeholder="Password">
+    </div>
+    <button>Submit</button>
+  </div>
+</div>
+
+
 <style>
 .permissions-container {
     padding: 1.5rem;
@@ -37,6 +55,68 @@
     font-size: 0.9rem;
     color: var(--text-primary);
 }
+
+/* Modal styles */
+.modal {
+  display: none;
+  position: fixed;
+  z-index: 1;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 100%;
+  overflow: auto;
+  background-color: rgba(0,0,0,0.4);
+}
+
+.modal-content {
+  background-color: #fefefe;
+  margin: 15% auto;
+  padding: 20px;
+  border: 1px solid #888;
+  width: 300px;
+}
+
+.close {
+  color: #aaa;
+  float: right;
+  font-size: 28px;
+  font-weight: bold;
+}
+
+.close:hover,
+.close:focus {
+  color: black;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.input-wrapper {
+    position: relative;
+    margin-bottom: 1rem;
+}
+
+.input-wrapper i {
+    position: absolute;
+    left: 1.5rem;
+    color: var(--text-secondary);
+    width: 16px;
+    height: 16px;
+}
+
+.input-wrapper input {
+    width: 100%;
+    max-width: 400px;
+    padding: 0.75rem 1rem 0.75rem 3.25rem;
+    border: 1px solid var(--border-color);
+    background: var(--bg-secondary);
+    color: var(--text-primary);
+    transition: all 0.2s;
+}
+
+.input-wrapper input[type="password"] {
+    max-width: 300px;
+}
 </style>
 
 <script>
@@ -46,10 +126,10 @@ document.addEventListener('DOMContentLoaded', async function() {
         if (!response.ok) {
             throw new Error('Failed to fetch permissions');
         }
-        
+
         const data = await response.json();
         const permissionsGrid = document.getElementById('permissionsGrid');
-        
+
         // Group permissions by resource type (document, category, etc)
         const groupedPermissions = data.reduce((acc, permission) => {
             const [resource] = permission.split('_');
@@ -64,37 +144,37 @@ document.addEventListener('DOMContentLoaded', async function() {
         Object.entries(groupedPermissions).forEach(([resource, permissions]) => {
             const section = document.createElement('div');
             section.className = 'permission-section';
-            
+
             const title = document.createElement('h3');
             title.textContent = resource.charAt(0).toUpperCase() + resource.slice(1);
             title.style.marginBottom = '0.5rem';
             title.style.color = 'var(--text-secondary)';
-            
+
             section.appendChild(title);
-            
+
             permissions.forEach(permission => {
                 const card = document.createElement('div');
                 card.className = 'permission-card';
-                
+
                 // Add icon based on permission type
                 const icon = document.createElement('i');
                 icon.setAttribute('data-feather', getPermissionIcon(permission));
-                
+
                 const name = document.createElement('span');
                 name.className = 'permission-name';
                 name.textContent = formatPermissionName(permission);
-                
+
                 card.appendChild(icon);
                 card.appendChild(name);
                 section.appendChild(card);
             });
-            
+
             permissionsGrid.appendChild(section);
         });
-        
+
         // Initialize Feather icons
         feather.replace();
-        
+
     } catch (error) {
         console.error('Error fetching permissions:', error);
         const permissionsGrid = document.getElementById('permissionsGrid');
