@@ -193,12 +193,14 @@
 .modal-container {
     position: relative;
     background: var(--bg-primary);
-    width: 90%;
-    max-width: 800px;
-    border-radius: 16px;
-    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+    width: 95%;
+    max-width: 1200px;
+    height: 90vh;
+    border-radius: 0;
+    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
     z-index: 1001;
-    overflow: hidden;
+    display: flex;
+    flex-direction: column;
 }
 
 .modal-header {
@@ -229,7 +231,6 @@
     padding: 0.5rem;
     cursor: pointer;
     color: var(--text-secondary);
-    border-radius: 8px;
     transition: all 0.2s;
 }
 
@@ -240,13 +241,15 @@
 
 .modal-body {
     padding: 2rem;
-    max-height: calc(90vh - 150px);
-    overflow-y: auto;
+    flex: 1;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
 }
 
 /* Form Styles */
 .form-section {
-    margin-bottom: 2.5rem;
+    margin-bottom: 2rem;
 }
 
 .section-title {
@@ -268,7 +271,7 @@
 
 .form-row {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    grid-template-columns: repeat(2, 1fr);
     gap: 1.5rem;
 }
 
@@ -301,7 +304,6 @@
     width: 100%;
     padding: 0.75rem 1rem 0.75rem 2.75rem;
     border: 1px solid var(--border-color);
-    border-radius: 8px;
     background: var(--bg-secondary);
     color: var(--text-primary);
     transition: all 0.2s;
@@ -320,30 +322,28 @@
 /* Permissions Styles */
 .permissions-container {
     background: var(--bg-secondary);
-    border-radius: 12px;
     padding: 1.5rem;
+    flex: 1;
+    overflow: hidden;
 }
 
 .permissions-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    grid-template-columns: repeat(3, 1fr);
     gap: 1.5rem;
-    max-height: 400px;
-    overflow-y: auto;
-    padding-right: 0.5rem;
+    height: 100%;
 }
 
 .permission-group {
     background: var(--bg-primary);
     padding: 1.5rem;
-    border-radius: 12px;
     border: 1px solid var(--border-color);
     transition: transform 0.2s;
 }
 
 .permission-group:hover {
     transform: translateY(-2px);
-    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
 }
 
 .permission-group-title {
@@ -369,7 +369,6 @@
     align-items: center;
     gap: 0.75rem;
     padding: 0.5rem;
-    border-radius: 8px;
     cursor: pointer;
     transition: background-color 0.2s;
 }
@@ -382,7 +381,6 @@
     width: 18px;
     height: 18px;
     margin: 0;
-    border-radius: 4px;
     border: 2px solid var(--border-color);
     transition: all 0.2s;
 }
@@ -416,7 +414,6 @@
     gap: 0.5rem;
     padding: 0.75rem 1.5rem;
     border: none;
-    border-radius: 8px;
     font-weight: 500;
     cursor: pointer;
     transition: all 0.2s;
@@ -434,7 +431,6 @@
 
 .btn.primary:hover {
     background: var(--accent-hover);
-    transform: translateY(-1px);
 }
 
 .btn.secondary {
@@ -444,18 +440,20 @@
 
 .btn.secondary:hover {
     background: var(--bg-active);
-    transform: translateY(-1px);
 }
 
 /* Responsive Adjustments */
+@media (max-width: 1200px) {
+    .permissions-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
 @media (max-width: 768px) {
     .modal-container {
-        width: 95%;
-        margin: 1rem;
-    }
-
-    .modal-body {
-        padding: 1.5rem;
+        width: 100%;
+        height: 100vh;
+        margin: 0;
     }
 
     .permissions-grid {
@@ -465,9 +463,12 @@
     .form-row {
         grid-template-columns: 1fr;
     }
+
+    .modal-body {
+        padding: 1rem;
+    }
 }
 
-/* Rest of the styles remain unchanged */
 </style>
 
 <script>
