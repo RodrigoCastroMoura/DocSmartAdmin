@@ -249,7 +249,8 @@ async function loadPermissions() {
         if (!response.ok) throw new Error('Failed to fetch permissions');
 
         const permissions = await response.json();
-        return permissions;
+        // Ensure permissions is an array and handle both string and object formats
+        return Array.isArray(permissions) ? permissions : [];
     } catch (error) {
         console.error('Error loading permissions:', error);
         return [];
@@ -262,9 +263,18 @@ function generatePermissionsHTML(permissions, containerId, selectedPermissions =
 
     // Group permissions by resource
     const groupedPermissions = permissions.reduce((acc, permission) => {
-        const [resource] = permission.split('_');
+        // Handle both string and object permission formats
+        let resource, action;
+        if (typeof permission === 'string') {
+            [resource, action] = permission.split('_');
+        } else if (typeof permission === 'object' && permission.name) {
+            [resource, action] = permission.name.split('_');
+        } else {
+            return acc; // Skip invalid permissions
+        }
+
         if (!acc[resource]) acc[resource] = [];
-        acc[resource].push(permission);
+        acc[resource].push(typeof permission === 'string' ? permission : permission.name);
         return acc;
     }, {});
 
@@ -500,7 +510,14 @@ async function showEditAdminModal(admin) {
 }
 
 function formatPermissionName(permission) {
-    const [resource, action] = permission.split('_');
+    let resource, action;
+    if (typeof permission === 'string') {
+        [resource, action] = permission.split('_');
+    } else if (typeof permission === 'object' && permission.name) {
+        [resource, action] = permission.name.split('_');
+    } else {
+        return ''; // Return empty string for invalid permissions
+    }
     return `${PERMISSION_ACTIONS[action]?.title || action} ${PERMISSION_GROUPS[resource]?.title || resource}`;
 }
 
