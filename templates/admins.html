@@ -38,7 +38,13 @@
 <!-- Add Admin Modal -->
 <div id="addAdminModal" class="modal">
     <div class="modal-content">
-        <h3>Add Administrator</h3>
+        <div class="notification-header">
+            <i data-feather="user-plus" style="color: var(--accent-color);"></i>
+            <h3>Add Administrator</h3>
+            <button class="close-btn" onclick="hideModal('addAdminModal')">
+                <i data-feather="x"></i>
+            </button>
+        </div>
         <form id="addAdminForm" onsubmit="createAdmin(event)">
             <div class="form-group">
                 <label for="adminName">Name</label>
@@ -53,14 +59,14 @@
                 <input type="password" id="adminPassword" name="password" required>
             </div>
             <div class="form-group">
-                <label for="adminPermissions">Permissions</label>
-                <div id="permissionsGrid" class="permissions-grid">
+                <label>Permissions</label>
+                <div id="addPermissionsGrid" class="permissions-grid">
                     <!-- Permissions will be loaded dynamically -->
                 </div>
             </div>
             <div class="modal-actions">
                 <button type="button" class="action-btn" onclick="hideModal('addAdminModal')">Cancel</button>
-                <button type="submit" class="action-btn primary">Add</button>
+                <button type="submit" class="action-btn primary">Add Administrator</button>
             </div>
         </form>
     </div>
@@ -69,7 +75,13 @@
 <!-- Edit Admin Modal -->
 <div id="editAdminModal" class="modal">
     <div class="modal-content">
-        <h3>Edit Administrator</h3>
+        <div class="notification-header">
+            <i data-feather="edit" style="color: var(--accent-color);"></i>
+            <h3>Edit Administrator</h3>
+            <button class="close-btn" onclick="hideModal('editAdminModal')">
+                <i data-feather="x"></i>
+            </button>
+        </div>
         <form id="editAdminForm" onsubmit="updateAdmin(event)">
             <input type="hidden" id="editAdminId">
             <div class="form-group">
@@ -81,14 +93,14 @@
                 <input type="email" id="editAdminEmail" name="email" required>
             </div>
             <div class="form-group">
-                <label for="editAdminPermissions">Permissions</label>
-                <div id="permissionsGrid" class="permissions-grid">
+                <label>Permissions</label>
+                <div id="editPermissionsGrid" class="permissions-grid">
                     <!-- Permissions will be loaded dynamically -->
                 </div>
             </div>
             <div class="modal-actions">
                 <button type="button" class="action-btn" onclick="hideModal('editAdminModal')">Cancel</button>
-                <button type="submit" class="action-btn primary">Update</button>
+                <button type="submit" class="action-btn primary">Update Administrator</button>
             </div>
         </form>
     </div>
@@ -102,37 +114,51 @@
     margin-top: 0.5rem;
 }
 
+.permission-group {
+    background: var(--bg-tertiary);
+    padding: 1rem;
+    border-radius: 8px;
+}
+
+.permission-group-title {
+    font-weight: 500;
+    margin-bottom: 0.5rem;
+    color: var(--text-secondary);
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.permission-group-title i {
+    color: var(--accent-color);
+}
+
+.permission-items {
+    display: grid;
+    gap: 0.5rem;
+}
+
 .checkbox-container {
     display: flex;
     align-items: center;
     gap: 0.5rem;
     cursor: pointer;
+    padding: 0.25rem;
+    border-radius: 4px;
+    transition: background-color 0.2s;
+}
+
+.checkbox-container:hover {
+    background-color: var(--bg-secondary);
 }
 
 .checkbox-container input[type="checkbox"] {
     width: auto;
 }
 
-.admins-table {
-    width: 100%;
-    border-collapse: collapse;
-    min-width: 800px;
-}
-
-.admins-table th,
-.admins-table td {
-    padding: 1rem;
-    text-align: left;
-    border-bottom: 1px solid var(--border-color);
-}
-
-.admins-table th {
-    font-weight: 500;
-    color: var(--text-secondary);
-    background-color: var(--bg-tertiary);
-    position: sticky;
-    top: 0;
-    z-index: 1;
+.checkbox-container span {
+    font-size: 0.875rem;
+    color: var(--text-primary);
 }
 
 .permission-badge {
@@ -144,37 +170,161 @@
     color: var(--text-secondary);
     margin: 0.125rem;
 }
+
+.user-cell {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.user-avatar {
+    width: 32px;
+    height: 32px;
+    background-color: var(--accent-color);
+    color: white;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.875rem;
+    font-weight: 500;
+}
+
+.status-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+    padding: 0.25rem 0.5rem;
+    border-radius: 9999px;
+    font-size: 0.75rem;
+    font-weight: 500;
+}
+
+.status-badge.active {
+    background-color: rgba(var(--success-rgb), 0.1);
+    color: var(--success-color);
+}
+
+.status-badge.inactive {
+    background-color: rgba(var(--danger-rgb), 0.1);
+    color: var(--danger-color);
+}
+
+.table-actions {
+    display: flex;
+    gap: 0.5rem;
+}
+
+.table-actions .action-btn {
+    padding: 0.5rem;
+}
+
+.table-actions .action-btn i {
+    width: 16px;
+    height: 16px;
+}
 </style>
 
 <script>
-function loadAdmins() {
+// Permission groups and their icons
+const PERMISSION_GROUPS = {
+    document: { icon: 'file-text', title: 'Documents' },
+    category: { icon: 'grid', title: 'Categories' },
+    department: { icon: 'briefcase', title: 'Departments' },
+    user: { icon: 'users', title: 'Users' },
+    company: { icon: 'home', title: 'Company' }
+};
+
+// Permission actions and their icons
+const PERMISSION_ACTIONS = {
+    read: { icon: 'eye', title: 'View' },
+    write: { icon: 'plus-circle', title: 'Create' },
+    update: { icon: 'edit-2', title: 'Edit' },
+    delete: { icon: 'trash-2', title: 'Delete' }
+};
+
+async function loadPermissions() {
+    try {
+        const response = await fetch('/api/permissions');
+        if (!response.ok) throw new Error('Failed to fetch permissions');
+
+        const permissions = await response.json();
+        return permissions;
+    } catch (error) {
+        console.error('Error loading permissions:', error);
+        return [];
+    }
+}
+
+function generatePermissionsHTML(permissions, containerId, selectedPermissions = []) {
+    const container = document.getElementById(containerId);
+    if (!container) return;
+
+    // Group permissions by resource
+    const groupedPermissions = permissions.reduce((acc, permission) => {
+        const [resource] = permission.split('_');
+        if (!acc[resource]) acc[resource] = [];
+        acc[resource].push(permission);
+        return acc;
+    }, {});
+
+    container.innerHTML = Object.entries(groupedPermissions)
+        .map(([resource, perms]) => `
+            <div class="permission-group">
+                <div class="permission-group-title">
+                    <i data-feather="${PERMISSION_GROUPS[resource]?.icon || 'check'}"></i>
+                    <span>${PERMISSION_GROUPS[resource]?.title || resource}</span>
+                </div>
+                <div class="permission-items">
+                    ${perms.map(perm => {
+                        const action = perm.split('_')[1];
+                        return `
+                            <label class="checkbox-container">
+                                <input type="checkbox" 
+                                       name="permissions" 
+                                       value="${perm}"
+                                       ${selectedPermissions.includes(perm) ? 'checked' : ''}>
+                                <span>
+                                    <i data-feather="${PERMISSION_ACTIONS[action]?.icon || 'check'}" class="w-4 h-4"></i>
+                                    ${PERMISSION_ACTIONS[action]?.title || action}
+                                </span>
+                            </label>
+                        `;
+                    }).join('')}
+                </div>
+            </div>
+        `).join('');
+
+    feather.replace();
+}
+
+async function loadAdmins() {
     const contentDiv = document.getElementById('adminsContent');
     const tableBody = document.getElementById('adminsTableBody');
     showLoading(contentDiv);
 
-    fetch('/api/users?role=admin')
-        .then(response => response.json())
-        .then(data => {
-            if (!data || !data.users) {
-                throw new Error('Invalid response format');
-            }
-            tableBody.innerHTML = generateAdminsHTML(data.users);
-            feather.replace();
-        })
-        .catch(error => {
-            console.error('Error loading admins:', error);
-            tableBody.innerHTML = `
-                <tr>
-                    <td colspan="5" class="no-data error">
-                        <i data-feather="alert-circle"></i>
-                        <p>${error.message || 'Failed to load administrators'}</p>
-                    </td>
-                </tr>`;
-            feather.replace();
-        })
-        .finally(() => {
-            hideLoading(contentDiv);
-        });
+    try {
+        const response = await fetch('/api/users?role=admin');
+        if (!response.ok) throw new Error('Failed to fetch administrators');
+
+        const data = await response.json();
+        if (!data || !data.users) throw new Error('Invalid response format');
+
+        tableBody.innerHTML = generateAdminsHTML(data.users);
+        feather.replace();
+    } catch (error) {
+        console.error('Error loading admins:', error);
+        tableBody.innerHTML = `
+            <tr>
+                <td colspan="5" class="no-data error">
+                    <i data-feather="alert-circle"></i>
+                    <p>${error.message || 'Failed to load administrators'}</p>
+                </td>
+            </tr>`;
+        feather.replace();
+    } finally {
+        hideLoading(contentDiv);
+    }
 }
 
 function generateAdminsHTML(admins) {
@@ -199,20 +349,21 @@ function generateAdminsHTML(admins) {
             <td>${admin.email}</td>
             <td>
                 <span class="status-badge ${admin.status === 'active' ? 'active' : 'inactive'}">
+                    <i data-feather="${admin.status === 'active' ? 'check-circle' : 'x-circle'}"></i>
                     ${admin.status}
                 </span>
             </td>
             <td>
                 ${admin.permissions ? admin.permissions.map(perm => 
-                    `<span class="permission-badge">${perm}</span>`
+                    `<span class="permission-badge">${formatPermissionName(perm)}</span>`
                 ).join('') : ''}
             </td>
             <td>
                 <div class="table-actions">
-                    <button class="action-btn" onclick='showEditAdminModal("${admin.id}", ${JSON.stringify(admin)})'>
+                    <button class="action-btn" onclick='showEditAdminModal(${JSON.stringify(admin)})' title="Edit">
                         <i data-feather="edit-2"></i>
                     </button>
-                    <button class="action-btn danger" onclick="deleteAdmin('${admin.id}')">
+                    <button class="action-btn danger" onclick="deleteAdmin('${admin.id}')" title="Delete">
                         <i data-feather="trash-2"></i>
                     </button>
                 </div>
@@ -221,89 +372,86 @@ function generateAdminsHTML(admins) {
     `).join('');
 }
 
-function createAdmin(event) {
+async function createAdmin(event) {
     event.preventDefault();
     const form = event.target;
     const submitButton = form.querySelector('button[type="submit"]');
+    showLoading(submitButton);
 
     const formData = new FormData(form);
     const permissions = Array.from(form.querySelectorAll('input[name="permissions"]:checked'))
         .map(input => input.value);
 
     const data = {
-        ...Object.fromEntries(formData),
+        name: formData.get('name'),
+        email: formData.get('email'),
+        password: formData.get('password'),
         role: 'admin',
         permissions: permissions
     };
 
-    showLoading(submitButton);
+    try {
+        const response = await fetch('/api/users', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(data)
+        });
 
-    fetch('/api/users', {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(data)
-    })
-    .then(response => response.json())
-    .then(data => {
-        if (!data.success) {
-            throw new Error(data.error || 'Failed to create administrator');
+        if (!response.ok) {
+            const errorData = await response.json();
+            throw new Error(errorData.error || 'Failed to create administrator');
         }
+
         hideModal('addAdminModal');
         form.reset();
-        loadAdmins();
         showNotification('Administrator created successfully', 'success');
-    })
-    .catch(error => {
+        loadAdmins();
+    } catch (error) {
         console.error('Error creating administrator:', error);
-        showErrorMessage(error.message);
-    })
-    .finally(() => {
+        showNotification(error.message, 'error');
+    } finally {
         hideLoading(submitButton);
-    });
+    }
 }
 
-function updateAdmin(event) {
+async function updateAdmin(event) {
     event.preventDefault();
     const form = event.target;
     const submitButton = form.querySelector('button[type="submit"]');
     const id = document.getElementById('editAdminId').value;
+    showLoading(submitButton);
 
     const formData = new FormData(form);
     const permissions = Array.from(form.querySelectorAll('input[name="permissions"]:checked'))
         .map(input => input.value);
 
     const data = {
-        ...Object.fromEntries(formData),
+        name: formData.get('name'),
+        email: formData.get('email'),
         permissions: permissions
     };
 
-    showLoading(submitButton);
+    try {
+        const response = await fetch(`/api/users/${id}`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(data)
+        });
 
-    fetch(`/api/users/${id}`, {
-        method: 'PUT',
-        headers: {
-            'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(data)
-    })
-    .then(response => response.json())
-    .then(data => {
-        if (!data.success) {
-            throw new Error(data.error || 'Failed to update administrator');
+        if (!response.ok) {
+            const errorData = await response.json();
+            throw new Error(errorData.error || 'Failed to update administrator');
         }
+
         hideModal('editAdminModal');
-        loadAdmins();
         showNotification('Administrator updated successfully', 'success');
-    })
-    .catch(error => {
+        loadAdmins();
+    } catch (error) {
         console.error('Error updating administrator:', error);
-        showErrorMessage(error.message);
-    })
-    .finally(() => {
+        showNotification(error.message, 'error');
+    } finally {
         hideLoading(submitButton);
-    });
+    }
 }
 
 function deleteAdmin(id) {
@@ -311,48 +459,54 @@ function deleteAdmin(id) {
     showModal('deleteConfirmModal');
 }
 
-function confirmDelete() {
+async function confirmDelete() {
+    hideModal('deleteConfirmModal');
     const row = document.querySelector(`tr[data-id="${itemToDelete}"]`);
     showLoading(row);
 
-    fetch(`/api/users/${itemToDelete}`, {
-        method: 'DELETE'
-    })
-    .then(response => {
-        if (!response.ok) {
-            throw new Error('Failed to delete administrator');
-        }
-        loadAdmins();
+    try {
+        const response = await fetch(`/api/users/${itemToDelete}`, {
+            method: 'DELETE'
+        });
+
+        if (!response.ok) throw new Error('Failed to delete administrator');
+
         showNotification('Administrator deleted successfully', 'success');
-    })
-    .catch(error => {
+        loadAdmins();
+    } catch (error) {
         console.error('Error deleting administrator:', error);
-        showErrorMessage(error.message);
-    })
-    .finally(() => {
+        showNotification(error.message, 'error');
+    } finally {
         hideLoading(row);
-    });
+    }
 }
 
-function showAddAdminModal() {
+async function showAddAdminModal() {
+    const permissions = await loadPermissions();
+    generatePermissionsHTML(permissions, 'addPermissionsGrid');
     document.getElementById('addAdminForm').reset();
     showModal('addAdminModal');
 }
 
-function showEditAdminModal(id, admin) {
-    document.getElementById('editAdminId').value = id;
+async function showEditAdminModal(admin) {
+    const permissions = await loadPermissions();
+    generatePermissionsHTML(permissions, 'editPermissionsGrid', admin.permissions || []);
+
+    document.getElementById('editAdminId').value = admin.id;
     document.getElementById('editAdminName').value = admin.name;
     document.getElementById('editAdminEmail').value = admin.email;
-
-    // Reset and set permissions
-    const checkboxes = document.querySelectorAll('#editAdminForm input[name="permissions"]');
-    checkboxes.forEach(checkbox => {
-        checkbox.checked = admin.permissions && admin.permissions.includes(checkbox.value);
-    });
 
     showModal('editAdminModal');
 }
 
-document.addEventListener('DOMContentLoaded', loadAdmins);
+function formatPermissionName(permission) {
+    const [resource, action] = permission.split('_');
+    return `${PERMISSION_ACTIONS[action]?.title || action} ${PERMISSION_GROUPS[resource]?.title || resource}`;
+}
+
+// Initialize on page load
+document.addEventListener('DOMContentLoaded', async () => {
+    loadAdmins();
+});
 </script>
 {% endblock %}
