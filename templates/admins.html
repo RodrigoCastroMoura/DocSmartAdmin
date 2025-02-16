@@ -109,15 +109,19 @@
 <style>
 .permissions-grid {
     display: grid;
-    grid-template-columns: repeat(2, 1fr);
-    gap: 1rem;
-    margin-top: 0.5rem;
+    grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+    gap: 1.5rem;
+    margin-top: 1rem;
+    max-height: 50vh;
+    overflow-y: auto;
+    padding: 0.5rem;
 }
 
 .permission-group {
     background: var(--bg-tertiary);
-    padding: 1rem;
-    border-radius: 8px;
+    padding: 1.5rem;
+    border-radius: 10px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
 }
 
 .permission-group-title {
@@ -222,6 +226,60 @@
 .table-actions .action-btn i {
     width: 16px;
     height: 16px;
+}
+
+.modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100vh;
+    background-color: rgba(0, 0, 0, 0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+    padding: 1rem;
+    overflow-y: auto;
+}
+
+.modal-content {
+    background-color: var(--bg-primary);
+    border-radius: 12px;
+    width: 95%;
+    max-width: 1000px;
+    max-height: 85vh;
+    position: relative;
+    padding: 2rem;
+    margin: auto;
+    overflow-y: auto;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.form-group {
+    margin-bottom: 1.5rem;
+}
+
+.modal-actions {
+    margin-top: 2rem;
+    display: flex;
+    justify-content: flex-end;
+    gap: 1rem;
+    padding-top: 1rem;
+    border-top: 1px solid var(--border-color);
+}
+
+@media (max-width: 768px) {
+    .modal-content {
+        padding: 1.5rem;
+        width: 100%;
+        margin: 0.5rem;
+    }
+
+    .permissions-grid {
+        grid-template-columns: 1fr;
+        max-height: 60vh;
+    }
 }
 </style>
 
