@@ -17,6 +17,7 @@
                             <th>Name</th>
                             <th>Email</th>
                             <th>Status</th>
+                            <th>Permissions</th>
                             <th>Actions</th>
                         </tr>
                     </thead>
@@ -146,14 +147,7 @@
                             </div>
                         </div>
                     </div>
-                    <div class="form-group">
-                        <label class="status-toggle-label">Status</label>
-                        <div class="toggle-switch">
-                            <input type="checkbox" id="editAdminStatus" name="status">
-                            <label for="editAdminStatus"></label>
-                            <span class="toggle-label">Active</span>
-                        </div>
-                    </div>
+                    
                 </div>
 
                 <div class="form-section">
@@ -777,7 +771,17 @@ function generateAdminsHTML(admins) {
                 </span>
             </td>
             <td>
+                ${admin.permissions ? admin.permissions.map(perm => 
+                    `<span class="permission-badge">${formatPermissionName(perm)}</span>`
+                ).join('') : ''}
+            </td>
+            <td>
                 <div class="table-actions">
+                    <button class="action-btn ${admin.status === 'active' ? 'success' : 'danger'}" 
+                            onclick="toggleAdminStatus('${admin.id}', '${admin.status === 'active' ? 'inactive' : 'active'}')" 
+                            title="${admin.status === 'active' ? 'Deactivate' : 'Activate'}">
+                        <i data-feather="${admin.status === 'active' ? 'user-check' : 'user-x'}"></i>
+                    </button>
                     <button class="action-btn" onclick='showEditAdminModal(${JSON.stringify(admin)})' title="Edit">
                         <i data-feather="edit-2"></i>
                     </button>
@@ -830,6 +834,27 @@ async function createAdmin(event) {
         showNotification(error.message, 'error');
     } finally {
         hideLoading(submitButton);
+    }
+}
+
+async function toggleAdminStatus(adminId, newStatus) {
+    try {
+        const response = await fetch(`/api/users/${adminId}/status`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ status: newStatus })
+        });
+
+        if (!response.ok) {
+            const errorData = await response.json();
+            throw new Error(errorData.error || 'Failed to update status');
+        }
+
+        showNotification(`Administrator ${newStatus === 'active' ? 'activated' : 'deactivated'} successfully`, 'success');
+        loadAdmins();
+    } catch (error) {
+        console.error('Error updating admin status:', error);
+        showNotification(error.message, 'error');
     }
 }
 
