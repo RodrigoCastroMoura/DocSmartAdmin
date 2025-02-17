@@ -17,7 +17,6 @@
                             <th>Name</th>
                             <th>Email</th>
                             <th>Status</th>
-                            <th>Permissions</th>
                             <th>Actions</th>
                         </tr>
                     </thead>
@@ -776,11 +775,6 @@ function generateAdminsHTML(admins) {
                     <i data-feather="${admin.status === 'active' ? 'check-circle' : 'x-circle'}"></i>
                     ${admin.status}
                 </span>
-            </td>
-            <td>
-                ${admin.permissions ? admin.permissions.map(perm => 
-                    `<span class="permission-badge">${formatPermissionName(perm)}</span>`
-                ).join('') : ''}
             </td>
             <td>
                 <div class="table-actions">

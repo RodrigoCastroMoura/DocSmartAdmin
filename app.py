@@ -870,6 +870,7 @@ def users_api():
         form_data = {
             "name": data.get('name'),
             "email": data.get('email'),
+            "cpf" : data.get('cpf'),
             "password": data.get('password'),
             "role": data.get('role', 'admin'),
             "permissions": data.get('permissions', []),
@@ -881,6 +882,24 @@ def users_api():
                                  headers=headers,
                                  json=form_data,
                                  timeout=REQUEST_TIMEOUT)
+        
+        if response.status_code == 201:
+
+            response_content = response.content
+
+            # Decodificando o conteúdo de bytes para string
+            response_str = response_content.decode('utf-8')
+
+            # Convertendo a string JSON para um dicionário Python
+            response_dict = json.loads(response_str)
+
+            form_data_permission = {
+                "permissions": data.get('permissions')
+            }
+            response_permision = requests.post(f"{API_BASE_URL}/permissions/admin/{response_dict['id']}/permissions",
+                                               headers=headers,
+                                               json=form_data_permission,
+                                               timeout=REQUEST_TIMEOUT) 
         return handle_api_response(response,
                                    success_code=201,
                                    error_message='Failed to create user')
