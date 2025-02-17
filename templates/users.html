@@ -66,7 +66,6 @@
                     <label for="userRole">Role</label>
                     <select id="userRole" name="role" required>
                         <option value="user">User</option>
-                        <option value="admin">Admin</option>
                     </select>
                 </div>
             </div>
@@ -104,7 +103,6 @@
                     <label for="editUserRole">Role</label>
                     <select id="editUserRole" name="role" required>
                         <option value="user">User</option>
-                        <option value="admin">Admin</option>
                     </select>
                 </div>
 
@@ -319,6 +317,7 @@ let itemToDelete = null;
 async function confirmDelete() {
     
     const row = document.querySelector(`tr[data-id="${itemToDelete}"]`);
+    hideModal('deleteConfirmModal')
     showLoading(row);
 
     try {

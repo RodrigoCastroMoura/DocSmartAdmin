@@ -720,7 +720,7 @@ async function loadAdmins() {
     showLoading(contentDiv);
 
     try {
-        const response = await fetch('/api/users?role=admin');
+        const response = await fetch('/api/admin?role=admin');
         if (!response.ok) throw new Error('Failed to fetch administrators');
 
         const data = await response.json();
@@ -771,11 +771,7 @@ function generateAdminsHTML(admins) {
             </td>
             <td>
                 <div class="table-actions">
-                    ${admin.id === session.user.id ? `
-                        <button class="action-btn" disabled title="Cannot modify own account">
-                            <i data-feather="lock"></i>
-                        </button>
-                    ` : `
+                    
                         <button class="action-btn ${admin.status === 'active' ? 'success' : 'danger'}" 
                                 onclick="toggleAdminStatus('${admin.id}', '${admin.status === 'active' ? 'inactive' : 'active'}')" 
                                 title="${admin.status === 'active' ? 'Deactivate' : 'Activate'}">
@@ -787,7 +783,7 @@ function generateAdminsHTML(admins) {
                         <button class="action-btn danger" onclick="deleteAdmin('${admin.id}')" title="Delete">
                             <i data-feather="trash-2"></i>
                         </button>
-                    `}
+                 
                 </div>
             </td>
         </tr>
@@ -814,7 +810,7 @@ async function createAdmin(event) {
     };
 
     try {
-        const response = await fetch('/api/users', {
+        const response = await fetch('/api/admin', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(data)
@@ -885,12 +881,11 @@ async function updateAdmin(event) {
         name: formData.get('name'),
         email: formData.get('email'),
         cpf: formData.get('cpf'), // Added CPF field
-        permissions: permissions,
-        status: document.getElementById('editAdminStatus').checked ? 'active' : 'inactive'
+        permissions: permissions
     };
 
     try {
-        const response = await fetch(`/api/users/${id}`, {
+        const response = await fetch(`/api/admin/${id}`, {
             method: 'PUT',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(data)
@@ -923,7 +918,7 @@ async function confirmDelete() {
     showLoading(row);
 
     try {
-        const response = await fetch(`/api/users/${itemToDelete}`, {
+        const response = await fetch(`/api/admin/${itemToDelete}`, {
             method: 'DELETE'
         });
 

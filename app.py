@@ -603,6 +603,11 @@ def departments_id(department_id):
             timeout=REQUEST_TIMEOUT * 2  # Double timeout for file upload
         )
 
+        return handle_api_response(
+            response,
+            success_code=204,
+            error_message='Failed to delete departments')
+
 
 @app.route('/api/permissions')
 @login_required
@@ -696,7 +701,7 @@ def categories_id(category_id):
         return handle_api_response(
             response,
             success_code=204,
-            error_message='Failed to create departments')
+            error_message='Failed to delete categories')
 
 
 @app.route('/api/categories/departments/<department_id>/categories')
@@ -837,9 +842,10 @@ def category_document_types_api(category_id):
         return jsonify({'error': 'An unexpected error occurred'}), 500
 
 
-@app.route('/api/users', methods=['GET', 'POST'])
+
+@app.route('/api/admin', methods=['GET', 'POST'])
 @login_required
-def users_api():
+def admins_api():
     headers = get_auth_headers()
     company_id = session.get('company_id')
 
@@ -852,7 +858,7 @@ def users_api():
             'page': request.args.get('page', 1),
             'per_page': request.args.get('per_page', 10),
             'company_id': company_id,
-            'role': role,
+            'role': 'admin',
            
         }
         # Remove None values
@@ -904,6 +910,142 @@ def users_api():
                                    error_message='Failed to create user')
 
 
+@app.route('/api/admin/<admin_id>', methods=['PUT', 'DELETE'])
+@login_required
+def admins_id(admin_id):
+    headers = get_auth_headers()
+    company_id = session.get('company_id')
+
+    if not company_id:
+        return jsonify({'error': 'Company ID not found in session'}), 400
+
+    if request.method == 'PUT':
+        data = request.get_json()
+        form_data = {
+            "name": data.get('name'),
+            "email": data.get('email'),
+            "role": data.get('role', 'admin'),
+            "permissions": data.get('permissions', []),
+            "status": "active",
+            'company_id': company_id
+        }
+
+        response = requests.put(f"{USERS_URL}/{admin_id}",
+                                headers=headers,
+                                json=form_data,
+                                timeout=REQUEST_TIMEOUT)
+        
+        if response.status_code == 200:
+            form_data_permission = {
+                "permissions": data.get('permissions')
+            }
+            response_permision = requests.post(f"{API_BASE_URL}/permissions/admin/{admin_id}/permissions",
+                                               headers=headers,
+                                               json=form_data_permission,
+                                               timeout=REQUEST_TIMEOUT)
+            
+        return handle_api_response(response,
+                                   error_message='Failed to update user')
+
+    elif request.method == 'DELETE':
+        response = requests.delete(f"{USERS_URL}/{admin_id}",
+                                   headers=headers,
+                                   timeout=REQUEST_TIMEOUT)
+        return handle_api_response(response,
+                                   success_code=204,
+                                   error_message='Failed to delete user')
+
+
+@app.route('/api/users', methods=['GET', 'POST'])
+@login_required
+def users_api():
+    headers = get_auth_headers()
+    company_id = session.get('company_id')
+
+    if not company_id:
+        return jsonify({'error': 'Company ID not found in session'}), 400
+
+    if request.method == 'GET':
+        role = request.args.get('role')
+        params = {
+            'page': request.args.get('page', 1),
+            'per_page': request.args.get('per_page', 10),
+            'company_id': company_id,
+            'role': 'user',
+           
+        }
+        # Remove None values
+        params = {k: v for k, v in params.items() if v is not None}
+
+        response = requests.get(USERS_URL,
+                                headers=headers,
+                                params=params,
+                                timeout=REQUEST_TIMEOUT)
+        return handle_api_response(response,
+                                   error_message='Failed to fetch users')
+
+    elif request.method == 'POST':
+        data = request.get_json()
+        form_data = {
+            "name": data.get('name'),
+            "email": data.get('email'),
+            "cpf" : data.get('cpf'),
+            "password": data.get('password'),
+            "phone" :  data.get('phone'),
+            "role": data.get('role', 'admin'),
+            "permissions": data.get('permissions', []),
+            'company_id': company_id
+        }
+
+        response = requests.post(USERS_URL,
+                                 headers=headers,
+                                 json=form_data,
+                                 timeout=REQUEST_TIMEOUT)
+        
+        return handle_api_response(response,
+                                   success_code=201,
+                                   error_message='Failed to create user')
+
+
+@app.route('/api/users/<user_id>', methods=['PUT', 'DELETE'])
+@login_required
+def users_id(user_id):
+    headers = get_auth_headers()
+    company_id = session.get('company_id')
+
+    if not company_id:
+        return jsonify({'error': 'Company ID not found in session'}), 400
+
+    if request.method == 'PUT':
+        data = request.get_json()
+        form_data = {
+            "name": data.get('name'),
+            "email": data.get('email'),
+            "role": data.get('role', 'admin'),
+            "phone" :  data.get('phone'),
+            "permissions": data.get('permissions', []),
+            "status": "active",
+            'company_id': company_id
+        }
+
+        response = requests.put(f"{USERS_URL}/{user_id}",
+                                headers=headers,
+                                json=form_data,
+                                timeout=REQUEST_TIMEOUT)
+        
+            
+        return handle_api_response(response,
+                                   error_message='Failed to update user')
+
+    elif request.method == 'DELETE':
+        response = requests.delete(f"{USERS_URL}/{user_id}",
+                                   headers=headers,
+                                   timeout=REQUEST_TIMEOUT)
+        return handle_api_response(response,
+                                   success_code=204,
+                                   error_message='Failed to delete user')
+
+
 @app.route('/api/users/<user_id>/status', methods=['POST'])
 @login_required
 def update_user_status(user_id):
@@ -926,51 +1068,6 @@ def update_user_status(user_id):
     except Exception as e:
         print(f"Error updating user status: {e}")
         return jsonify({'error': 'An unexpected error occurred'}), 500
-
-@app.route('/api/users/<user_id>', methods=['PUT', 'DELETE'])
-@login_required
-def users_id(user_id):
-    headers = get_auth_headers()
-    company_id = session.get('company_id')
-
-    if not company_id:
-        return jsonify({'error': 'Company ID not found in session'}), 400
-
-    if request.method == 'PUT':
-        data = request.get_json()
-        form_data = {
-            "name": data.get('name'),
-            "email": data.get('email'),
-            "role": data.get('role', 'admin'),
-            "permissions": data.get('permissions', []),
-            "status": "active",
-            'company_id': company_id
-        }
-
-        response = requests.put(f"{USERS_URL}/{user_id}",
-                                headers=headers,
-                                json=form_data,
-                                timeout=REQUEST_TIMEOUT)
-        
-        if response.status_code == 200:
-            form_data_permission = {
-                "permissions": data.get('permissions')
-            }
-            response_permision = requests.post(f"{API_BASE_URL}/permissions/admin/{user_id}/permissions",
-                                               headers=headers,
-                                               json=form_data,
-                                               timeout=REQUEST_TIMEOUT)
-            
-        return handle_api_response(response,
-                                   error_message='Failed to update user')
-
-    elif request.method == 'DELETE':
-        response = requests.delete(f"{USERS_URL}/{user_id}",
-                                   headers=headers,
-                                   timeout=REQUEST_TIMEOUT)
-        return handle_api_response(response,
-                                   success_code=204,
-                                   error_message='Failed to delete user')
 
 
 @app.route('/api/documents')
