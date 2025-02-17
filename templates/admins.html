@@ -17,7 +17,6 @@
                             <th>Name</th>
                             <th>Email</th>
                             <th>Status</th>
-                            <th>Permissions</th>
                             <th>Actions</th>
                         </tr>
                     </thead>
@@ -771,11 +770,6 @@ function generateAdminsHTML(admins) {
                 </span>
             </td>
             <td>
-                ${admin.permissions ? admin.permissions.map(perm => 
-                    `<span class="permission-badge">${formatPermissionName(perm)}</span>`
-                ).join('') : ''}
-            </td>
-            <td>
                 <div class="table-actions">
                     <button class="action-btn ${admin.status === 'active' ? 'success' : 'danger'}" 
                             onclick="toggleAdminStatus('${admin.id}', '${admin.status === 'active' ? 'inactive' : 'active'}')" 
@@ -955,7 +949,7 @@ async function showEditAdminModal(admin) {
     document.getElementById('editAdminName').value = admin.name;
     document.getElementById('editAdminEmail').value = admin.email;
     document.getElementById('editAdminCPF').value = admin.cpf; // Added CPF field for edit modal
-    document.getElementById('editAdminStatus').checked = admin.status === 'active';
+   
 
     showModal('editAdminModal');
 }

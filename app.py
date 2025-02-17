@@ -874,7 +874,6 @@ def users_api():
             "password": data.get('password'),
             "role": data.get('role', 'admin'),
             "permissions": data.get('permissions', []),
-            "status": "active",
             'company_id': company_id
         }
 
