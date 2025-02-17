@@ -167,12 +167,12 @@ async function loadUsers() {
         if (!response.ok) {
             throw new Error(`HTTP error! status: ${response.status}`);
         }
-        
+
         const data = await response.json();
         if (!data || !data.users) {
             throw new Error('Invalid response format');
         }
-        
+
         tableBody.innerHTML = generateUsersHTML(data.users);
         feather.replace();
     } catch (error) {
@@ -217,6 +217,7 @@ function generateUsersHTML(users) {
                 <span class="status-badge ${user.status === 'active' ? 'active' : 'inactive'}">
                     ${user.status}
                 </span>
+                <button onclick="toggleUserStatus('${user.id}', '${user.status === 'active' ? 'inactive' : 'active'}')">Toggle</button>
             </td>
             <td>
                 <div class="table-actions">
@@ -236,11 +237,11 @@ async function createUser(event) {
     event.preventDefault();
     const form = event.target;
     const submitButton = form.querySelector('button[type="submit"]');
-    
+
     if (!validateForm(form)) {
         return;
     }
-    
+
     const formData = new FormData(form);
     const data = Object.fromEntries(formData);
     showLoading(submitButton);
@@ -255,7 +256,7 @@ async function createUser(event) {
         });
 
         const responseData = await response.json();
-        
+
         if (!response.ok) {
             throw new Error(responseData.error || 'Failed to create user');
         }
@@ -276,11 +277,11 @@ async function updateUser(event) {
     event.preventDefault();
     const form = event.target;
     const submitButton = form.querySelector('button[type="submit"]');
-    
+
     if (!validateForm(form)) {
         return;
     }
-    
+
     const id = document.getElementById('editUserId').value;
     const formData = new FormData(form);
     const data = Object.fromEntries(formData);
@@ -296,7 +297,7 @@ async function updateUser(event) {
         });
 
         const responseData = await response.json();
-        
+
         if (!response.ok) {
             throw new Error(responseData.error || 'Failed to update user');
         }
@@ -315,7 +316,7 @@ async function updateUser(event) {
 let itemToDelete = null;
 
 async function confirmDelete() {
-    
+
     const row = document.querySelector(`tr[data-id="${itemToDelete}"]`);
     hideModal('deleteConfirmModal')
     showLoading(row);
@@ -340,7 +341,40 @@ async function confirmDelete() {
     }
 }
 
-function deleteUser(id) {
+async function toggleUserStatus(userId, newStatus) {
+    try {
+        const response = await fetch(`/api/users/${userId}/status`, {
+            method: 'POST',
+            headers: { 
+                'Content-Type': 'application/json',
+                'Accept': 'application/json'
+            },
+            body: JSON.stringify({ status: newStatus })
+        });
+
+        let errorMessage = 'Failed to update status';
+
+        if (!response.ok) {
+            try {
+                const errorData = await response.json();
+                errorMessage = errorData.error || errorMessage;
+            } catch (e) {
+                const text = await response.text();
+                console.error('Raw response:', text);
+                errorMessage = 'Invalid server response';
+            }
+            throw new Error(errorMessage);
+        }
+
+        showNotification(`User ${newStatus === 'active' ? 'activated' : 'deactivated'} successfully`, 'success');
+        loadUsers();
+    } catch (error) {
+        console.error('Error updating user status:', error);
+        showNotification(error.message, 'error');
+    }
+}
+
+async function deleteUser(id) {
     showDeleteConfirmation(id);
 }
 
