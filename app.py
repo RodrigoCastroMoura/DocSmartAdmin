@@ -905,6 +905,29 @@ def users_api():
                                    error_message='Failed to create user')
 
 
+@app.route('/api/users/<user_id>/status', methods=['POST'])
+@login_required
+def update_user_status(user_id):
+    headers = get_auth_headers()
+    try:
+        data = request.get_json()
+        status = data.get('status')
+        
+        if not status:
+            return jsonify({'error': 'Status is required'}), 400
+            
+        response = requests.post(
+            f"{API_BASE_URL}/users/{user_id}/status",
+            headers=headers,
+            json={'status': status},
+            timeout=REQUEST_TIMEOUT
+        )
+        
+        return handle_api_response(response, error_message='Failed to update user status')
+    except Exception as e:
+        print(f"Error updating user status: {e}")
+        return jsonify({'error': 'An unexpected error occurred'}), 500
+
 @app.route('/api/users/<user_id>', methods=['PUT', 'DELETE'])
 @login_required
 def users_id(user_id):
