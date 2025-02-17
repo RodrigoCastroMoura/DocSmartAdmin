@@ -804,11 +804,21 @@ async function createAdmin(event) {
     const permissions = Array.from(form.querySelectorAll('input[name="permissions"]:checked'))
         .map(input => input.value);
 
+    // Get current user info from session
+    const currentUser = JSON.parse(sessionStorage.getItem('user') || '{}');
+    
+    // Check if trying to modify own account
+    if (currentUser.id === document.getElementById('editAdminId')?.value) {
+        showNotification('You cannot modify your own admin account', 'error');
+        hideLoading(submitButton);
+        return;
+    }
+
     const data = {
         name: formData.get('name'),
         email: formData.get('email'),
         password: formData.get('password'),
-        cpf: formData.get('cpf'), // Added CPF field
+        cpf: formData.get('cpf'),
         role: 'admin',
         permissions: permissions
     };
