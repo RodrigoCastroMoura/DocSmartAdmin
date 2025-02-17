@@ -17,7 +17,6 @@
                             <th>Name</th>
                             <th>Email</th>
                             <th>Status</th>
-                            <th>Permissions</th>
                             <th>Actions</th>
                         </tr>
                     </thead>
@@ -771,23 +770,24 @@ function generateAdminsHTML(admins) {
                 </span>
             </td>
             <td>
-                ${admin.permissions ? admin.permissions.map(perm => 
-                    `<span class="permission-badge">${formatPermissionName(perm)}</span>`
-                ).join('') : ''}
-            </td>
-            <td>
                 <div class="table-actions">
-                    <button class="action-btn ${admin.status === 'active' ? 'success' : 'danger'}" 
-                            onclick="toggleAdminStatus('${admin.id}', '${admin.status === 'active' ? 'inactive' : 'active'}')" 
-                            title="${admin.status === 'active' ? 'Deactivate' : 'Activate'}">
-                        <i data-feather="${admin.status === 'active' ? 'user-check' : 'user-x'}"></i>
-                    </button>
-                    <button class="action-btn" onclick='showEditAdminModal(${JSON.stringify(admin)})' title="Edit">
-                        <i data-feather="edit-2"></i>
-                    </button>
-                    <button class="action-btn danger" onclick="deleteAdmin('${admin.id}')" title="Delete">
-                        <i data-feather="trash-2"></i>
-                    </button>
+                    ${admin.id === session.user.id ? `
+                        <button class="action-btn" disabled title="Cannot modify own account">
+                            <i data-feather="lock"></i>
+                        </button>
+                    ` : `
+                        <button class="action-btn ${admin.status === 'active' ? 'success' : 'danger'}" 
+                                onclick="toggleAdminStatus('${admin.id}', '${admin.status === 'active' ? 'inactive' : 'active'}')" 
+                                title="${admin.status === 'active' ? 'Deactivate' : 'Activate'}">
+                            <i data-feather="${admin.status === 'active' ? 'user-check' : 'user-x'}"></i>
+                        </button>
+                        <button class="action-btn" onclick='showEditAdminModal(${JSON.stringify(admin)})' title="Edit">
+                            <i data-feather="edit-2"></i>
+                        </button>
+                        <button class="action-btn danger" onclick="deleteAdmin('${admin.id}')" title="Delete">
+                            <i data-feather="trash-2"></i>
+                        </button>
+                    `}
                 </div>
             </td>
         </tr>
@@ -804,21 +804,11 @@ async function createAdmin(event) {
     const permissions = Array.from(form.querySelectorAll('input[name="permissions"]:checked'))
         .map(input => input.value);
 
-    // Get current user info from session
-    const currentUser = JSON.parse(sessionStorage.getItem('user') || '{}');
-    
-    // Check if trying to modify own account
-    if (currentUser.id === document.getElementById('editAdminId')?.value) {
-        showNotification('You cannot modify your own admin account', 'error');
-        hideLoading(submitButton);
-        return;
-    }
-
     const data = {
         name: formData.get('name'),
         email: formData.get('email'),
         password: formData.get('password'),
-        cpf: formData.get('cpf'),
+        cpf: formData.get('cpf'), // Added CPF field
         role: 'admin',
         permissions: permissions
     };
@@ -965,7 +955,7 @@ async function showEditAdminModal(admin) {
     document.getElementById('editAdminName').value = admin.name;
     document.getElementById('editAdminEmail').value = admin.email;
     document.getElementById('editAdminCPF').value = admin.cpf; // Added CPF field for edit modal
-    document.getElementById('editAdminStatus').checked = admin.status === 'active';
+   
 
     showModal('editAdminModal');
 }
