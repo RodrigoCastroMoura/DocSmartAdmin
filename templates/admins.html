@@ -901,8 +901,8 @@ async function showAddAdminModal() {
 
 async function showEditAdminModal(admin) {
     const permissions = await loadPermissions();
-    const permissionNames = admin.permissions.map(p => p.name || p);
-    generatePermissionsHTML(permissions, 'editPermissionsGrid', permissionNames);
+    const selectedPermissions = admin.permissions.map(p => p.id || p);
+    generatePermissionsHTML(permissions, 'editPermissionsGrid', selectedPermissions);
 
     document.getElementById('editAdminId').value = admin.id;
     document.getElementById('editAdminName').value = admin.name;
