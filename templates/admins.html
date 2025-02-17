@@ -62,6 +62,13 @@
                                 <input type="email" id="adminEmail" name="email" placeholder="Enter admin email" required>
                             </div>
                         </div>
+                        <div class="form-group">
+                            <label for="adminCPF">CPF</label>
+                            <div class="input-wrapper">
+                                <i data-feather="hash"></i>
+                                <input type="text" id="adminCPF" name="cpf" placeholder="Enter CPF" required>
+                            </div>
+                        </div>
                     </div>
                     <div class="form-group">
                         <label for="adminPassword">Password</label>
@@ -130,6 +137,13 @@
                             <div class="input-wrapper">
                                 <i data-feather="mail"></i>
                                 <input type="email" id="editAdminEmail" name="email" placeholder="Enter admin email" required>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label for="editAdminCPF">CPF</label>
+                            <div class="input-wrapper">
+                                <i data-feather="hash"></i>
+                                <input type="text" id="editAdminCPF" name="cpf" placeholder="Enter CPF" required>
                             </div>
                         </div>
                     </div>
@@ -796,6 +810,7 @@ async function createAdmin(event) {
         name: formData.get('name'),
         email: formData.get('email'),
         password: formData.get('password'),
+        cpf: formData.get('cpf'), // Added CPF field
         role: 'admin',
         permissions: permissions
     };
@@ -838,6 +853,7 @@ async function updateAdmin(event) {
     const data = {
         name: formData.get('name'),
         email: formData.get('email'),
+        cpf: formData.get('cpf'), // Added CPF field
         permissions: permissions,
         status: document.getElementById('editAdminStatus').checked ? 'active' : 'inactive'
     };
@@ -907,6 +923,7 @@ async function showEditAdminModal(admin) {
     document.getElementById('editAdminId').value = admin.id;
     document.getElementById('editAdminName').value = admin.name;
     document.getElementById('editAdminEmail').value = admin.email;
+    document.getElementById('editAdminCPF').value = admin.cpf; // Added CPF field for edit modal
     document.getElementById('editAdminStatus').checked = admin.status === 'active';
 
     showModal('editAdminModal');
