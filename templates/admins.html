@@ -841,13 +841,25 @@ async function toggleAdminStatus(adminId, newStatus) {
     try {
         const response = await fetch(`/api/users/${adminId}/status`, {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
+            headers: { 
+                'Content-Type': 'application/json',
+                'Accept': 'application/json'
+            },
             body: JSON.stringify({ status: newStatus })
         });
 
+        let errorMessage = 'Failed to update status';
+        
         if (!response.ok) {
-            const errorData = await response.json();
-            throw new Error(errorData.error || 'Failed to update status');
+            try {
+                const errorData = await response.json();
+                errorMessage = errorData.error || errorMessage;
+            } catch (e) {
+                const text = await response.text();
+                console.error('Raw response:', text);
+                errorMessage = 'Invalid server response';
+            }
+            throw new Error(errorMessage);
         }
 
         showNotification(`Administrator ${newStatus === 'active' ? 'activated' : 'deactivated'} successfully`, 'success');
