@@ -1,0 +1,157 @@
+{
+  "id": "671958718d8d36c35e6c7c5f",
+  "name": "Rodrigo Aparecido",
+  "email": "rodrigo.castro.moura@gmail.com",
+  "cpf": "31599899841",
+  "phone": null,
+  "password": null,
+  "role": "admin",
+  "status": "active",
+  "permissions": [
+    {
+      "id": "67abb5db1ddf197d6abb7349",
+      "name": "document_read",
+      "description": "View Document",
+      "resource_type": "document",
+      "action_type": "read"
+    },
+    {
+      "id": "67abb5dc1ddf197d6abb734a",
+      "name": "document_write",
+      "description": "Create Document",
+      "resource_type": "document",
+      "action_type": "write"
+    },
+    {
+      "id": "67abb5dc1ddf197d6abb734b",
+      "name": "document_update",
+      "description": "Edit Document",
+      "resource_type": "document",
+      "action_type": "update"
+    },
+    {
+      "id": "67abb5dc1ddf197d6abb734c",
+      "name": "document_delete",
+      "description": "Delete Document",
+      "resource_type": "document",
+      "action_type": "delete"
+    },
+    {
+      "id": "67abb5dc1ddf197d6abb734d",
+      "name": "category_read",
+      "description": "View Category",
+      "resource_type": "category",
+      "action_type": "read"
+    },
+    {
+      "id": "67abb5dc1ddf197d6abb734e",
+      "name": "category_write",
+      "description": "Create Category",
+      "resource_type": "category",
+      "action_type": "write"
+    },
+    {
+      "id": "67abb5dc1ddf197d6abb734f",
+      "name": "category_update",
+      "description": "Edit Category",
+      "resource_type": "category",
+      "action_type": "update"
+    },
+    {
+      "id": "67abb5dc1ddf197d6abb7350",
+      "name": "category_delete",
+      "description": "Delete Category",
+      "resource_type": "category",
+      "action_type": "delete"
+    },
+    {
+      "id": "67abb5dd1ddf197d6abb7351",
+      "name": "department_read",
+      "description": "View Department",
+      "resource_type": "department",
+      "action_type": "read"
+    },
+    {
+      "id": "67abb5dd1ddf197d6abb7352",
+      "name": "department_write",
+      "description": "Create Department",
+      "resource_type": "department",
+      "action_type": "write"
+    },
+    {
+      "id": "67abb5dd1ddf197d6abb7353",
+      "name": "department_update",
+      "description": "Edit Department",
+      "resource_type": "department",
+      "action_type": "update"
+    },
+    {
+      "id": "67abb5dd1ddf197d6abb7354",
+      "name": "department_delete",
+      "description": "Delete Department",
+      "resource_type": "department",
+      "action_type": "delete"
+    },
+    {
+      "id": "67abb5dd1ddf197d6abb7355",
+      "name": "user_read",
+      "description": "View User",
+      "resource_type": "user",
+      "action_type": "read"
+    },
+    {
+      "id": "67abb5dd1ddf197d6abb7356",
+      "name": "user_write",
+      "description": "Create User",
+      "resource_type": "user",
+      "action_type": "write"
+    },
+    {
+      "id": "67abb5de1ddf197d6abb7357",
+      "name": "user_update",
+      "description": "Edit User",
+      "resource_type": "user",
+      "action_type": "update"
+    },
+    {
+      "id": "67abb5de1ddf197d6abb7358",
+      "name": "user_delete",
+      "description": "Delete User",
+      "resource_type": "user",
+      "action_type": "delete"
+    },
+    {
+      "id": "67abb5de1ddf197d6abb7359",
+      "name": "company_read",
+      "description": "View Company",
+      "resource_type": "company",
+      "action_type": "read"
+    },
+    {
+      "id": "67abb5de1ddf197d6abb735a",
+      "name": "company_write",
+      "description": "Create Company",
+      "resource_type": "company",
+      "action_type": "write"
+    },
+    {
+      "id": "67abb5de1ddf197d6abb735b",
+      "name": "company_update",
+      "description": "Edit Company",
+      "resource_type": "company",
+      "action_type": "update"
+    },
+    {
+      "id": "67abb5de1ddf197d6abb735c",
+      "name": "company_delete",
+      "description": "Delete Company",
+      "resource_type": "company",
+      "action_type": "delete"
+    }
+  ],
+  "company_id": "671958708d8d36c35e6c7c5e",
+  "created_at": "2024-10-23T20:11:29.364000",
+  "created_by": null,
+  "updated_at": "2025-02-15T15:43:08.609000",
+  "updated_by": null
+}
