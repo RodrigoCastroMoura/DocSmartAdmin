@@ -686,13 +686,14 @@ function generatePermissionsHTML(permissions, containerId, selectedPermissions =
                 </div>
                 <div class="permission-items">
                     ${perms.map(perm => {
-                        const action = perm.split('_')[1];
+                        const permObj = typeof perm === 'object' ? perm : permissions.find(p => p.name === perm);
+                        const action = (permObj?.name || perm).split('_')[1];
                         return `
                             <label class="checkbox-container">
                                 <input type="checkbox" 
                                        name="permissions" 
-                                       value="${perm}"
-                                       ${selectedPermissions.includes(perm) ? 'checked' : ''}>
+                                       value="${permObj?.id || perm}"
+                                       ${selectedPermissions.includes(permObj?.id || perm) ? 'checked' : ''}>
                                 <span>
                                     <i data-feather="${PERMISSION_ACTIONS[action]?.icon || 'check'}" class="w-4 h-4"></i>
                                     ${PERMISSION_ACTIONS[action]?.title || action}
