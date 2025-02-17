@@ -853,7 +853,7 @@ def users_api():
             'per_page': request.args.get('per_page', 10),
             'company_id': company_id,
             'role': role,
-            'status': 'active'
+           
         }
         # Remove None values
         params = {k: v for k, v in params.items() if v is not None}
@@ -910,6 +910,16 @@ def users_id(user_id):
                                 headers=headers,
                                 json=form_data,
                                 timeout=REQUEST_TIMEOUT)
+        
+        if response.status_code == 200:
+            form_data_permission = {
+                "permissions": data.get('permissions')
+            }
+            response_permision = requests.post(f"{API_BASE_URL}/permissions/admin/{user_id}/permissions",
+                                               headers=headers,
+                                               json=form_data,
+                                               timeout=REQUEST_TIMEOUT)
+            
         return handle_api_response(response,
                                    error_message='Failed to update user')
 
