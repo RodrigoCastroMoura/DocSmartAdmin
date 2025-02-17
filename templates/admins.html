@@ -771,17 +771,23 @@ function generateAdminsHTML(admins) {
             </td>
             <td>
                 <div class="table-actions">
-                    <button class="action-btn ${admin.status === 'active' ? 'success' : 'danger'}" 
-                            onclick="toggleAdminStatus('${admin.id}', '${admin.status === 'active' ? 'inactive' : 'active'}')" 
-                            title="${admin.status === 'active' ? 'Deactivate' : 'Activate'}">
-                        <i data-feather="${admin.status === 'active' ? 'user-check' : 'user-x'}"></i>
-                    </button>
-                    <button class="action-btn" onclick='showEditAdminModal(${JSON.stringify(admin)})' title="Edit">
-                        <i data-feather="edit-2"></i>
-                    </button>
-                    <button class="action-btn danger" onclick="deleteAdmin('${admin.id}')" title="Delete">
-                        <i data-feather="trash-2"></i>
-                    </button>
+                    ${admin.id === session.user.id ? `
+                        <button class="action-btn" disabled title="Cannot modify own account">
+                            <i data-feather="lock"></i>
+                        </button>
+                    ` : `
+                        <button class="action-btn ${admin.status === 'active' ? 'success' : 'danger'}" 
+                                onclick="toggleAdminStatus('${admin.id}', '${admin.status === 'active' ? 'inactive' : 'active'}')" 
+                                title="${admin.status === 'active' ? 'Deactivate' : 'Activate'}">
+                            <i data-feather="${admin.status === 'active' ? 'user-check' : 'user-x'}"></i>
+                        </button>
+                        <button class="action-btn" onclick='showEditAdminModal(${JSON.stringify(admin)})' title="Edit">
+                            <i data-feather="edit-2"></i>
+                        </button>
+                        <button class="action-btn danger" onclick="deleteAdmin('${admin.id}')" title="Delete">
+                            <i data-feather="trash-2"></i>
+                        </button>
+                    `}
                 </div>
             </td>
         </tr>
