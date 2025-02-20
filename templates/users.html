@@ -126,13 +126,13 @@
 </div>
 
 <script>
-async function showUserDocuments(userId, userCpf) {
+async function showUserDocuments(userCpf, companyId) {
     showModal('userDocumentsModal');
     const documentsList = document.getElementById('documentsList');
     documentsList.innerHTML = 'Loading documents...';
 
     try {
-        const response = await fetch(`/api/documents?user_cpf=${userCpf}`);
+        const response = await fetch(`/api/documents?user_cpf=${userCpf}&company_id=${companyId}`);
         if (!response.ok) {
             throw new Error('Failed to fetch documents');
         }
@@ -272,7 +272,7 @@ function generateUsersHTML(users) {
                     <button class="action-btn" onclick='showEditUserModal("${user.id}", ${JSON.stringify(user)})'>
                         <i data-feather="edit-2"></i>
                     </button>
-                    <button class="action-btn info" onclick="showUserDocuments('${user.id}', '${user.cpf}')">
+                    <button class="action-btn info" onclick="showUserDocuments('${user.cpf}', '${user.company_id}')">
                         <i data-feather="file-text"></i>
                     </button>
                     <button class="action-btn danger" onclick="deleteUser('${user.id}')">
