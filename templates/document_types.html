@@ -278,12 +278,14 @@ function generateDocumentTypesHTML(types) {
                 </p>
             </div>
             <div class="document-type-actions">
-                <button class="action-btn success" onclick='showUserAccessModal("${type.id}", "add")'>
-                    <i data-feather="user-plus"></i>
-                </button>
-                <button class="action-btn warning" onclick='showUserAccessModal("${type.id}", "remove")'>
-                    <i data-feather="user-minus"></i>
-                </button>
+                ${!type.public ? `
+                    <button class="action-btn success" onclick='showUserAccessModal("${type.id}", "add")'>
+                        <i data-feather="user-plus"></i>
+                    </button>
+                    <button class="action-btn warning" onclick='showUserAccessModal("${type.id}", "remove")'>
+                        <i data-feather="user-minus"></i>
+                    </button>
+                ` : ''}
                 <button class="action-btn" onclick='showEditDocumentTypeModal("${type.id}", ${JSON.stringify(type)})'>
                     <i data-feather="edit-2"></i>
                 </button>
