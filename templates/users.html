@@ -120,16 +120,43 @@
             Loading documents...
         </div>
         <div class="modal-actions">
+            <label>
+                <input type="checkbox" id="selectAllDocuments" onclick="toggleAllDocuments()"> Select All
+            </label>
+            <button type="button" class="action-btn primary" onclick="updateSelectedDocuments()">Update Selected</button>
             <button type="button" class="action-btn" onclick="hideModal('userDocumentsModal')">Close</button>
         </div>
     </div>
 </div>
 
 <script>
+function toggleAllDocuments() {
+    const selectAllCheckbox = document.getElementById('selectAllDocuments');
+    const checkboxes = document.querySelectorAll('#documentsList input[type="checkbox"]');
+    checkboxes.forEach(checkbox => {
+        checkbox.checked = selectAllCheckbox.checked;
+    });
+}
+
+async function updateSelectedDocuments() {
+    const selectedDocuments = Array.from(document.querySelectorAll('#documentsList input[type="checkbox"]:checked'))
+        .map(checkbox => checkbox.value);
+
+    if (selectedDocuments.length === 0) {
+        showNotification('Please select at least one document', 'error');
+        return;
+    }
+
+    // Here you can implement the update logic for the selected documents
+    console.log('Selected documents:', selectedDocuments);
+    showNotification('Documents updated successfully', 'success');
+}
+
 async function showUserDocuments(userCpf, companyId) {
     showModal('userDocumentsModal');
     const documentsList = document.getElementById('documentsList');
     documentsList.innerHTML = 'Loading documents...';
+    document.getElementById('selectAllDocuments').checked = false;
 
     try {
         const response = await fetch(`/api/documents?user_cpf=${userCpf}&company_id=${companyId}`);
