@@ -115,22 +115,29 @@
 <div id="userAccessModal" class="modal">
     <div class="modal-content">
         <h3 id="userAccessTitle">Manage User Access</h3>
-        <div class="form-group">
-            <label for="userCpf">User CPF</label>
-            <div class="search-input">
-                <input type="text" id="userCpf" placeholder="Enter user CPF">
-                <button type="button" class="action-btn primary" onclick="searchUser()">
-                    <i data-feather="search"></i>
-                </button>
+        <div id="addUserSection" style="display: none;">
+            <div class="form-group">
+                <label for="userCpf">User CPF</label>
+                <div class="search-input">
+                    <input type="text" id="userCpf" placeholder="Enter user CPF">
+                    <button type="button" class="action-btn primary" onclick="searchUser()">
+                        <i data-feather="search"></i>
+                    </button>
+                </div>
+            </div>
+            <div class="form-group">
+                <label for="userName">User Name</label>
+                <input type="text" id="userName" disabled>
+                <input type="hidden" id="userId">
             </div>
         </div>
-        <div class="form-group">
-            <label for="userName">User Name</label>
-            <input type="text" id="userName" disabled>
-            <input type="hidden" id="userId">
-            <input type="hidden" id="documentTypeId">
-            <input type="hidden" id="accessAction">
+        <div id="removeUserSection" style="display: none;">
+            <div class="users-list" id="usersList">
+                Loading users...
+            </div>
         </div>
+        <input type="hidden" id="documentTypeId">
+        <input type="hidden" id="accessAction">
         <div class="modal-actions">
             <button type="button" class="action-btn" onclick="hideModal('userAccessModal')">Cancel</button>
             <button type="button" class="action-btn primary" onclick="updateUserAccess()">Confirm</button>
@@ -439,15 +446,71 @@ function showEditDocumentTypeModal(id, type) {
     showModal('editDocumentTypeModal');
 }
 
-function showUserAccessModal(documentTypeId, action) {
+async function showUserAccessModal(documentTypeId, action) {
     document.getElementById('userAccessTitle').textContent = action === 'add' ? 'Add User Access' : 'Remove User Access';
     document.getElementById('documentTypeId').value = documentTypeId;
     document.getElementById('accessAction').value = action;
-    document.getElementById('userCpf').value = '';
-    document.getElementById('userName').value = '';
-    document.getElementById('userId').value = '';
+    
+    const addSection = document.getElementById('addUserSection');
+    const removeSection = document.getElementById('removeUserSection');
+    
+    if (action === 'add') {
+        addSection.style.display = 'block';
+        removeSection.style.display = 'none';
+        document.getElementById('userCpf').value = '';
+        document.getElementById('userName').value = '';
+        document.getElementById('userId').value = '';
+    } else {
+        addSection.style.display = 'none';
+        removeSection.style.display = 'block';
+        await loadDocumentTypeUsers(documentTypeId);
+    }
+    
     showModal('userAccessModal');
     feather.replace();
+}
+
+async function loadDocumentTypeUsers(documentTypeId) {
+    const usersList = document.getElementById('usersList');
+    usersList.innerHTML = 'Loading users...';
+    
+    try {
+        const response = await fetch(`/api/document_types/${documentTypeId}/users`);
+        const data = await response.json();
+        
+        if (!data.users || data.users.length === 0) {
+            usersList.innerHTML = '<p class="no-data">No users have access to this document type</p>';
+            return;
+        }
+        
+        usersList.innerHTML = `
+            <div class="users-table">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Select</th>
+                            <th>Name</th>
+                            <th>CPF</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${data.users.map(user => `
+                            <tr>
+                                <td>
+                                    <input type="checkbox" value="${user.id}" class="user-checkbox">
+                                </td>
+                                <td>${user.name}</td>
+                                <td>${user.cpf}</td>
+                            </tr>
+                        `).join('')}
+                    </tbody>
+                </table>
+            </div>
+        `;
+    } catch (error) {
+        console.error('Error loading users:', error);
+        usersList.innerHTML = '<p class="error">Failed to load users</p>';
+    }
 }
 
 async function searchUser() {
@@ -677,6 +740,45 @@ document.addEventListener('DOMContentLoaded', loadDocumentTypes);
     max-width: 650px !important;
     box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
     animation: slideIn 0.3s ease;
+}
+
+.users-list {
+    max-height: 300px;
+    overflow-y: auto;
+    margin: 1rem 0;
+}
+
+.users-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.users-table th,
+.users-table td {
+    padding: 0.75rem;
+    text-align: left;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.users-table th {
+    background-color: var(--bg-tertiary);
+    font-weight: 500;
+}
+
+.user-checkbox {
+    width: 18px;
+    height: 18px;
+    cursor: pointer;
+}
+
+.no-data {
+    text-align: center;
+    padding: 1rem;
+    color: var(--text-secondary);
+}
+
+.error {
+    color: var(--danger-color);
 }
 </style>
 {% endblock %}
