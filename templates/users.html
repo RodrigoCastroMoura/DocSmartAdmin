@@ -120,11 +120,17 @@
             Loading documents...
         </div>
         <div class="modal-actions">
-            <label>
-                <input type="checkbox" id="selectAllDocuments" onclick="toggleAllDocuments()"> Select All
-            </label>
-            <button type="button" class="action-btn primary" onclick="updateSelectedDocuments()">Update Selected</button>
-            <button type="button" class="action-btn" onclick="hideModal('userDocumentsModal')">Close</button>
+            <div class="select-all-container">
+                <label class="select-all-label">
+                    <input type="checkbox" id="selectAllDocuments" onclick="toggleAllDocuments()">
+                    <span class="checkmark"></span>
+                    <span>Select All</span>
+                </label>
+            </div>
+            <div class="action-buttons">
+                <button type="button" class="action-btn primary" onclick="updateSelectedDocuments()">Update Selected</button>
+                <button type="button" class="action-btn" onclick="hideModal('userDocumentsModal')">Close</button>
+            </div>
         </div>
     </div>
 </div>
@@ -682,9 +688,66 @@ tr.loading .loading-indicator {
 
 .modal-actions {
     display: flex;
-    justify-content: flex-end;
-    gap: 0.5rem;
+    justify-content: space-between;
+    align-items: center;
     margin-top: 1rem;
+    padding-top: 1rem;
+    border-top: 1px solid var(--border-color);
+}
+
+.action-buttons {
+    display: flex;
+    gap: 0.5rem;
+}
+
+.select-all-container {
+    padding-left: 0.5rem;
+}
+
+.select-all-label {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    cursor: pointer;
+    user-select: none;
+    color: var(--text-secondary);
+    font-size: 0.9rem;
+}
+
+.select-all-label input[type="checkbox"] {
+    display: none;
+}
+
+.select-all-label .checkmark {
+    width: 18px;
+    height: 18px;
+    border: 2px solid var(--border-color);
+    border-radius: 4px;
+    display: inline-block;
+    position: relative;
+    transition: all 0.2s;
+    background: var(--bg-tertiary);
+}
+
+.select-all-label input[type="checkbox"]:checked + .checkmark {
+    background: var(--accent-color);
+    border-color: var(--accent-color);
+}
+
+.select-all-label input[type="checkbox"]:checked + .checkmark:after {
+    content: '';
+    position: absolute;
+    left: 5px;
+    top: 2px;
+    width: 5px;
+    height: 10px;
+    border: solid white;
+    border-width: 0 2px 2px 0;
+    transform: rotate(45deg);
+}
+
+.select-all-label:hover .checkmark {
+    border-color: var(--accent-color);
 }
 </style>
 {% endblock %}
