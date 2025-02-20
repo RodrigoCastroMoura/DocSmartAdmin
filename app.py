@@ -37,6 +37,7 @@ DEPARTMENTS_URL = f"{API_BASE_URL}/departments"
 CATEGORIES_URL = f"{API_BASE_URL}/categories"
 DOCUMENTS_URL = f"{API_BASE_URL}/documents"
 USERS_URL = f"{API_BASE_URL}/users"
+ADMIN_URL = f"{API_BASE_URL}/admins"
 DOCUMENT_TYPES_URL = f"{API_BASE_URL}/document_types"
 
 # Request timeout in seconds
@@ -864,10 +865,11 @@ def admins_api():
         # Remove None values
         params = {k: v for k, v in params.items() if v is not None}
 
-        response = requests.get(USERS_URL,
+        response = requests.get(ADMIN_URL,
                                 headers=headers,
                                 params=params,
                                 timeout=REQUEST_TIMEOUT)
+        
         return handle_api_response(response,
                                    error_message='Failed to fetch users')
 
@@ -883,7 +885,7 @@ def admins_api():
             'company_id': company_id
         }
 
-        response = requests.post(USERS_URL,
+        response = requests.post(ADMIN_URL,
                                  headers=headers,
                                  json=form_data,
                                  timeout=REQUEST_TIMEOUT)
@@ -930,7 +932,7 @@ def admins_id(admin_id):
             'company_id': company_id
         }
 
-        response = requests.put(f"{USERS_URL}/{admin_id}",
+        response = requests.put(f"{ADMIN_URL}/{admin_id}",
                                 headers=headers,
                                 json=form_data,
                                 timeout=REQUEST_TIMEOUT)
@@ -948,7 +950,7 @@ def admins_id(admin_id):
                                    error_message='Failed to update user')
 
     elif request.method == 'DELETE':
-        response = requests.delete(f"{USERS_URL}/{admin_id}",
+        response = requests.delete(f"{ADMIN_URL}/{admin_id}",
                                    headers=headers,
                                    timeout=REQUEST_TIMEOUT)
         return handle_api_response(response,

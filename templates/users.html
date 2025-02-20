@@ -217,10 +217,14 @@ function generateUsersHTML(users) {
                 <span class="status-badge ${user.status === 'active' ? 'active' : 'inactive'}">
                     ${user.status}
                 </span>
-                <button onclick="toggleUserStatus('${user.id}', '${user.status === 'active' ? 'inactive' : 'active'}')">Toggle</button>
             </td>
             <td>
                 <div class="table-actions">
+                     <button class="action-btn ${user.status === 'active' ? 'success' : 'danger'}" 
+                                onclick="toggleUserStatus('${user.id}', '${user.status === 'active' ? 'inactive' : 'active'}')"
+                                title="${user.status === 'active' ? 'Deactivate' : 'Activate'}">
+                            <i data-feather="${user.status === 'active' ? 'user-check' : 'user-x'}"></i>
+                        </button>
                     <button class="action-btn" onclick='showEditUserModal("${user.id}", ${JSON.stringify(user)})'>
                         <i data-feather="edit-2"></i>
                     </button>

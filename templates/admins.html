@@ -638,7 +638,9 @@ const PERMISSION_GROUPS = {
     category: { icon: 'grid', title: 'Categories' },
     department: { icon: 'briefcase', title: 'Departments' },
     user: { icon: 'users', title: 'Users' },
-    company: { icon: 'home', title: 'Company' }
+    company: { icon: 'home', title: 'Company' },
+    documentType: { icon: 'file', title: 'Document Type' },
+    admin: { icon: 'shield', title: 'Administrator' }
 };
 
 const PERMISSION_ACTIONS = {
@@ -724,9 +726,9 @@ async function loadAdmins() {
         if (!response.ok) throw new Error('Failed to fetch administrators');
 
         const data = await response.json();
-        if (!data || !data.users) throw new Error('Invalid response format');
+        if (!data || !data.admins) throw new Error('Invalid response format');
 
-        tableBody.innerHTML = generateAdminsHTML(data.users);
+        tableBody.innerHTML = generateAdminsHTML(data.admins);
         feather.replace();
     } catch (error) {
         console.error('Error loading admins:', error);
