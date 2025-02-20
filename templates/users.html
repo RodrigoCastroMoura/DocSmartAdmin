@@ -17,6 +17,8 @@
                             <th>Name</th>
                             <th>Email</th>
                             <th>CPF</th>
+                            <th>Phone</th>
+                            <th>Role</th>
                             <th>Status</th>
                             <th>Actions</th>
                         </tr>
@@ -80,36 +82,6 @@
         <h3>Add User</h3>
         <form id="editUserForm" onsubmit="updateUser(event)">
             <input type="hidden" id="editUserId">
-
-<!-- User Documents Modal -->
-<div id="userDocumentsModal" class="modal">
-    <div class="modal-content">
-        <h3>User Documents</h3>
-        <div id="userDocumentsContent">
-            <div class="table-container">
-                <table class="documents-table">
-                    <thead>
-                        <tr>
-                            <th>Title</th>
-                            <th>Department</th>
-                            <th>Category</th>
-                            <th>Type</th>
-                            <th>Status</th>
-                            <th>Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody id="userDocumentsTableBody">
-                        <!-- Documents will be loaded here -->
-                    </tbody>
-                </table>
-            </div>
-        </div>
-        <div class="modal-actions">
-            <button type="button" class="action-btn" onclick="hideModal('userDocumentsModal')">Close</button>
-        </div>
-    </div>
-</div>
-
             <div class="form-group">
                 <label for="editUserName">Name</label>
                 <input type="text" id="editUserName" name="name" required>
@@ -239,6 +211,8 @@ function generateUsersHTML(users) {
             </td>
             <td>${user.email}</td>
             <td>${user.cpf}</td>
+            <td>${user.phone || '-'}</td>
+            <td>${user.role}</td>
             <td>
                 <span class="status-badge ${user.status === 'active' ? 'active' : 'inactive'}">
                     ${user.status}
@@ -253,9 +227,6 @@ function generateUsersHTML(users) {
                         </button>
                     <button class="action-btn" onclick='showEditUserModal("${user.id}", ${JSON.stringify(user)})'>
                         <i data-feather="edit-2"></i>
-                    </button>
-                    <button class="action-btn info" onclick="showUserDocuments('${user.id}', '${user.cpf}')" title="Documents">
-                        <i data-feather="file-text"></i>
                     </button>
                     <button class="action-btn danger" onclick="deleteUser('${user.id}')">
                         <i data-feather="trash-2"></i>
@@ -382,94 +353,6 @@ async function toggleUserStatus(userId, newStatus) {
                 'Content-Type': 'application/json',
                 'Accept': 'application/json'
             },
-
-async function showUserDocuments(userId, userCpf) {
-    const modal = document.getElementById('userDocumentsModal');
-    const tableBody = document.getElementById('userDocumentsTableBody');
-    showLoading(tableBody);
-    showModal('userDocumentsModal');
-
-    try {
-        const response = await fetch(`/api/documents?user_cpf=${userCpf}`);
-        if (!response.ok) throw new Error('Failed to fetch documents');
-
-        const data = await response.json();
-        const documents = data.documents || [];
-
-        if (documents.length === 0) {
-            tableBody.innerHTML = `
-                <tr>
-                    <td colspan="6" class="no-data">
-                        <i data-feather="inbox"></i>
-                        <p>No documents found</p>
-                    </td>
-                </tr>`;
-        } else {
-            tableBody.innerHTML = documents.map(doc => `
-                <tr>
-                    <td>${doc.titulo}</td>
-                    <td>${doc.department_name || '-'}</td>
-                    <td>${doc.category_name || '-'}</td>
-                    <td>${doc.document_type_name || '-'}</td>
-                    <td>
-                        <span class="status-badge ${doc.status === 'active' ? 'active' : 'inactive'}">
-                            ${doc.status}
-                        </span>
-                    </td>
-                    <td>
-                        <div class="table-actions">
-                            <button class="action-btn ${doc.status === 'active' ? 'danger' : 'success'}" 
-                                    onclick="toggleDocumentStatus('${doc.id}', '${doc.status === 'active' ? 'inactive' : 'active'}')"
-                                    title="${doc.status === 'active' ? 'Deactivate' : 'Activate'}">
-                                <i data-feather="${doc.status === 'active' ? 'x-circle' : 'check-circle'}"></i>
-                            </button>
-                        </div>
-                    </td>
-                </tr>
-            `).join('');
-        }
-        feather.replace();
-    } catch (error) {
-        console.error('Error loading documents:', error);
-        tableBody.innerHTML = `
-            <tr>
-                <td colspan="6" class="no-data error">
-                    <i data-feather="alert-circle"></i>
-                    <p>${error.message || 'Failed to load documents'}</p>
-                </td>
-            </tr>`;
-        feather.replace();
-    } finally {
-        hideLoading(tableBody);
-    }
-}
-
-async function toggleDocumentStatus(documentId, newStatus) {
-    try {
-        const response = await fetch(`/api/documents/${documentId}/status`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({ status: newStatus })
-        });
-
-        if (!response.ok) {
-            const errorData = await response.json();
-            throw new Error(errorData.error || 'Failed to update document status');
-        }
-
-        showNotification(`Document ${newStatus === 'active' ? 'activated' : 'deactivated'} successfully`, 'success');
-        const userCpf = document.querySelector('[data-current-cpf]')?.dataset.currentCpf;
-        if (userCpf) {
-            await showUserDocuments(null, userCpf);
-        }
-    } catch (error) {
-        console.error('Error updating document status:', error);
-        showNotification(error.message, 'error');
-    }
-}
-
             body: JSON.stringify({ status: newStatus })
         });
 
@@ -517,34 +400,6 @@ function showAddUserModal() {
     document.getElementById('addUserForm').reset();
     showModal('addUserModal');
 }
-
-.documents-table {
-    width: 100%;
-    border-collapse: collapse;
-    margin-bottom: 1rem;
-}
-
-.documents-table th,
-.documents-table td {
-    padding: 0.75rem;
-    text-align: left;
-    border-bottom: 1px solid var(--border-color);
-}
-
-.documents-table th {
-    background-color: var(--bg-tertiary);
-    font-weight: 500;
-}
-
-.info {
-    background-color: var(--accent-color);
-    color: white;
-}
-
-.info:hover {
-    background-color: var(--accent-hover);
-}
-
 
 function showEditUserModal(id, user) {
     document.getElementById('editUserId').value = id;
