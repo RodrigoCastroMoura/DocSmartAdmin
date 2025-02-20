@@ -23,14 +23,6 @@
     <!-- Load dashboard.js which contains common utilities -->
     <script src="{{ url_for('static', filename='js/dashboard.js') }}"></script>
     <style>
-        /* Hide modals by default */
-        .modal {
-            display: none !important;
-        }
-        .modal.show {
-            display: flex !important;
-        }
-
         :root {
             /* Light theme variables (default) */
             --bg-primary: #ffffff;
@@ -189,12 +181,12 @@
             }
 
             messageEl.textContent = message;
-            showModal('notificationModal');
+            modal.style.display = 'block';
             feather.replace();
         }
 
         function hideNotificationModal() {
-            hideModal('notificationModal');
+            document.getElementById('notificationModal').style.display = 'none';
         }
 
         function openPopup() {
@@ -231,17 +223,17 @@
 
             // Check if password change is required
             {% if show_password_modal %}
-                showModal('passwordChangeModal');
+                showPasswordChangeModal();
             {% endif %}
         });
 
         // Add this to your existing script section
         function showPasswordChangeModal() {
-            showModal('passwordChangeModal');
+            document.getElementById('passwordChangeModal').style.display = 'block';
         }
 
         function hidePasswordChangeModal() {
-            hideModal('passwordChangeModal');
+            document.getElementById('passwordChangeModal').style.display = 'none';
         }
 
         async function handlePasswordChange(event) {
@@ -280,19 +272,6 @@
             } catch (error) {
                 showNotification('An error occurred while changing password', 'error');
             }
-        }
-
-        function showModal(modalId) {
-            document.getElementById(modalId).classList.add('show');
-        }
-
-        function hideModal(modalId) {
-            document.getElementById(modalId).classList.remove('show');
-        }
-
-        function confirmDelete(){
-            // Add your delete confirmation logic here
-            hideModal('deleteConfirmModal');
         }
     </script>
 
