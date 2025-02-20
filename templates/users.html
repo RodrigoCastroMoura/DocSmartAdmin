@@ -17,6 +17,8 @@
                             <th>Name</th>
                             <th>Email</th>
                             <th>CPF</th>
+                            <th>Phone</th>
+                            <th>Role</th>
                             <th>Status</th>
                             <th>Actions</th>
                         </tr>
@@ -81,34 +83,7 @@
         <form id="editUserForm" onsubmit="updateUser(event)">
             <input type="hidden" id="editUserId">
 
-<!-- User Documents Modal -->
-<div id="userDocumentsModal" class="modal">
-    <div class="modal-content">
-        <h3>User Documents</h3>
-        <div id="userDocumentsContent">
-            <div class="table-container">
-                <table class="documents-table">
-                    <thead>
-                        <tr>
-                            <th>Title</th>
-                            <th>Department</th>
-                            <th>Category</th>
-                            <th>Type</th>
-                            <th>Status</th>
-                            <th>Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody id="userDocumentsTableBody">
-                        <!-- Documents will be loaded here -->
-                    </tbody>
-                </table>
-            </div>
-        </div>
-        <div class="modal-actions">
-            <button type="button" class="action-btn" onclick="hideModal('userDocumentsModal')">Close</button>
-        </div>
-    </div>
-</div>
+
 
             <div class="form-group">
                 <label for="editUserName">Name</label>
