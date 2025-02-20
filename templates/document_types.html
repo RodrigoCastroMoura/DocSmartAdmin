@@ -132,6 +132,15 @@
             </div>
         </div>
         <div id="removeUserSection" style="display: none;">
+            <div class="form-group">
+                <label for="searchUser">Search User</label>
+                <div class="search-input">
+                    <input type="text" id="searchUser" placeholder="Search by name or CPF...">
+                    <button type="button" class="action-btn primary" onclick="filterUsers()">
+                        <i data-feather="search"></i>
+                    </button>
+                </div>
+            </div>
             <div class="users-list" id="usersList">
                 Loading users...
             </div>
@@ -488,6 +497,51 @@ async function showUserAccessModal(documentTypeId, action) {
     feather.replace();
 }
 
+let allUsers = [];
+
+async function filterUsers() {
+    const searchTerm = document.getElementById('searchUser').value.toLowerCase();
+    const filteredUsers = allUsers.filter(user => 
+        user.name.toLowerCase().includes(searchTerm) || 
+        user.cpf.toLowerCase().includes(searchTerm)
+    );
+    displayUsers(filteredUsers);
+}
+
+function displayUsers(users) {
+    const usersList = document.getElementById('usersList');
+    
+    if (!users || users.length === 0) {
+        usersList.innerHTML = '<p class="no-data">No users found</p>';
+        return;
+    }
+    
+    usersList.innerHTML = `
+        <div class="users-table">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Select</th>
+                        <th>Name</th>
+                        <th>CPF</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    ${users.map(user => `
+                        <tr>
+                            <td>
+                                <input type="checkbox" value="${user.id}" class="user-checkbox">
+                            </td>
+                            <td>${user.name}</td>
+                            <td>${user.cpf}</td>
+                        </tr>
+                    `).join('')}
+                </tbody>
+            </table>
+        </div>
+    `;
+}
+
 async function loadDocumentTypeUsers(documentTypeId) {
     const usersList = document.getElementById('usersList');
     usersList.innerHTML = 'Loading users...';
@@ -501,30 +555,8 @@ async function loadDocumentTypeUsers(documentTypeId) {
             return;
         }
         
-        usersList.innerHTML = `
-            <div class="users-table">
-                <table>
-                    <thead>
-                        <tr>
-                            <th>Select</th>
-                            <th>Name</th>
-                            <th>CPF</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        ${data.users.map(user => `
-                            <tr>
-                                <td>
-                                    <input type="checkbox" value="${user.id}" class="user-checkbox">
-                                </td>
-                                <td>${user.name}</td>
-                                <td>${user.cpf}</td>
-                            </tr>
-                        `).join('')}
-                    </tbody>
-                </table>
-            </div>
-        `;
+        allUsers = data.users;
+        displayUsers(allUsers);
     } catch (error) {
         console.error('Error loading users:', error);
         usersList.innerHTML = '<p class="error">Failed to load users</p>';
