@@ -464,14 +464,21 @@ document.addEventListener('DOMContentLoaded', loadUsers);
 
 <style>
 .documents-list {
-    max-height: 400px;
+    max-height: 300px;
     overflow-y: auto;
     margin: 1rem 0;
+    border: 1px solid var(--border-color);
+    border-radius: 4px;
 }
 
 .document-item {
     padding: 0.75rem;
     border-bottom: 1px solid var(--border-color);
+    background: var(--bg-tertiary);
+}
+
+.document-item:last-child {
+    border-bottom: none;
 }
 
 .document-checkbox {
