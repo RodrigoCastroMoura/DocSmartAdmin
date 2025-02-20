@@ -17,8 +17,6 @@
                             <th>Name</th>
                             <th>Email</th>
                             <th>CPF</th>
-                            <th>Phone</th>
-                            <th>Role</th>
                             <th>Status</th>
                             <th>Actions</th>
                         </tr>
@@ -211,8 +209,6 @@ function generateUsersHTML(users) {
             </td>
             <td>${user.email}</td>
             <td>${user.cpf}</td>
-            <td>${user.phone || '-'}</td>
-            <td>${user.role}</td>
             <td>
                 <span class="status-badge ${user.status === 'active' ? 'active' : 'inactive'}">
                     ${user.status}
