@@ -133,9 +133,9 @@
         </div>
         <div id="removeUserSection" style="display: none;">
             <div class="form-group">
-                <label for="searchUser">Search User</label>
+                <label for="searchUser">Search Users (Multiple CPFs separated by comma)</label>
                 <div class="search-input">
-                    <input type="text" id="searchUser" placeholder="Search by name or CPF...">
+                    <input type="text" id="searchUser" placeholder="Enter CPFs (e.g. 123.456.789-00, 987.654.321-00)">
                     <button type="button" class="action-btn primary" onclick="filterUsers()">
                         <i data-feather="search"></i>
                     </button>
@@ -500,10 +500,14 @@ async function showUserAccessModal(documentTypeId, action) {
 let allUsers = [];
 
 async function filterUsers() {
-    const searchTerm = document.getElementById('searchUser').value.toLowerCase();
+    const searchInput = document.getElementById('searchUser').value;
+    const cpfList = searchInput.split(',').map(cpf => cpf.trim().toLowerCase());
+    
     const filteredUsers = allUsers.filter(user => 
-        user.name.toLowerCase().includes(searchTerm) || 
-        user.cpf.toLowerCase().includes(searchTerm)
+        cpfList.some(searchCpf => 
+            user.cpf.toLowerCase().includes(searchCpf) ||
+            (searchCpf.length < 3 && user.name.toLowerCase().includes(searchCpf))
+        )
     );
     displayUsers(filteredUsers);
 }
