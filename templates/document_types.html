@@ -111,6 +111,33 @@
     </div>
 </div>
 
+<!-- User Access Modal -->
+<div id="userAccessModal" class="modal">
+    <div class="modal-content">
+        <h3 id="userAccessTitle">Manage User Access</h3>
+        <div class="form-group">
+            <label for="userCpf">User CPF</label>
+            <div class="search-input">
+                <input type="text" id="userCpf" placeholder="Enter user CPF">
+                <button type="button" class="action-btn primary" onclick="searchUser()">
+                    <i data-feather="search"></i>
+                </button>
+            </div>
+        </div>
+        <div class="form-group">
+            <label for="userName">User Name</label>
+            <input type="text" id="userName" disabled>
+            <input type="hidden" id="userId">
+            <input type="hidden" id="documentTypeId">
+            <input type="hidden" id="accessAction">
+        </div>
+        <div class="modal-actions">
+            <button type="button" class="action-btn" onclick="hideModal('userAccessModal')">Cancel</button>
+            <button type="button" class="action-btn primary" onclick="updateUserAccess()">Confirm</button>
+        </div>
+    </div>
+</div>
+
 <script>
 setupFormValidation('addDocumentTypeForm', {
     'documentTypeName': [
@@ -244,6 +271,12 @@ function generateDocumentTypesHTML(types) {
                 </p>
             </div>
             <div class="document-type-actions">
+                <button class="action-btn success" onclick='showUserAccessModal("${type.id}", "add")'>
+                    <i data-feather="user-plus"></i>
+                </button>
+                <button class="action-btn warning" onclick='showUserAccessModal("${type.id}", "remove")'>
+                    <i data-feather="user-minus"></i>
+                </button>
                 <button class="action-btn" onclick='showEditDocumentTypeModal("${type.id}", ${JSON.stringify(type)})'>
                     <i data-feather="edit-2"></i>
                 </button>
@@ -406,6 +439,78 @@ function showEditDocumentTypeModal(id, type) {
     showModal('editDocumentTypeModal');
 }
 
+function showUserAccessModal(documentTypeId, action) {
+    document.getElementById('userAccessTitle').textContent = action === 'add' ? 'Add User Access' : 'Remove User Access';
+    document.getElementById('documentTypeId').value = documentTypeId;
+    document.getElementById('accessAction').value = action;
+    document.getElementById('userCpf').value = '';
+    document.getElementById('userName').value = '';
+    document.getElementById('userId').value = '';
+    showModal('userAccessModal');
+    feather.replace();
+}
+
+async function searchUser() {
+    const cpf = document.getElementById('userCpf').value;
+    if (!cpf) {
+        showNotification('Please enter a CPF', 'error');
+        return;
+    }
+
+    try {
+        const response = await fetch(`/api/users?cpf=${cpf}`);
+        const data = await response.json();
+        
+        if (!data.users || data.users.length === 0) {
+            showNotification('User not found', 'error');
+            document.getElementById('userName').value = '';
+            document.getElementById('userId').value = '';
+            return;
+        }
+
+        const user = data.users[0];
+        document.getElementById('userName').value = user.name;
+        document.getElementById('userId').value = user.id;
+    } catch (error) {
+        console.error('Error searching user:', error);
+        showNotification('Failed to search user', 'error');
+    }
+}
+
+async function updateUserAccess() {
+    const userId = document.getElementById('userId').value;
+    const documentTypeId = document.getElementById('documentTypeId').value;
+    const action = document.getElementById('accessAction').value;
+
+    if (!userId || !documentTypeId) {
+        showNotification('Please select a valid user', 'error');
+        return;
+    }
+
+    try {
+        const response = await fetch(`/api/document_types/${documentTypeId}/access`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                user_id: userId,
+                action: action
+            })
+        });
+
+        if (!response.ok) {
+            throw new Error('Failed to update user access');
+        }
+
+        hideModal('userAccessModal');
+        showNotification(`User access ${action === 'add' ? 'granted' : 'removed'} successfully`, 'success');
+    } catch (error) {
+        console.error('Error updating user access:', error);
+        showNotification(error.message, 'error');
+    }
+}
+
 // Initialize document types list when page loads
 document.addEventListener('DOMContentLoaded', loadDocumentTypes);
 </script>
@@ -514,6 +619,30 @@ document.addEventListener('DOMContentLoaded', loadDocumentTypes);
 
 .radio-label input[type="radio"] {
     cursor: pointer;
+}
+
+.search-input {
+    display: flex;
+    gap: 0.5rem;
+}
+
+.search-input input {
+    flex: 1;
+    padding: 0.5rem;
+    border: 1px solid var(--border-color);
+    border-radius: 4px;
+    background: var(--bg-tertiary);
+    color: var(--text-primary);
+}
+
+.action-btn.success {
+    background-color: var(--success-color);
+    color: white;
+}
+
+.action-btn.warning {
+    background-color: var(--warning-color);
+    color: white;
 }
 .document-type-link {
     text-decoration: none;
