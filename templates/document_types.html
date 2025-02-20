@@ -430,25 +430,36 @@ function showAddDocumentTypeModal() {
 }
 
 async function showEditDocumentTypeModal(id, type) {
-    document.getElementById('editDocumentTypeId').value = id;
-    document.getElementById('editDocumentTypeName').value = type.name;
-    document.getElementById('editDocumentTypeDescription').value = type.description || '';
-    document.getElementById('editPublicTrue').checked = type.public === true;
-    document.getElementById('editPublicFalse').checked = type.public === false;
-    
-    await loadDepartments();
-    
-    if (type.department_id) {
+    try {
+        document.getElementById('editDocumentTypeId').value = id;
+        document.getElementById('editDocumentTypeName').value = type.name;
+        document.getElementById('editDocumentTypeDescription').value = type.description || '';
+        document.getElementById('editPublicTrue').checked = type.public === true;
+        document.getElementById('editPublicFalse').checked = type.public === false;
+        
+        // First load departments
+        await loadDepartments();
+        
+        // Set department value
         const deptSelect = document.getElementById('editDocumentTypeDepartment');
-        deptSelect.value = type.department_id;
+        if (type.department_id) {
+            deptSelect.value = type.department_id;
+            
+            // Then load categories for the selected department
+            await loadDepartmentCategories(type.department_id, 'editDocumentTypeCategory');
+            
+            // Finally set category value
+            const catSelect = document.getElementById('editDocumentTypeCategory');
+            setTimeout(() => {
+                catSelect.value = type.category_id || '';
+            }, 100);
+        }
         
-        await loadDepartmentCategories(type.department_id, 'editDocumentTypeCategory');
-        
-        const catSelect = document.getElementById('editDocumentTypeCategory');
-        catSelect.value = type.category_id || '';
+        showModal('editDocumentTypeModal');
+    } catch (error) {
+        console.error('Error setting up edit modal:', error);
+        showNotification('Error loading edit form', 'error');
     }
-    
-    showModal('editDocumentTypeModal');
 }
 
 async function showUserAccessModal(documentTypeId, action) {
