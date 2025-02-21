@@ -128,11 +128,8 @@
                 </label>
             </div>
             <div class="action-buttons">
-                <button type="button" class="action-btn success" onclick="toggleSelectedDocumentsStatus('active')">
-                    <i data-feather="check-circle"></i> Activate Selected
-                </button>
-                <button type="button" class="action-btn danger" onclick="toggleSelectedDocumentsStatus('inactive')">
-                    <i data-feather="x-circle"></i> Deactivate Selected
+                <button type="button" class="action-btn primary" onclick="toggleSelectedDocumentsStatus()">
+                    <i data-feather="refresh-cw"></i> Toggle Status
                 </button>
                 <button type="button" class="action-btn" onclick="hideModal('userDocumentsModal')">Close</button>
             </div>
@@ -149,7 +146,7 @@ function toggleAllDocuments() {
     });
 }
 
-async function toggleSelectedDocumentsStatus(status) {
+async function toggleSelectedDocumentsStatus() {
     const selectedDocuments = Array.from(document.querySelectorAll('#documentsList input[type="checkbox"]:checked'))
         .map(checkbox => checkbox.value);
 
@@ -159,31 +156,27 @@ async function toggleSelectedDocumentsStatus(status) {
     }
 
     try {
-        const promises = selectedDocuments.map(documentId =>
-            fetch(`/api/documents/${documentId}/toggle-status`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({ status })
-            })
-        );
+        const response = await fetch('/api/documents/toggle-status', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ document_ids: selectedDocuments })
+        });
 
-        const results = await Promise.all(promises);
-        const failedUpdates = results.filter(r => !r.ok).length;
-
-        if (failedUpdates > 0) {
-            showNotification(`Failed to update ${failedUpdates} documents`, 'error');
-        } else {
-            showNotification(`Successfully ${status === 'active' ? 'activated' : 'deactivated'} ${selectedDocuments.length} documents`, 'success');
-            // Refresh documents list
-            const userCpf = document.querySelector('#userDocumentsModal').getAttribute('data-user-cpf');
-            const companyId = document.querySelector('#userDocumentsModal').getAttribute('data-company-id');
-            await showUserDocuments(userCpf, companyId);
+        if (!response.ok) {
+            const error = await response.json();
+            throw new Error(error.message || 'Failed to update documents');
         }
+
+        showNotification('Documents status updated successfully', 'success');
+        // Refresh documents list
+        const userCpf = document.querySelector('#userDocumentsModal').getAttribute('data-user-cpf');
+        const companyId = document.querySelector('#userDocumentsModal').getAttribute('data-company-id');
+        await showUserDocuments(userCpf, companyId);
     } catch (error) {
         console.error('Error updating documents:', error);
-        showNotification('Failed to update documents status', 'error');
+        showNotification(error.message || 'Failed to update documents status', 'error');
     }
 }
 
