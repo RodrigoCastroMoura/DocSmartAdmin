@@ -165,7 +165,7 @@ async function showUserDocuments(userCpf, companyId) {
     document.getElementById('selectAllDocuments').checked = false;
 
     try {
-        const response = await fetch(`/api/documents?user_cpf=${userCpf}&company_id=${companyId}`);
+        const response = await fetch(`/api/documents/simple?user_cpf=${userCpf}&company_id=${companyId}`);
         if (!response.ok) {
             throw new Error('Failed to fetch documents');
         }
@@ -181,13 +181,14 @@ async function showUserDocuments(userCpf, companyId) {
                 ${data.documents.map(doc => `
                     <div class="document-item">
                         <label class="document-checkbox">
-                            <input type="checkbox" value="${doc.id}">
+                            <input type="checkbox" value="${doc.id}" ${doc.visible ? 'checked' : ''}>
                             <span class="document-name">${doc.titulo}</span>
                         </label>
                     </div>
                 `).join('')}
             </div>
         `;
+
     } catch (error) {
         console.error('Error fetching documents:', error);
         documentsList.innerHTML = '<p class="error">Failed to load documents.</p>';

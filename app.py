@@ -1109,6 +1109,43 @@ def documents_api():
         print(f"Error fetching documents: {e}")
         return jsonify({'error': 'An unexpected error occurred'}), 500
 
+@app.route('/api/documents/simple')
+@login_required
+def documentsSimple_api():
+    headers = get_auth_headers()
+    company_id = session.get('company_id')
+
+    if not company_id:
+        return jsonify({'error': 'Company ID not found in session'}), 400
+
+    try:
+        params = {
+            'page': request.args.get('page', 1),
+            'per_page': request.args.get('per_page', 9),
+            'department_id': request.args.get('department_id'),
+            'category_id': request.args.get('category_id'),
+            'document_type_id': request.args.get('document_type_id'),
+            'user_cpf': request.args.get('user_cpf'),
+            'company_id': company_id
+        }
+
+        # Remove None values
+        params = {k: v for k, v in params.items() if v is not None}
+
+        response = requests.get(f"{DOCUMENTS_URL}",
+                                headers=headers,
+                                params=params,
+                                timeout=REQUEST_TIMEOUT)
+        return handle_api_response(response,
+                                   error_message='Failed to fetch documents')
+    except requests.Timeout:
+        return jsonify({'error': 'Request timed out'}), 504
+    except requests.ConnectionError:
+        return jsonify({'error': 'Failed to connect to server'}), 503
+    except Exception as e:
+        print(f"Error fetching documents: {e}")
+        return jsonify({'error': 'An unexpected error occurred'}), 500
+
 
 @app.route('/api/documents', methods=['POST'])
 @login_required
