@@ -612,6 +612,31 @@ def departments_id(department_id):
 
 @app.route('/api/permissions')
 @login_required
+
+@app.route('/api/documents/toggle-status', methods=['POST'])
+@login_required
+def toggle_documents_status():
+    headers = get_auth_headers()
+    try:
+        data = request.get_json()
+        document_ids = data.get('document_ids')
+        
+        if not document_ids:
+            return jsonify({'error': 'Document IDs are required'}), 400
+            
+        response = requests.post(
+            f"{API_BASE_URL}/documents/toggle-status",
+            headers=headers,
+            json={'document_ids': document_ids},
+            timeout=REQUEST_TIMEOUT
+        )
+        
+        return handle_api_response(response, error_message='Failed to update documents status')
+    except Exception as e:
+        print(f"Error updating documents status: {e}")
+        return jsonify({'error': 'An unexpected error occurred'}), 500
+
+
 def get_permissions():
     headers = get_auth_headers()
     try:
