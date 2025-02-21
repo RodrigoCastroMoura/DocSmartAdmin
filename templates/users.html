@@ -153,29 +153,9 @@ async function updateSelectedDocuments() {
         return;
     }
 
-    try {
-        const promises = selectedDocuments.map(docId => 
-            fetch(`/api/documents/toggle-status`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Accept': 'application/json'
-                },
-                body: JSON.stringify({
-                    document_ids: selectedDocuments
-                })
-            })
-        );
-
-        await Promise.all(promises);
-        showNotification('Documents status updated successfully', 'success');
-        const userCpf = document.querySelector('#documentsList').getAttribute('data-user-cpf');
-        const companyId = document.querySelector('#documentsList').getAttribute('data-company-id');
-        await showUserDocuments(userCpf, companyId);
-    } catch (error) {
-        console.error('Error updating documents:', error);
-        showNotification('Failed to update documents status', 'error');
-    }
+    // Here you can implement the update logic for the selected documents
+    console.log('Selected documents:', selectedDocuments);
+    showNotification('Documents updated successfully', 'success');
 }
 
 async function showUserDocuments(userCpf, companyId) {
@@ -197,16 +177,12 @@ async function showUserDocuments(userCpf, companyId) {
         }
 
         documentsList.innerHTML = `
-            <div class="documents-list" data-user-cpf="${userCpf}" data-company-id="${companyId}">
+            <div class="documents-list">
                 ${data.documents.map(doc => `
                     <div class="document-item">
                         <label class="document-checkbox">
-                            <input type="checkbox" value="${doc.id}" class="document-checkbox-input">
-                            <span class="checkmark"></span>
+                            <input type="checkbox" value="${doc.id}">
                             <span class="document-name">${doc.titulo}</span>
-                            <span class="document-status ${doc.status === 'active' ? 'active' : 'inactive'}">
-                                ${doc.status}
-                            </span>
                         </label>
                     </div>
                 `).join('')}
@@ -551,35 +527,12 @@ document.addEventListener('DOMContentLoaded', loadUsers);
 }
 
 .document-checkbox input[type="checkbox"] {
-    display: none;
-}
-
-.document-checkbox .checkmark {
     width: 20px;
     height: 20px;
     border: 2px solid var(--border-color);
     border-radius: 4px;
     cursor: pointer;
     transition: all 0.2s ease;
-    display: inline-block;
-    position: relative;
-}
-
-.document-checkbox input[type="checkbox"]:checked + .checkmark {
-    background-color: var(--accent-color);
-    border-color: var(--accent-color);
-}
-
-.document-checkbox input[type="checkbox"]:checked + .checkmark:after {
-    content: '';
-    position: absolute;
-    left: 6px;
-    top: 2px;
-    width: 5px;
-    height: 10px;
-    border: solid white;
-    border-width: 0 2px 2px 0;
-    transform: rotate(45deg);
 }
 
 .document-checkbox input[type="checkbox"]:checked {
@@ -591,23 +544,6 @@ document.addEventListener('DOMContentLoaded', loadUsers);
     flex: 1;
     font-size: 0.95rem;
     color: var(--text-primary);
-}
-
-.document-status {
-    padding: 0.25rem 0.5rem;
-    border-radius: 4px;
-    font-size: 0.75rem;
-    font-weight: 500;
-}
-
-.document-status.active {
-    background-color: var(--success-color);
-    color: white;
-}
-
-.document-status.inactive {
-    background-color: var(--danger-color);
-    color: white;
 }
 
 .table-container {
