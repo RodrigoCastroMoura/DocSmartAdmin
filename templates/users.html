@@ -153,9 +153,31 @@ async function updateSelectedDocuments() {
         return;
     }
 
-    // Here you can implement the update logic for the selected documents
-    console.log('Selected documents:', selectedDocuments);
-    showNotification('Documents updated successfully', 'success');
+    try {
+        const promises = selectedDocuments.map(docId =>
+            fetch(`/api/documents/${docId}/toggle-status`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            })
+        );
+
+        const responses = await Promise.all(promises);
+        const failedDocs = responses.filter(r => !r.ok).length;
+
+        if (failedDocs > 0) {
+            showNotification(`Failed to update ${failedDocs} documents`, 'error');
+        } else {
+            showNotification('Documents updated successfully', 'success');
+        }
+
+        hideModal('userDocumentsModal');
+        await loadUsers();
+    } catch (error) {
+        console.error('Error updating documents:', error);
+        showNotification('Failed to update documents', 'error');
+    }
 }
 
 async function showUserDocuments(userCpf, companyId) {
