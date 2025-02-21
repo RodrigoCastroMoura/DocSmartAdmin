@@ -155,11 +155,15 @@ async function updateSelectedDocuments() {
 
     try {
         const promises = selectedDocuments.map(docId => 
-            fetch(`/api/documents/${docId}/toggle-status`, {
+            fetch(`/api/documents/toggle-status`, {
                 method: 'POST',
                 headers: {
-                    'Content-Type': 'application/json'
-                }
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json'
+                },
+                body: JSON.stringify({
+                    document_ids: selectedDocuments
+                })
             })
         );
 
