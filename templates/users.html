@@ -176,7 +176,7 @@ async function updateSelectedDocuments() {
 async function showUserDocuments(userCpf, companyId) {
     showModal('userDocumentsModal');
     const documentsList = document.getElementById('documentsList');
-    documentsList.innerHTML = 'Loading documents...';
+    documentsList.innerHTML = '<div class="loading-spinner"></div>';
     document.getElementById('selectAllDocuments').checked = false;
 
     try {
@@ -781,6 +781,21 @@ tr.loading .loading-indicator {
 
 .select-all-label:hover .checkmark {
     border-color: var(--accent-color);
+}
+
+.loading-spinner {
+    width: 40px;
+    height: 40px;
+    margin: 20px auto;
+    border: 3px solid var(--bg-tertiary);
+    border-radius: 50%;
+    border-top-color: var(--accent-color);
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
 }
 </style>
 {% endblock %}
