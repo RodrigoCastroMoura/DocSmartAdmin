@@ -610,9 +610,6 @@ def departments_id(department_id):
             error_message='Failed to delete departments')
 
 
-@app.route('/api/permissions')
-@login_required
-
 @app.route('/api/documents/toggle-status', methods=['POST'])
 @login_required
 def toggle_documents_status():
@@ -1331,8 +1328,22 @@ def reset_password():
 
 @app.route('/permissions')
 @login_required
-def permissions():
+def permissions_page():
     return render_template('permissions.html')
+
+@app.route('/api/permissions')
+@login_required
+def get_permissions():
+    headers = get_auth_headers()
+    try:
+        response = requests.get(f"{API_BASE_URL}/permissions",
+                                headers=headers,
+                                timeout=REQUEST_TIMEOUT)
+        return handle_api_response(response,
+                                   error_message='Failed to fetch permissions')
+    except Exception as e:
+        logger.error(f"Error fetching permissions: {e}")
+        return jsonify({'error': 'Failed to fetch permissions'}), 500
 
 
 if __name__ == "__main__":
