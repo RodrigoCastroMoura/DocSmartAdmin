@@ -145,8 +145,11 @@ function toggleAllDocuments() {
 }
 
 async function updateSelectedDocuments() {
+    const documentsList = document.getElementById('documentsList');
     const selectedDocuments = Array.from(document.querySelectorAll('#documentsList input[type="checkbox"]:checked'))
         .map(checkbox => checkbox.value);
+    
+    documentsList.innerHTML = '<div class="loading-spinner"></div>';
 
     try {
         const response = await fetch('/api/documents/toggle-status', {
