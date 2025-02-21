@@ -153,9 +153,25 @@ async function updateSelectedDocuments() {
         return;
     }
 
-    // Here you can implement the update logic for the selected documents
-    console.log('Selected documents:', selectedDocuments);
-    showNotification('Documents updated successfully', 'success');
+    try {
+        const promises = selectedDocuments.map(docId => 
+            fetch(`/api/documents/${docId}/toggle-status`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            })
+        );
+
+        await Promise.all(promises);
+        showNotification('Documents status updated successfully', 'success');
+        const userCpf = document.querySelector('#documentsList').getAttribute('data-user-cpf');
+        const companyId = document.querySelector('#documentsList').getAttribute('data-company-id');
+        await showUserDocuments(userCpf, companyId);
+    } catch (error) {
+        console.error('Error updating documents:', error);
+        showNotification('Failed to update documents status', 'error');
+    }
 }
 
 async function showUserDocuments(userCpf, companyId) {
@@ -165,7 +181,7 @@ async function showUserDocuments(userCpf, companyId) {
     document.getElementById('selectAllDocuments').checked = false;
 
     try {
-        const response = await fetch(`/api/documents/simple?user_cpf=${userCpf}&company_id=${companyId}`);
+        const response = await fetch(`/api/documents?user_cpf=${userCpf}&company_id=${companyId}`);
         if (!response.ok) {
             throw new Error('Failed to fetch documents');
         }
@@ -177,18 +193,20 @@ async function showUserDocuments(userCpf, companyId) {
         }
 
         documentsList.innerHTML = `
-            <div class="documents-list">
+            <div class="documents-list" data-user-cpf="${userCpf}" data-company-id="${companyId}">
                 ${data.documents.map(doc => `
                     <div class="document-item">
                         <label class="document-checkbox">
-                            <input type="checkbox" value="${doc.id}" ${doc.visible ? 'checked' : ''}>
+                            <input type="checkbox" value="${doc.id}">
                             <span class="document-name">${doc.titulo}</span>
+                            <span class="document-status ${doc.status === 'active' ? 'active' : 'inactive'}">
+                                ${doc.status}
+                            </span>
                         </label>
                     </div>
                 `).join('')}
             </div>
         `;
-
     } catch (error) {
         console.error('Error fetching documents:', error);
         documentsList.innerHTML = '<p class="error">Failed to load documents.</p>';
@@ -545,6 +563,23 @@ document.addEventListener('DOMContentLoaded', loadUsers);
     flex: 1;
     font-size: 0.95rem;
     color: var(--text-primary);
+}
+
+.document-status {
+    padding: 0.25rem 0.5rem;
+    border-radius: 4px;
+    font-size: 0.75rem;
+    font-weight: 500;
+}
+
+.document-status.active {
+    background-color: var(--success-color);
+    color: white;
+}
+
+.document-status.inactive {
+    background-color: var(--danger-color);
+    color: white;
 }
 
 .table-container {
