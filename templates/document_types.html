@@ -427,11 +427,11 @@ function showDeleteConfirmation(id) {
 }
 
 function showModal(modalId) {
-    document.getElementById(modalId).classList.add('show');
+    document.getElementById(modalId).style.display = 'block';
 }
 
 function hideModal(modalId) {
-    document.getElementById(modalId).classList.remove('show');
+    document.getElementById(modalId).style.display = 'none';
 }
 
 function showAddDocumentTypeModal() {
