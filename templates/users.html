@@ -491,23 +491,11 @@ function showDeleteConfirmation(id) {
 }
 
 function showModal(modalId) {
-    const modal = document.getElementById(modalId);
-    if (modal) {
-        modal.style.display = 'flex';
-        modal.style.opacity = '1';
-        modal.style.visibility = 'visible';
-    } else {
-        console.error('Modal not found:', modalId);
-    }
+    document.getElementById(modalId).style.display = 'block';
 }
 
 function hideModal(modalId) {
-    const modal = document.getElementById(modalId);
-    if (modal) {
-        modal.style.display = 'none';
-        modal.style.opacity = '0';
-        modal.style.visibility = 'hidden';
-    }
+    document.getElementById(modalId).style.display = 'none';
 }
 
 function showAddUserModal() {
