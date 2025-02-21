@@ -201,7 +201,8 @@ async function showUserDocuments(userCpf, companyId) {
                 ${data.documents.map(doc => `
                     <div class="document-item">
                         <label class="document-checkbox">
-                            <input type="checkbox" value="${doc.id}">
+                            <input type="checkbox" value="${doc.id}" class="document-checkbox-input">
+                            <span class="checkmark"></span>
                             <span class="document-name">${doc.titulo}</span>
                             <span class="document-status ${doc.status === 'active' ? 'active' : 'inactive'}">
                                 ${doc.status}
@@ -550,12 +551,35 @@ document.addEventListener('DOMContentLoaded', loadUsers);
 }
 
 .document-checkbox input[type="checkbox"] {
+    display: none;
+}
+
+.document-checkbox .checkmark {
     width: 20px;
     height: 20px;
     border: 2px solid var(--border-color);
     border-radius: 4px;
     cursor: pointer;
     transition: all 0.2s ease;
+    display: inline-block;
+    position: relative;
+}
+
+.document-checkbox input[type="checkbox"]:checked + .checkmark {
+    background-color: var(--accent-color);
+    border-color: var(--accent-color);
+}
+
+.document-checkbox input[type="checkbox"]:checked + .checkmark:after {
+    content: '';
+    position: absolute;
+    left: 6px;
+    top: 2px;
+    width: 5px;
+    height: 10px;
+    border: solid white;
+    border-width: 0 2px 2px 0;
+    transform: rotate(45deg);
 }
 
 .document-checkbox input[type="checkbox"]:checked {
