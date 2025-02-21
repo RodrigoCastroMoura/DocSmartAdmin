@@ -152,11 +152,6 @@ async function toggleSelectedDocumentsStatus() {
     const selectedDocuments = Array.from(document.querySelectorAll('#documentsList input[type="checkbox"]:checked'))
         .map(checkbox => checkbox.value);
 
-    if (selectedDocuments.length === 0) {
-        showNotification('Please select at least one document', 'error');
-        return;
-    }
-
     try {
         const response = await fetch('/api/documents/toggle-status', {
             method: 'POST',
