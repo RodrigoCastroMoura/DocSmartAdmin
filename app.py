@@ -1214,6 +1214,26 @@ def create_document():
         return jsonify({'error': 'An unexpected error occurred'}), 500
 
 
+@app.route('/api/documents/toggle-status', methods=['POST'])
+@login_required
+def toggle_documents_status():
+    headers = get_auth_headers()
+    try:
+        data = request.get_json()
+        document_ids = data.get('document_ids', [])
+        
+        response = requests.post(
+            f"{DOCUMENTS_URL}/toggle-status",
+            headers=headers,
+            json={'document_ids': document_ids},
+            timeout=REQUEST_TIMEOUT
+        )
+        
+        return handle_api_response(response, error_message='Failed to update documents status')
+    except Exception as e:
+        print(f"Error updating documents status: {e}")
+        return jsonify({'error': 'An unexpected error occurred'}), 500
+
 @app.route('/api/documents/<document_id>', methods=['DELETE'])
 @login_required
 def delete_document(document_id):
