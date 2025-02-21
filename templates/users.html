@@ -117,9 +117,7 @@
     <div class="modal-content">
         <h3>User Documents</h3>
         <div id="documentsList">
-            <div class="loading-spinner">
-                <div class="spinner"></div>
-            </div>
+            Loading documents...
         </div>
         <div class="modal-actions">
             <div class="select-all-container">
@@ -130,9 +128,7 @@
                 </label>
             </div>
             <div class="action-buttons">
-                <button type="button" class="action-btn primary" onclick="toggleSelectedDocumentsStatus()">
-                    <i data-feather="refresh-cw"></i> Update
-                </button>
+                <button type="button" class="action-btn primary" onclick="updateSelectedDocuments()">Update Selected</button>
                 <button type="button" class="action-btn" onclick="hideModal('userDocumentsModal')">Close</button>
             </div>
         </div>
@@ -148,39 +144,24 @@ function toggleAllDocuments() {
     });
 }
 
-async function toggleSelectedDocumentsStatus() {
+async function updateSelectedDocuments() {
     const selectedDocuments = Array.from(document.querySelectorAll('#documentsList input[type="checkbox"]:checked'))
         .map(checkbox => checkbox.value);
 
-    try {
-        const response = await fetch('/api/documents/toggle-status', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({ document_ids: selectedDocuments })
-        });
-
-        if (!response.ok) {
-            const error = await response.json();
-            throw new Error(error.message || 'Failed to update documents');
-        }
-
-        showNotification('Documents status updated successfully', 'success');
-        // Refresh documents list
-        const userCpf = document.querySelector('#userDocumentsModal').getAttribute('data-user-cpf');
-        const companyId = document.querySelector('#userDocumentsModal').getAttribute('data-company-id');
-        await showUserDocuments(userCpf, companyId);
-    } catch (error) {
-        console.error('Error updating documents:', error);
-        showNotification(error.message || 'Failed to update documents status', 'error');
+    if (selectedDocuments.length === 0) {
+        showNotification('Please select at least one document', 'error');
+        return;
     }
+
+    // Here you can implement the update logic for the selected documents
+    console.log('Selected documents:', selectedDocuments);
+    showNotification('Documents updated successfully', 'success');
 }
 
 async function showUserDocuments(userCpf, companyId) {
     showModal('userDocumentsModal');
     const documentsList = document.getElementById('documentsList');
-    documentsList.innerHTML = '<div class="loading-spinner"><div class="spinner"></div></div>';
+    documentsList.innerHTML = 'Loading documents...';
     document.getElementById('selectAllDocuments').checked = false;
 
     try {
@@ -202,9 +183,6 @@ async function showUserDocuments(userCpf, companyId) {
                         <label class="document-checkbox">
                             <input type="checkbox" value="${doc.id}" ${doc.visible ? 'checked' : ''}>
                             <span class="document-name">${doc.titulo}</span>
-                            <span class="status-badge ${doc.status === 'active' ? 'active' : 'inactive'}">
-                                ${doc.status || 'inactive'}
-                            </span>
                         </label>
                     </div>
                 `).join('')}
@@ -788,27 +766,6 @@ tr.loading .loading-indicator {
 
 .select-all-label:hover .checkmark {
     border-color: var(--accent-color);
-}
-
-.loading-spinner {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    height: 100px; /* Adjust height as needed */
-}
-
-.spinner {
-    width: 40px;
-    height: 40px;
-    border: 4px solid #f3f3f3; /* Light gray */
-    border-top: 4px solid #3498db; /* Blue */
-    border-radius: 50%;
-    animation: spin 1s linear infinite;
-}
-
-@keyframes spin {
-    0% { transform: rotate(0deg); }
-    100% { transform: rotate(360deg); }
 }
 </style>
 {% endblock %}

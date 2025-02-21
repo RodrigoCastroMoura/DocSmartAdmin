@@ -610,30 +610,8 @@ def departments_id(department_id):
             error_message='Failed to delete departments')
 
 
-@app.route('/api/documents/toggle-status', methods=['POST'])
+@app.route('/api/permissions')
 @login_required
-def toggle_documents_status():
-    headers = get_auth_headers()
-    try:
-        data = request.get_json()
-        document_ids = data.get('document_ids')
-        
-        if not document_ids:
-            return jsonify({'error': 'Document IDs are required'}), 400
-            
-        response = requests.post(
-            f"{API_BASE_URL}/documents/toggle-status",
-            headers=headers,
-            json={'document_ids': document_ids},
-            timeout=REQUEST_TIMEOUT
-        )
-        
-        return handle_api_response(response, error_message='Failed to update documents status')
-    except Exception as e:
-        print(f"Error updating documents status: {e}")
-        return jsonify({'error': 'An unexpected error occurred'}), 500
-
-
 def get_permissions():
     headers = get_auth_headers()
     try:
@@ -1328,22 +1306,8 @@ def reset_password():
 
 @app.route('/permissions')
 @login_required
-def permissions_page():
+def permissions():
     return render_template('permissions.html')
-
-@app.route('/api/permissions')
-@login_required
-def get_permissions():
-    headers = get_auth_headers()
-    try:
-        response = requests.get(f"{API_BASE_URL}/permissions",
-                                headers=headers,
-                                timeout=REQUEST_TIMEOUT)
-        return handle_api_response(response,
-                                   error_message='Failed to fetch permissions')
-    except Exception as e:
-        logger.error(f"Error fetching permissions: {e}")
-        return jsonify({'error': 'Failed to fetch permissions'}), 500
 
 
 if __name__ == "__main__":
