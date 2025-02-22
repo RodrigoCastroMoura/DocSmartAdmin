@@ -95,7 +95,7 @@
             <input type="hidden" id="editUserId">
             <div class="form-group">
                 <label for="editUserName">Name</label>
-                <input type="text" id="editUserName" name="name" required>
+                <input type="text" id="editUserName" name="name" required readonly>
             </div>
             <div class="form-group">
                 <label for="editUserEmail">Email</label>
@@ -104,7 +104,7 @@
             <div class="form-grid">
                 <div class="form-group">
                     <label for="editUserCPF">CPF</label>
-                    <input type="text" id="editUserCPF" name="cpf" required oninput="maskCPF(this)" maxlength="14">
+                    <input type="text" id="editUserCPF" name="cpf" required oninput="maskCPF(this)" readonly maxlength="14">
                 </div>
                 <div class="form-group">
                     <label for="editUserPhone">Phone</label>
@@ -341,21 +341,9 @@ setupFormValidation('addUserForm', {
 });
 
 setupFormValidation('editUserForm', {
-    'editUserName': [
-        ValidationRules.required,
-        ValidationRules.minLength(3),
-        ValidationRules.maxLength(50)
-    ],
     'editUserEmail': [
         ValidationRules.required,
         ValidationRules.email
-    ],
-    'editUserCPF': [
-        (value) => {
-            if (!value) return false;
-            const cpf = value.replace(/[^\d]/g, '');
-            return cpf.length === 11 && validateCPF(cpf);
-        }
     ],
     'editUserPhone': [
         (value) => {
