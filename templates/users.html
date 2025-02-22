@@ -4,6 +4,14 @@
 <div class="page-container">
     <div class="header-actions">
         <h2><i data-feather="users"></i> Users</h2>
+        <div class="search-container">
+            <div class="search-input">
+                <input type="text" id="searchCpf" placeholder="Search by CPF...">
+                <button class="action-btn primary" onclick="searchByCpf()">
+                    <i data-feather="search"></i>
+                </button>
+            </div>
+        </div>
         <button class="action-btn primary" onclick="showAddUserModal()">
             <i data-feather="plus"></i> Add User
         </button>
@@ -258,13 +266,23 @@ setupFormValidation('editUserForm', {
     ]
 });
 
-async function loadUsers() {
+async function searchByCpf() {
+    const cpf = document.getElementById('searchCpf').value.trim();
+    if (!cpf) {
+        showNotification('Please enter a CPF to search', 'error');
+        return;
+    }
+    await loadUsers(cpf);
+}
+
+async function loadUsers(cpf = '') {
     const contentDiv = document.getElementById('usersContent');
     const tableBody = document.getElementById('usersTableBody');
     showLoading(contentDiv);
 
     try {
-        const response = await fetch('/api/users?role=user');
+        const url = cpf ? `/api/users?role=user&cpf=${encodeURIComponent(cpf)}` : '/api/users?role=user';
+        const response = await fetch(url);
         if (!response.ok) {
             throw new Error(`HTTP error! status: ${response.status}`);
         }
@@ -518,6 +536,32 @@ document.addEventListener('DOMContentLoaded', loadUsers);
 </script>
 
 <style>
+.search-container {
+    display: flex;
+    align-items: center;
+}
+
+.search-input {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    background: var(--bg-tertiary);
+    border-radius: 6px;
+    padding: 0.5rem;
+    margin-right: 1rem;
+}
+
+.search-input input {
+    border: none;
+    background: transparent;
+    padding: 0.25rem;
+    color: var(--text-primary);
+    min-width: 200px;
+}
+
+.search-input input:focus {
+    outline: none;
+}
 .documents-list {
     max-height: 300px;
     overflow-y: auto;
