@@ -2,19 +2,24 @@
 
 {% block content %}
 <div class="page-container">
-    <div class="header-actions">
-        <h2><i data-feather="users"></i> Users</h2>
-        <div class="search-container">
-            <div class="search-input">
-                <input type="text" id="searchCpf" placeholder="Search by CPF...">
-                <button class="action-btn primary" onclick="searchByCpf()">
-                    <i data-feather="search"></i>
-                </button>
+    <div class="filter-section">
+        <div class="filter-header">
+            <h2><i data-feather="users"></i> Users</h2>
+            <button class="action-btn primary" onclick="showAddUserModal()">
+                <i data-feather="plus"></i> Add User
+            </button>
+        </div>
+        <div class="filter-grid">
+            <div class="filter-group">
+                <label for="searchCpf">Search by CPF</label>
+                <div class="filter-input-wrapper search-input">
+                    <input type="text" id="searchCpf" placeholder="Enter CPF...">
+                    <button class="action-btn primary" onclick="searchByCpf()">
+                        <i data-feather="search"></i>
+                    </button>
+                </div>
             </div>
         </div>
-        <button class="action-btn primary" onclick="showAddUserModal()">
-            <i data-feather="plus"></i> Add User
-        </button>
     </div>
     <div class="content-grid">
         <div id="usersContent">
@@ -536,31 +541,61 @@ document.addEventListener('DOMContentLoaded', loadUsers);
 </script>
 
 <style>
-.search-container {
+.filter-section {
+    background-color: var(--bg-secondary);
+    border-radius: 8px;
+    padding: 1.5rem;
+    margin-bottom: 1.5rem;
+}
+
+.filter-header {
     display: flex;
+    justify-content: space-between;
     align-items: center;
+    margin-bottom: 1rem;
+    padding-bottom: 1rem;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.filter-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1rem;
+}
+
+.filter-group {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.filter-group label {
+    font-size: 0.9rem;
+    color: var(--text-secondary);
+}
+
+.filter-input-wrapper {
+    position: relative;
+    width: 100%;
 }
 
 .search-input {
     display: flex;
-    align-items: center;
     gap: 0.5rem;
-    background: var(--bg-tertiary);
-    border-radius: 6px;
-    padding: 0.5rem;
-    margin-right: 1rem;
 }
 
 .search-input input {
-    border: none;
-    background: transparent;
-    padding: 0.25rem;
+    flex: 1;
+    padding: 0.5rem;
+    border: 1px solid var(--border-color);
+    border-radius: 4px;
+    background: var(--bg-tertiary);
     color: var(--text-primary);
-    min-width: 200px;
 }
 
 .search-input input:focus {
     outline: none;
+    border-color: var(--accent-color);
 }
 .documents-list {
     max-height: 300px;
