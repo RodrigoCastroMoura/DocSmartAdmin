@@ -305,7 +305,9 @@ setupFormValidation('addUserForm', {
         (value) => {
             if (!value) return true;
             const phone = value.replace(/\D/g, '');
-            return phone.length >= 10 && phone.length <= 11 || 'Invalid phone number';
+            if (phone.length < 10 || phone.length > 11) return false;
+            if (phone.length === 11 && phone[2] !== '9') return false;
+            return true;
         }
     ],
     'userPassword': [
@@ -333,7 +335,13 @@ setupFormValidation('editUserForm', {
         }
     ],
     'editUserPhone': [
-        ValidationRules.phone
+        (value) => {
+            if (!value) return true;
+            const phone = value.replace(/\D/g, '');
+            if (phone.length < 10 || phone.length > 11) return false;
+            if (phone.length === 11 && phone[2] !== '9') return false;
+            return true;
+        }
     ]
 });
 
