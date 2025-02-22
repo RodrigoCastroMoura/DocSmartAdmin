@@ -466,6 +466,9 @@ function updatePaginationControls() {
 }
 
 function changePage(newPage) {
+    if (typeof newPage === 'object') {
+        newPage = parseInt(newPage.target.getAttribute('data-page')) || 1;
+    }
     if (newPage >= 1 && newPage <= totalPages) {
         const cpf = document.getElementById('searchCpf').value;
         loadUsers(newPage, cpf ? { cpf } : {});
