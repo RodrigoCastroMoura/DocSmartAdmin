@@ -67,7 +67,7 @@
                 </div>
                 <div class="form-group">
                     <label for="userPhone">Phone</label>
-                    <input type="text" id="userPhone" name="phone">
+                    <input type="text" id="userPhone" name="phone" oninput="maskPhone(this)" maxlength="15">
                 </div>
                 <div class="form-group">
                     <label for="userPassword">Password</label>
@@ -108,7 +108,7 @@
                 </div>
                 <div class="form-group">
                     <label for="editUserPhone">Phone</label>
-                    <input type="text" id="editUserPhone" name="phone">
+                    <input type="text" id="editUserPhone" name="phone" oninput="maskPhone(this)" maxlength="15">
                 </div>
                 <div class="form-group">
                     <label for="editUserRole">Role</label>
@@ -277,7 +277,11 @@ setupFormValidation('addUserForm', {
         }
     ],
     'userPhone': [
-        ValidationRules.phone
+        (value) => {
+            if (!value) return true;
+            const phone = value.replace(/\D/g, '');
+            return phone.length >= 10 && phone.length <= 11 || 'Invalid phone number';
+        }
     ],
     'userPassword': [
         ValidationRules.required,
@@ -316,6 +320,23 @@ function maskCPF(input) {
     value = value.replace(/(\d{3})(\d)/, '$1.$2');
     value = value.replace(/(\d{3})(\d)/, '$1.$2');
     value = value.replace(/(\d{3})(\d{1,2})$/, '$1-$2');
+    input.value = value;
+}
+
+function maskPhone(input) {
+    let value = input.value.replace(/\D/g, '');
+    if (value.length > 11) {
+        value = value.substring(0, 11);
+    }
+    if (value.length > 10) {
+        value = value.replace(/^(\d{2})(\d{5})(\d{4}).*/, '($1) $2-$3');
+    } else if (value.length > 5) {
+        value = value.replace(/^(\d{2})(\d{4})(\d{0,4}).*/, '($1) $2-$3');
+    } else if (value.length > 2) {
+        value = value.replace(/^(\d{2})(\d{0,5})/, '($1) $2');
+    } else if (value.length > 0) {
+        value = value.replace(/^(\d*)/, '($1');
+    }
     input.value = value;
 }
 
