@@ -310,7 +310,7 @@ setupFormValidation('addUserForm', {
     ],
     'userPassword': [
         ValidationRules.required,
-        ValidationRules.minLength(6)
+        value => !value || value.length >= 6 || 'Password must be at least 6 characters'
     ]
 });
 
