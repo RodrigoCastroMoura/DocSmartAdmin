@@ -406,6 +406,7 @@ async function loadUsers(page = 1, filters = {}) {
     const contentDiv = document.getElementById('usersContent');
     const tableBody = document.getElementById('usersTableBody');
     showLoading(contentDiv);
+    currentPage = page;
 
     try {
         const queryParams = new URLSearchParams({
@@ -466,9 +467,6 @@ function updatePaginationControls() {
 }
 
 function changePage(newPage) {
-    if (typeof newPage === 'object') {
-        newPage = parseInt(newPage.target.getAttribute('data-page')) || 1;
-    }
     if (newPage >= 1 && newPage <= totalPages) {
         const cpf = document.getElementById('searchCpf').value;
         loadUsers(newPage, cpf ? { cpf } : {});
