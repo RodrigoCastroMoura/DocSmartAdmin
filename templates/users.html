@@ -63,7 +63,7 @@
             <div class="form-grid">
                 <div class="form-group">
                     <label for="userCPF">CPF</label>
-                    <input type="text" id="userCPF" name="cpf" required>
+                    <input type="text" id="userCPF" name="cpf" required oninput="maskCPF(this)" maxlength="14">
                 </div>
                 <div class="form-group">
                     <label for="userPhone">Phone</label>
@@ -104,7 +104,7 @@
             <div class="form-grid">
                 <div class="form-group">
                     <label for="editUserCPF">CPF</label>
-                    <input type="text" id="editUserCPF" name="cpf" required disabled>
+                    <input type="text" id="editUserCPF" name="cpf" required oninput="maskCPF(this)" maxlength="14">
                 </div>
                 <div class="form-group">
                     <label for="editUserPhone">Phone</label>
@@ -162,7 +162,7 @@ async function updateSelectedDocuments() {
     const selectedDocuments = Array.from(document.querySelectorAll('#documentsList input[type="checkbox"]:checked'))
         .map(checkbox => checkbox.value);
     const idUser = document.querySelector('#documentsList input[type="hidden"]').value
-    
+
     documentsList.innerHTML = '<div class="loading-spinner"></div>';
 
     try {
