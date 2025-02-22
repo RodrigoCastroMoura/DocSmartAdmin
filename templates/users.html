@@ -13,6 +13,36 @@
             <div class="filter-group">
                 <label for="searchCpf">Search by CPF</label>
                 <div class="filter-input-wrapper search-input">
+
+<!-- Validation Alert Modal -->
+<div id="validationAlert" class="modal">
+    <div class="modal-content alert-content">
+        <h3><i data-feather="alert-circle"></i> Validation Error</h3>
+        <p id="validationMessage"></p>
+        <div class="modal-actions">
+            <button class="action-btn primary" onclick="closeValidationAlert()">OK</button>
+        </div>
+    </div>
+</div>
+
+<style>
+.alert-content {
+    max-width: 400px !important;
+    text-align: center;
+}
+.alert-content h3 {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    color: var(--danger-color);
+}
+.alert-content i {
+    width: 24px;
+    height: 24px;
+}
+</style>
+
                     <input type="text" id="searchCpf" placeholder="Enter CPF..." oninput="maskCPF(this)" maxlength="14">
                     <button class="action-btn primary" onclick="searchByCpf()">
                         <i data-feather="search"></i>
@@ -498,20 +528,57 @@ function generateUsersHTML(users) {
     `).join('');
 }
 
+function showValidationAlert(message) {
+    const alert = document.getElementById('validationAlert');
+    document.getElementById('validationMessage').textContent = message;
+    alert.style.display = 'block';
+}
+
+function closeValidationAlert() {
+    document.getElementById('validationAlert').style.display = 'none';
+}
+
+async function validateUserForm(form) {
+    const name = form.querySelector('[name="name"]').value.trim();
+    const email = form.querySelector('[name="email"]').value.trim();
+    const cpf = form.querySelector('[name="cpf"]').value.replace(/\D/g, '');
+    const phone = form.querySelector('[name="phone"]').value.replace(/\D/g, '');
+    const password = form.querySelector('[name="password"]')?.value;
+
+    if (!name || name.length < 3) {
+        showValidationAlert('Name must be at least 3 characters long');
+        return false;
+    }
+
+    if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+        showValidationAlert('Please enter a valid email address');
+        return false;
+    }
+
+    if (!validateCPF(cpf)) {
+        showValidationAlert('Please enter a valid CPF');
+        return false;
+    }
+
+    if (phone && (phone.length < 10 || phone.length > 11)) {
+        showValidationAlert('Please enter a valid phone number');
+        return false;
+    }
+
+    if (password && password.length < 6) {
+        showValidationAlert('Password must be at least 6 characters long');
+        return false;
+    }
+
+    return true;
+}
+
 async function createUser(event) {
     event.preventDefault();
     const form = event.target;
     const submitButton = form.querySelector('button[type="submit"]');
 
-    const cpfInput = form.querySelector('#userCPF').value;
-    const cpf = cpfInput.replace(/\D/g, '');
-
-    if (!validateCPF(cpf)) {
-        showNotification('Please enter a valid CPF', 'error');
-        return;
-    }
-
-    if (!validateForm(form)) {
+    if (!await validateUserForm(form)) {
         return;
     }
 
@@ -551,15 +618,7 @@ async function updateUser(event) {
     const form = event.target;
     const submitButton = form.querySelector('button[type="submit"]');
 
-    const cpfInput = form.querySelector('#editUserCPF').value;
-    const cpf = cpfInput.replace(/\D/g, '');
-
-    if (!validateCPF(cpf)) {
-        showNotification('Please enter a valid CPF', 'error');
-        return;
-    }
-
-    if (!validateForm(form)) {
+    if (!await validateUserForm(form)) {
         return;
     }
 
@@ -666,11 +725,15 @@ function showDeleteConfirmation(id) {
 }
 
 function showModal(modalId) {
-    document.getElementById(modalId).style.display = 'block';
+    const modal = document.getElementById(modalId);
+    modal.style.display = 'block';
+    modal.setAttribute('data-static', 'true');
 }
 
 function hideModal(modalId) {
-    document.getElementById(modalId).style.display = 'none';
+    const modal = document.getElementById(modalId);
+    modal.style.display = 'none';
+    document.getElementById('validationAlert').style.display = 'none';
 }
 
 function showAddUserModal() {
@@ -921,7 +984,7 @@ tr.loading .loading-indicator {
     z-index: 2;
 }
 .modal {
-    display: flex;
+    display: none;
     justify-content: center;
     align-items: center;
     position: fixed;
@@ -930,6 +993,10 @@ tr.loading .loading-indicator {
     width: 100%;
     height: 100%;
     background-color: rgba(0, 0, 0, 0.5);
+}
+
+.modal[data-static="true"] {
+    display: flex;
 }
 
 .modal-content {
