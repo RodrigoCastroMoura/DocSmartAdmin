@@ -270,16 +270,22 @@ function clearError(input) {
 // Validate a single field
 function validateField(input, rules) {
     clearError(input);
+    let isValid = true;
 
     for (const rule of rules) {
         const error = rule(input.value);
         if (error) {
             showError(input);
-            return false;
+            isValid = false;
+            break;
         }
     }
 
-    return true;
+    if (isValid) {
+        input.classList.remove('error');
+    }
+
+    return isValid;
 }
 
 
@@ -322,12 +328,10 @@ setupFormValidation('addUserForm', {
                 return hint;
             })();
             
-            if (!value || value.length < 6) {
-                hint.style.color = 'red';
-                return false;
-            }
-            hint.style.color = 'green';
-            return true;
+            const isValid = value && value.length >= 6;
+            hint.style.color = isValid ? 'green' : 'red';
+            document.getElementById('userPassword').classList.toggle('error', !isValid);
+            return isValid;
         }
     ]
 });
