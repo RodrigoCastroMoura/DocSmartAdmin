@@ -148,6 +148,7 @@ async function updateSelectedDocuments() {
     const documentsList = document.getElementById('documentsList');
     const selectedDocuments = Array.from(document.querySelectorAll('#documentsList input[type="checkbox"]:checked'))
         .map(checkbox => checkbox.value);
+    const idUser = document.querySelector('input[type="hidden"]').value
     
     documentsList.innerHTML = '<div class="loading-spinner"></div>';
 
@@ -158,7 +159,8 @@ async function updateSelectedDocuments() {
                 'Content-Type': 'application/json'
             },
             body: JSON.stringify({
-                document_ids: selectedDocuments
+                document_ids: selectedDocuments,
+                user_id : idUser
             })
         });
 
@@ -176,7 +178,7 @@ async function updateSelectedDocuments() {
     }
 }
 
-async function showUserDocuments(userCpf, companyId) {
+async function showUserDocuments(userCpf, companyId,userId) {
     showModal('userDocumentsModal');
     const documentsList = document.getElementById('documentsList');
     documentsList.innerHTML = '<div class="loading-spinner"></div>';
@@ -204,6 +206,7 @@ async function showUserDocuments(userCpf, companyId) {
                         </label>
                     </div>
                 `).join('')}
+                 <input type="hidden" value="${userId}">
             </div>
         `;
 
@@ -324,7 +327,7 @@ function generateUsersHTML(users) {
                     <button class="action-btn" onclick='showEditUserModal("${user.id}", ${JSON.stringify(user)})'>
                         <i data-feather="edit-2"></i>
                     </button>
-                    <button class="action-btn info" onclick="showUserDocuments('${user.cpf}', '${user.company_id}')">
+                    <button class="action-btn info" onclick="showUserDocuments('${user.cpf}', '${user.company_id}', '${user.id}')">
                         <i data-feather="file-text"></i>
                     </button>
                     <button class="action-btn danger" onclick="deleteUser('${user.id}')">
