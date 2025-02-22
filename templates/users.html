@@ -231,12 +231,12 @@ async function showUserDocuments(userCpf, companyId,userId) {
 
 function validateCPF(cpf) {
     cpf = cpf.replace(/[^\d]/g, '');
-    
+
     if (cpf.length !== 11) return false;
-    
+
     // Check if all digits are the same
     if (/^(\d)\1+$/.test(cpf)) return false;
-    
+
     // Validate first digit
     let sum = 0;
     for (let i = 0; i < 9; i++) {
@@ -245,7 +245,7 @@ function validateCPF(cpf) {
     let digit = 11 - (sum % 11);
     if (digit > 9) digit = 0;
     if (digit !== parseInt(cpf.charAt(9))) return false;
-    
+
     // Validate second digit
     sum = 0;
     for (let i = 0; i < 10; i++) {
@@ -254,7 +254,7 @@ function validateCPF(cpf) {
     digit = 11 - (sum % 11);
     if (digit > 9) digit = 0;
     if (digit !== parseInt(cpf.charAt(10))) return false;
-    
+
     return true;
 }
 
@@ -270,7 +270,9 @@ setupFormValidation('addUserForm', {
     ],
     'userCPF': [
         (value) => {
+            if (!value) return 'CPF is required';
             const cpf = value.replace(/[^\d]/g, '');
+            if (cpf.length !== 11) return 'CPF must have 11 digits';
             return validateCPF(cpf) || 'Invalid CPF';
         }
     ],
@@ -295,7 +297,9 @@ setupFormValidation('editUserForm', {
     ],
     'editUserCPF': [
         (value) => {
+            if (!value) return 'CPF is required';
             const cpf = value.replace(/[^\d]/g, '');
+            if (cpf.length !== 11) return 'CPF must have 11 digits';
             return validateCPF(cpf) || 'Invalid CPF';
         }
     ],
