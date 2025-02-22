@@ -258,6 +258,31 @@ function validateCPF(cpf) {
     return true;
 }
 
+function showError(input) {
+    input.classList.add('error');
+}
+
+// Clear error message
+function clearError(input) {
+    input.classList.remove('error');
+}
+
+// Validate a single field
+function validateField(input, rules) {
+    clearError(input);
+
+    for (const rule of rules) {
+        const error = rule(input.value);
+        if (error) {
+            showError(input);
+            return false;
+        }
+    }
+
+    return true;
+}
+
+
 setupFormValidation('addUserForm', {
     'userName': [
         ValidationRules.required,
@@ -446,10 +471,10 @@ async function createUser(event) {
     event.preventDefault();
     const form = event.target;
     const submitButton = form.querySelector('button[type="submit"]');
-    
+
     const cpfInput = form.querySelector('#userCPF').value;
     const cpf = cpfInput.replace(/\D/g, '');
-    
+
     if (!validateCPF(cpf)) {
         showNotification('Please enter a valid CPF', 'error');
         return;
@@ -494,10 +519,10 @@ async function updateUser(event) {
     event.preventDefault();
     const form = event.target;
     const submitButton = form.querySelector('button[type="submit"]');
-    
+
     const cpfInput = form.querySelector('#editUserCPF').value;
     const cpf = cpfInput.replace(/\D/g, '');
-    
+
     if (!validateCPF(cpf)) {
         showNotification('Please enter a valid CPF', 'error');
         return;
@@ -977,6 +1002,10 @@ tr.loading .loading-indicator {
 @keyframes spin {
     0% { transform: rotate(0deg); }
     100% { transform: rotate(360deg); }
+}
+
+.error {
+    border-color: red;
 }
 </style>
 {% endblock %}
