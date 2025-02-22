@@ -13,7 +13,7 @@
             <div class="filter-group">
                 <label for="searchCpf">Search by CPF</label>
                 <div class="filter-input-wrapper search-input">
-                    <input type="text" id="searchCpf" placeholder="Enter CPF...">
+                    <input type="text" id="searchCpf" placeholder="Enter CPF..." oninput="maskCPF(this)" maxlength="14">
                     <button class="action-btn primary" onclick="searchByCpf()">
                         <i data-feather="search"></i>
                     </button>
@@ -271,8 +271,19 @@ setupFormValidation('editUserForm', {
     ]
 });
 
+function maskCPF(input) {
+    let value = input.value.replace(/\D/g, '');
+    if (value.length >= 11) {
+        value = value.substring(0, 11);
+    }
+    value = value.replace(/(\d{3})(\d)/, '$1.$2');
+    value = value.replace(/(\d{3})(\d)/, '$1.$2');
+    value = value.replace(/(\d{3})(\d{1,2})$/, '$1-$2');
+    input.value = value;
+}
+
 async function searchByCpf() {
-    const cpf = document.getElementById('searchCpf').value.trim();
+    const cpf = document.getElementById('searchCpf').value.replace(/\D/g, '').trim();
     if (!cpf) {
         showNotification('Please enter a CPF to search', 'error');
         return;
