@@ -320,9 +320,14 @@ function maskCPF(input) {
 }
 
 async function searchByCpf() {
-    const cpf = document.getElementById('searchCpf').value.replace(/\D/g, '').trim();
+    const cpfInput = document.getElementById('searchCpf').value;
+    const cpf = cpfInput.replace(/\D/g, '').trim();
     if (!cpf) {
         showNotification('Please enter a CPF to search', 'error');
+        return;
+    }
+    if (!validateCPF(cpf)) {
+        showNotification('Please enter a valid CPF', 'error');
         return;
     }
     await loadUsers(cpf);
@@ -420,6 +425,14 @@ async function createUser(event) {
     event.preventDefault();
     const form = event.target;
     const submitButton = form.querySelector('button[type="submit"]');
+    
+    const cpfInput = form.querySelector('#userCPF').value;
+    const cpf = cpfInput.replace(/\D/g, '');
+    
+    if (!validateCPF(cpf)) {
+        showNotification('Please enter a valid CPF', 'error');
+        return;
+    }
 
     if (!validateForm(form)) {
         return;
@@ -460,6 +473,14 @@ async function updateUser(event) {
     event.preventDefault();
     const form = event.target;
     const submitButton = form.querySelector('button[type="submit"]');
+    
+    const cpfInput = form.querySelector('#editUserCPF').value;
+    const cpf = cpfInput.replace(/\D/g, '');
+    
+    if (!validateCPF(cpf)) {
+        showNotification('Please enter a valid CPF', 'error');
+        return;
+    }
 
     if (!validateForm(form)) {
         return;
