@@ -301,9 +301,14 @@ setupFormValidation('addUserForm', {
     ],
     'userCPF': [
         (value) => {
-            if (!value) return false;
+            if (!value) {
+                document.getElementById('userCPF').classList.add('error');
+                return false;
+            }
             const cpf = value.replace(/[^\d]/g, '');
-            return cpf.length === 11 && validateCPF(cpf);
+            const isValid = cpf.length === 11 && validateCPF(cpf);
+            document.getElementById('userCPF').classList.toggle('error', !isValid);
+            return isValid;
         }
     ],
     'userPhone': [
