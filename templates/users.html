@@ -303,14 +303,11 @@ setupFormValidation('addUserForm', {
     ],
     'userCPF': [
         (value) => {
-            const input = document.getElementById('userCPF');
             if (!value) {
-                input.classList.add('error');
                 return false;
             }
             const cpf = value.replace(/[^\d]/g, '');
             const isValid = validateCPF(cpf);
-            input.classList.toggle('error', !isValid);
             return isValid;
         }
     ],
@@ -355,7 +352,7 @@ setupFormValidation('editUserForm', {
     ],
     'editUserCPF': [
         (value) => {
-            if (!value) return false;
+            if (!value) return true;
             const cpf = value.replace(/[^\d]/g, '');
             return cpf.length === 11 && validateCPF(cpf);
         }
