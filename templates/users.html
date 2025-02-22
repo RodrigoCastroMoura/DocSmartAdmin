@@ -312,7 +312,23 @@ setupFormValidation('addUserForm', {
     ],
     'userPassword': [
         ValidationRules.required,
-        value => !value || value.length >= 6 || 'Password must be at least 6 characters'
+        value => {
+            const formGroup = document.querySelector('#userPassword').closest('.form-group');
+            const hint = formGroup.querySelector('.password-hint') || (() => {
+                const hint = document.createElement('div');
+                hint.className = 'password-hint';
+                hint.textContent = 'Password must be at least 6 characters';
+                formGroup.appendChild(hint);
+                return hint;
+            })();
+            
+            if (!value || value.length < 6) {
+                hint.style.color = 'red';
+                return false;
+            }
+            hint.style.color = 'green';
+            return true;
+        }
     ]
 });
 
@@ -1014,6 +1030,12 @@ tr.loading .loading-indicator {
 
 .error {
     border-color: red;
+}
+
+.password-hint {
+    font-size: 0.85rem;
+    margin-top: 0.25rem;
+    transition: color 0.3s ease;
 }
 </style>
 {% endblock %}
