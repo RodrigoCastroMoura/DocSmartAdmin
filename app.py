@@ -1221,11 +1221,12 @@ def toggle_documents_status():
     try:
         data = request.get_json()
         document_ids = data.get('document_ids', [])
+        user_id = data.get('user_id')
         
         response = requests.post(
             f"{DOCUMENTS_URL}/toggle-status",
             headers=headers,
-            json={'document_ids': document_ids},
+            json={'document_ids': document_ids,'user_id':user_id},
             timeout=REQUEST_TIMEOUT
         )
         
