@@ -306,7 +306,7 @@ setupFormValidation('addUserForm', {
                 return false;
             }
             const cpf = value.replace(/[^\d]/g, '');
-            const isValid = cpf.length === 11 && !validateCPF(cpf);
+            const isValid = cpf.length === 11 && validateCPF(cpf);
             document.getElementById('userCPF').classList.toggle('error', !isValid);
             return isValid;
         }
