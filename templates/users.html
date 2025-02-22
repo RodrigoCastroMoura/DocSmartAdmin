@@ -314,6 +314,12 @@ async function loadUsers(cpf = '') {
     }
 }
 
+function formatCPF(cpf) {
+    if (!cpf) return '';
+    cpf = cpf.replace(/[^\d]/g, '');
+    return cpf.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, '$1.$2.$3-$4');
+}
+
 function generateUsersHTML(users) {
     if (!users || users.length === 0) {
         return `
@@ -334,7 +340,7 @@ function generateUsersHTML(users) {
                 </div>
             </td>
             <td>${user.email}</td>
-            <td>${user.cpf}</td>
+            <td>${formatCPF(user.cpf)}</td>
             <td>
                 <span class="status-badge ${user.status === 'active' ? 'active' : 'inactive'}">
                     ${user.status}
