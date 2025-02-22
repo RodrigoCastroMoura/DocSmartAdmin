@@ -406,7 +406,6 @@ async function loadUsers(page = 1, filters = {}) {
     const contentDiv = document.getElementById('usersContent');
     const tableBody = document.getElementById('usersTableBody');
     showLoading(contentDiv);
-    currentPage = page;
 
     try {
         const queryParams = new URLSearchParams({
