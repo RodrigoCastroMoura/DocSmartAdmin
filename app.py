@@ -968,13 +968,15 @@ def users_api():
         return jsonify({'error': 'Company ID not found in session'}), 400
 
     if request.method == 'GET':
-        role = request.args.get('role')
         params = {
             'page': request.args.get('page', 1),
             'per_page': request.args.get('per_page', 10),
             'company_id': company_id,
-            'role': 'user',
-           
+            'role': request.args.get('role', 'user'),
+            'cpf': request.args.get('cpf'),
+            'name': request.args.get('name'),
+            'email': request.args.get('email'),
+            'status': request.args.get('status')
         }
         # Remove None values
         params = {k: v for k, v in params.items() if v is not None}
