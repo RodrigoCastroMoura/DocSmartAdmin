@@ -270,22 +270,16 @@ function clearError(input) {
 // Validate a single field
 function validateField(input, rules) {
     clearError(input);
-    let isValid = true;
 
     for (const rule of rules) {
         const error = rule(input.value);
         if (error) {
             showError(input);
-            isValid = false;
-            break;
+            return false;
         }
     }
 
-    if (isValid) {
-        input.classList.remove('error');
-    }
-
-    return isValid;
+    return true;
 }
 
 
@@ -301,9 +295,10 @@ setupFormValidation('addUserForm', {
     ],
     'userCPF': [
         (value) => {
-            if (!value) return false;
+            if (!value) return 'CPF is required';
             const cpf = value.replace(/[^\d]/g, '');
-            return cpf.length === 11 && validateCPF(cpf);
+            if (cpf.length !== 11) return 'CPF must have 11 digits';
+            return validateCPF(cpf) || 'Invalid CPF';
         }
     ],
     'userPhone': [
@@ -327,10 +322,12 @@ setupFormValidation('addUserForm', {
                 return hint;
             })();
             
-            const isValid = value && value.length >= 6;
-            hint.style.color = isValid ? 'green' : 'red';
-            document.getElementById('userPassword').classList.toggle('error', !isValid);
-            return isValid;
+            if (!value || value.length < 6) {
+                hint.style.color = 'red';
+                return false;
+            }
+            hint.style.color = 'green';
+            return true;
         }
     ]
 });
@@ -347,9 +344,10 @@ setupFormValidation('editUserForm', {
     ],
     'editUserCPF': [
         (value) => {
-            if (!value) return false;
+            if (!value) return 'CPF is required';
             const cpf = value.replace(/[^\d]/g, '');
-            return cpf.length === 11 && validateCPF(cpf);
+            if (cpf.length !== 11) return 'CPF must have 11 digits';
+            return validateCPF(cpf) || 'Invalid CPF';
         }
     ],
     'editUserPhone': [
