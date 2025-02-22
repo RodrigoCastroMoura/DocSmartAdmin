@@ -44,6 +44,15 @@
                     </tbody>
                 </table>
             </div>
+            <div class="pagination-controls" id="pagination">
+                <button class="action-btn" onclick="changePage(currentPage - 1)" id="prevPage" disabled>
+                    <i data-feather="chevron-left"></i> Previous
+                </button>
+                <span id="pageInfo">Page 1</span>
+                <button class="action-btn" onclick="changePage(currentPage + 1)" id="nextPage" disabled>
+                    Next <i data-feather="chevron-right"></i>
+                </button>
+            </div>
         </div>
     </div>
 </div>
@@ -300,7 +309,7 @@ setupFormValidation('addUserForm', {
         ValidationRules.email
     ],
     'userCPF': [
-        (value) => {
+    (value) => {
             if (!value) {
                 document.getElementById('userCPF').classList.add('error');
                 return false;
@@ -387,32 +396,30 @@ function maskPhone(input) {
 async function searchByCpf() {
     const cpfInput = document.getElementById('searchCpf').value;
     const cpf = cpfInput.replace(/\D/g, '').trim();
-    if (!cpf) {
-        showNotification('Please enter a CPF to search', 'error');
-        return;
+    if (cpf) {        
+        if (!validateCPF(cpf)) {
+            showNotification('Please enter a valid CPF', 'error');
+            return;
+        }
     }
-    if (!validateCPF(cpf)) {
-        showNotification('Please enter a valid CPF', 'error');
-        return;
-    }
-    await loadUsers(cpf);
+    await loadUsers();
 }
 
-let currentPage = 1;
-let totalPages = 1;
-const perPage = 10;
 
-async function loadUsers(page = 1, filters = {}) {
+
+async function loadUsers(page = 1) {
     const contentDiv = document.getElementById('usersContent');
     const tableBody = document.getElementById('usersTableBody');
+    const pagination = document.getElementById('pagination')
+    const perPage = 10;
     showLoading(contentDiv);
 
     try {
         const queryParams = new URLSearchParams({
+            role: 'user',
+            cpf: document.getElementById('searchCpf').value.replace(/\D/g, '').trim(),
             page: page,
             per_page: perPage,
-            role: 'user',
-            ...filters
         });
 
         const response = await fetch(`/api/users?${queryParams}`);
@@ -425,25 +432,9 @@ async function loadUsers(page = 1, filters = {}) {
             throw new Error('Invalid response format');
         }
 
-        currentPage = page;
-        totalPages = Math.ceil(data.total / perPage);
-
         tableBody.innerHTML = generateUsersHTML(data.users);
-        
-        // Add pagination controls
-        contentDiv.innerHTML += `
-            <div class="pagination-controls">
-                <button class="action-btn" onclick="changePage(currentPage - 1)" id="prevPage" ${currentPage <= 1 ? 'disabled' : ''}>
-                    <i data-feather="chevron-left"></i> Previous
-                </button>
-                <span id="pageInfo">Page ${currentPage} of ${totalPages}</span>
-                <button class="action-btn" onclick="changePage(currentPage + 1)" id="nextPage" ${currentPage >= totalPages ? 'disabled' : ''}>
-                    Next <i data-feather="chevron-right"></i>
-                </button>
-            </div>`;
-        
+        pagination.innerHTML = generatePaginationHTML(data,page);
         feather.replace();
-        updatePaginationControls();
     } catch (error) {
         console.error('Error loading users:', error);
         tableBody.innerHTML = `
@@ -456,22 +447,6 @@ async function loadUsers(page = 1, filters = {}) {
         feather.replace();
     } finally {
         hideLoading(contentDiv);
-    }
-}
-
-function updatePaginationControls() {
-    document.getElementById('prevPage').disabled = currentPage <= 1;
-    document.getElementById('nextPage').disabled = currentPage >= totalPages;
-    document.getElementById('pageInfo').textContent = `Page ${currentPage} of ${totalPages}`;
-}
-
-function changePage(newPage) {
-    if (typeof newPage === 'object') {
-        newPage = currentPage;
-    }
-    if (typeof newPage === 'number' && newPage >= 1 && newPage <= totalPages) {
-        const cpf = document.getElementById('searchCpf').value;
-        loadUsers(newPage, cpf ? { cpf } : {});
     }
 }
 
@@ -527,6 +502,22 @@ function generateUsersHTML(users) {
             </td>
         </tr>
     `).join('');
+}
+
+function generatePaginationHTML(data,page){
+
+    currentPage = page;
+    totalPages = data.total_pages || 1;
+
+    return  `<div class="pagination-controls">
+                <button class="action-btn" onclick="changePage(currentPage - 1)" id="prevPage" ${currentPage <= 1 ? 'disabled' : ''}>
+                    <i data-feather="chevron-left"></i> Previous
+                </button>
+                <span id="pageInfo">Page ${currentPage} of ${totalPages}</span>
+                <button class="action-btn" onclick="changePage(currentPage + 1)" id="nextPage" ${currentPage >= totalPages ? 'disabled' : ''}>
+                    Next <i data-feather="chevron-right"></i>
+                </button>
+            </div>`;
 }
 
 async function createUser(event) {
@@ -713,372 +704,393 @@ function showEditUserModal(id, user) {
     document.getElementById('editUserId').value = id;
     document.getElementById('editUserName').value = user.name;
     document.getElementById('editUserEmail').value = user.email;
-    document.getElementById('editUserCPF').value = formatCPF(user.cpf);
+    document.getElementById('editUserCPF').value = user.cpf;
     document.getElementById('editUserPhone').value = user.phone || '';
     document.getElementById('editUserRole').value = user.role;
     showModal('editUserModal');
 }
 
+function changePage(newPage) {
+    if (newPage >= 1 && newPage <= totalPages) {
+        loadUsers(newPage);
+    }
+}
+
 // Initialize users list when page loads
-document.addEventListener('DOMContentLoaded', loadUsers);
+document.addEventListener('DOMContentLoaded', function() {
+  loadUsers(1);
+});
 </script>
 
 <style>
-.filter-section {
-    background-color: var(--bg-secondary);
-    border-radius: 8px;
-    padding: 1.5rem;
-    margin-bottom: 1.5rem;
-}
+    .pagination-controls {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 1rem;
+        margin-top: 2rem;
+    }
+    
+    .pagination-controls button {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+    
+    .pagination-controls button:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+    }
+    .filter-section {
+        background-color: var(--bg-secondary);
+        border-radius: 8px;
+        padding: 1.5rem;
+        margin-bottom: 1.5rem;
+    }
 
-.filter-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 1rem;
-    padding-bottom: 1rem;
-    border-bottom: 1px solid var(--border-color);
-}
+    .filter-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 1rem;
+        padding-bottom: 1rem;
+        border-bottom: 1px solid var(--border-color);
+    }
 
-.filter-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-    gap: 1rem;
-}
+    .filter-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 1rem;
+    }
 
-.filter-group {
-    display: flex;
-    flex-direction: column;
-    gap: 0.5rem;
-}
+    .filter-group {
+        display: flex;
+        flex-direction: column;
+        gap: 0.5rem;
+    }
 
-.filter-group label {
-    font-size: 0.9rem;
-    color: var(--text-secondary);
-}
+    .filter-group label {
+        font-size: 0.9rem;
+        color: var(--text-secondary);
+    }
 
-.filter-input-wrapper {
-    position: relative;
-    width: 100%;
-}
+    .filter-input-wrapper {
+        position: relative;
+        width: 100%;
+    }
 
-.search-input {
-    display: flex;
-    gap: 0.5rem;
-}
+    .search-input {
+        display: flex;
+        gap: 0.5rem;
+    }
 
-.search-input input {
-    flex: 1;
-    padding: 0.5rem;
-    border: 1px solid var(--border-color);
-    border-radius: 4px;
-    background: var(--bg-tertiary);
-    color: var(--text-primary);
-}
+    .search-input input {
+        flex: 1;
+        padding: 0.5rem;
+        border: 1px solid var(--border-color);
+        border-radius: 4px;
+        background: var(--bg-tertiary);
+        color: var(--text-primary);
+    }
 
-.search-input input:focus {
-    outline: none;
-    border-color: var(--accent-color);
-}
-.documents-list {
-    max-height: 300px;
-    overflow-y: auto;
-    margin: 1rem 0;
-    border: 1px solid var(--border-color);
-    border-radius: 8px;
-    background: var(--bg-secondary);
-}
+    .search-input input:focus {
+        outline: none;
+        border-color: var(--accent-color);
+    }
+    .documents-list {
+        max-height: 300px;
+        overflow-y: auto;
+        margin: 1rem 0;
+        border: 1px solid var(--border-color);
+        border-radius: 8px;
+        background: var(--bg-secondary);
+    }
 
-.document-item {
-    padding: 1rem;
-    border-bottom: 1px solid var(--border-color);
-    transition: all 0.2s ease;
-}
+    .document-item {
+        padding: 1rem;
+        border-bottom: 1px solid var(--border-color);
+        transition: all 0.2s ease;
+    }
 
-.document-item:hover {
-    background: var(--bg-tertiary);
-}
+    .document-item:hover {
+        background: var(--bg-tertiary);
+    }
 
-.document-item:last-child {
-    border-bottom: none;
-}
+    .document-item:last-child {
+        border-bottom: none;
+    }
 
-.document-checkbox {
-    display: flex;
-    align-items: center;
-    gap: 1rem;
-    cursor: pointer;
-}
+    .document-checkbox {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        cursor: pointer;
+    }
 
-.document-checkbox input[type="checkbox"] {
-    width: 20px;
-    height: 20px;
-    border: 2px solid var(--border-color);
-    border-radius: 4px;
-    cursor: pointer;
-    transition: all 0.2s ease;
-}
+    .document-checkbox input[type="checkbox"] {
+        width: 20px;
+        height: 20px;
+        border: 2px solid var(--border-color);
+        border-radius: 4px;
+        cursor: pointer;
+        transition: all 0.2s ease;
+    }
 
-.document-checkbox input[type="checkbox"]:checked {
-    background-color: var(--accent-color);
-    border-color: var(--accent-color);
-}
+    .document-checkbox input[type="checkbox"]:checked {
+        background-color: var(--accent-color);
+        border-color: var(--accent-color);
+    }
 
-.document-name {
-    flex: 1;
-    font-size: 0.95rem;
-    color: var(--text-primary);
-}
+    .document-name {
+        flex: 1;
+        font-size: 0.95rem;
+        color: var(--text-primary);
+    }
 
-.table-container {
-    overflow-x: auto;
-}
+    .table-container {
+        overflow-x: auto;
+    }
 
-.users-table {
-    width: 100%;
-    border-collapse: collapse;
-    min-width: 800px;
-}
+    .users-table {
+        width: 100%;
+        border-collapse: collapse;
+        min-width: 800px;
+    }
 
-.users-table th,
-.users-table td {
-    padding: 1rem;
-    text-align: left;
-    border-bottom: 1px solid var(--border-color);
-}
+    .users-table th,
+    .users-table td {
+        padding: 1rem;
+        text-align: left;
+        border-bottom: 1px solid var(--border-color);
+    }
 
-.users-table th {
-    font-weight: 500;
-    color: var(--text-secondary);
-    background-color: var(--bg-tertiary);
-    position: sticky;
-    top: 0;
-    z-index: 1;
-}
+    .users-table th {
+        font-weight: 500;
+        color: var(--text-secondary);
+        background-color: var(--bg-tertiary);
+        position: sticky;
+        top: 0;
+        z-index: 1;
+    }
 
-.user-cell {
-    display: flex;
-    align-items: center;
-    gap: 0.75rem;
-}
+    .user-cell {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+    }
 
-.user-avatar {
-    width: 32px;
-    height: 32px;
-    background-color: var(--accent-color);
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 0.875rem;
-    color: white;
-}
+    .user-avatar {
+        width: 32px;
+        height: 32px;
+        background-color: var(--accent-color);
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 0.875rem;
+        color: white;
+    }
 
-.status-badge {
-    padding: 0.25rem 0.75rem;
-    border-radius: 4px;
-    font-size: 0.875rem;
-    font-weight: 500;
-    display: inline-block;
-}
+    .status-badge {
+        padding: 0.25rem 0.75rem;
+        border-radius: 4px;
+        font-size: 0.875rem;
+        font-weight: 500;
+        display: inline-block;
+    }
 
-.status-badge.active {
-    background-color: var(--success-color);
-    color: white;
-}
+    .status-badge.active {
+        background-color: var(--success-color);
+        color: white;
+    }
 
-.status-badge.inactive {
-    background-color: var(--danger-color);
-    color: white;
-}
+    .status-badge.inactive {
+        background-color: var(--danger-color);
+        color: white;
+    }
 
-.table-actions {
-    display: flex;
-    gap: 0.5rem;
-}
+    .table-actions {
+        display: flex;
+        gap: 0.5rem;
+    }
 
-.no-data {
-    text-align: center;
-    padding: 2rem;
-    color: var(--text-secondary);
-}
+    .no-data {
+        text-align: center;
+        padding: 2rem;
+        color: var(--text-secondary);
+    }
 
-.no-data i {
-    font-size: 2rem;
-    margin-bottom: 0.5rem;
-    opacity: 0.5;
-}
+    .no-data i {
+        font-size: 2rem;
+        margin-bottom: 0.5rem;
+        opacity: 0.5;
+    }
 
-.page-container {
-    padding: 2rem;
-}
+    .page-container {
+        padding: 2rem;
+    }
 
-.header-actions {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 2rem;
-}
+    .header-actions {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 2rem;
+    }
 
-.header-actions h2 {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-}
+    .header-actions h2 {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
 
-.content-grid {
-    background-color: var(--bg-secondary);
-    border-radius: 8px;
-    padding: 1.5rem;
-    position: relative;
-}
+    .content-grid {
+        background-color: var(--bg-secondary);
+        border-radius: 8px;
+        padding: 1.5rem;
+        position: relative;
+    }
 
-tr.loading {
-    opacity: 0.5;
-    pointer-events: none;
-}
+    tr.loading {
+        opacity: 0.5;
+        pointer-events: none;
+    }
 
-tr.loading .loading-indicator {
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    background-color: var(--bg-secondary);
-    padding: 0.5rem 1rem;
-    border-radius: 4px;
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    z-index: 2;
-}
-.modal {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background-color: rgba(0, 0, 0, 0.5);
-    pointer-events: none;
-}
+    tr.loading .loading-indicator {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        background-color: var(--bg-secondary);
+        padding: 0.5rem 1rem;
+        border-radius: 4px;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        z-index: 2;
+    }
+    .modal {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(0, 0, 0, 0.5);
+    }
 
-.modal-content {
-    pointer-events: auto;
-}
+    .modal-content {
+        position: relative;
+        background-color: var(--bg-secondary);
+        margin: 2% auto;
+        padding: 2.5rem;
+        border-radius: 12px;
+        max-width: 800px !important;
+        width: 90%;
+        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
+        animation: slideIn 0.3s ease;
+    }
 
-.modal-content {
-    position: relative;
-    background-color: var(--bg-secondary);
-    margin: 2% auto;
-    padding: 2.5rem;
-    border-radius: 12px;
-    max-width: 800px !important;
-    width: 90%;
-    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
-    animation: slideIn 0.3s ease;
-}
+    .form-group {
+        display: flex;
+        flex-direction: column;
+        margin-bottom: 0.5rem !important;
+    }
 
-.form-group {
-    display: flex;
-    flex-direction: column;
-    margin-bottom: 0.5rem !important;
-}
+    .form-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 1rem;
+    }
 
-.form-grid {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 1rem;
-}
+    .modal-actions {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-top: 1rem;
+        padding-top: 1rem;
+        border-top: 1px solid var(--border-color);
+    }
 
-.modal-actions {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-top: 1rem;
-    padding-top: 1rem;
-    border-top: 1px solid var(--border-color);
-}
+    .action-buttons {
+        display: flex;
+        gap: 0.5rem;
+    }
 
-.action-buttons {
-    display: flex;
-    gap: 0.5rem;
-}
+    .select-all-container {
+        padding-left: 0.5rem;
+    }
 
-.select-all-container {
-    padding-left: 0.5rem;
-}
+    .select-all-label {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        cursor: pointer;
+        user-select: none;
+        color: var(--text-secondary);
+        font-size: 0.9rem;
+    }
 
-.select-all-label {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    cursor: pointer;
-    user-select: none;
-    color: var(--text-secondary);
-    font-size: 0.9rem;
-}
+    .select-all-label input[type="checkbox"] {
+        display: none;
+    }
 
-.select-all-label input[type="checkbox"] {
-    display: none;
-}
+    .select-all-label .checkmark {
+        width: 18px;
+        height: 18px;
+        border: 2px solid var(--border-color);
+        border-radius: 4px;
+        display: inline-block;
+        position: relative;
+        transition: all 0.2s;
+        background: var(--bg-tertiary);
+    }
 
-.select-all-label .checkmark {
-    width: 18px;
-    height: 18px;
-    border: 2px solid var(--border-color);
-    border-radius: 4px;
-    display: inline-block;
-    position: relative;
-    transition: all 0.2s;
-    background: var(--bg-tertiary);
-}
+    .select-all-label input[type="checkbox"]:checked + .checkmark {
+        background: var(--accent-color);
+        border-color: var(--accent-color);
+    }
 
-.select-all-label input[type="checkbox"]:checked + .checkmark {
-    background: var(--accent-color);
-    border-color: var(--accent-color);
-}
+    .select-all-label input[type="checkbox"]:checked + .checkmark:after {
+        content: '';
+        position: absolute;
+        left: 5px;
+        top: 2px;
+        width: 5px;
+        height: 10px;
+        border: solid white;
+        border-width: 0 2px 2px 0;
+        transform: rotate(45deg);
+    }
 
-.select-all-label input[type="checkbox"]:checked + .checkmark:after {
-    content: '';
-    position: absolute;
-    left: 5px;
-    top: 2px;
-    width: 5px;
-    height: 10px;
-    border: solid white;
-    border-width: 0 2px 2px 0;
-    transform: rotate(45deg);
-}
+    .select-all-label:hover .checkmark {
+        border-color: var(--accent-color);
+    }
 
-.select-all-label:hover .checkmark {
-    border-color: var(--accent-color);
-}
+    .loading-spinner {
+        width: 40px;
+        height: 40px;
+        margin: 20px auto;
+        border: 3px solid var(--bg-tertiary);
+        border-radius: 50%;
+        border-top-color: var(--accent-color);
+        animation: spin 1s linear infinite;
+    }
 
-.loading-spinner {
-    width: 40px;
-    height: 40px;
-    margin: 20px auto;
-    border: 3px solid var(--bg-tertiary);
-    border-radius: 50%;
-    border-top-color: var(--accent-color);
-    animation: spin 1s linear infinite;
-}
+    @keyframes spin {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
+    }
 
-@keyframes spin {
-    0% { transform: rotate(0deg); }
-    100% { transform: rotate(360deg); }
-}
+    .error {
+        border-color: red;
+    }
 
-.error {
-    border-color: red;
-}
-
-.password-hint {
-    font-size: 0.85rem;
-    margin-top: 0.25rem;
-    transition: color 0.3s ease;
-}
+    .password-hint {
+        font-size: 0.85rem;
+        margin-top: 0.25rem;
+        transition: color 0.3s ease;
+    }
 </style>
 {% endblock %}
