@@ -670,7 +670,7 @@ function showEditUserModal(id, user) {
     document.getElementById('editUserId').value = id;
     document.getElementById('editUserName').value = user.name;
     document.getElementById('editUserEmail').value = user.email;
-    document.getElementById('editUserCPF').value = user.cpf;
+    document.getElementById('editUserCPF').value = formatCPF(user.cpf);
     document.getElementById('editUserPhone').value = user.phone || '';
     document.getElementById('editUserRole').value = user.role;
     showModal('editUserModal');
