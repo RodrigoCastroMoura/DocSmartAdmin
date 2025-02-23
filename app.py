@@ -826,9 +826,13 @@ def add_user_to_document_type(document_types_id, user_id):
 def remove_user_from_document_type(document_types_id, user_id):
     headers = get_auth_headers()
     try:
-        response = requests.post(
-            f"{DOCUMENT_TYPES_URL}/{document_types_id}/users/{user_id}/remove",
+        params = {
+            'user_id': user_id
+        }
+        response = requests.delete(
+            f"{DOCUMENT_TYPES_URL}/{document_types_id}/allowed-users",
             headers=headers,
+            params=params,
             timeout=REQUEST_TIMEOUT
         )
         return handle_api_response(response, error_message='Failed to remove user access')
