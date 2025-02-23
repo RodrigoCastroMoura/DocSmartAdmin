@@ -501,15 +501,32 @@ let allUsers = [];
 
 async function filterUsers() {
     const searchInput = document.getElementById('searchUser').value;
-    const cpfList = searchInput.split(',').map(cpf => cpf.trim().toLowerCase());
+    const documentTypeId = document.getElementById('documentTypeId').value;
+    
+    if (!searchInput.trim()) {
+        await loadDocumentTypeUsers(documentTypeId);
+        return;
+    }
 
-    const filteredUsers = allUsers.filter(user => 
-        cpfList.some(searchCpf => 
-            user.cpf.toLowerCase().includes(searchCpf) ||
-            (searchCpf.length < 3 && user.name.toLowerCase().includes(searchCpf))
-        )
-    );
-    displayUsers(filteredUsers);
+    try {
+        const headers = {
+            'Authorization': `Bearer ${getAccessToken()}`,
+            'Content-Type': 'application/json'
+        };
+
+        const response = await fetch(`/api/users?cpf=${searchInput}`, {
+            headers: headers
+        });
+
+        if (!response.ok) throw new Error('Failed to fetch users');
+        
+        const data = await response.json();
+        const users = { allowed_users: data.users || [] };
+        displayUsers(users);
+    } catch (error) {
+        console.error('Error filtering users:', error);
+        showNotification('Failed to filter users', 'error');
+    }
 }
 
 function formatCPF(cpf) {
@@ -525,8 +542,15 @@ function toggleSelectAll() {
 
 function displayUsers(users) {
     const usersList = document.getElementById('usersList');
-
-
+    if (!users || !users.allowed_users || users.allowed_users.length === 0) {
+        usersList.innerHTML = `
+            <div class="no-data">
+                <i data-feather="users"></i>
+                <p>No users found</p>
+            </div>`;
+        feather.replace();
+        return;
+    }
 
     usersList.innerHTML = `
         <div class="users-table">
@@ -552,6 +576,7 @@ function displayUsers(users) {
             </table>
         </div>
     `;
+    feather.replace();
 }
 
 async function loadDocumentTypeUsers(documentTypeId) {
