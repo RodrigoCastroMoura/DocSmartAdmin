@@ -447,25 +447,25 @@ async function showEditDocumentTypeModal(id, type) {
         document.getElementById('editDocumentTypeDescription').value = type.description || '';
         document.getElementById('editPublicTrue').checked = type.public === true;
         document.getElementById('editPublicFalse').checked = type.public === false;
-        
+
         // First load departments
         await loadDepartments();
-        
+
         // Set department value
         const deptSelect = document.getElementById('editDocumentTypeDepartment');
         if (type.department_id) {
             deptSelect.value = type.department_id;
-            
+
             // Then load categories for the selected department
             await loadDepartmentCategories(type.department_id, 'editDocumentTypeCategory');
-            
+
             // Finally set category value
             const catSelect = document.getElementById('editDocumentTypeCategory');
             setTimeout(() => {
                 catSelect.value = type.category_id || '';
             }, 100);
         }
-        
+
         showModal('editDocumentTypeModal');
     } catch (error) {
         console.error('Error setting up edit modal:', error);
@@ -477,10 +477,10 @@ async function showUserAccessModal(documentTypeId, action) {
     document.getElementById('userAccessTitle').textContent = action === 'add' ? 'Add User Access' : 'Remove User Access';
     document.getElementById('documentTypeId').value = documentTypeId;
     document.getElementById('accessAction').value = action;
-    
+
     const addSection = document.getElementById('addUserSection');
     const removeSection = document.getElementById('removeUserSection');
-    
+
     if (action === 'add') {
         addSection.style.display = 'block';
         removeSection.style.display = 'none';
@@ -492,7 +492,7 @@ async function showUserAccessModal(documentTypeId, action) {
         removeSection.style.display = 'block';
         await loadDocumentTypeUsers(documentTypeId);
     }
-    
+
     showModal('userAccessModal');
     feather.replace();
 }
@@ -502,7 +502,7 @@ let allUsers = [];
 async function filterUsers() {
     const searchInput = document.getElementById('searchUser').value;
     const cpfList = searchInput.split(',').map(cpf => cpf.trim().toLowerCase());
-    
+
     const filteredUsers = allUsers.filter(user => 
         cpfList.some(searchCpf => 
             user.cpf.toLowerCase().includes(searchCpf) ||
@@ -522,28 +522,24 @@ function toggleSelectAll() {
     checkboxes.forEach(checkbox => checkbox.checked = selectAllCheckbox.checked);
 }
 
+
 function displayUsers(users) {
     const usersList = document.getElementById('usersList');
-    
-    if (!users || users.length === 0) {
-        usersList.innerHTML = '<p class="no-data">No users found</p>';
-        return;
-    }
-    
+
+
+
     usersList.innerHTML = `
         <div class="users-table">
             <table>
                 <thead>
                     <tr>
-                        <th>
-                            <input type="checkbox" id="selectAll" onchange="toggleSelectAll()">
-                        </th>
+                        <th><input type="checkbox" id="selectAll" onchange="toggleSelectAll()"></th>
                         <th>Name</th>
                         <th>CPF</th>
                     </tr>
                 </thead>
                 <tbody>
-                    ${users.map(user => `
+                    ${users.allowed_users.map(user => `
                         <tr>
                             <td>
                                 <input type="checkbox" value="${user.id}" class="user-checkbox">
@@ -561,7 +557,7 @@ function displayUsers(users) {
 async function loadDocumentTypeUsers(documentTypeId) {
     const usersList = document.getElementById('usersList');
     usersList.innerHTML = 'Loading users...';
-    
+
     try {
         const response = await fetch(`/api/document_types/${documentTypeId}/users`);
         const allUsers = await response.json(); 
@@ -582,7 +578,7 @@ async function searchUser() {
     try {
         const response = await fetch(`/api/users?cpf=${cpf}`);
         const data = await response.json();
-        
+
         if (!data.users || data.users.length === 0) {
             showNotification('User not found', 'error');
             document.getElementById('userName').value = '';
@@ -805,9 +801,9 @@ document.addEventListener('DOMContentLoaded', loadDocumentTypes);
 }
 
 .users-list {
+    max-height: 260px;
+    overflow-y: auto;
     margin: 1rem 0;
-    border: 1px solid var(--border-color);
-    border-radius: 8px;
 }
 
 .users-table {
@@ -819,47 +815,17 @@ document.addEventListener('DOMContentLoaded', loadDocumentTypes);
     width: 100%;
 }
 
-.users-table tbody {
-    display: block;
-    max-height: 300px;
-    overflow-y: auto;
-}
-
-.users-table thead, .users-table tbody tr {
-    display: table;
-    width: 100%;
-    table-layout: fixed;
-}
-
-.users-table table {
-    width: 100%;
-}
 
 .users-table th,
 .users-table td {
-    padding: 1rem;
+    padding: 0.75rem;
     text-align: left;
     border-bottom: 1px solid var(--border-color);
-    min-width: 120px;
 }
 
 .users-table th {
     background-color: var(--bg-tertiary);
     font-weight: 500;
-    position: sticky;
-    top: 0;
-    z-index: 1;
-}
-
-.users-table tbody tr:hover {
-    background-color: var(--bg-tertiary);
-}
-
-.modal-content {
-    width: 90%;
-    max-width: 800px !important;
-    max-height: 80vh;
-    overflow-y: auto;
 }
 
 .user-checkbox {
