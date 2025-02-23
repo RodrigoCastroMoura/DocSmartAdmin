@@ -27,6 +27,11 @@
                 <label for="documentTypeName">Name</label>
                 <input type="text" id="documentTypeName" name="name" required>
             </div>
+
+function getAccessToken() {
+    return "{{ session.get('access_token', '') }}";
+}
+
             <div class="form-group">
                 <label for="documentTypeDescription">Description</label>
                 <input type="text" id="documentTypeDescription" name="description">
