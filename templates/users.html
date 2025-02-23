@@ -138,21 +138,25 @@
 <div id="userDocumentsModal" class="modal">
     <div class="modal-content">
         <h3>User Documents</h3>
-        <div id="documentsList">
-            Loading documents...
+        <div class="users-table">
+            <table>
+                <thead>
+                    <tr>
+                        <th><input type="checkbox" id="selectAllDocuments" onchange="toggleAllDocuments()"></th>
+                        <th>Document</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody id="documentsList">
+                    <tr>
+                        <td colspan="3" class="loading-message">Loading documents...</td>
+                    </tr>
+                </tbody>
+            </table>
         </div>
         <div class="modal-actions">
-            <div class="select-all-container">
-                <label class="select-all-label">
-                    <input type="checkbox" id="selectAllDocuments" onclick="toggleAllDocuments()">
-                    <span class="checkmark"></span>
-                    <span>Select All</span>
-                </label>
-            </div>
-            <div class="action-buttons">
-                <button type="button" class="action-btn primary" onclick="updateSelectedDocuments()">Update Selected</button>
-                <button type="button" class="action-btn" onclick="hideModal('userDocumentsModal')">Close</button>
-            </div>
+            <button type="button" class="action-btn" onclick="hideModal('userDocumentsModal')">Cancel</button>
+            <button type="button" class="action-btn primary" onclick="updateSelectedDocuments()">Update Selected</button>
         </div>
     </div>
 </div>
@@ -219,17 +223,16 @@ async function showUserDocuments(userCpf, companyId,userId) {
         }
 
         documentsList.innerHTML = `
-            <div class="documents-list">
-                ${data.documents.map(doc => `
-                    <div class="document-item">
-                        <label class="document-checkbox">
-                            <input type="checkbox" value="${doc.id}" ${doc.visible ? 'checked' : ''}>
-                            <span class="document-name">${doc.titulo}</span>
-                        </label>
-                    </div>
-                `).join('')}
-                 <input type="hidden" value="${userId}">
-            </div>
+            ${data.documents.map(doc => `
+                <tr>
+                    <td>
+                        <input type="checkbox" value="${doc.id}" ${doc.visible ? 'checked' : ''}>
+                    </td>
+                    <td>${doc.titulo}</td>
+                    <td><span class="status-badge ${doc.visible ? 'active' : 'inactive'}">${doc.visible ? 'Visible' : 'Hidden'}</span></td>
+                </tr>
+            `).join('')}
+            <input type="hidden" value="${userId}">
         `;
 
     } catch (error) {
@@ -797,54 +800,45 @@ document.addEventListener('DOMContentLoaded', function() {
         outline: none;
         border-color: var(--accent-color);
     }
-    .documents-list {
+    .loading-message {
+        text-align: center;
+        padding: 1rem;
+        color: var(--text-secondary);
+    }
+
+    #userDocumentsModal .users-table {
+        margin: 1rem 0;
         max-height: 300px;
         overflow-y: auto;
-        margin: 1rem 0;
-        border: 1px solid var(--border-color);
-        border-radius: 8px;
-        background: var(--bg-secondary);
     }
 
-    .document-item {
-        padding: 1rem;
+    #userDocumentsModal table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+
+    #userDocumentsModal th,
+    #userDocumentsModal td {
+        padding: 0.75rem;
+        text-align: left;
         border-bottom: 1px solid var(--border-color);
-        transition: all 0.2s ease;
     }
 
-    .document-item:hover {
-        background: var(--bg-tertiary);
+    #userDocumentsModal th {
+        background-color: var(--bg-tertiary);
+        position: sticky;
+        top: 0;
+        z-index: 1;
     }
 
-    .document-item:last-child {
-        border-bottom: none;
-    }
-
-    .document-checkbox {
-        display: flex;
-        align-items: center;
-        gap: 1rem;
+    #userDocumentsModal input[type="checkbox"] {
+        width: 18px;
+        height: 18px;
         cursor: pointer;
     }
 
-    .document-checkbox input[type="checkbox"] {
-        width: 20px;
-        height: 20px;
-        border: 2px solid var(--border-color);
-        border-radius: 4px;
-        cursor: pointer;
-        transition: all 0.2s ease;
-    }
-
-    .document-checkbox input[type="checkbox"]:checked {
-        background-color: var(--accent-color);
-        border-color: var(--accent-color);
-    }
-
-    .document-name {
-        flex: 1;
-        font-size: 0.95rem;
-        color: var(--text-primary);
+    #userDocumentsModal tr:hover {
+        background-color: var(--bg-tertiary);
     }
 
     .table-container {
