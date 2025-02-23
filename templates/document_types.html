@@ -523,7 +523,10 @@ async function filterUsers() {
             'Content-Type': 'application/json'
         };
 
-        const response = await fetch(`/api/users?cpf=${searchInput}`, {
+        // Clean and format CPF input
+        const cpf = searchInput.replace(/[^\d,]/g, '').split(',')[0];
+        
+        const response = await fetch(`/api/users?cpf=${encodeURIComponent(cpf)}`, {
             headers: headers
         });
 
