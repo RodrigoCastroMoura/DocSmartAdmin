@@ -512,6 +512,16 @@ async function filterUsers() {
     displayUsers(filteredUsers);
 }
 
+function formatCPF(cpf) {
+    return cpf.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, '$1.$2.$3-$4');
+}
+
+function toggleSelectAll() {
+    const selectAllCheckbox = document.getElementById('selectAll');
+    const checkboxes = document.querySelectorAll('.user-checkbox');
+    checkboxes.forEach(checkbox => checkbox.checked = selectAllCheckbox.checked);
+}
+
 function displayUsers(users) {
     const usersList = document.getElementById('usersList');
     
@@ -525,7 +535,9 @@ function displayUsers(users) {
             <table>
                 <thead>
                     <tr>
-                        <th>Select</th>
+                        <th>
+                            <input type="checkbox" id="selectAll" onchange="toggleSelectAll()">
+                        </th>
                         <th>Name</th>
                         <th>CPF</th>
                     </tr>
@@ -537,7 +549,7 @@ function displayUsers(users) {
                                 <input type="checkbox" value="${user.id}" class="user-checkbox">
                             </td>
                             <td>${user.name}</td>
-                            <td>${user.cpf}</td>
+                            <td>${formatCPF(user.cpf)}</td>
                         </tr>
                     `).join('')}
                 </tbody>
@@ -793,8 +805,6 @@ document.addEventListener('DOMContentLoaded', loadDocumentTypes);
 }
 
 .users-list {
-    max-height: 400px;
-    overflow-y: auto;
     margin: 1rem 0;
     border: 1px solid var(--border-color);
     border-radius: 8px;
@@ -802,10 +812,23 @@ document.addEventListener('DOMContentLoaded', loadDocumentTypes);
 
 .users-table {
     width: 100%;
-    min-width: 100%;
+    border-collapse: collapse;
+}
+
+.users-table table {
+    width: 100%;
+}
+
+.users-table tbody {
+    display: block;
+    max-height: 300px;
+    overflow-y: auto;
+}
+
+.users-table thead, .users-table tbody tr {
+    display: table;
+    width: 100%;
     table-layout: fixed;
-    border-collapse: separate;
-    border-spacing: 0;
 }
 
 .users-table table {
