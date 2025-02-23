@@ -552,14 +552,7 @@ async function loadDocumentTypeUsers(documentTypeId) {
     
     try {
         const response = await fetch(`/api/document_types/${documentTypeId}/users`);
-        const data = await response.json();
-        
-        if (!data.users || data.users.length === 0) {
-            usersList.innerHTML = '<p class="no-data">No users have access to this document type</p>';
-            return;
-        }
-        
-        allUsers = data.users;
+        const allUsers = await response.json(); 
         displayUsers(allUsers);
     } catch (error) {
         console.error('Error loading users:', error);

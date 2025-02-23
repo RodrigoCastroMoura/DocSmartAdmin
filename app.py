@@ -774,14 +774,45 @@ def document_types_api():
             error_message='Failed to create document types')
 
 
+@app.route('/api/document_types/<id>/users')
+@login_required
+def document_types_users_api(id):
+
+    try:
+        headers = get_auth_headers()
+        company_id = session.get('company_id')
+
+        if not company_id:
+            return jsonify({'error': 'Company ID not found in session'}), 400
+
+        response = requests.get(
+            f"{DOCUMENT_TYPES_URL}/{id}/allowed-users",
+            headers=headers,
+            timeout=REQUEST_TIMEOUT)
+        
+        return handle_api_response(
+        response, error_message='Failed to fetch document types')
+    except Exception as e:
+        print(f"Error adding user access: {e}")
+        return jsonify({'error': 'An unexpected error occurred'}), 500
+
+    
+
 @app.route('/api/document_types/<document_types_id>/users/<user_id>/add', methods=['POST'])
 @login_required
 def add_user_to_document_type(document_types_id, user_id):
     headers = get_auth_headers()
+
     try:
+         # Build form data
+        params = {
+            'user_id': user_id
+        }
+
         response = requests.post(
-            f"{DOCUMENT_TYPES_URL}/{document_types_id}/users/{user_id}/add",
+            f"{DOCUMENT_TYPES_URL}/{document_types_id}/allowed-users",
             headers=headers,
+            params=params,
             timeout=REQUEST_TIMEOUT
         )
         return handle_api_response(response, error_message='Failed to add user access')
