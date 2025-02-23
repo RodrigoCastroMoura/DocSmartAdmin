@@ -841,15 +841,28 @@ document.addEventListener('DOMContentLoaded', loadDocumentTypes);
     max-height: 260px;
     overflow-y: auto;
     margin: 1rem 0;
+    position: relative;
 }
 
 .users-table {
     width: 100%;
-    border-collapse: collapse;
+    border-collapse: separate;
+    border-spacing: 0;
 }
 
 .users-table table {
     width: 100%;
+}
+
+.users-table thead {
+    position: sticky;
+    top: 0;
+    background: var(--bg-tertiary);
+    z-index: 1;
+}
+
+.users-table th {
+    border-bottom: 2px solid var(--border-color);
 }
 
 
