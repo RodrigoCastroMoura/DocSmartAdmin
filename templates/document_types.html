@@ -464,11 +464,10 @@ async function showEditDocumentTypeModal(id, type) {
             // Then load categories for the selected department
             await loadDepartmentCategories(type.department_id, 'editDocumentTypeCategory');
 
-            // Finally set category value
+            // Finally set category value after a brief delay to ensure categories are loaded
             const catSelect = document.getElementById('editDocumentTypeCategory');
-            setTimeout(() => {
-                catSelect.value = type.category_id || '';
-            }, 100);
+            await new Promise(resolve => setTimeout(resolve, 500));
+            catSelect.value = type.category_id || '';
         }
 
         showModal('editDocumentTypeModal');
