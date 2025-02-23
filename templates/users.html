@@ -714,8 +714,19 @@ function showEditUserModal(id, user) {
     document.getElementById('editUserId').value = id;
     document.getElementById('editUserName').value = user.name;
     document.getElementById('editUserEmail').value = user.email;
-    document.getElementById('editUserCPF').value = user.cpf;
-    document.getElementById('editUserPhone').value = user.phone || '';
+    
+    // Apply CPF mask
+    const cpfInput = document.getElementById('editUserCPF');
+    cpfInput.value = user.cpf;
+    maskCPF(cpfInput);
+    
+    // Apply phone mask
+    const phoneInput = document.getElementById('editUserPhone');
+    phoneInput.value = user.phone || '';
+    if (user.phone) {
+        maskPhone(phoneInput);
+    }
+    
     document.getElementById('editUserRole').value = user.role;
     showModal('editUserModal');
 }
