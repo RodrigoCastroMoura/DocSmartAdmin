@@ -524,11 +524,16 @@ async function filterUsers() {
         };
 
         // Clean and format CPF input
-        const cpf = searchInput.replace(/[^\d,]/g, '').split(',')[0];
+        const cpfs = searchInput.split(',').map(cpf => cpf.replace(/[^\d]/g, '').trim()).filter(cpf => cpf);
         
-        const response = await fetch(`/api/users?cpf=${encodeURIComponent(cpf)}`, {
-            headers: headers
-        });
+        const promises = cpfs.map(cpf => 
+            fetch(`/api/users?cpf=${encodeURIComponent(cpf)}`, { headers: headers })
+                .then(res => res.json())
+        );
+
+        const responses = await Promise.all(promises);
+        const allUsers = responses.flatMap(data => data.users || []);
+        const users = { allowed_users: allUsers };
 
         if (!response.ok) throw new Error('Failed to fetch users');
         
