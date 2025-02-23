@@ -138,25 +138,21 @@
 <div id="userDocumentsModal" class="modal">
     <div class="modal-content">
         <h3>User Documents</h3>
-        <div class="users-table">
-            <table>
-                <thead>
-                    <tr>
-                        <th><input type="checkbox" id="selectAllDocuments" onchange="toggleAllDocuments()"></th>
-                        <th>Document</th>
-                        <th>Status</th>
-                    </tr>
-                </thead>
-                <tbody id="documentsList">
-                    <tr>
-                        <td colspan="3" class="loading-message">Loading documents...</td>
-                    </tr>
-                </tbody>
-            </table>
+        <div id="documentsList">
+            Loading documents...
         </div>
         <div class="modal-actions">
-            <button type="button" class="action-btn" onclick="hideModal('userDocumentsModal')">Cancel</button>
-            <button type="button" class="action-btn primary" onclick="updateSelectedDocuments()">Update Selected</button>
+            <div class="select-all-container">
+                <label class="select-all-label">
+                    <input type="checkbox" id="selectAllDocuments" onclick="toggleAllDocuments()">
+                    <span class="checkmark"></span>
+                    <span>Select All</span>
+                </label>
+            </div>
+            <div class="action-buttons">
+                <button type="button" class="action-btn primary" onclick="updateSelectedDocuments()">Update Selected</button>
+                <button type="button" class="action-btn" onclick="hideModal('userDocumentsModal')">Close</button>
+            </div>
         </div>
     </div>
 </div>
@@ -223,16 +219,17 @@ async function showUserDocuments(userCpf, companyId,userId) {
         }
 
         documentsList.innerHTML = `
-            ${data.documents.map(doc => `
-                <tr>
-                    <td>
-                        <input type="checkbox" value="${doc.id}" ${doc.visible ? 'checked' : ''}>
-                    </td>
-                    <td>${doc.titulo}</td>
-                    <td><span class="status-badge ${doc.visible ? 'active' : 'inactive'}">${doc.visible ? 'Visible' : 'Hidden'}</span></td>
-                </tr>
-            `).join('')}
-            <input type="hidden" value="${userId}">
+            <div class="documents-list">
+                ${data.documents.map(doc => `
+                    <div class="document-item">
+                        <label class="document-checkbox">
+                            <input type="checkbox" value="${doc.id}" ${doc.visible ? 'checked' : ''}>
+                            <span class="document-name">${doc.titulo}</span>
+                        </label>
+                    </div>
+                `).join('')}
+                 <input type="hidden" value="${userId}">
+            </div>
         `;
 
     } catch (error) {
@@ -343,7 +340,7 @@ setupFormValidation('addUserForm', {
                 formGroup.appendChild(hint);
                 return hint;
             })();
-
+            
             const isValid = value && value.length <= 6;
             hint.style.color = isValid ? 'red' : 'green';
             document.getElementById('userPassword').classList.toggle('error', !isValid);
@@ -733,13 +730,13 @@ document.addEventListener('DOMContentLoaded', function() {
         gap: 1rem;
         margin-top: 2rem;
     }
-
+    
     .pagination-controls button {
         display: flex;
         align-items: center;
         gap: 0.5rem;
     }
-
+    
     .pagination-controls button:disabled {
         opacity: 0.5;
         cursor: not-allowed;
@@ -800,78 +797,54 @@ document.addEventListener('DOMContentLoaded', function() {
         outline: none;
         border-color: var(--accent-color);
     }
-    .loading-message {
-        text-align: center;
-        padding: 1rem;
-        color: var(--text-secondary);
-    }
-
-    #userDocumentsModal .modal-content {
-        max-width: 800px !important;
-        width: 90%;
-        max-height: 90vh;
-        display: flex;
-        flex-direction: column;
-    }
-
-    #userDocumentsModal .users-table {
-        margin: 1rem 0;
-        flex: 1;
-        overflow: hidden;
-        position: relative;
-        min-height: 300px;
-    }
-
-    #userDocumentsModal table {
-        width: 100%;
-        border-collapse: collapse;
-        table-layout: fixed;
-    }
-
-    #userDocumentsModal th,
-    #userDocumentsModal td {
-        padding: 0.75rem;
-        text-align: left;
-        border-bottom: 1px solid var(--border-color);
-        white-space: nowrap;
-        overflow: hidden;
-        text-overflow: ellipsis;
-    }
-
-    #userDocumentsModal tbody {
-        display: block;
+    .documents-list {
+        max-height: 300px;
         overflow-y: auto;
-        overflow-x: hidden;
-        max-height: calc(90vh - 200px);
+        margin: 1rem 0;
+        border: 1px solid var(--border-color);
+        border-radius: 8px;
+        background: var(--bg-secondary);
     }
 
-    #userDocumentsModal thead,
-    #userDocumentsModal tbody tr {
-        display: table;
-        width: 100%;
-        table-layout: fixed;
+    .document-item {
+        padding: 1rem;
+        border-bottom: 1px solid var(--border-color);
+        transition: all 0.2s ease;
     }
 
-    #userDocumentsModal th {
-        background-color: var(--bg-tertiary);
-        position: sticky;
-        top: 0;
-        z-index: 1;
+    .document-item:hover {
+        background: var(--bg-tertiary);
     }
 
-    #userDocumentsModal th:first-child,
-    #userDocumentsModal td:first-child {
-        width: 50px;
+    .document-item:last-child {
+        border-bottom: none;
     }
 
-    #userDocumentsModal input[type="checkbox"] {
-        width: 18px;
-        height: 18px;
+    .document-checkbox {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
         cursor: pointer;
     }
 
-    #userDocumentsModal tr:hover {
-        background-color: var(--bg-tertiary);
+    .document-checkbox input[type="checkbox"] {
+        width: 20px;
+        height: 20px;
+        border: 2px solid var(--border-color);
+        border-radius: 4px;
+        cursor: pointer;
+        transition: all 0.2s ease;
+    }
+
+    .document-checkbox input[type="checkbox"]:checked {
+        background-color: var(--accent-color);
+        border-color: var(--accent-color);
+    }
+
+    .document-name {
+        flex: 1;
+        font-size: 0.95rem;
+        color: var(--text-primary);
     }
 
     .table-container {
@@ -1013,7 +986,7 @@ document.addEventListener('DOMContentLoaded', function() {
         margin: 2% auto;
         padding: 2.5rem;
         border-radius: 12px;
-        max-width: 600px !important;
+        max-width: 800px !important;
         width: 90%;
         box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
         animation: slideIn 0.3s ease;
