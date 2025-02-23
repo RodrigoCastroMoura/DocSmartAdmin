@@ -28,10 +28,6 @@
                 <input type="text" id="documentTypeName" name="name" required>
             </div>
 
-function getAccessToken() {
-    return "{{ session.get('access_token', '') }}";
-}
-
             <div class="form-group">
                 <label for="documentTypeDescription">Description</label>
                 <input type="text" id="documentTypeDescription" name="description">
@@ -511,7 +507,7 @@ let allUsers = [];
 async function filterUsers() {
     const searchInput = document.getElementById('searchUser').value;
     const documentTypeId = document.getElementById('documentTypeId').value;
-    
+
     if (!searchInput.trim()) {
         await loadDocumentTypeUsers(documentTypeId);
         return;
@@ -525,7 +521,7 @@ async function filterUsers() {
 
         // Clean and format CPF input
         const cpfs = searchInput.split(',').map(cpf => cpf.replace(/[^\d]/g, '').trim()).filter(cpf => cpf);
-        
+
         const promises = cpfs.map(cpf => 
             fetch(`/api/users?cpf=${encodeURIComponent(cpf)}`, { headers: headers })
                 .then(res => res.json())
@@ -633,36 +629,59 @@ async function searchUser() {
 }
 
 async function updateUserAccess() {
-    const userId = document.getElementById('userId').value;
     const documentTypeId = document.getElementById('documentTypeId').value;
     const action = document.getElementById('accessAction').value;
 
-    if (!userId || !documentTypeId) {
-        showNotification('Please select a valid user', 'error');
-        return;
-    }
-
     try {
-        let endpoint = action === 'add' ? 
-            `/api/document_types/${documentTypeId}/users/${userId}/add` : 
-            `/api/document_types/${documentTypeId}/users/${userId}/remove`;
-
-        const response = await fetch(endpoint, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'Accept': 'application/json'
+        if (action === 'add') {
+            const userId = document.getElementById('userId').value;
+            if (!userId) {
+                showNotification('Please select a valid user', 'error');
+                return;
             }
-        });
 
-        if (!response.ok) {
-            const errorData = await response.json();
-            throw new Error(errorData.error || 'Failed to update user access');
+            const response = await fetch(`/api/document_types/${documentTypeId}/users/${userId}/add`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json'
+                }
+            });
+
+            if (!response.ok) {
+                const errorData = await response.json();
+                throw new Error(errorData.error || 'Failed to add user access');
+            }
+        } else if (action === 'remove') {
+            const selectedUsers = Array.from(document.querySelectorAll('.user-checkbox:checked'))
+                .map(checkbox => checkbox.value);
+
+            if (selectedUsers.length === 0) {
+                showNotification('Please select users to remove', 'error');
+                return;
+            }
+
+            const promises = selectedUsers.map(userId =>
+                fetch(`/api/document_types/${documentTypeId}/users/${userId}/remove`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json'
+                    }
+                })
+            );
+
+            const results = await Promise.all(promises);
+            const failedResults = results.filter(r => !r.ok);
+
+            if (failedResults.length > 0) {
+                throw new Error('Failed to remove some users');
+            }
         }
 
         hideModal('userAccessModal');
         showNotification(`User access ${action === 'add' ? 'granted' : 'removed'} successfully`, 'success');
-        await loadDocumentTypes(); // Refresh the list
+        await loadDocumentTypes();
     } catch (error) {
         console.error('Error updating user access:', error);
         showNotification(error.message, 'error');
