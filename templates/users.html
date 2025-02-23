@@ -343,7 +343,7 @@ setupFormValidation('addUserForm', {
                 formGroup.appendChild(hint);
                 return hint;
             })();
-            
+
             const isValid = value && value.length <= 6;
             hint.style.color = isValid ? 'red' : 'green';
             document.getElementById('userPassword').classList.toggle('error', !isValid);
@@ -733,13 +733,13 @@ document.addEventListener('DOMContentLoaded', function() {
         gap: 1rem;
         margin-top: 2rem;
     }
-    
+
     .pagination-controls button {
         display: flex;
         align-items: center;
         gap: 0.5rem;
     }
-    
+
     .pagination-controls button:disabled {
         opacity: 0.5;
         cursor: not-allowed;
@@ -810,6 +810,8 @@ document.addEventListener('DOMContentLoaded', function() {
         margin: 1rem 0;
         max-height: 300px;
         overflow-y: auto;
+        overflow-x: hidden;
+        width: 100%;
     }
 
     #userDocumentsModal table {
@@ -980,7 +982,7 @@ document.addEventListener('DOMContentLoaded', function() {
         margin: 2% auto;
         padding: 2.5rem;
         border-radius: 12px;
-        max-width: 800px !important;
+        max-width: 600px !important;
         width: 90%;
         box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
         animation: slideIn 0.3s ease;
