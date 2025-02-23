@@ -162,7 +162,7 @@ function toggleAllDocuments() {
 
 async function updateSelectedDocuments() {
     const documentsList = document.getElementById('documentsList');
-    const selectedDocuments = Array.from(document.querySelectorAll('#documentsList input[type="checkbox"]:checked'))
+    const selectedDocuments = Array.from(document.querySelectorAll('table tbody input[type="checkbox"]:checked'))
         .map(checkbox => checkbox.value);
     const idUser = document.querySelector('#documentsList input[type="hidden"]').value
 
