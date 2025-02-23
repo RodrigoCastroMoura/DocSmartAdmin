@@ -797,7 +797,6 @@ def document_types_users_api(id):
         return jsonify({'error': 'An unexpected error occurred'}), 500
 
     
-
 @app.route('/api/document_types/<document_types_id>/users/<user_id>/add', methods=['POST'])
 @login_required
 def add_user_to_document_type(document_types_id, user_id):
@@ -821,13 +820,13 @@ def add_user_to_document_type(document_types_id, user_id):
         return jsonify({'error': 'An unexpected error occurred'}), 500
 
 
-@app.route('/api/document_types/<document_types_id>/users/<user_id>/remove', methods=['POST'])
+@app.route('/api/document_types/<document_types_id>/users/<user_ids>/remove', methods=['POST'])
 @login_required
-def remove_user_from_document_type(document_types_id, user_id):
+def remove_user_from_document_type(document_types_id, user_ids):
     headers = get_auth_headers()
     try:
         params = {
-            'user_id': user_id
+            'user_ids': user_ids
         }
         response = requests.delete(
             f"{DOCUMENT_TYPES_URL}/{document_types_id}/allowed-users",
