@@ -774,8 +774,39 @@ def document_types_api():
             error_message='Failed to create document types')
 
 
-@app.route('/api/document_types/<document_types_id>',
-           methods=['PUT', 'DELETE'])
+@app.route('/api/document_types/<document_types_id>/users/<user_id>/add', methods=['POST'])
+@login_required
+def add_user_to_document_type(document_types_id, user_id):
+    headers = get_auth_headers()
+    try:
+        response = requests.post(
+            f"{DOCUMENT_TYPES_URL}/{document_types_id}/users/{user_id}/add",
+            headers=headers,
+            timeout=REQUEST_TIMEOUT
+        )
+        return handle_api_response(response, error_message='Failed to add user access')
+    except Exception as e:
+        print(f"Error adding user access: {e}")
+        return jsonify({'error': 'An unexpected error occurred'}), 500
+
+
+@app.route('/api/document_types/<document_types_id>/users/<user_id>/remove', methods=['POST'])
+@login_required
+def remove_user_from_document_type(document_types_id, user_id):
+    headers = get_auth_headers()
+    try:
+        response = requests.post(
+            f"{DOCUMENT_TYPES_URL}/{document_types_id}/users/{user_id}/remove",
+            headers=headers,
+            timeout=REQUEST_TIMEOUT
+        )
+        return handle_api_response(response, error_message='Failed to remove user access')
+    except Exception as e:
+        print(f"Error removing user access: {e}")
+        return jsonify({'error': 'An unexpected error occurred'}), 500
+
+
+@app.route('/api/document_types/<document_types_id>', methods=['PUT', 'DELETE'])
 @login_required
 def document_types_id(document_types_id):
     headers = get_auth_headers()
@@ -860,7 +891,7 @@ def admins_api():
             'per_page': request.args.get('per_page', 10),
             'company_id': company_id,
             'role': 'admin',
-           
+
         }
         # Remove None values
         params = {k: v for k, v in params.items() if v is not None}
@@ -869,7 +900,7 @@ def admins_api():
                                 headers=headers,
                                 params=params,
                                 timeout=REQUEST_TIMEOUT)
-        
+
         return handle_api_response(response,
                                    error_message='Failed to fetch users')
 
@@ -889,7 +920,7 @@ def admins_api():
                                  headers=headers,
                                  json=form_data,
                                  timeout=REQUEST_TIMEOUT)
-        
+
         if response.status_code == 201:
 
             response_content = response.content
@@ -897,7 +928,7 @@ def admins_api():
             # Decodificando o conteúdo de bytes para string
             response_str = response_content.decode('utf-8')
 
-            # Convertendo a string JSON para um dicionário Python
+            # Convertendo a string JSON para umdicionário Python
             response_dict = json.loads(response_str)
 
             form_data_permission = {
@@ -936,7 +967,7 @@ def admins_id(admin_id):
                                 headers=headers,
                                 json=form_data,
                                 timeout=REQUEST_TIMEOUT)
-        
+
         if response.status_code == 200:
             form_data_permission = {
                 "permissions": data.get('permissions')
@@ -945,7 +976,7 @@ def admins_id(admin_id):
                                                headers=headers,
                                                json=form_data_permission,
                                                timeout=REQUEST_TIMEOUT)
-            
+
         return handle_api_response(response,
                                    error_message='Failed to update user')
 
@@ -1005,7 +1036,7 @@ def users_api():
                                  headers=headers,
                                  json=form_data,
                                  timeout=REQUEST_TIMEOUT)
-        
+
         return handle_api_response(response,
                                    success_code=201,
                                    error_message='Failed to create user')
@@ -1036,8 +1067,8 @@ def users_id(user_id):
                                 headers=headers,
                                 json=form_data,
                                 timeout=REQUEST_TIMEOUT)
-        
-            
+
+
         return handle_api_response(response,
                                    error_message='Failed to update user')
 
@@ -1057,17 +1088,17 @@ def update_user_status(user_id):
     try:
         data = request.get_json()
         status = data.get('status')
-        
+
         if not status:
             return jsonify({'error': 'Status is required'}), 400
-            
+
         response = requests.post(
             f"{API_BASE_URL}/users/{user_id}/status",
             headers=headers,
             json={'status': status},
             timeout=REQUEST_TIMEOUT
         )
-        
+
         return handle_api_response(response, error_message='Failed to update user status')
     except Exception as e:
         print(f"Error updating user status: {e}")
@@ -1224,14 +1255,14 @@ def toggle_documents_status():
         data = request.get_json()
         document_ids = data.get('document_ids', [])
         user_id = data.get('user_id')
-        
+
         response = requests.post(
             f"{DOCUMENTS_URL}/toggle-status",
             headers=headers,
             json={'document_ids': document_ids,'user_id':user_id},
             timeout=REQUEST_TIMEOUT
         )
-        
+
         return handle_api_response(response, error_message='Failed to update documents status')
     except Exception as e:
         print(f"Error updating documents status: {e}")

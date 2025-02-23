@@ -605,23 +605,26 @@ async function updateUserAccess() {
     }
 
     try {
-        const response = await fetch(`/api/document_types/${documentTypeId}/access`, {
+        let endpoint = action === 'add' ? 
+            `/api/document_types/${documentTypeId}/users/${userId}/add` : 
+            `/api/document_types/${documentTypeId}/users/${userId}/remove`;
+
+        const response = await fetch(endpoint, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-                user_id: userId,
-                action: action
-            })
+                'Accept': 'application/json'
+            }
         });
 
         if (!response.ok) {
-            throw new Error('Failed to update user access');
+            const errorData = await response.json();
+            throw new Error(errorData.error || 'Failed to update user access');
         }
 
         hideModal('userAccessModal');
         showNotification(`User access ${action === 'add' ? 'granted' : 'removed'} successfully`, 'success');
+        await loadDocumentTypes(); // Refresh the list
     } catch (error) {
         console.error('Error updating user access:', error);
         showNotification(error.message, 'error');
