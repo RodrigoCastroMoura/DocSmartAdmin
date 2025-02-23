@@ -160,6 +160,10 @@ function getAccessToken() {
 </div>
 
 <script>
+function getAccessToken() {
+    return "{{ session.get('access_token', '') }}";
+}
+
 setupFormValidation('addDocumentTypeForm', {
     'documentTypeName': [
         ValidationRules.required,
