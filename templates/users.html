@@ -138,7 +138,7 @@
 <div id="userDocumentsModal" class="modal">
     <div class="modal-content">
         <h3>User Documents</h3>
-        <div id="documentsList">
+        <div class="users-list" id="documentsList">
             Loading documents...
         </div>
         <div class="modal-actions">
@@ -219,16 +219,32 @@ async function showUserDocuments(userCpf, companyId,userId) {
         }
 
         documentsList.innerHTML = `
-            <div class="documents-list">
-                ${data.documents.map(doc => `
-                    <div class="document-item">
-                        <label class="document-checkbox">
-                            <input type="checkbox" value="${doc.id}" ${doc.visible ? 'checked' : ''}>
-                            <span class="document-name">${doc.titulo}</span>
-                        </label>
-                    </div>
-                `).join('')}
-                 <input type="hidden" value="${userId}">
+            <div class="users-table">
+                <table>
+                    <thead>
+                        <tr>
+                            <th><input type="checkbox" id="selectAll" onchange="toggleAllDocuments()"></th>
+                            <th>Document Name</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${data.documents.map(doc => `
+                            <tr>
+                                <td>
+                                    <input type="checkbox" value="${doc.id}" class="document-checkbox" ${doc.visible ? 'checked' : ''}>
+                                </td>
+                                <td>${doc.titulo}</td>
+                                <td>
+                                    <span class="status-badge ${doc.visible ? 'active' : 'inactive'}">
+                                        ${doc.visible ? 'Visible' : 'Hidden'}
+                                    </span>
+                                </td>
+                            </tr>
+                        `).join('')}
+                    </tbody>
+                </table>
+                <input type="hidden" value="${userId}">
             </div>
         `;
 
