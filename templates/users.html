@@ -142,13 +142,7 @@
             Loading documents...
         </div>
         <div class="modal-actions">
-            <div class="select-all-container">
-                <label class="select-all-label">
-                    <input type="checkbox" id="selectAllDocuments" onclick="toggleAllDocuments()">
-                    <span class="checkmark"></span>
-                    <span>Select All</span>
-                </label>
-            </div>
+            
             <div class="action-buttons">
                 <button type="button" class="action-btn primary" onclick="updateSelectedDocuments()">Update Selected</button>
                 <button type="button" class="action-btn" onclick="hideModal('userDocumentsModal')">Close</button>
@@ -159,7 +153,7 @@
 
 <script>
 function toggleAllDocuments() {
-    const selectAllCheckbox = document.getElementById('selectAllDocuments');
+    const selectAllCheckbox = document.getElementById('selectAll');
     const checkboxes = document.querySelectorAll('#documentsList input[type="checkbox"]');
     checkboxes.forEach(checkbox => {
         checkbox.checked = selectAllCheckbox.checked;
@@ -204,7 +198,7 @@ async function showUserDocuments(userCpf, companyId,userId) {
     showModal('userDocumentsModal');
     const documentsList = document.getElementById('documentsList');
     documentsList.innerHTML = '<div class="loading-spinner"></div>';
-    document.getElementById('selectAllDocuments').checked = false;
+    
 
     try {
         const response = await fetch(`/api/documents/simple?user_cpf=${userCpf}&company_id=${companyId}`);
@@ -219,11 +213,11 @@ async function showUserDocuments(userCpf, companyId,userId) {
         }
 
         documentsList.innerHTML = `
-            <div class="users-table">
+            <div class="users-tables">
                 <table>
                     <thead>
                         <tr>
-                            <th><input type="checkbox" id="selectAll" onchange="toggleAllDocuments()"></th>
+                            <th><input type="checkbox" id="selectAll" onclick="toggleAllDocuments()"></th>
                             <th>Document Name</th>
                             <th>Status</th>
                         </tr>
@@ -867,6 +861,12 @@ document.addEventListener('DOMContentLoaded', function() {
         overflow-x: auto;
     }
 
+    .users-tables table{
+        width: 100%;
+        border-collapse: collapse;
+        margin-top:25px
+    }
+
     .users-table {
         width: 100%;
         border-collapse: collapse;
@@ -881,6 +881,22 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     .users-table th {
+        font-weight: 500;
+        color: var(--text-secondary);
+        background-color: var(--bg-tertiary);
+        position: sticky;
+        top: 0;
+        z-index: 1;
+    }
+
+    .users-tables th,
+    .users-tables td {
+        padding: 1rem;
+        text-align: left;
+        border-bottom: 1px solid var(--border-color);
+    }
+
+    .users-tables th {
         font-weight: 500;
         color: var(--text-secondary);
         background-color: var(--bg-tertiary);
