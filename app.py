@@ -777,6 +777,7 @@ def document_types_api():
 @app.route('/api/document_types/<id>/users')
 @login_required
 def document_types_users_api(id):
+
     try:
         headers = get_auth_headers()
         company_id = session.get('company_id')
@@ -785,14 +786,14 @@ def document_types_users_api(id):
             return jsonify({'error': 'Company ID not found in session'}), 400
 
         response = requests.get(
-            f"{DOCUMENT_TYPES_URL}/{id}/users",
+            f"{DOCUMENT_TYPES_URL}/{id}/allowed-users",
             headers=headers,
             timeout=REQUEST_TIMEOUT)
         
         return handle_api_response(
-        response, error_message='Failed to fetch document types users')
+        response, error_message='Failed to fetch document types')
     except Exception as e:
-        print(f"Error fetching document type users: {e}")
+        print(f"Error adding user access: {e}")
         return jsonify({'error': 'An unexpected error occurred'}), 500
 
     
