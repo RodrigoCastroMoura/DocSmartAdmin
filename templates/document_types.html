@@ -844,9 +844,17 @@ document.addEventListener('DOMContentLoaded', loadDocumentTypes);
 
 .modal-content {
     width: 90%;
-    max-width: 800px !important;
-    height: auto;
+    max-width: 600px !important;
     margin: 2rem auto;
+    max-height: 80vh;
+}
+
+.users-list {
+    max-height: 300px;
+    overflow-y: auto;
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    margin: 1rem 0;
 }
 
 .user-checkbox {
