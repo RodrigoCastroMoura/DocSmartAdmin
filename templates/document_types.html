@@ -665,9 +665,7 @@ async function updateUserAccess() {
                 fetch(`/api/document_types/${documentTypeId}/users/${userId}/remove`, {
                     method: 'POST',
                     headers: {
-                        'Content-Type': 'application/json',
-                        'Accept': 'application/json',
-                        'Authorization': `Bearer ${getAccessToken()}`
+                        'Content-Type': 'application/json'
                     }
                 })
             );
