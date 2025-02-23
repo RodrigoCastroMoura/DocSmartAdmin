@@ -534,11 +534,6 @@ async function filterUsers() {
         const responses = await Promise.all(promises);
         const allUsers = responses.flatMap(data => data.users || []);
         const users = { allowed_users: allUsers };
-
-        if (!response.ok) throw new Error('Failed to fetch users');
-        
-        const data = await response.json();
-        const users = { allowed_users: data.users || [] };
         displayUsers(users);
     } catch (error) {
         console.error('Error filtering users:', error);
