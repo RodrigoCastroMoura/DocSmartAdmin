@@ -280,15 +280,7 @@ function generateDocumentTypesHTML(types) {
             </div>`;
     }
 
-    const itemsPerPage = 9;
-    const currentPage = 1;
-    const totalPages = Math.ceil(types.length / itemsPerPage);
-    
-    const startIndex = (currentPage - 1) * itemsPerPage;
-    const endIndex = startIndex + itemsPerPage;
-    const paginatedTypes = types.slice(startIndex, endIndex);
-    
-    const typesHTML = paginatedTypes.map(type => `
+    const typesHTML = types.map(type => `
         <div class="document-type-card" data-id="${type.id}">
             <div class="document-type-header">
                 <i data-feather="file"></i>
@@ -322,22 +314,7 @@ function generateDocumentTypesHTML(types) {
         </div>
     `).join('');
 
-    const paginationHTML = `
-        <div class="pagination">
-            <button onclick="changePage(${currentPage - 1})" ${currentPage === 1 ? 'disabled' : ''}>
-                <i data-feather="chevron-left"></i>
-            </button>
-            <span>Page ${currentPage} of ${totalPages}</span>
-            <button onclick="changePage(${currentPage + 1})" ${currentPage === totalPages ? 'disabled' : ''}>
-                <i data-feather="chevron-right"></i>
-            </button>
-        </div>
-    `;
-    
-    return `
-        <div class="document-types-grid">${typesHTML}</div>
-        ${paginationHTML}
-    `;
+    return `<div class="document-types-grid">${typesHTML}</div>`;
 }
 
 async function createDocumentType(event) {
@@ -692,18 +669,6 @@ async function updateUserAccess() {
     }
 }
 
-let currentPage = 1;
-let allDocumentTypes = [];
-
-function changePage(newPage) {
-    if (newPage >= 1 && newPage <= Math.ceil(allDocumentTypes.length / 9)) {
-        currentPage = newPage;
-        const contentDiv = document.getElementById('documentTypesContent');
-        contentDiv.innerHTML = generateDocumentTypesHTML(allDocumentTypes);
-        feather.replace();
-    }
-}
-
 // Initialize document types list when page loads
 document.addEventListener('DOMContentLoaded', loadDocumentTypes);
 </script>
@@ -914,33 +879,6 @@ document.addEventListener('DOMContentLoaded', loadDocumentTypes);
 
 .error {
     color: var(--danger-color);
-}
-
-.pagination {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    gap: 1rem;
-    margin-top: 2rem;
-}
-
-.pagination button {
-    background: var(--bg-tertiary);
-    border: 1px solid var(--border-color);
-    border-radius: 4px;
-    padding: 0.5rem;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-}
-
-.pagination button:disabled {
-    opacity: 0.5;
-    cursor: not-allowed;
-}
-
-.pagination span {
-    color: var(--text-secondary);
 }
 </style>
 {% endblock %}
