@@ -526,10 +526,7 @@ function toggleSelectAll() {
 function displayUsers(users) {
     const usersList = document.getElementById('usersList');
     
-    if (!users || users.length === 0) {
-        usersList.innerHTML = '<p class="no-data">No users found</p>';
-        return;
-    }
+    
     
     usersList.innerHTML = `
         <div class="users-table">
@@ -542,7 +539,7 @@ function displayUsers(users) {
                     </tr>
                 </thead>
                 <tbody>
-                    ${users.map(user => `
+                    ${users.allowed_users.map(user => `
                         <tr>
                             <td>
                                 <input type="checkbox" value="${user.id}" class="user-checkbox">
