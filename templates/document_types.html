@@ -808,7 +808,6 @@ document.addEventListener('DOMContentLoaded', loadDocumentTypes);
 
 .users-list {
     max-height: 400px;
-    overflow-y: auto;
     margin: 1rem 0;
     border: 1px solid var(--border-color);
     border-radius: 8px;
@@ -820,6 +819,9 @@ document.addEventListener('DOMContentLoaded', loadDocumentTypes);
     table-layout: fixed;
     border-collapse: separate;
     border-spacing: 0;
+    overflow-y: auto;
+    max-height: 400px;
+    display: block;
 }
 
 .users-table table {
@@ -849,8 +851,6 @@ document.addEventListener('DOMContentLoaded', loadDocumentTypes);
 .modal-content {
     width: 90%;
     max-width: 800px !important;
-    max-height: 80vh;
-    overflow-y: auto;
 }
 
 .user-checkbox {
