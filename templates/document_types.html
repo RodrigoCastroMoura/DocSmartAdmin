@@ -793,26 +793,44 @@ document.addEventListener('DOMContentLoaded', loadDocumentTypes);
 }
 
 .users-list {
-    max-height: 300px;
+    max-height: 400px;
     overflow-y: auto;
     margin: 1rem 0;
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
 }
 
 .users-table {
     width: 100%;
-    border-collapse: collapse;
+    border-collapse: separate;
+    border-spacing: 0;
 }
 
 .users-table th,
 .users-table td {
-    padding: 0.75rem;
+    padding: 1rem;
     text-align: left;
     border-bottom: 1px solid var(--border-color);
+    min-width: 120px;
 }
 
 .users-table th {
     background-color: var(--bg-tertiary);
     font-weight: 500;
+    position: sticky;
+    top: 0;
+    z-index: 1;
+}
+
+.users-table tbody tr:hover {
+    background-color: var(--bg-tertiary);
+}
+
+.modal-content {
+    width: 90%;
+    max-width: 800px !important;
+    max-height: 80vh;
+    overflow-y: auto;
 }
 
 .user-checkbox {
