@@ -525,9 +525,6 @@ function toggleSelectAll() {
 
 function displayUsers(users) {
     const usersList = document.getElementById('usersList');
-
-
-
     usersList.innerHTML = `
         <div class="users-table">
             <table>
@@ -541,9 +538,7 @@ function displayUsers(users) {
                 <tbody>
                     ${users.allowed_users.map(user => `
                         <tr>
-                            <td>
-                                <input type="checkbox" value="${user.id}" class="user-checkbox">
-                            </td>
+                            <td><input type="checkbox" value="${user.id}" class="user-checkbox"></td>
                             <td>${user.name}</td>
                             <td>${formatCPF(user.cpf)}</td>
                         </tr>
@@ -813,6 +808,14 @@ document.addEventListener('DOMContentLoaded', loadDocumentTypes);
 
 .users-table table {
     width: 100%;
+    border-collapse: collapse; /* Ensure consistent border collapsing */
+}
+
+.users-table thead {
+    position: sticky;
+    top: 0;
+    background-color: var(--bg-tertiary); /* Match header background color */
+    z-index: 1;
 }
 
 
@@ -827,6 +830,13 @@ document.addEventListener('DOMContentLoaded', loadDocumentTypes);
     background-color: var(--bg-tertiary);
     font-weight: 500;
 }
+
+.users-table tbody {
+    display: block;
+    overflow-y: auto;
+    max-height: 200px; /* Adjust as needed */
+}
+
 
 .user-checkbox {
     width: 18px;
