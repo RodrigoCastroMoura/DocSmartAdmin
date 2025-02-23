@@ -802,8 +802,14 @@ document.addEventListener('DOMContentLoaded', loadDocumentTypes);
 
 .users-table {
     width: 100%;
+    min-width: 100%;
+    table-layout: fixed;
     border-collapse: separate;
     border-spacing: 0;
+}
+
+.users-table table {
+    width: 100%;
 }
 
 .users-table th,
