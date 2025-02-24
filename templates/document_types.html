@@ -740,7 +740,9 @@ async function updateUserAccess() {
 }
 
 // Initialize document types list when page loads
-document.addEventListener('DOMContentLoaded', loadDocumentTypes);
+document.addEventListener('DOMContentLoaded', () => {
+    loadDocumentTypes(1);
+});
 </script>
 
 <style>
