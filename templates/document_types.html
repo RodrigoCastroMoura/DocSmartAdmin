@@ -15,6 +15,15 @@
                 <p>Loading document types...</p>
             </div>
         </div>
+        <div class="pagination-controls">
+            <button class="action-btn" onclick="changePage(currentPage - 1)" id="prevPage" disabled>
+                <i data-feather="chevron-left"></i> Previous
+            </button>
+            <span id="pageInfo">Page 1</span>
+            <button class="action-btn" onclick="changePage(currentPage + 1)" id="nextPage" disabled>
+                Next <i data-feather="chevron-right"></i>
+            </button>
+        </div>
     </div>
 </div>
 
@@ -233,12 +242,21 @@ async function loadDepartmentCategories(departmentId, targetId = 'documentTypeCa
     }
 }
 
-async function loadDocumentTypes() {
+let currentPage = 1;
+const perPage = 9;
+let totalPages = 1;
+
+async function loadDocumentTypes(page = 1) {
     const contentDiv = document.getElementById('documentTypesContent');
     showLoading(contentDiv);
 
     try {
-        const response = await fetch('/api/document_types');
+        const params = new URLSearchParams({
+            page: page,
+            per_page: perPage
+        });
+        
+        const response = await fetch(`/api/document_types?${params}`);
         if (!response.ok) {
             throw new Error(`HTTP error! status: ${response.status}`);
         }
@@ -248,8 +266,23 @@ async function loadDocumentTypes() {
             throw new Error('Invalid response format');
         }
 
-        contentDiv.innerHTML = generateDocumentTypesHTML(data.document_types);
+        currentPage = page;
+        totalPages = data.total_pages || 1;
+
+        const gridHTML = generateDocumentTypesHTML(data.document_types);
+        contentDiv.innerHTML = `${gridHTML}
+            <div class="pagination-controls">
+                <button class="action-btn" onclick="changePage(currentPage - 1)" id="prevPage" ${currentPage <= 1 ? 'disabled' : ''}>
+                    <i data-feather="chevron-left"></i> Previous
+                </button>
+                <span id="pageInfo">Page ${currentPage} of ${totalPages}</span>
+                <button class="action-btn" onclick="changePage(currentPage + 1)" id="nextPage" ${currentPage >= totalPages ? 'disabled' : ''}>
+                    Next <i data-feather="chevron-right"></i>
+                </button>
+            </div>`;
+        
         feather.replace();
+        updatePaginationControls();
     } catch (error) {
         console.error('Error loading document types:', error);
         contentDiv.innerHTML = `
@@ -262,6 +295,18 @@ async function loadDocumentTypes() {
         feather.replace();
     } finally {
         hideLoading(contentDiv);
+    }
+}
+
+function updatePaginationControls() {
+    document.getElementById('prevPage').disabled = currentPage <= 1;
+    document.getElementById('nextPage').disabled = currentPage >= totalPages;
+    document.getElementById('pageInfo').textContent = `Page ${currentPage} of ${totalPages}`;
+}
+
+function changePage(newPage) {
+    if (newPage >= 1 && newPage <= totalPages) {
+        loadDocumentTypes(newPage);
     }
 }
 
