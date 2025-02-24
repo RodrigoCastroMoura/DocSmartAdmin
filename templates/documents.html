@@ -725,7 +725,7 @@ const pdfjsLib = window['pdfjs-dist/build/pdf'];
 pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/pdf.worker.min.js';
 
 let currentPdf = null;
-let currentPage = 1;
+let currentPdfPage = 1;
 let totalPages = 1;
 
 async function previewDocument(url, filename) {
@@ -759,8 +759,8 @@ async function previewDocument(url, filename) {
             const loadingTask = pdfjsLib.getDocument(url);
             currentPdf = await loadingTask.promise;
             totalPages = currentPdf.numPages;
-            currentPage = 1;
-            await renderPage(currentPage);
+            currentPdfPage = 1;
+            await renderPage(currentPdfPage);
         } else if (['jpg', 'jpeg', 'png', 'gif'].includes(fileType)) {
             // Handle images
             imagePreview.style.display = 'block';
@@ -803,10 +803,10 @@ async function renderPage(pageNumber) {
 }
 
 async function changePdfPage(delta) {
-    const newPage = currentPage + delta;
+    const newPage = currentPdfPage + delta;
     if (newPage >= 1 && newPage <= totalPages) {
-        currentPage = newPage;
-        await renderPage(currentPage);
+        currentPdfPage = newPage;
+        await renderPage(currentPdfPage);
     }
 }
 
@@ -950,7 +950,7 @@ document.addEventListener('DOMContentLoaded', () => {
     .filter-grid {
         display: grid;
         grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-        gap: 1rem;
+gap: 1rem;
     }
 
     .filter-group {
