@@ -726,7 +726,7 @@ pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs
 
 let currentPdf = null;
 let currentPdfPage = 1;
-let totalPages = 1;
+let pdfTotalPages = 1;
 
 async function previewDocument(url, filename) {
     const previewTitle = document.getElementById('previewTitle');
@@ -758,7 +758,7 @@ async function previewDocument(url, filename) {
 
             const loadingTask = pdfjsLib.getDocument(url);
             currentPdf = await loadingTask.promise;
-            totalPages = currentPdf.numPages;
+            pdfTotalPages = currentPdf.numPages;
             currentPdfPage = 1;
             await renderPage(currentPdfPage);
         } else if (['jpg', 'jpeg', 'png', 'gif'].includes(fileType)) {
@@ -793,9 +793,9 @@ async function renderPage(pageNumber) {
             viewport: viewport
         }).promise;
 
-        document.getElementById('pageInfo').textContent = `Page ${pageNumber} of ${totalPages}`;
+        document.getElementById('pageInfo').textContent = `Page ${pageNumber} of ${pdfTotalPages}`;
         document.getElementById('prevPage').disabled = pageNumber <= 1;
-        document.getElementById('nextPage').disabled = pageNumber >= totalPages;
+        document.getElementById('nextPage').disabled = pageNumber >= pdfTotalPages;
     } catch (error) {
         console.error('Error rendering PDF page:', error);
         showNotification('Failed to render PDF page', 'error');
