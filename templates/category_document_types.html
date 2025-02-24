@@ -1,3 +1,4 @@
+
 {% extends "base.html" %}
 
 {% block content %}
@@ -18,7 +19,7 @@
         </button>
     </div>
     <div class="content-grid">
-        <div class="document-types-grid">
+        <div class="document-types-grid" id="documentTypesGrid">
             {% if document_types %}
                 {% for type in document_types %}
                 <div class="document-type-card" data-id="{{ type.id }}">
@@ -31,11 +32,19 @@
                     <div class="document-type-info">
                         <p class="description">{{ type.description or 'No description' }}</p>
                         <p class="meta">
-                            <span>Documents:  {{ type.document_count|default(0)}}</span>
-                            <span>Created:</span>
+                            <span>Documents: {{ type.document_count|default(0)}}</span>
+                            <span>Created: {{ type.created_at|default('N/A') }}</span>
                         </p>
                     </div>
                     <div class="document-type-actions">
+                        {% if not type.public %}
+                        <button class="action-btn success" onclick='showUserAccessModal("{{ type.id }}", "add")'>
+                            <i data-feather="user-plus"></i>
+                        </button>
+                        <button class="action-btn warning" onclick='showUserAccessModal("{{ type.id }}", "remove")'>
+                            <i data-feather="user-minus"></i>
+                        </button>
+                        {% endif %}
                         <button class="action-btn" onclick='showEditDocumentTypeModal("{{ type.id }}", {{ type|tojson|safe }})'>
                             <i data-feather="edit-2"></i>
                         </button>
@@ -51,6 +60,15 @@
                     <p>No document types found for this category</p>
                 </div>
             {% endif %}
+        </div>
+        <div class="pagination-controls">
+            <button class="action-btn" onclick="changePage(currentPage - 1)" id="prevPage" disabled>
+                <i data-feather="chevron-left"></i> Previous
+            </button>
+            <span id="pageInfo">Page 1</span>
+            <button class="action-btn" onclick="changePage(currentPage + 1)" id="nextPage" disabled>
+                Next <i data-feather="chevron-right"></i>
+            </button>
         </div>
     </div>
 </div>
@@ -69,6 +87,19 @@
                 <input type="text" id="documentTypeDescription" name="description">
             </div>
             <input type="hidden" name="category_id" value="{{ category.id }}">
+            <div class="form-group">
+                <label>Is Public?</label>
+                <div class="radio-group">
+                    <label class="radio-label">
+                        <input type="radio" name="public" value="true" checked>
+                        Public
+                    </label>
+                    <label class="radio-label">
+                        <input type="radio" name="public" value="false">
+                        Private
+                    </label>
+                </div>
+            </div>
             <div class="modal-actions">
                 <button type="button" class="action-btn" onclick="hideModal('addDocumentTypeModal')">Cancel</button>
                 <button type="submit" class="action-btn primary">Add</button>
@@ -92,6 +123,19 @@
                 <label for="editDocumentTypeDescription">Description</label>
                 <input type="text" id="editDocumentTypeDescription" name="description">
             </div>
+            <div class="form-group">
+                <label>Is Public?</label>
+                <div class="radio-group">
+                    <label class="radio-label">
+                        <input type="radio" name="public" value="true" id="editPublicTrue">
+                        Public
+                    </label>
+                    <label class="radio-label">
+                        <input type="radio" name="public" value="false" id="editPublicFalse">
+                        Private
+                    </label>
+                </div>
+            </div>
             <div class="modal-actions">
                 <button type="button" class="action-btn" onclick="hideModal('editDocumentTypeModal')">Cancel</button>
                 <button type="submit" class="action-btn primary">Update</button>
@@ -100,7 +144,58 @@
     </div>
 </div>
 
+<!-- User Access Modal -->
+<div id="userAccessModal" class="modal">
+    <div class="modal-content">
+        <h3 id="userAccessTitle">Manage User Access</h3>
+        <div id="addUserSection" style="display: none;">
+            <div class="form-group">
+                <label for="userCpf">User CPF</label>
+                <div class="search-input">
+                    <input type="text" id="userCpf" placeholder="Enter user CPF">
+                    <button type="button" class="action-btn primary" onclick="searchUser()">
+                        <i data-feather="search"></i>
+                    </button>
+                </div>
+            </div>
+            <div class="form-group">
+                <label for="userName">User Name</label>
+                <input type="text" id="userName" disabled>
+                <input type="hidden" id="userId">
+            </div>
+        </div>
+        <div id="removeUserSection" style="display: none;">
+            <div class="form-group">
+                <label for="searchUser">Search Users (Multiple CPFs separated by comma)</label>
+                <div class="search-input">
+                    <input type="text" id="searchUser" placeholder="Enter CPFs (e.g. 123.456.789-00, 987.654.321-00)">
+                    <button type="button" class="action-btn primary" onclick="filterUsers()">
+                        <i data-feather="search"></i>
+                    </button>
+                </div>
+            </div>
+            <div class="users-list" id="usersList">
+                Loading users...
+            </div>
+        </div>
+        <input type="hidden" id="documentTypeId">
+        <input type="hidden" id="accessAction">
+        <div class="modal-actions">
+            <button type="button" class="action-btn" onclick="hideModal('userAccessModal')">Cancel</button>
+            <button type="button" class="action-btn primary" onclick="updateUserAccess()">Confirm</button>
+        </div>
+    </div>
+</div>
+
 <script>
+let currentPage = 1;
+const perPage = 9;
+let totalPages = 1;
+
+function getAccessToken() {
+    return "{{ session.get('access_token', '') }}";
+}
+
 setupFormValidation('addDocumentTypeForm', {
     'documentTypeName': [
         ValidationRules.required,
@@ -117,22 +212,66 @@ setupFormValidation('editDocumentTypeForm', {
     ]
 });
 
-async function loadDocumentTypes() {
-    const contentDiv = document.querySelector('.document-types-grid');
+async function loadDocumentTypes(page = 1) {
+    const contentDiv = document.getElementById('documentTypesGrid');
     showLoading(contentDiv);
 
     try {
-        const response = await fetch(window.location.pathname);
+        const params = new URLSearchParams({
+            page: page,
+            per_page: perPage
+        });
+
+        const response = await fetch(`/api/document_types/categories/{{ category.id }}/types?${params}`);
         if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
-        const html = await response.text();
-        const parser = new DOMParser();
-        const doc = parser.parseFromString(html, 'text/html');
-        const newContent = doc.querySelector('.document-types-grid');
-        
-        if (newContent) {
-            contentDiv.innerHTML = newContent.innerHTML;
-            feather.replace();
+        const data = await response.json();
+
+        currentPage = page;
+        totalPages = Math.ceil(data.length / perPage);
+        updatePaginationControls();
+
+        if (!data || data.length === 0) {
+            contentDiv.innerHTML = `
+                <div class="no-data">
+                    <i data-feather="inbox"></i>
+                    <p>No document types found</p>
+                </div>`;
+        } else {
+            contentDiv.innerHTML = data.map(type => `
+                <div class="document-type-card" data-id="${type.id}">
+                    <div class="document-type-header">
+                        <i data-feather="file"></i>
+                        <a href="/document_type/${type.id}/documents" class="document-type-link">
+                            <h3>${type.name}</h3>
+                        </a>    
+                    </div>
+                    <div class="document-type-info">
+                        <p class="description">${type.description || 'No description'}</p>
+                        <p class="meta">
+                            <span>Documents: ${type.document_count || 0}</span>
+                            <span>Created: ${new Date(type.created_at).toLocaleDateString()}</span>
+                        </p>
+                    </div>
+                    <div class="document-type-actions">
+                        ${!type.public ? `
+                            <button class="action-btn success" onclick='showUserAccessModal("${type.id}", "add")'>
+                                <i data-feather="user-plus"></i>
+                            </button>
+                            <button class="action-btn warning" onclick='showUserAccessModal("${type.id}", "remove")'>
+                                <i data-feather="user-minus"></i>
+                            </button>
+                        ` : ''}
+                        <button class="action-btn" onclick='showEditDocumentTypeModal("${type.id}", ${JSON.stringify(type)})'>
+                            <i data-feather="edit-2"></i>
+                        </button>
+                        <button class="action-btn danger" onclick="deleteDocumentType('${type.id}')">
+                            <i data-feather="trash-2"></i>
+                        </button>
+                    </div>
+                </div>
+            `).join('');
         }
+        feather.replace();
     } catch (error) {
         console.error('Error loading document types:', error);
         contentDiv.innerHTML = `
@@ -143,6 +282,18 @@ async function loadDocumentTypes() {
         feather.replace();
     } finally {
         hideLoading(contentDiv);
+    }
+}
+
+function updatePaginationControls() {
+    document.getElementById('prevPage').disabled = currentPage <= 1;
+    document.getElementById('nextPage').disabled = currentPage >= totalPages;
+    document.getElementById('pageInfo').textContent = `Page ${currentPage} of ${totalPages}`;
+}
+
+function changePage(newPage) {
+    if (newPage >= 1 && newPage <= totalPages) {
+        loadDocumentTypes(newPage);
     }
 }
 
@@ -163,6 +314,8 @@ function showEditDocumentTypeModal(id, type) {
     document.getElementById('editDocumentTypeId').value = id;
     document.getElementById('editDocumentTypeName').value = type.name;
     document.getElementById('editDocumentTypeDescription').value = type.description || '';
+    document.getElementById('editPublicTrue').checked = type.public === true;
+    document.getElementById('editPublicFalse').checked = type.public === false;
     showModal('editDocumentTypeModal');
 }
 
@@ -244,13 +397,11 @@ async function updateDocumentType(event) {
     }
 }
 
-let itemToDelete = null;
+async function deleteDocumentType(id) {
+    if (!confirm('Are you sure you want to delete this document type?')) {
+        return;
+    }
 
-async function  confirmDelete() { 
-    if (!itemToDelete) return;
- 
-    const id = itemToDelete;
-    hideModal('deleteConfirmModal');
     const card = document.querySelector(`.document-type-card[data-id="${id}"]`);
     showLoading(card);
 
@@ -274,19 +425,164 @@ async function  confirmDelete() {
     }
 }
 
-function deleteDocumentType(id) {
-    showDeleteConfirmation(id);
-}
+async function showUserAccessModal(documentTypeId, action) {
+    document.getElementById('userAccessTitle').textContent = action === 'add' ? 'Add User Access' : 'Remove User Access';
+    document.getElementById('documentTypeId').value = documentTypeId;
+    document.getElementById('accessAction').value = action;
 
-function showDeleteConfirmation(id) {
-    itemToDelete = id;
-    showModal('deleteConfirmModal');
+    const addSection = document.getElementById('addUserSection');
+    const removeSection = document.getElementById('removeUserSection');
+
+    if (action === 'add') {
+        addSection.style.display = 'block';
+        removeSection.style.display = 'none';
+        document.getElementById('userCpf').value = '';
+        document.getElementById('userName').value = '';
+        document.getElementById('userId').value = '';
+    } else {
+        addSection.style.display = 'none';
+        removeSection.style.display = 'block';
+        await loadDocumentTypeUsers(documentTypeId);
+    }
+
+    showModal('userAccessModal');
     feather.replace();
 }
 
-// Initialize document types list when page loads
+async function loadDocumentTypeUsers(documentTypeId) {
+    const usersList = document.getElementById('usersList');
+    usersList.innerHTML = 'Loading users...';
+
+    try {
+        const response = await fetch(`/api/document_types/${documentTypeId}/users`);
+        const data = await response.json();
+        displayUsers(data);
+    } catch (error) {
+        console.error('Error loading users:', error);
+        usersList.innerHTML = '<p class="error">Failed to load users</p>';
+    }
+}
+
+function displayUsers(users) {
+    const usersList = document.getElementById('usersList');
+    if (!users || !users.allowed_users || users.allowed_users.length === 0) {
+        usersList.innerHTML = `
+            <div class="no-data">
+                <i data-feather="users"></i>
+                <p>No users found</p>
+            </div>`;
+        feather.replace();
+        return;
+    }
+
+    usersList.innerHTML = `
+        <div class="users-table">
+            <table>
+                <thead>
+                    <tr>
+                        <th><input type="checkbox" id="selectAll" onchange="toggleSelectAll()"></th>
+                        <th>Name</th>
+                        <th>CPF</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    ${users.allowed_users.map(user => `
+                        <tr>
+                            <td><input type="checkbox" value="${user.id}" class="user-checkbox"></td>
+                            <td>${user.name}</td>
+                            <td>${formatCPF(user.cpf)}</td>
+                        </tr>
+                    `).join('')}
+                </tbody>
+            </table>
+        </div>
+    `;
+    feather.replace();
+}
+
+function formatCPF(cpf) {
+    return cpf.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, '$1.$2.$3-$4');
+}
+
+function toggleSelectAll() {
+    const selectAllCheckbox = document.getElementById('selectAll');
+    const checkboxes = document.querySelectorAll('.user-checkbox');
+    checkboxes.forEach(checkbox => checkbox.checked = selectAllCheckbox.checked);
+}
+
+async function searchUser() {
+    const cpf = document.getElementById('userCpf').value;
+    if (!cpf) {
+        showNotification('Please enter a CPF', 'error');
+        return;
+    }
+
+    try {
+        const response = await fetch(`/api/users?cpf=${cpf}`);
+        const data = await response.json();
+
+        if (!data.users || data.users.length === 0) {
+            showNotification('User not found', 'error');
+            document.getElementById('userName').value = '';
+            document.getElementById('userId').value = '';
+            return;
+        }
+
+        const user = data.users[0];
+        document.getElementById('userName').value = user.name;
+        document.getElementById('userId').value = user.id;
+    } catch (error) {
+        console.error('Error searching user:', error);
+        showNotification('Failed to search user', 'error');
+    }
+}
+
+async function updateUserAccess() {
+    const documentTypeId = document.getElementById('documentTypeId').value;
+    const action = document.getElementById('accessAction').value;
+
+    try {
+        if (action === 'add') {
+            const userId = document.getElementById('userId').value;
+            if (!userId) {
+                showNotification('Please select a valid user', 'error');
+                return;
+            }
+
+            const response = await fetch(`/api/document_types/${documentTypeId}/users/${userId}/add`, {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'}
+            });
+
+            if (!response.ok) throw new Error('Failed to add user access');
+        } else {
+            const selectedUsers = Array.from(document.querySelectorAll('.user-checkbox:checked'))
+                .map(checkbox => checkbox.value);
+
+            if (selectedUsers.length === 0) {
+                showNotification('Please select users to remove', 'error');
+                return;
+            }
+
+            const response = await fetch(`/api/document_types/${documentTypeId}/users/${selectedUsers.join(',')}/remove`, {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'}
+            });
+
+            if (!response.ok) throw new Error('Failed to remove user access');
+        }
+
+        hideModal('userAccessModal');
+        await loadDocumentTypes();
+        showNotification(`User access ${action === 'add' ? 'granted' : 'removed'} successfully`, 'success');
+    } catch (error) {
+        console.error('Error updating user access:', error);
+        showNotification(error.message, 'error');
+    }
+}
+
 document.addEventListener('DOMContentLoaded', () => {
-    loadDocumentTypes();
+    loadDocumentTypes(1);
     feather.replace();
 });
 </script>
@@ -296,6 +592,7 @@ document.addEventListener('DOMContentLoaded', () => {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
     gap: 1rem;
+    margin-bottom: 2rem;
 }
 
 .document-type-card {
@@ -330,6 +627,12 @@ document.addEventListener('DOMContentLoaded', () => {
 .document-type-info .description {
     margin-bottom: 0.5rem;
     font-style: italic;
+}
+
+.document-type-info .meta {
+    display: flex;
+    gap: 1rem;
+    font-size: 0.875rem;
 }
 
 .document-type-actions {
@@ -376,7 +679,7 @@ document.addEventListener('DOMContentLoaded', () => {
 .header-actions {
     display: flex;
     justify-content: space-between;
-    align-items: center;
+    align-items: flex-start;
     margin-bottom: 2rem;
 }
 
@@ -384,6 +687,7 @@ document.addEventListener('DOMContentLoaded', () => {
     text-align: center;
     padding: 2rem;
     color: var(--text-secondary);
+    grid-column: 1 / -1;
 }
 
 .no-data i {
@@ -398,24 +702,69 @@ document.addEventListener('DOMContentLoaded', () => {
     padding: 1.5rem;
 }
 
-.document-type-info {
-    margin: 1rem 0;
-    color: var(--text-secondary);
-}
-
-.document-type-info .description {
-    margin-bottom: 0.5rem;
-    font-style: italic;
-}
-
-.document-type-info .meta {
+.radio-group {
     display: flex;
     gap: 1rem;
-    font-size: 0.875rem;
+    margin-top: 0.5rem;
+}
+
+.radio-label {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    cursor: pointer;
+}
+
+.users-list {
+    max-height: 260px;
+    overflow-y: auto;
+    margin: 1rem 0;
+}
+
+.users-table {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0;
+}
+
+.users-table th,
+.users-table td {
+    padding: 0.75rem;
+    text-align: left;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.search-input {
+    display: flex;
+    gap: 0.5rem;
+}
+
+.search-input input {
+    flex: 1;
+}
+
+.pagination-controls {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 1rem;
+    margin-top: 2rem;
+    padding-top: 1rem;
+    border-top: 1px solid var(--border-color);
 }
 
 .page-container {
     padding: 2rem;
+}
+
+.action-btn.success {
+    background-color: var(--success-color);
+    color: white;
+}
+
+.action-btn.warning {
+    background-color: var(--warning-color);
+    color: white;
 }
 </style>
 {% endblock %}
