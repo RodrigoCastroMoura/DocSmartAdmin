@@ -285,6 +285,14 @@ function generateDocumentTypesHTML(types) {
                 </a>   
             </div>
             <div class="document-type-info">
+                 <div class="department-badge">
+                    <i data-feather="briefcase"></i>
+                    <span>${type.department_name || 'No Department'}</span>
+                </div>
+                 <div class="department-badge">
+                    <i data-feather="grid"></i>
+                    <span>${ type.category_name||'No category'}</span>
+                </div>
                 <p class="description">${type.description || 'No description'}</p>
                 <p class="meta">
                     <span>Documents: ${type.document_count || 0}</span>
@@ -909,6 +917,17 @@ document.addEventListener('DOMContentLoaded', loadDocumentTypes);
 
 .error {
     color: var(--danger-color);
+}
+.department-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.25rem 0.75rem;
+    background-color: var(--bg-secondary);
+    border-radius: 4px;
+    font-size: 0.875rem;
+    color: var(--text-secondary);
+    margin-bottom: 0.5rem;
 }
 </style>
 {% endblock %}

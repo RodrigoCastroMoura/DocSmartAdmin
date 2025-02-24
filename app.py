@@ -856,8 +856,7 @@ def document_types_id(document_types_id):
         description = data.get('description')
         department_id = data.get('department_id')
         category_id = data.get('category_id')
-        public = data.get(
-            'public')  # Adiciona a chave 'public' com o valor True ou False
+        public = data.get('public')  # Adiciona a chave 'public' com o valor True ou False
         # Build form data
         form_data = {
             "name": name,
@@ -865,7 +864,7 @@ def document_types_id(document_types_id):
             "description": description,
             "category_id": category_id,
             'company_id': company_id,
-            'public': public
+            'public': public.lower() in ['true']
         }
         response = requests.put(f"{DOCUMENT_TYPES_URL}/{document_types_id}",
                                 headers=headers,
