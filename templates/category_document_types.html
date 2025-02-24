@@ -246,6 +246,14 @@ async function loadDocumentTypes(page = 1) {
                         </a>    
                     </div>
                     <div class="document-type-info">
+                        <div class="department-badge">
+                            <i data-feather="briefcase"></i>
+                            <span>${type.department_name || 'No Department'}</span>
+                        </div>
+                        <div class="department-badge">
+                            <i data-feather="grid"></i>
+                            <span>${type.category_name || 'No Category'}</span>
+                        </div>
                         <p class="description">${type.description || 'No description'}</p>
                         <p class="meta">
                             <span>Documents: ${type.document_count || 0}</span>
