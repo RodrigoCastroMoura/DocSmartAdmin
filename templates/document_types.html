@@ -255,7 +255,7 @@ async function loadDocumentTypes(page = 1) {
             page: page,
             per_page: perPage
         });
-        
+
         const response = await fetch(`/api/document_types?${params}`);
         if (!response.ok) {
             throw new Error(`HTTP error! status: ${response.status}`);
@@ -280,7 +280,7 @@ async function loadDocumentTypes(page = 1) {
                     Next <i data-feather="chevron-right"></i>
                 </button>
             </div>`;
-        
+
         feather.replace();
         updatePaginationControls();
     } catch (error) {
@@ -963,6 +963,7 @@ document.addEventListener('DOMContentLoaded', loadDocumentTypes);
 .error {
     color: var(--danger-color);
 }
+
 .department-badge {
     display: inline-flex;
     align-items: center;
@@ -973,6 +974,25 @@ document.addEventListener('DOMContentLoaded', loadDocumentTypes);
     font-size: 0.875rem;
     color: var(--text-secondary);
     margin-bottom: 0.5rem;
+}
+
+.pagination-controls {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 1rem;
+    margin: 2rem auto;
+    width: 100%;
+    padding: 1rem 0;
+}
+
+.pagination-controls button {
+    min-width: 100px;
+}
+
+.pagination-controls span {
+    min-width: 120px;
+    text-align: center;
 }
 </style>
 {% endblock %}
