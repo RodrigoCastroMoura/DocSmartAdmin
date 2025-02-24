@@ -737,6 +737,24 @@ async function previewDocument(url, filename) {
     const nextButton = document.getElementById('nextPage');
     const pageInfo = document.getElementById('pageInfo');
 
+    // Function to fetch document with proper headers
+    async function fetchDocument(url) {
+        try {
+            const response = await fetch(url, {
+                method: 'GET',
+                mode: 'cors',
+                headers: {
+                    'Accept': 'application/pdf',
+                },
+            });
+            const blob = await response.blob();
+            return URL.createObjectURL(blob);
+        } catch (error) {
+            console.error('Error fetching document:', error);
+            throw error;
+        }
+    }
+
     // Reset all preview elements
     pdfCanvas.style.display = 'none';
     imagePreview.style.display = 'none';
@@ -756,11 +774,13 @@ async function previewDocument(url, filename) {
             nextButton.style.display = 'block';
             pageInfo.style.display = 'block';
 
-            const loadingTask = pdfjsLib.getDocument(url);
+            const objectUrl = await fetchDocument(url);
+            const loadingTask = pdfjsLib.getDocument(objectUrl);
             currentPdf = await loadingTask.promise;
             pdfTotalPages = currentPdf.numPages;
             currentPdfPage = 1;
             await renderPage(currentPdfPage);
+            URL.revokeObjectURL(objectUrl); // Clean up the object URL after loading
         } else if (['jpg', 'jpeg', 'png', 'gif'].includes(fileType)) {
             // Handle images
             imagePreview.style.display = 'block';
