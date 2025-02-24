@@ -702,6 +702,14 @@ async function downloadDocument(url) {
     }
 }
 
+<!-- Add at the top of the file, after the extends base.html -->
+{% block head %}
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+<script>
+    pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+</script>
+{% endblock %}
+
 async function previewDocument(url, filename) {
     const viewer = document.getElementById('documentViewer');
     viewer.innerHTML = '<div class="loading-overlay">Loading...</div>';
@@ -710,26 +718,25 @@ async function previewDocument(url, filename) {
     try {
         const ext = filename.split('.').pop().toLowerCase();
         if (ext === 'pdf') {
-            //For PDF use a library like pdf.js
-            // Example using PDF.js (You'll need to include the PDF.js library)
-            const pdfjsLib = window.pdfjsLib; // Assuming pdfjsLib is available globally
-            pdfjsLib.getDocument(url).promise.then(pdf => {
-                pdf.getPage(1).then(page => {
-                    const viewport = page.getViewport({ scale: 1.5 });
-                    const canvas = document.createElement('canvas');
-                    const context = canvas.getContext('2d');
-                    canvas.height = viewport.height;
-                    canvas.width = viewport.width;
-                    const renderContext = {
-                        canvasContext: context,
-                        viewport: viewport
-                    };
-                    page.render(renderContext).promise.then(() => {
-                        viewer.innerHTML = '';
-                        viewer.appendChild(canvas);
-                    });
-                });
-            });
+            const loadingTask = pdfjsLib.getDocument(url);
+            const pdf = await loadingTask.promise;
+            
+            const page = await pdf.getPage(1);
+            const viewport = page.getViewport({ scale: 1.5 });
+            const canvas = document.createElement('canvas');
+            const context = canvas.getContext('2d');
+            
+            canvas.height = viewport.height;
+            canvas.width = viewport.width;
+            
+            const renderContext = {
+                canvasContext: context,
+                viewport: viewport
+            };
+            
+            await page.render(renderContext).promise;
+            viewer.innerHTML = '';
+            viewer.appendChild(canvas);
 
         } else if (['jpg', 'jpeg', 'png', 'gif', 'bmp'].includes(ext)) {
             const img = document.createElement('img');
