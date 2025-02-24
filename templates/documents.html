@@ -16,7 +16,7 @@
                     <option value="">Select Department</option>
                     {% if departments %}
                         {% for department in departments %}
-                        <option value="{{department.id}}">{{department.name}}</option>
+                            <option value="{{department.id}}">{{department.name}}</option>
                         {% endfor %}
                     {% endif %}
                 </select>
