@@ -126,6 +126,15 @@
         </form>
     </div>
 </div>
+
+<!-- Document Viewer Modal -->
+<div id="documentViewerModal" class="modal">
+    <div class="modal-content">
+        <span class="close-btn" onclick="hideModal('documentViewerModal')">&times;</span>
+        <div id="documentViewer"></div>
+    </div>
+</div>
+
 <script>
 let currentPage = 1;
 const perPage = 9;
@@ -154,7 +163,7 @@ async function loadFilterOptions() {
         const departments = await deptResponse.json();
         populateFilterSelect('filterDepartment', departments);
         populateFilterSelect('documentDepartment', departments);
-        
+
         // Load users for the Add Document modal only
         const userResponse = await fetch('/api/users');
         if (!userResponse.ok) {
@@ -175,7 +184,7 @@ async function loadFilterOptions() {
     } catch (error) {
         console.error('Error loading filter options:', error);
         showNotification(`Failed to load some filter options: ${error.message}`, 'error');
-        
+
         // Reset filters to a safe state
         const filterIds = {
             'filterDepartment': 'All Departments',
@@ -207,7 +216,7 @@ function resetFilters() {
 async function searchUser() {
     const searchInput = document.getElementById('filterUser');
     const searchTerm = searchInput.value.trim();
-    
+
     if (userSearchTimeout) {
         clearTimeout(userSearchTimeout);
     }
@@ -224,11 +233,11 @@ async function applyFilters() {
         document_type_id: document.getElementById('filterDocumentType').value,
         user_cpf: document.getElementById('user-cpf-filter').value
     };
-    
+
     // Store filters in URL params
     const params = new URLSearchParams(filters);
 
-    
+
     // Reload documents with filters
     await loadDocuments(1, filters);
 }
@@ -236,7 +245,7 @@ async function applyFilters() {
 async function applyFiltersDepartment(departmentId) {
     const categorySelect = document.getElementById('filterCategory');
     const typeSelect = document.getElementById('filterDocumentType');
-    
+
     categorySelect.innerHTML = '<option value="">Loading categories...</option>';
     categorySelect.disabled = true;
     typeSelect.innerHTML = '<option value="">Types</option>';
@@ -256,7 +265,7 @@ async function applyFiltersDepartment(departmentId) {
             throw new Error(errorData.error || 'Failed to load categories');
         }
         const data = await response.json();
-        
+
         if (!data.categories || !Array.isArray(data.categories)) {
             throw new Error('Invalid categories data format');
         }
@@ -294,7 +303,7 @@ async function applyFiltersCategory(categoryId) {
             throw new Error(errorData.error || 'Failed to load document types');
         }
         const data = await response.json();
-        
+
         if (!Array.isArray(data)) {
             throw new Error('Invalid document types data format');
         }
@@ -315,7 +324,7 @@ async function applyFiltersCategory(categoryId) {
 
 function getFileIcon(filename) {
     if (!filename) return 'file';
-    
+
     const ext = filename.split('.').pop().toLowerCase();
     switch (ext) {
         case 'pdf': return 'file-text';
@@ -361,11 +370,11 @@ async function loadDocumentTypes(categoryId) {
             throw new Error(errorData.error || 'Failed to load document types');
         }
         const data = await response.json();
-        
+
         if (!Array.isArray(data)) {
             throw new Error('Invalid document types data format');
         }
-        
+
         typeSelect.innerHTML = `
             <option value="">Select Document Type</option>
             ${data.map(type => 
@@ -383,7 +392,7 @@ async function loadDocumentTypes(categoryId) {
 async function loadDepartmentCategories(departmentId) {
     const categorySelect = document.getElementById('documentCategory');
     const typeSelect = document.getElementById('documentType');
-    
+
     categorySelect.innerHTML = '<option value="">Loading categories...</option>';
     categorySelect.disabled = true;
     typeSelect.innerHTML = '<option value="">Select Document Type</option>';
@@ -401,11 +410,11 @@ async function loadDepartmentCategories(departmentId) {
             throw new Error(errorData.error || 'Failed to load categories');
         }
         const data = await response.json();
-        
+
         if (!data.categories || !Array.isArray(data.categories)) {
             throw new Error('Invalid categories data format');
         }
-        
+
         categorySelect.innerHTML = `
             <option value="">Select Category</option>
             ${data.categories.map(cat => `
@@ -425,7 +434,7 @@ async function createDocument(event) {
     event.preventDefault();
     const form = event.target;
     const submitButton = form.querySelector('button[type="submit"]');
-    
+
     if (!validateForm(form)) {
         return;
     }
@@ -434,7 +443,7 @@ async function createDocument(event) {
         showNotification('Enter with CPF', 'error');
         return;
     }
-    
+
     showLoading(submitButton);
     const formData = new FormData(form);
 
@@ -470,7 +479,7 @@ function showDeleteConfirmation(id) {
 
 async function confirmDelete() {
     if (!itemToDelete) return;
-    
+
     const id = itemToDelete;
     hideModal('deleteConfirmModal');
     const card = document.querySelector(`.document-card[data-id="${id}"]`);
@@ -500,14 +509,14 @@ async function confirmDelete() {
 async function loadDocuments(page = 1, filters = {}) {
     const contentDiv = document.getElementById('documentsContent');
     showLoading(contentDiv);
-    
+
     try {
         const params = new URLSearchParams({
             page: page,
             per_page: perPage,
             ...filters
         });
-        
+
         const response = await fetch(`/api/documents?${params}`);
         if (!response.ok) {
             const errorData = await response.json();
@@ -518,10 +527,10 @@ async function loadDocuments(page = 1, filters = {}) {
         if (!data || !Array.isArray(data.documents)) {
             throw new Error('Invalid response format');
         }
-        
+
         currentPage = page;
         totalPages = data.total_pages || 1;
-        
+
         const gridHTML = data.documents.length === 0 ? `
             <div class="documents-grid">
                 <div class="no-data">
@@ -556,6 +565,9 @@ async function loadDocuments(page = 1, filters = {}) {
                             </div>
                         </div>
                         <div class="document-actions">
+                            <button class="action-btn primary" onclick="previewDocument('${doc.url}', '${doc.name}')">
+                                <i data-feather="eye"></i>
+                            </button>
                             <button class="action-btn" onclick="downloadDocument('${doc.url}')">
                                 <i data-feather="download"></i>
                             </button>
@@ -577,7 +589,7 @@ async function loadDocuments(page = 1, filters = {}) {
                     Next <i data-feather="chevron-right"></i>
                 </button>
             </div>`;
-        
+
         feather.replace();
         updatePaginationControls();
     } catch (error) {
@@ -609,7 +621,7 @@ async function searchUser() {
         const params = new URLSearchParams({
             cpf: document.getElementById(`user_cpf`).value,
         });
-        
+
         const response = await fetch(`/api/users?${params}`);
         if (!response.ok) {
             closePopup();
@@ -634,7 +646,7 @@ async function searchUser() {
     } catch (error) {
         console.error('Error loading documents:', error);
         showNotification(error.message || 'Failed to load users', 'error');
-       
+
     } finally {
         closePopup();
     }
@@ -681,7 +693,7 @@ async function downloadDocument(url) {
         showNotification('Document URL is not available', 'error');
         return;
     }
-    
+
     try {
         window.open(url, '_blank');
     } catch (error) {
@@ -690,9 +702,58 @@ async function downloadDocument(url) {
     }
 }
 
+async function previewDocument(url, filename) {
+    const viewer = document.getElementById('documentViewer');
+    viewer.innerHTML = '<div class="loading-overlay">Loading...</div>';
+    showModal('documentViewerModal');
+
+    try {
+        const ext = filename.split('.').pop().toLowerCase();
+        if (ext === 'pdf') {
+            //For PDF use a library like pdf.js
+            // Example using PDF.js (You'll need to include the PDF.js library)
+            const pdfjsLib = window.pdfjsLib; // Assuming pdfjsLib is available globally
+            pdfjsLib.getDocument(url).promise.then(pdf => {
+                pdf.getPage(1).then(page => {
+                    const viewport = page.getViewport({ scale: 1.5 });
+                    const canvas = document.createElement('canvas');
+                    const context = canvas.getContext('2d');
+                    canvas.height = viewport.height;
+                    canvas.width = viewport.width;
+                    const renderContext = {
+                        canvasContext: context,
+                        viewport: viewport
+                    };
+                    page.render(renderContext).promise.then(() => {
+                        viewer.innerHTML = '';
+                        viewer.appendChild(canvas);
+                    });
+                });
+            });
+
+        } else if (['jpg', 'jpeg', 'png', 'gif', 'bmp'].includes(ext)) {
+            const img = document.createElement('img');
+            img.src = url;
+            img.onload = () => {
+                viewer.innerHTML = '';
+                viewer.appendChild(img);
+            };
+            img.onerror = () => {
+                viewer.innerHTML = '<p>Error loading image</p>';
+            };
+        } else {
+            viewer.innerHTML = '<p>Unsupported file type</p>';
+        }
+    } catch (error) {
+        console.error('Error previewing document:', error);
+        viewer.innerHTML = `<p>Error previewing document: ${error.message}</p>`;
+    }
+}
+
+
 // Initialize the page
 document.addEventListener('DOMContentLoaded', () => {
-    
+
     loadDocuments();
     feather.replace();
 });
@@ -705,7 +766,7 @@ document.addEventListener('DOMContentLoaded', () => {
         gap: 1.5rem;
         margin-bottom: 2rem;
     }
-    
+
     .document-card {
         background-color: var(--bg-tertiary);
         border-radius: 8px;
@@ -713,50 +774,50 @@ document.addEventListener('DOMContentLoaded', () => {
         transition: transform 0.2s;
         position: relative;
     }
-    
+
     .document-card:hover {
         transform: translateY(-2px);
     }
-    
+
     .document-header {
         display: flex;
         align-items: flex-start;
         gap: 1rem;
         margin-bottom: 1rem;
     }
-    
+
     .document-header i {
         padding: 0.75rem;
         background-color: var(--accent-color);
         border-radius: 6px;
     }
-    
+
     .document-title {
         flex: 1;
     }
-    
+
     .document-title h3 {
         margin: 0;
         margin-bottom: 0.25rem;
     }
-    
+
     .document-subtitle {
         color: var(--text-secondary);
         font-size: 0.875rem;
         margin: 0;
     }
-    
+
     .document-info {
         margin: 1rem 0;
     }
-    
+
     .user-info {
         display: flex;
         align-items: center;
         gap: 1rem;
         margin-bottom: 1rem;
     }
-    
+
     .user-avatar {
         width: 40px;
         height: 40px;
@@ -766,22 +827,22 @@ document.addEventListener('DOMContentLoaded', () => {
         align-items: center;
         justify-content: center;
     }
-    
+
     .user-details {
         flex: 1;
     }
-    
+
     .user-name {
         margin: 0;
         font-weight: 500;
     }
-    
+
     .user-cpf {
         margin: 0;
         font-size: 0.875rem;
         color: var(--text-secondary);
     }
-    
+
     .document-meta {
         display: flex;
         flex-wrap: wrap;
@@ -789,28 +850,28 @@ document.addEventListener('DOMContentLoaded', () => {
         color: var(--text-secondary);
         font-size: 0.875rem;
     }
-    
+
     .document-meta p {
         margin: 0;
         display: flex;
         align-items: center;
         gap: 0.5rem;
     }
-    
+
     .document-actions {
         display: flex;
         justify-content: flex-end;
         gap: 0.5rem;
         margin-top: 1rem;
     }
-    
+
     .filter-section {
         background-color: var(--bg-secondary);
         border-radius: 8px;
         padding: 1.5rem;
         margin-bottom: 1.5rem;
     }
-    
+
     .filter-header {
         display: flex;
         justify-content: space-between;
@@ -819,7 +880,7 @@ document.addEventListener('DOMContentLoaded', () => {
         padding-bottom: 1rem;
         border-bottom: 1px solid var(--border-color);
     }
-    
+
     .filter-header h3 {
         display: flex;
         align-items: center;
@@ -828,29 +889,29 @@ document.addEventListener('DOMContentLoaded', () => {
         font-size: 1.1rem;
         color: var(--text-primary);
     }
-    
+
     .filter-grid {
         display: grid;
         grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
         gap: 1rem;
     }
-    
+
     .filter-group {
         display: flex;
         flex-direction: column;
         gap: 0.5rem;
     }
-    
+
     .filter-group label {
         font-size: 0.9rem;
         color: var(--text-secondary);
     }
-    
+
     .filter-input-wrapper {
         position: relative;
         width: 100%;
     }
-    
+
     .filter-input-wrapper select {
         width: 100%;
         padding: 0.5rem 2rem 0.5rem 0.75rem;
@@ -861,7 +922,7 @@ document.addEventListener('DOMContentLoaded', () => {
         appearance: none;
         cursor: pointer;
     }
-    
+
     .filter-input-wrapper .select-icon {
         position: absolute;
         right: 0.75rem;
@@ -872,17 +933,17 @@ document.addEventListener('DOMContentLoaded', () => {
         height: 16px;
         color: var(--text-secondary);
     }
-    
+
     .filter-input-wrapper select:disabled {
         opacity: 0.7;
         cursor: not-allowed;
     }
-    
+
     .filter-input-wrapper select:focus {
         outline: none;
         border-color: var(--accent-color);
     }
-    
+
     .pagination-controls {
         display: flex;
         align-items: center;
@@ -890,42 +951,42 @@ document.addEventListener('DOMContentLoaded', () => {
         gap: 1rem;
         margin-top: 2rem;
     }
-    
+
     .pagination-controls button {
         display: flex;
         align-items: center;
         gap: 0.5rem;
     }
-    
+
     .pagination-controls button:disabled {
         opacity: 0.5;
         cursor: not-allowed;
     }
-    
+
     #pageInfo {
         color: var(--text-secondary);
     }
-    
+
     .no-data {
         text-align: center;
         padding: 2rem;
         color: var(--text-secondary);
     }
-    
+
     .no-data i {
         font-size: 2rem;
-        margin-bottom: 0.5rem;
+margin-bottom: 0.5rem;
         opacity: 0.5;
     }
-    
+
     .no-data.error {
         color: var(--danger-color);
     }
-    
+
     .no-data.error i {
         color: var(--danger-color);
     }
-    
+
     .back-link {
         display: flex;
         align-items: center;
@@ -934,23 +995,23 @@ document.addEventListener('DOMContentLoaded', () => {
         text-decoration: none;
         margin-bottom: 1rem;
     }
-    
+
     .back-link:hover {
         color: var(--accent-color);
     }
-    
+
     .header-title {
         display: flex;
         flex-direction: column;
     }
-    
+
     .header-actions {
         display: flex;
         justify-content: space-between;
         align-items: center;
         margin-bottom: 2rem;
     }
-    
+
     .loading-overlay {
         position: absolute;
         top: 0;
@@ -964,7 +1025,7 @@ document.addEventListener('DOMContentLoaded', () => {
         border-radius: 8px;
         z-index: 10;
     }
-    
+
     .modal {
         display: flex;
         justify-content: center;
@@ -976,7 +1037,7 @@ document.addEventListener('DOMContentLoaded', () => {
         height: 100%;
         background-color: rgba(0, 0, 0, 0.5);
     }
-    
+
     .modal-content {
         position: relative;
         background-color: var(--bg-secondary);
@@ -987,31 +1048,31 @@ document.addEventListener('DOMContentLoaded', () => {
         box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
         animation: slideIn 0.3s ease;
     }
-    
+
     .form-group {
         display: flex;
         flex-direction: column;
         margin-bottom: 0.5rem !important;
     }
-    
+
     .form-grid {
         display: grid;
         grid-template-columns: 1fr 1fr;
         gap: 1rem;
     }
-    
+
     .modal-actions {
         display: flex;
         justify-content: flex-end;
         gap: 0.5rem;
         margin-top: 1rem;
     }
-    
+
     .search-input {
         display: flex;
         gap: 0.5rem;
     }
-    
+
     .search-input input {
         flex: 1;
         padding: 0.5rem;
@@ -1020,15 +1081,31 @@ document.addEventListener('DOMContentLoaded', () => {
         background: var(--bg-tertiary);
         color: var(--text-primary);
     }
-    
+
     .search-input button {
         padding: 0.5rem 1rem;
     }
-    
+
     .page-container {
         padding: 2rem;
     }
-    
-    
-    </style>
+
+    .close-btn {
+        position: absolute;
+        top: 10px;
+        right: 10px;
+        cursor: pointer;
+        font-size: 20px;
+    }
+
+    #documentViewer img {
+        max-width: 100%;
+        max-height: 80vh;
+    }
+    #documentViewer canvas {
+        max-width: 100%;
+        max-height: 80vh;
+    }
+
+</style>
 {% endblock %}
