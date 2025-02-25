@@ -803,7 +803,7 @@ async function renderPage(pageNumber) {
         const canvas = document.getElementById('pdfCanvas');
         const context = canvas.getContext('2d');
 
-        const viewport = page.getViewport({ scale: 1.5 });
+        const viewport = page.getViewport({ scale: 2.0 });
         canvas.height = viewport.height;
         canvas.width = viewport.width;
 
@@ -1143,11 +1143,12 @@ gap: 1rem;
     .preview-container {
         flex: 1;
         overflow: auto;
-        padding: 0.5rem;
+        padding: 1rem;
         display: flex;
         justify-content: center;
         align-items: center;
         background: var(--bg-tertiary);
+        min-height: 85vh;
     }
 
     #pdfCanvas {
