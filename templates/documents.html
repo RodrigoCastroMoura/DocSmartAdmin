@@ -836,9 +836,15 @@ async function renderPage(pageNumber) {
 window.currentScale = 1.2; // Default 120%
 
 async function changeZoom(delta) {
-    window.currentScale = Math.max(0.5, Math.min(3, window.currentScale + delta));
-    document.getElementById('zoomInfo').textContent = `${Math.round(window.currentScale * 100)}%`;
-    await renderPage(currentPdfPage);
+    try {
+        if (!currentPdf) return;
+        window.currentScale = Math.max(0.5, Math.min(3, window.currentScale + delta));
+        document.getElementById('zoomInfo').textContent = `${Math.round(window.currentScale * 100)}%`;
+        await renderPage(currentPdfPage);
+    } catch (error) {
+        console.error('Error changing zoom:', error);
+        showNotification('Failed to change zoom level', 'error');
+    }
 }
 
 async function changePdfPage(delta) {
