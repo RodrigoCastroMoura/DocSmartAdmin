@@ -142,24 +142,13 @@
             <iframe id="documentPreview" style="width: 100%; height: 100%; border: none;"></iframe>
         </div>
         <div class="preview-controls">
-            <div class="zoom-controls">
-                <button class="action-btn" onclick="changeZoom(-0.2)">
-                    <i data-feather="minus"></i>
-                </button>
-                <span id="zoomInfo">120%</span>
-                <button class="action-btn" onclick="changeZoom(0.2)">
-                    <i data-feather="plus"></i>
-                </button>
-            </div>
-            <div class="page-controls">
-                <button id="prevPage" class="action-btn" onclick="changePdfPage(-1)" disabled>
-                    <i data-feather="chevron-left"></i> Previous
-                </button>
-                <span id="pageInfo">Page 1 of 1</span>
-                <button id="nextPage" class="action-btn" onclick="changePdfPage(1)" disabled>
-                    Next <i data-feather="chevron-right"></i>
-                </button>
-            </div>
+            <button id="prevPage" class="action-btn" onclick="changePdfPage(-1)" disabled>
+                <i data-feather="chevron-left"></i> Previous
+            </button>
+            <span id="pageInfo">Page 1 of 1</span>
+            <button id="nextPage" class="action-btn" onclick="changePdfPage(1)" disabled>
+                Next <i data-feather="chevron-right"></i>
+            </button>
         </div>
     </div>
 </div>
@@ -814,8 +803,7 @@ async function renderPage(pageNumber) {
         const canvas = document.getElementById('pdfCanvas');
         const context = canvas.getContext('2d');
 
-        const currentScale = window.currentScale || 1.2; // Default 120%
-        const viewport = page.getViewport({ scale: currentScale });
+        const viewport = page.getViewport({ scale: 1.5 });
         canvas.height = viewport.height;
         canvas.width = viewport.width;
 
@@ -833,36 +821,9 @@ async function renderPage(pageNumber) {
     }
 }
 
-window.currentScale = 1.2; // Default 120%
-
-async function changeZoom(delta) {
-    try {
-        if (!currentPdf) return;
-        const newScale = Math.max(0.5, Math.min(3, window.currentScale + delta));
-        window.currentScale = newScale;
-        document.getElementById('zoomInfo').textContent = `${Math.round(newScale * 100)}%`;
-
-        const page = await currentPdf.getPage(currentPdfPage);
-        const canvas = document.getElementById('pdfCanvas');
-        const context = canvas.getContext('2d');
-
-        const viewport = page.getViewport({ scale: newScale });
-        canvas.height = viewport.height;
-        canvas.width = viewport.width;
-
-        await page.render({
-            canvasContext: context,
-            viewport: viewport
-        }).promise;
-    } catch (error) {
-        console.error('Error changing zoom:', error);
-        showNotification('Failed to change zoom level', 'error');
-    }
-}
-
 async function changePdfPage(delta) {
     const newPage = currentPdfPage + delta;
-    if (newPage >= 1 && newPage <= pdfTotalPages) {
+    if (newPage >= 1 && newPage <= totalPages) {
         currentPdfPage = newPage;
         await renderPage(currentPdfPage);
     }
@@ -1160,91 +1121,45 @@ gap: 1rem;
     }
 
     .preview-modal {
-        width: 100% !important;
-        height: 100vh !important;
-        max-width: 100% !important;
-        margin: 0 !important;
-        padding: 0 !important;
+        max-width: 95% !important;
+        height: 95vh;
         display: flex;
         flex-direction: column;
-        border-radius: 0 !important;
+        margin: 1rem auto !important;
+        padding: 1rem !important;
     }
 
     .preview-header {
         display: flex;
         justify-content: space-between;
         align-items: center;
-        padding: 1rem;
-        background: var(--bg-secondary);
+        padding-bottom: 0.5rem;
         border-bottom: 1px solid var(--border-color);
     }
 
     .preview-container {
         flex: 1;
         overflow: auto;
+        padding: 0.5rem;
         display: flex;
         justify-content: center;
         align-items: center;
         background: var(--bg-tertiary);
-        padding: 0;
     }
 
     #pdfCanvas {
-        max-width: 95%;
-        max-height: calc(100vh - 120px);
         box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
         background: white;
         margin: auto;
-        min-width: 800px;
-    }
-
-    @media (max-width: 768px) {
-        .preview-header {
-            padding: 0.75rem;
-        }
-
-        .preview-header h3 {
-            font-size: 1rem;
-        }
-
-        .preview-controls {
-            padding: 0.75rem;
-        }
-
-        .preview-controls button {
-            padding: 0.5rem;
-            font-size: 0.875rem;
-        }
-
-        #pdfCanvas {
-            max-height: calc(100vh - 100px);
-        }
     }
 
     .preview-controls {
         display: flex;
-        flex-direction: column;
+        justify-content: center;
         align-items: center;
         gap: 1rem;
-        padding: 1rem;
+        padding-top: 1rem;
         border-top: 1px solid var(--border-color);
-    }
-
-    .zoom-controls {
-        display: flex;
-        align-items: center;
-        gap: 1rem;
-    }
-
-    .page-controls {
-        display: flex;
-        align-items: center;
-        gap: 1rem;
-    }
-
-    #zoomInfo {
-        min-width: 60px;
-        text-align: center;
     }
 
     #pdfCanvas {
