@@ -774,8 +774,8 @@ async function previewDocument(url, filename) {
             nextButton.style.display = 'block';
             pageInfo.style.display = 'block';
 
-            const objectUrl = await fetchDocument(url);
-            const loadingTask = pdfjsLib.getDocument(objectUrl);
+            const proxyUrl = `/proxy/storage/${url.replace('https://storage.googleapis.com/', '')}`;
+            const loadingTask = pdfjsLib.getDocument(proxyUrl);
             currentPdf = await loadingTask.promise;
             pdfTotalPages = currentPdf.numPages;
             currentPdfPage = 1;

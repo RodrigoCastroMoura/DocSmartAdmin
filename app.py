@@ -1,4 +1,4 @@
-from flask import Flask, render_template, redirect, url_for, request, flash, session, jsonify
+from flask import Flask, render_template, redirect, url_for, request, flash, session, jsonify, Response
 from functools import wraps
 import requests
 import os
@@ -6,12 +6,14 @@ import json
 import time
 from werkzeug.utils import secure_filename
 import logging
+from flask_cors import CORS
 
 # Configure logging
 logging.basicConfig(level=logging.DEBUG)
 logger = logging.getLogger(__name__)
 
 app = Flask(__name__)
+CORS(app)
 app.secret_key = os.urandom(24)
 app.permanent_session_lifetime = 3600  # 1 hour session lifetime
 
@@ -1395,6 +1397,26 @@ def reset_password():
 @login_required
 def permissions():
     return render_template('permissions.html')
+
+@app.route('/proxy/storage/<path:url>')
+def proxy_storage(url):
+    try:
+        storage_url = f"https://storage.googleapis.com/{url}"
+        response = requests.get(storage_url, stream=True)
+        
+        proxy_response = Response(
+            response.iter_content(chunk_size=8192),
+            content_type=response.headers['Content-Type']
+        )
+        
+        # Add CORS headers
+        proxy_response.headers['Access-Control-Allow-Origin'] = '*'
+        proxy_response.headers['Access-Control-Allow-Methods'] = 'GET, OPTIONS'
+        proxy_response.headers['Access-Control-Allow-Headers'] = 'Content-Type'
+        
+        return proxy_response
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
 
 
 if __name__ == "__main__":

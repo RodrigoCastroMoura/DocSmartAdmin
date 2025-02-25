@@ -11,3 +11,4 @@ flask
 flask-login
 requests
 werkzeug
+flask-cors
