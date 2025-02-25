@@ -142,13 +142,24 @@
             <iframe id="documentPreview" style="width: 100%; height: 100%; border: none;"></iframe>
         </div>
         <div class="preview-controls">
-            <button id="prevPage" class="action-btn" onclick="changePdfPage(-1)" disabled>
-                <i data-feather="chevron-left"></i> Previous
-            </button>
-            <span id="pageInfo">Page 1 of 1</span>
-            <button id="nextPage" class="action-btn" onclick="changePdfPage(1)" disabled>
-                Next <i data-feather="chevron-right"></i>
-            </button>
+            <div class="zoom-controls">
+                <button class="action-btn" onclick="changeZoom(-0.2)">
+                    <i data-feather="minus"></i>
+                </button>
+                <span id="zoomInfo">120%</span>
+                <button class="action-btn" onclick="changeZoom(0.2)">
+                    <i data-feather="plus"></i>
+                </button>
+            </div>
+            <div class="page-controls">
+                <button id="prevPage" class="action-btn" onclick="changePdfPage(-1)" disabled>
+                    <i data-feather="chevron-left"></i> Previous
+                </button>
+                <span id="pageInfo">Page 1 of 1</span>
+                <button id="nextPage" class="action-btn" onclick="changePdfPage(1)" disabled>
+                    Next <i data-feather="chevron-right"></i>
+                </button>
+            </div>
         </div>
     </div>
 </div>
@@ -803,7 +814,8 @@ async function renderPage(pageNumber) {
         const canvas = document.getElementById('pdfCanvas');
         const context = canvas.getContext('2d');
 
-        const viewport = page.getViewport({ scale: 1.5 });
+        const currentScale = window.currentScale || 1.2; // Default 120%
+        const viewport = page.getViewport({ scale: currentScale });
         canvas.height = viewport.height;
         canvas.width = viewport.width;
 
@@ -821,9 +833,17 @@ async function renderPage(pageNumber) {
     }
 }
 
+window.currentScale = 1.2; // Default 120%
+
+async function changeZoom(delta) {
+    window.currentScale = Math.max(0.5, Math.min(3, window.currentScale + delta));
+    document.getElementById('zoomInfo').textContent = `${Math.round(window.currentScale * 100)}%`;
+    await renderPage(currentPdfPage);
+}
+
 async function changePdfPage(delta) {
     const newPage = currentPdfPage + delta;
-    if (newPage >= 1 && newPage <= totalPages) {
+    if (newPage >= 1 && newPage <= pdfTotalPages) {
         currentPdfPage = newPage;
         await renderPage(currentPdfPage);
     }
@@ -1183,11 +1203,28 @@ gap: 1rem;
 
     .preview-controls {
         display: flex;
-        justify-content: center;
+        flex-direction: column;
         align-items: center;
         gap: 1rem;
-        padding-top: 1rem;
+        padding: 1rem;
         border-top: 1px solid var(--border-color);
+    }
+
+    .zoom-controls {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+    }
+
+    .page-controls {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+    }
+
+    #zoomInfo {
+        min-width: 60px;
+        text-align: center;
     }
 
     #pdfCanvas {
