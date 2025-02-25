@@ -53,16 +53,7 @@
                     <p>Loading documents...</p>
                 </div>
             </div>
-            <div class="pagination-controls">
-                <button class="action-btn" onclick="changePage(currentPage - 1)" id="prevPage" disabled>
-                    <i data-feather="chevron-left"></i> Previous
-                </button>
-                <span id="pageInfo">Page 1</span>
-                <button class="action-btn" onclick="changePage(currentPage + 1)" id="nextPage" disabled>
-                    Next <i data-feather="chevron-right"></i>
-                </button>
             </div>
-        </div>
     </div>
 </div>
 </div>
@@ -142,12 +133,12 @@
             <iframe id="documentPreview" style="width: 100%; height: 100%; border: none;"></iframe>
         </div>
         <div class="preview-controls">
-            <button id="prevPage" class="action-btn" onclick="changePdfPage(-1)" disabled>
-                <i data-feather="chevron-left"></i> Previous
+            <button class="action-btn" onclick="adjustZoom(-0.2)">
+                <i data-feather="zoom-out"></i>
             </button>
-            <span id="pageInfo">Page 1 of 1</span>
-            <button id="nextPage" class="action-btn" onclick="changePdfPage(1)" disabled>
-                Next <i data-feather="chevron-right"></i>
+            <span id="zoomLevel">100%</span>
+            <button class="action-btn" onclick="adjustZoom(0.2)">
+                <i data-feather="zoom-in"></i>
             </button>
         </div>
     </div>
@@ -159,6 +150,7 @@ const perPage = 9;
 let totalPages = 1;
 let itemToDelete = null;
 let userSearchTimeout = null;
+let zoomLevel = 1.0;
 
 async function loadFilterOptions() {
     const contentDiv = document.getElementById('documentsContent');
@@ -597,16 +589,7 @@ async function loadDocuments(page = 1, filters = {}) {
                 `).join('')}
             </div>`;
 
-        contentDiv.innerHTML = gridHTML + `
-            <div class="pagination-controls">
-                <button class="action-btn" onclick="changePage(currentPage - 1)" id="prevPage" ${currentPage <= 1 ? 'disabled' : ''}>
-                    <i data-feather="chevron-left"></i> Previous
-                </button>
-                <span id="pageInfo">Page ${currentPage} of ${totalPages}</span>
-                <button class="action-btn" onclick="changePage(currentPage + 1)" id="nextPage" ${currentPage >= totalPages ? 'disabled' : ''}>
-                    Next <i data-feather="chevron-right"></i>
-                </button>
-            </div>`;
+        contentDiv.innerHTML = gridHTML;
 
         feather.replace();
         updatePaginationControls();
@@ -671,23 +654,9 @@ async function searchUser() {
 }
 
 function updatePaginationControls() {
-    document.getElementById('prevPage').disabled = currentPage <= 1;
-    document.getElementById('nextPage').disabled = currentPage >= totalPages;
-    document.getElementById('pageInfo').textContent = `Page ${currentPage} of ${totalPages}`;
+    //This function is not used anymore because pagination is removed.  Leaving it here for completeness in case pagination is re-added later
 }
 
-function changePage(newPage) {
-    if (newPage >= 1 && newPage <= totalPages) {
-        const urlParams = new URLSearchParams(window.location.search);
-        const filters = {
-            department_id: urlParams.get('department_id') || '',
-            category_id: urlParams.get('category_id') || '',
-            document_type_id: urlParams.get('document_type_id') || '',
-            user_search: urlParams.get('user_search') || ''
-        };
-        loadDocuments(newPage, filters);
-    }
-}
 
 function showModal(modalId) {
     document.getElementById(modalId).style.display = 'block';
@@ -733,9 +702,10 @@ async function previewDocument(url, filename) {
     const pdfCanvas = document.getElementById('pdfCanvas');
     const imagePreview = document.getElementById('imagePreview');
     const documentPreview = document.getElementById('documentPreview');
-    const prevButton = document.getElementById('prevPage');
-    const nextButton = document.getElementById('nextPage');
-    const pageInfo = document.getElementById('pageInfo');
+    const zoomLevelSpan = document.getElementById('zoomLevel');
+    zoomLevel = 1.0;
+    zoomLevelSpan.textContent = `${(zoomLevel * 100).toFixed(0)}%`;
+
 
     // Function to fetch document with proper headers
     async function fetchDocument(url) {
@@ -759,9 +729,7 @@ async function previewDocument(url, filename) {
     pdfCanvas.style.display = 'none';
     imagePreview.style.display = 'none';
     documentPreview.style.display = 'none';
-    prevButton.style.display = 'none';
-    nextButton.style.display = 'none';
-    pageInfo.style.display = 'none';
+
 
     previewTitle.textContent = filename;
     const fileType = filename.split('.').pop().toLowerCase();
@@ -770,9 +738,6 @@ async function previewDocument(url, filename) {
         if (fileType === 'pdf') {
             // Handle PDF files
             pdfCanvas.style.display = 'block';
-            prevButton.style.display = 'block';
-            nextButton.style.display = 'block';
-            pageInfo.style.display = 'block';
 
             const proxyUrl = `/proxy/storage/${url.replace('https://storage.googleapis.com/', '')}`;
             const loadingTask = pdfjsLib.getDocument(proxyUrl);
@@ -803,7 +768,7 @@ async function renderPage(pageNumber) {
         const canvas = document.getElementById('pdfCanvas');
         const context = canvas.getContext('2d');
 
-        const viewport = page.getViewport({ scale: 2.0 });
+        const viewport = page.getViewport({ scale: zoomLevel });
         canvas.height = viewport.height;
         canvas.width = viewport.width;
 
@@ -812,21 +777,21 @@ async function renderPage(pageNumber) {
             viewport: viewport
         }).promise;
 
-        document.getElementById('pageInfo').textContent = `Page ${pageNumber} of ${pdfTotalPages}`;
-        document.getElementById('prevPage').disabled = pageNumber <= 1;
-        document.getElementById('nextPage').disabled = pageNumber >= pdfTotalPages;
+        // document.getElementById('pageInfo').textContent = `Page ${pageNumber} of ${pdfTotalPages}`;
+        // document.getElementById('prevPage').disabled = pageNumber <= 1;
+        // document.getElementById('nextPage').disabled = pageNumber >= pdfTotalPages;
     } catch (error) {
         console.error('Error rendering PDF page:', error);
         showNotification('Failed to render PDF page', 'error');
     }
 }
 
-async function changePdfPage(delta) {
-    const newPage = currentPdfPage + delta;
-    if (newPage >= 1 && newPage <= totalPages) {
-        currentPdfPage = newPage;
-        await renderPage(currentPdfPage);
-    }
+function adjustZoom(delta) {
+    zoomLevel += delta;
+    zoomLevel = Math.max(0.2, Math.min(3, zoomLevel)); // Limit zoom level
+    const zoomLevelSpan = document.getElementById('zoomLevel');
+    zoomLevelSpan.textContent = `${(zoomLevel * 100).toFixed(0)}%`;
+    renderPage(currentPdfPage);
 }
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -1019,6 +984,7 @@ gap: 1rem;
         outline: none;
         border-color: var(--accent-color);
     }
+
 
     .pagination-controls {
         display: flex;
