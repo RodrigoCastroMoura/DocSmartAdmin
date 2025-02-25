@@ -193,8 +193,7 @@ async function loadDocumentTypes(page = 1) {
         }
 
         currentPage = page;
-<<<<<<< HEAD
-        totalPages = data.total_pages || 1;
+        totalPages = data.total_pages || Math.ceil(data.total_count / perPage);
         const gridHTML = generateDocumentTypesHTML(data.document_types);
         contentDiv.innerHTML = `${gridHTML}
             <div class="pagination-controls">
@@ -206,16 +205,6 @@ async function loadDocumentTypes(page = 1) {
                     Next <i data-feather="chevron-right"></i>
                 </button>
             </div>`;
-=======
-        totalPages = Math.ceil(data.total_count / perPage);
-        updatePaginationControls();
-        if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
-        const data = await response.json();
-
-        currentPage = page;
-        totalPages = Math.ceil(data.length / perPage);
-        updatePaginationControls();
->>>>>>> 285fadb (Assistant checkpoint: Implement pagination for document types)
 
         feather.replace();
         updatePaginationControls();

@@ -259,13 +259,13 @@ async function loadDocumentTypes(page = 1) {
             throw new Error(`HTTP error! status: ${response.status}`);
         }
 
-        const responseData = await response.json();
-        if (!responseData || !responseData.document_types) {
+        const data = await response.json();
+        if (!data || !data.document_types) {
             throw new Error('Invalid response format');
         }
 
         currentPage = page;
-        totalPages = responseData.total_pages || 1;
+        totalPages = data.total_pages || 1;
 
         const gridHTML = generateDocumentTypesHTML(data.document_types);
         contentDiv.innerHTML = `${gridHTML}

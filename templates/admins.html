@@ -796,48 +796,40 @@ async function createAdmin(event) {
     event.preventDefault();
     const form = event.target;
     const submitButton = form.querySelector('button[type="submit"]');
-    
+    showLoading(submitButton);
+
+    const formData = new FormData(form);
+    const permissions = Array.from(form.querySelectorAll('input[name="permissions"]:checked'))
+        .map(input => input.value);
+
+    const data = {
+        name: formData.get('name'),
+        email: formData.get('email'),
+        password: formData.get('password'),
+        cpf: formData.get('cpf'), // Added CPF field
+        role: 'admin',
+        permissions: permissions
+    };
+
     try {
-        showLoading(submitButton);
-        const formData = new FormData(form);
-        const permissions = Array.from(form.querySelectorAll('input[name="permissions"]:checked'))
-            .map(input => input.value);
-
-        if (!formData.get('name') || !formData.get('email') || !formData.get('password') || !formData.get('cpf')) {
-            throw new Error('Please fill in all required fields');
-        }
-
-        const data = {
-            name: formData.get('name'),
-            email: formData.get('email'),
-            password: formData.get('password'),
-            cpf: formData.get('cpf'),
-            role: 'admin',
-            permissions: permissions
-        };
-
         const response = await fetch('/api/admin', {
             method: 'POST',
-            headers: { 
-                'Content-Type': 'application/json',
-                'Accept': 'application/json'
-            },
+            headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(data)
         });
 
-        const responseData = await response.json();
-        
         if (!response.ok) {
-            throw new Error(responseData.error || 'Failed to create administrator');
+            const errorData = await response.json();
+            throw new Error(errorData.error || 'Failed to create administrator');
         }
 
         hideModal('addAdminModal');
         form.reset();
-        await loadAdmins();
         showNotification('Administrator created successfully', 'success');
+        loadAdmins();
     } catch (error) {
         console.error('Error creating administrator:', error);
-        showNotification(error.message || 'Failed to create administrator', 'error');
+        showNotification(error.message, 'error');
     } finally {
         hideLoading(submitButton);
     }
@@ -881,45 +873,37 @@ async function updateAdmin(event) {
     const form = event.target;
     const submitButton = form.querySelector('button[type="submit"]');
     const id = document.getElementById('editAdminId').value;
-    
+    showLoading(submitButton);
+
+    const formData = new FormData(form);
+    const permissions = Array.from(form.querySelectorAll('input[name="permissions"]:checked'))
+        .map(input => input.value);
+
+    const data = {
+        name: formData.get('name'),
+        email: formData.get('email'),
+        cpf: formData.get('cpf'), // Added CPF field
+        permissions: permissions
+    };
+
     try {
-        showLoading(submitButton);
-        const formData = new FormData(form);
-        const permissions = Array.from(form.querySelectorAll('input[name="permissions"]:checked'))
-            .map(input => input.value);
-
-        if (!formData.get('name') || !formData.get('email') || !formData.get('cpf')) {
-            throw new Error('Please fill in all required fields');
-        }
-
-        const data = {
-            name: formData.get('name'),
-            email: formData.get('email'),
-            cpf: formData.get('cpf'),
-            permissions: permissions
-        };
-
         const response = await fetch(`/api/admin/${id}`, {
             method: 'PUT',
-            headers: { 
-                'Content-Type': 'application/json',
-                'Accept': 'application/json'
-            },
+            headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(data)
         });
 
-        const responseData = await response.json();
-        
         if (!response.ok) {
-            throw new Error(responseData.error || 'Failed to update administrator');
+            const errorData = await response.json();
+            throw new Error(errorData.error || 'Failed to update administrator');
         }
 
         hideModal('editAdminModal');
-        await loadAdmins();
         showNotification('Administrator updated successfully', 'success');
+        loadAdmins();
     } catch (error) {
         console.error('Error updating administrator:', error);
-        showNotification(error.message || 'Failed to update administrator', 'error');
+        showNotification(error.message, 'error');
     } finally {
         hideLoading(submitButton);
     }
