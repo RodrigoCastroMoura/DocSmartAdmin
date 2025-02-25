@@ -193,6 +193,7 @@ async function loadDocumentTypes(page = 1) {
         }
 
         currentPage = page;
+<<<<<<< HEAD
         totalPages = data.total_pages || 1;
         const gridHTML = generateDocumentTypesHTML(data.document_types);
         contentDiv.innerHTML = `${gridHTML}
@@ -205,6 +206,16 @@ async function loadDocumentTypes(page = 1) {
                     Next <i data-feather="chevron-right"></i>
                 </button>
             </div>`;
+=======
+        totalPages = Math.ceil(data.total_count / perPage);
+        updatePaginationControls();
+        if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+        const data = await response.json();
+
+        currentPage = page;
+        totalPages = Math.ceil(data.length / perPage);
+        updatePaginationControls();
+>>>>>>> 285fadb (Assistant checkpoint: Implement pagination for document types)
 
         feather.replace();
         updatePaginationControls();
@@ -279,9 +290,15 @@ function generateDocumentTypesHTML(types) {
 
 
 function updatePaginationControls() {
-    document.getElementById('prevPage').disabled = currentPage <= 1;
-    document.getElementById('nextPage').disabled = currentPage >= totalPages;
-    document.getElementById('pageInfo').textContent = `Page ${currentPage} of ${totalPages}`;
+    const prevButton = document.getElementById('prevPage');
+    const nextButton = document.getElementById('nextPage');
+    const pageInfo = document.getElementById('pageInfo');
+    
+    if (prevButton && nextButton && pageInfo) {
+        prevButton.disabled = currentPage <= 1;
+        nextButton.disabled = currentPage >= totalPages;
+        pageInfo.textContent = `Page ${currentPage} of ${totalPages}`;
+    }
 }
 
 function changePage(newPage) {
