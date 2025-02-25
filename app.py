@@ -761,7 +761,7 @@ def document_types_api():
             "department_id": department_id,
             "category_id": category_id,
             'company_id': company_id,
-            'public': public
+            'public': public.lower() in ['true']
         }
         response = requests.post(
             DOCUMENT_TYPES_URL,
