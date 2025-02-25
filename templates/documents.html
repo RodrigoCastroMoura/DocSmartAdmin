@@ -838,9 +838,22 @@ window.currentScale = 1.2; // Default 120%
 async function changeZoom(delta) {
     try {
         if (!currentPdf) return;
-        window.currentScale = Math.max(0.5, Math.min(3, window.currentScale + delta));
-        document.getElementById('zoomInfo').textContent = `${Math.round(window.currentScale * 100)}%`;
-        await renderPage(currentPdfPage);
+        const newScale = Math.max(0.5, Math.min(3, window.currentScale + delta));
+        window.currentScale = newScale;
+        document.getElementById('zoomInfo').textContent = `${Math.round(newScale * 100)}%`;
+        
+        const page = await currentPdf.getPage(currentPdfPage);
+        const canvas = document.getElementById('pdfCanvas');
+        const context = canvas.getContext('2d');
+        
+        const viewport = page.getViewport({ scale: newScale });
+        canvas.height = viewport.height;
+        canvas.width = viewport.width;
+        
+        await page.render({
+            canvasContext: context,
+            viewport: viewport
+        }).promise;
     } catch (error) {
         console.error('Error changing zoom:', error);
         showNotification('Failed to change zoom level', 'error');
