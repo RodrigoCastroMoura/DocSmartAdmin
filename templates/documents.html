@@ -841,15 +841,15 @@ async function changeZoom(delta) {
         const newScale = Math.max(0.5, Math.min(3, window.currentScale + delta));
         window.currentScale = newScale;
         document.getElementById('zoomInfo').textContent = `${Math.round(newScale * 100)}%`;
-        
+
         const page = await currentPdf.getPage(currentPdfPage);
         const canvas = document.getElementById('pdfCanvas');
         const context = canvas.getContext('2d');
-        
+
         const viewport = page.getViewport({ scale: newScale });
         canvas.height = viewport.height;
         canvas.width = viewport.width;
-        
+
         await page.render({
             canvasContext: context,
             viewport: viewport
@@ -1190,11 +1190,12 @@ gap: 1rem;
     }
 
     #pdfCanvas {
-        max-width: 100%;
+        max-width: 95%;
         max-height: calc(100vh - 120px);
         box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
         background: white;
         margin: auto;
+        min-width: 800px;
     }
 
     @media (max-width: 768px) {
