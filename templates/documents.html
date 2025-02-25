@@ -793,7 +793,16 @@ function adjustZoom(delta) {
     zoomLevel = Math.max(0.2, Math.min(3, zoomLevel)); // Limit zoom level
     const zoomLevelSpan = document.getElementById('zoomLevel');
     zoomLevelSpan.textContent = `${(zoomLevel * 100).toFixed(0)}%`;
-    renderPage(currentPdfPage);
+    
+    const pdfCanvas = document.getElementById('pdfCanvas');
+    const imagePreview = document.getElementById('imagePreview');
+    
+    if (pdfCanvas.style.display === 'block') {
+        renderPage(currentPdfPage);
+    } else if (imagePreview.style.display === 'block') {
+        imagePreview.style.transform = `scale(${zoomLevel})`;
+        imagePreview.style.transformOrigin = 'center center';
+    }
 }
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -1149,6 +1158,12 @@ gap: 1rem;
     #pdfCanvas {
         max-width: 100%;
         height: auto;
+    }
+
+    #imagePreview {
+        max-width: 100%;
+        height: auto;
+        transition: transform 0.2s ease;
     }
 
     .form-group {
