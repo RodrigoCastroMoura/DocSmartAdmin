@@ -193,7 +193,7 @@ async function loadDocumentTypes(page = 1) {
         }
 
         currentPage = page;
-        totalPages = data.total_pages || Math.ceil(data.total_count / perPage);
+        totalPages = data.total_pages || 1;
         const gridHTML = generateDocumentTypesHTML(data.document_types);
         contentDiv.innerHTML = `${gridHTML}
             <div class="pagination-controls">
@@ -279,15 +279,9 @@ function generateDocumentTypesHTML(types) {
 
 
 function updatePaginationControls() {
-    const prevButton = document.getElementById('prevPage');
-    const nextButton = document.getElementById('nextPage');
-    const pageInfo = document.getElementById('pageInfo');
-    
-    if (prevButton && nextButton && pageInfo) {
-        prevButton.disabled = currentPage <= 1;
-        nextButton.disabled = currentPage >= totalPages;
-        pageInfo.textContent = `Page ${currentPage} of ${totalPages}`;
-    }
+    document.getElementById('prevPage').disabled = currentPage <= 1;
+    document.getElementById('nextPage').disabled = currentPage >= totalPages;
+    document.getElementById('pageInfo').textContent = `Page ${currentPage} of ${totalPages}`;
 }
 
 function changePage(newPage) {
