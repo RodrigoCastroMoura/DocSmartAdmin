@@ -393,7 +393,7 @@ async function createDocumentType(event) {
 
         hideModal('addDocumentTypeModal');
         form.reset();
-        await loadDocumentTypes();
+        await loadDocumentTypes(currentPage);
         showNotification('Document type created successfully', 'success');
     } catch (error) {
         console.error('Error creating document type:', error);
@@ -432,7 +432,7 @@ async function updateDocumentType(event) {
         }
 
         hideModal('editDocumentTypeModal');
-        await loadDocumentTypes();
+        await loadDocumentTypes(currentPage);
         showNotification('Document type updated successfully', 'success');
     } catch (error) {
         console.error('Error updating document type:', error);
@@ -463,7 +463,7 @@ async function confirmDelete() {
             throw new Error(errorData.error || 'Failed to delete document type');
         }
 
-        await loadDocumentTypes();
+        await loadDocumentTypes(currentPage);
         showNotification('Document type deleted successfully', 'success');
     } catch (error) {
         console.error('Error deleting document type:', error);
@@ -730,7 +730,6 @@ async function updateUserAccess() {
 
         hideModal('userAccessModal');
         showNotification(`User access ${action === 'add' ? 'granted' : 'removed'} successfully`, 'success');
-        await loadDocumentTypes();
     } catch (error) {
         console.error('Error updating user access:', error);
         showNotification(error.message, 'error');

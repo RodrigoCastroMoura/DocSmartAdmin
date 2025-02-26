@@ -18,48 +18,12 @@
             <i data-feather="plus"></i> Add Document Type
         </button>
     </div>
-    <div class="content-grid">
-        <div class="document-types-grid" id="documentTypesGrid">
-            {% if document_types %}
-                {% for type in document_types %}
-                <div class="document-type-card" data-id="{{ type.id }}">
-                    <div class="document-type-header">
-                        <i data-feather="file"></i>
-                        <a href="/document_type/{{type.id}}/documents" class="document-type-link">
-                            <h3>{{ type.name }}</h3>
-                        </a>    
-                    </div>
-                    <div class="document-type-info">
-                        <p class="description">{{ type.description or 'No description' }}</p>
-                        <p class="meta">
-                            <span>Documents: {{ type.document_count|default(0)}}</span>
-                            <span>Created: {{ type.created_at|default('N/A') }}</span>
-                        </p>
-                    </div>
-                    <div class="document-type-actions">
-                        {% if not type.public %}
-                        <button class="action-btn success" onclick='showUserAccessModal("{{ type.id }}", "add")'>
-                            <i data-feather="user-plus"></i>
-                        </button>
-                        <button class="action-btn warning" onclick='showUserAccessModal("{{ type.id }}", "remove")'>
-                            <i data-feather="user-minus"></i>
-                        </button>
-                        {% endif %}
-                        <button class="action-btn" onclick='showEditDocumentTypeModal("{{ type.id }}", {{ type|tojson|safe }})'>
-                            <i data-feather="edit-2"></i>
-                        </button>
-                        <button class="action-btn danger" onclick="deleteDocumentType('{{ type.id }}')">
-                            <i data-feather="trash-2"></i>
-                        </button>
-                    </div>
-                </div>
-                {% endfor %}
-            {% else %}
-                <div class="no-data">
-                    <i data-feather="inbox"></i>
-                    <p>No document types found for this category</p>
-                </div>
-            {% endif %}
+    <div class="content-grid" id="documentTypesContent">
+        <div class="document-types-grid">
+            <div class="no-data">
+                <i data-feather="inbox"></i>
+                <p>o document types found for this category</p>
+            </div>
         </div>
         <div class="pagination-controls">
             <button class="action-btn" onclick="changePage(currentPage - 1)" id="prevPage" disabled>
@@ -71,6 +35,7 @@
             </button>
         </div>
     </div>
+</div>
 </div>
 
 <!-- Add Document Type Modal -->
@@ -211,7 +176,7 @@ setupFormValidation('editDocumentTypeForm', {
 });
 
 async function loadDocumentTypes(page = 1) {
-    const contentDiv = document.getElementById('documentTypesGrid');
+    const contentDiv = document.getElementById('documentTypesContent');
     showLoading(contentDiv);
 
     try {
@@ -223,61 +188,26 @@ async function loadDocumentTypes(page = 1) {
         const response = await fetch(`/api/document_types/categories/{{ category.id }}/types?${params}`);
         if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
         const data = await response.json();
+        if (!data || !data.document_types) {
+            throw new Error('Invalid response format');
+        }
 
         currentPage = page;
-        totalPages = Math.ceil(data.length / perPage);
-        updatePaginationControls();
+        totalPages = data.total_pages || 1;
+        const gridHTML = generateDocumentTypesHTML(data.document_types);
+        contentDiv.innerHTML = `${gridHTML}
+            <div class="pagination-controls">
+                <button class="action-btn" onclick="changePage(currentPage - 1)" id="prevPage" ${currentPage <= 1 ? 'disabled' : ''}>
+                    <i data-feather="chevron-left"></i> Previous
+                </button>
+                <span id="pageInfo">Page ${currentPage} of ${totalPages}</span>
+                <button class="action-btn" onclick="changePage(currentPage + 1)" id="nextPage" ${currentPage >= totalPages ? 'disabled' : ''}>
+                    Next <i data-feather="chevron-right"></i>
+                </button>
+            </div>`;
 
-        if (!data || data.length === 0) {
-            contentDiv.innerHTML = `
-                <div class="no-data">
-                    <i data-feather="inbox"></i>
-                    <p>No document types found</p>
-                </div>`;
-        } else {
-            contentDiv.innerHTML = data.map(type => `
-                <div class="document-type-card" data-id="${type.id}">
-                    <div class="document-type-header">
-                        <i data-feather="file"></i>
-                        <a href="/document_type/${type.id}/documents" class="document-type-link">
-                            <h3>${type.name}</h3>
-                        </a>    
-                    </div>
-                    <div class="document-type-info">
-                        <div class="department-badge">
-                            <i data-feather="briefcase"></i>
-                            <span>${type.department_name || 'No Department'}</span>
-                        </div>
-                        <div class="department-badge">
-                            <i data-feather="grid"></i>
-                            <span>${type.category_name || 'No Category'}</span>
-                        </div>
-                        <p class="description">${type.description || 'No description'}</p>
-                        <p class="meta">
-                            <span>Documents: ${type.document_count || 0}</span>
-                            <span>Created: ${new Date(type.created_at).toLocaleDateString()}</span>
-                        </p>
-                    </div>
-                    <div class="document-type-actions">
-                        ${!type.public ? `
-                            <button class="action-btn success" onclick='showUserAccessModal("${type.id}", "add")'>
-                                <i data-feather="user-plus"></i>
-                            </button>
-                            <button class="action-btn warning" onclick='showUserAccessModal("${type.id}", "remove")'>
-                                <i data-feather="user-minus"></i>
-                            </button>
-                        ` : ''}
-                        <button class="action-btn" onclick='showEditDocumentTypeModal("${type.id}", ${JSON.stringify(type)})'>
-                            <i data-feather="edit-2"></i>
-                        </button>
-                        <button class="action-btn danger" onclick="deleteDocumentType('${type.id}')">
-                            <i data-feather="trash-2"></i>
-                        </button>
-                    </div>
-                </div>
-            `).join('');
-        }
         feather.replace();
+        updatePaginationControls();
     } catch (error) {
         console.error('Error loading document types:', error);
         contentDiv.innerHTML = `
@@ -290,6 +220,63 @@ async function loadDocumentTypes(page = 1) {
         hideLoading(contentDiv);
     }
 }
+
+function generateDocumentTypesHTML(types) {
+    if (!Array.isArray(types) || types.length === 0) {
+        return `
+            <div class="document-types-grid">
+                <div class="no-data">
+                    <i data-feather="inbox"></i>
+                    <p>No document types found</p>
+                </div>
+            </div>`;
+    }
+
+    const typesHTML = types.map(type => `
+        <div class="document-type-card" data-id="${type.id}">
+            <div class="document-type-header">
+                <i data-feather="file"></i>
+                <a href="/document_type/${type.id}/documents" class="document-type-link">
+                    <h3>${type.name}</h3>
+                </a>   
+            </div>
+            <div class="document-type-info">
+                 <div class="department-badge">
+                    <i data-feather="briefcase"></i>
+                    <span>${type.department_name || 'No Department'}</span>
+                </div>
+                 <div class="department-badge">
+                    <i data-feather="grid"></i>
+                    <span>${ type.category_name||'No category'}</span>
+                </div>
+                <p class="description">${type.description || 'No description'}</p>
+                <p class="meta">
+                    <span>Documents: ${type.document_count || 0}</span>
+                    <span>Created: ${new Date(type.created_at).toLocaleDateString()}</span>
+                </p>
+            </div>
+            <div class="document-type-actions">
+                ${!type.public ? `
+                    <button class="action-btn success" onclick='showUserAccessModal("${type.id}", "add")'>
+                        <i data-feather="user-plus"></i>
+                    </button>
+                    <button class="action-btn warning" onclick='showUserAccessModal("${type.id}", "remove")'>
+                        <i data-feather="user-minus"></i>
+                    </button>
+                ` : ''}
+                <button class="action-btn" onclick='showEditDocumentTypeModal("${type.id}", ${JSON.stringify(type)})'>
+                    <i data-feather="edit-2"></i>
+                </button>
+                <button class="action-btn danger" onclick="deleteDocumentType('${type.id}')">
+                    <i data-feather="trash-2"></i>
+                </button>
+            </div>
+        </div>
+    `).join('');
+
+    return `<div class="document-types-grid">${typesHTML}</div>`;
+}
+
 
 function updatePaginationControls() {
     document.getElementById('prevPage').disabled = currentPage <= 1;
@@ -354,7 +341,7 @@ async function createDocumentType(event) {
 
         hideModal('addDocumentTypeModal');
         form.reset();
-        await loadDocumentTypes();
+        await loadDocumentTypes(currentPage);
         showNotification('Document type created successfully', 'success');
     } catch (error) {
         console.error('Error creating document type:', error);
@@ -393,7 +380,7 @@ async function updateDocumentType(event) {
         }
 
         hideModal('editDocumentTypeModal');
-        await loadDocumentTypes();
+        await loadDocumentTypes(currentPage);
         showNotification('Document type updated successfully', 'success');
     } catch (error) {
         console.error('Error updating document type:', error);
@@ -421,7 +408,7 @@ async function deleteDocumentType(id) {
             throw new Error(errorData.error || 'Failed to delete document type');
         }
 
-        await loadDocumentTypes();
+        await loadDocumentTypes(currentPage);
         showNotification('Document type deleted successfully', 'success');
     } catch (error) {
         console.error('Error deleting document type:', error);
@@ -579,7 +566,6 @@ async function updateUserAccess() {
         }
 
         hideModal('userAccessModal');
-        await loadDocumentTypes();
         showNotification(`User access ${action === 'add' ? 'granted' : 'removed'} successfully`, 'success');
     } catch (error) {
         console.error('Error updating user access:', error);

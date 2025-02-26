@@ -738,9 +738,17 @@ def document_types_api():
         return jsonify({'error': 'Company ID not found in session'}), 400
 
     if request.method == 'GET':
+
+        params = {
+            'page': request.args.get('page', 1),
+            'per_page': request.args.get('per_page', 9),
+            'company_id': session.get('company_id')
+        }
+
         response = requests.get(
             f"{DOCUMENT_TYPES_URL}/companies/{company_id}/types",
             headers=headers,
+            params=params,
             timeout=REQUEST_TIMEOUT)
         return handle_api_response(
             response, error_message='Failed to fetch document types')
@@ -894,9 +902,15 @@ def category_document_types_api(category_id):
     headers = get_auth_headers()
 
     try:
+        params = {
+            'page': request.args.get('page', 1),
+            'per_page': request.args.get('per_page', 9),
+            'company_id': session.get('company_id')
+        }
         response = requests.get(
             f"{DOCUMENT_TYPES_URL}/categories/{category_id}/types",
             headers=headers,
+            params=params,
             timeout=REQUEST_TIMEOUT)
         return handle_api_response(
             response, error_message='Failed to fetch document types')
