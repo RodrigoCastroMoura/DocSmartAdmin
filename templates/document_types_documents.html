@@ -88,6 +88,33 @@
         </form>
     </div>
 </div>
+<!-- Preview Modal -->
+<div id="previewModal" class="modal">
+    <div class="modal-content preview-modal">
+        <div class="preview-header">
+            <div class="preview-title">
+                <h3 id="previewTitle">Document Preview</h3>
+                <div class="zoom-controls">
+                    <button class="action-btn" onclick="adjustZoom(-0.2)">
+                        <i data-feather="zoom-out"></i>
+                    </button>
+                    <span id="zoomLevel">100%</span>
+                    <button class="action-btn" onclick="adjustZoom(0.2)">
+                        <i data-feather="zoom-in"></i>
+                    </button>
+                </div>
+            </div>
+            <button class="action-btn" onclick="hideModal('previewModal')">
+                <i data-feather="x"></i>
+            </button>
+        </div>
+        <div class="preview-container">
+            <canvas id="pdfCanvas"></canvas>
+            <img id="imagePreview" alt="Image Preview">
+            <iframe id="documentPreview" style="width: 100%; height: 100%; border: none;"></iframe>
+        </div>
+    </div>
+</div>
 <script>
 let currentPage = 1;
 const perPage = 9;
@@ -533,6 +560,9 @@ async function loadDocuments(page = 1, filters = {}) {
                             </div>
                         </div>
                         <div class="document-actions">
+                            <button class="action-btn" onclick="previewDocument('${doc.url}', '${doc.name}')">
+                                <i data-feather="eye"></i>
+                            </button>
                             <button class="action-btn" onclick="downloadDocument('${doc.url}')">
                                 <i data-feather="download"></i>
                             </button>
@@ -667,6 +697,126 @@ async function downloadDocument(url) {
         showNotification('Failed to download document', 'error');
     }
 }
+
+// PDF.js library
+const pdfjsLib = window['pdfjs-dist/build/pdf'];
+pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/pdf.worker.min.js';
+
+let currentPdf = null;
+let currentPdfPage = 1;
+let pdfTotalPages = 1;
+
+async function previewDocument(url, filename) {
+    const previewTitle = document.getElementById('previewTitle');
+    const pdfCanvas = document.getElementById('pdfCanvas');
+    const imagePreview = document.getElementById('imagePreview');
+    const documentPreview = document.getElementById('documentPreview');
+    const zoomLevelSpan = document.getElementById('zoomLevel');
+    zoomLevel = 1.0;
+    zoomLevelSpan.textContent = `${(zoomLevel * 100).toFixed(0)}%`;
+
+
+    // Function to fetch document with proper headers
+    async function fetchDocument(url) {
+        try {
+            const response = await fetch(url, {
+                method: 'GET',
+                mode: 'cors',
+                headers: {
+                    'Accept': 'application/pdf',
+                },
+            });
+            const blob = await response.blob();
+            return URL.createObjectURL(blob);
+        } catch (error) {
+            console.error('Error fetching document:', error);
+            throw error;
+        }
+    }
+
+    // Reset all preview elements
+    pdfCanvas.style.display = 'none';
+    imagePreview.style.display = 'none';
+    documentPreview.style.display = 'none';
+
+
+    previewTitle.textContent = filename;
+    const fileType = filename.split('.').pop().toLowerCase();
+
+    try {
+        if (fileType === 'pdf') {
+            // Handle PDF files
+            pdfCanvas.style.display = 'block';
+
+            const proxyUrl = `/proxy/storage/${url.replace('https://storage.googleapis.com/', '')}`;
+            const loadingTask = pdfjsLib.getDocument(proxyUrl);
+            currentPdf = await loadingTask.promise;
+            pdfTotalPages = currentPdf.numPages;
+            currentPdfPage = 1;
+            await renderPage(currentPdfPage);
+        } else if (['jpg', 'jpeg', 'png', 'gif'].includes(fileType)) {
+            // Handle images
+            imagePreview.style.display = 'block';
+            imagePreview.src = url;
+        } else {
+            // Handle other document types
+            documentPreview.style.display = 'block';
+            documentPreview.src = url;
+        }
+
+        showModal('previewModal');
+    } catch (error) {
+        console.error('Error previewing document:', error);
+        showNotification('Failed to preview document', 'error');
+    }
+}
+
+async function renderPage(pageNumber) {
+    try {
+        const page = await currentPdf.getPage(pageNumber);
+        const canvas = document.getElementById('pdfCanvas');
+        const context = canvas.getContext('2d');
+
+        const viewport = page.getViewport({ scale: zoomLevel });
+        canvas.height = viewport.height;
+        canvas.width = viewport.width;
+
+        await page.render({
+            canvasContext: context,
+            viewport: viewport
+        }).promise;
+
+        // document.getElementById('pageInfo').textContent = `Page ${pageNumber} of ${pdfTotalPages}`;
+        // document.getElementById('prevPage').disabled = pageNumber <= 1;
+        // document.getElementById('nextPage').disabled = pageNumber >= pdfTotalPages;
+    } catch (error) {
+        console.error('Error rendering PDF page:', error);
+        showNotification('Failed to render PDF page', 'error');
+    }
+}
+
+function adjustZoom(delta) {
+    zoomLevel += delta;
+    zoomLevel = Math.max(0.2, Math.min(3, zoomLevel)); // Limit zoom level
+    const zoomLevelSpan = document.getElementById('zoomLevel');
+    zoomLevelSpan.textContent = `${(zoomLevel * 100).toFixed(0)}%`;
+    
+    const pdfCanvas = document.getElementById('pdfCanvas');
+    const imagePreview = document.getElementById('imagePreview');
+    
+    if (pdfCanvas.style.display === 'block') {
+        renderPage(currentPdfPage);
+    } else if (imagePreview.style.display === 'block') {
+        imagePreview.style.transform = `scale(${zoomLevel})`;
+        imagePreview.style.transformOrigin = 'center center';
+    }
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+    loadDocuments();
+    feather.replace();
+});
+
 
 // Initialize the page
 document.addEventListener('DOMContentLoaded', () => {
@@ -967,6 +1117,80 @@ document.addEventListener('DOMContentLoaded', () => {
     box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
     animation: slideIn 0.3s ease;
 }
+
+.modal-content {
+        position: relative;
+        background-color: var(--bg-secondary);
+        margin: 5% auto;
+    }
+
+    .preview-modal {
+        max-width: 100% !important;
+        width: 100%;
+        height: 100vh;
+        display: flex;
+        flex-direction: column;
+        margin: 0 !important;
+        padding: 1rem !important;
+        border-radius: 0;
+    }
+
+    .preview-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding-bottom: 0.5rem;
+        border-bottom: 1px solid var(--border-color);
+    }
+
+    .preview-title {
+        display: flex;
+        align-items: center;
+        gap: 2rem;
+    }
+
+    .zoom-controls {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+    }
+
+    .preview-container {
+        flex: 1;
+        overflow: auto;
+        padding: 1rem;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        background: var(--bg-tertiary);
+        min-height: 85vh;
+    }
+
+    #pdfCanvas {
+        box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
+        background: white;
+        margin: auto;
+    }
+
+    .preview-controls {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        gap: 1rem;
+        padding-top: 1rem;
+        border-top: 1px solid var(--border-color);
+    }
+
+    #pdfCanvas {
+        max-width: 100%;
+        height: auto;
+    }
+
+    #imagePreview {
+        max-width: 100%;
+        height: auto;
+        transition: transform 0.2s ease;
+    }
 
 .form-group {
     display: flex;
