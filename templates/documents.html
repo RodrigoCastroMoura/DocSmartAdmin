@@ -53,7 +53,16 @@
                     <p>Loading documents...</p>
                 </div>
             </div>
+            <div class="pagination-controls">
+                <button class="action-btn" onclick="changePage(currentPage - 1)" id="prevPage" disabled>
+                    <i data-feather="chevron-left"></i> Previous
+                </button>
+                <span id="pageInfo">Page 1</span>
+                <button class="action-btn" onclick="changePage(currentPage + 1)" id="nextPage" disabled>
+                    Next <i data-feather="chevron-right"></i>
+                </button>
             </div>
+        </div>
     </div>
 </div>
 </div>
@@ -591,7 +600,16 @@ async function loadDocuments(page = 1, filters = {}) {
                 `).join('')}
             </div>`;
 
-        contentDiv.innerHTML = gridHTML;
+        contentDiv.innerHTML = gridHTML + `
+            <div class="pagination-controls">
+                <button class="action-btn" onclick="changePage(currentPage - 1)" id="prevPage" ${currentPage <= 1 ? 'disabled' : ''}>
+                    <i data-feather="chevron-left"></i> Previous
+                </button>
+                <span id="pageInfo">Page ${currentPage} of ${totalPages}</span>
+                <button class="action-btn" onclick="changePage(currentPage + 1)" id="nextPage" ${currentPage >= totalPages ? 'disabled' : ''}>
+                    Next <i data-feather="chevron-right"></i>
+                </button>
+            </div>`;
 
         feather.replace();
         updatePaginationControls();
@@ -609,6 +627,12 @@ async function loadDocuments(page = 1, filters = {}) {
     } finally {
         hideLoading(contentDiv);
     }
+}
+
+function updatePaginationControls() {
+    document.getElementById('prevPage').disabled = currentPage <= 1;
+    document.getElementById('nextPage').disabled = currentPage >= totalPages;
+    document.getElementById('pageInfo').textContent = `Page ${currentPage} of ${totalPages}`;
 }
 
 async function searchUser() {
@@ -654,11 +678,6 @@ async function searchUser() {
         closePopup();
     }
 }
-
-function updatePaginationControls() {
-    //This function is not used anymore because pagination is removed.  Leaving it here for completeness in case pagination is re-added later
-}
-
 
 function showModal(modalId) {
     document.getElementById(modalId).style.display = 'block';
