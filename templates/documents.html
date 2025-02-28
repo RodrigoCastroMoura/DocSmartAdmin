@@ -737,16 +737,16 @@ let pdfTotalPages = 1;
 async function previewDocument(url, filename) {
     const previewTitle = document.getElementById('previewTitle');
     const pdfCanvas = document.getElementById('pdfCanvas');
+    const pdfPagesContainer = document.getElementById('pdfPagesContainer');
     const imagePreview = document.getElementById('imagePreview');
     const documentPreview = document.getElementById('documentPreview');
     const pdfControls = document.getElementById('pdfControls');
     const zoomLevelSpan = document.getElementById('zoomLevel');
+    
+    // Resetar configurações
     zoomLevel = 1.0;
     zoomLevelSpan.textContent = `${(zoomLevel * 100).toFixed(0)}%`;
     currentPdfPage = 1;
-    lastScrollTime = 0;
-    const scrollCooldown = 300; // Tempo em ms para evitar navegação rápida demais
-
 
     // Function to fetch document with proper headers
     async function fetchDocument(url) {
@@ -768,24 +768,31 @@ async function previewDocument(url, filename) {
 
     // Reset all preview elements
     pdfCanvas.style.display = 'none';
+    pdfPagesContainer.style.display = 'none';
     imagePreview.style.display = 'none';
     documentPreview.style.display = 'none';
     pdfControls.style.display = 'none';
-
 
     previewTitle.textContent = filename;
     const fileType = filename.split('.').pop().toLowerCase();
 
     try {
         if (fileType === 'pdf') {
-            // Handle PDF files
-            pdfCanvas.style.display = 'block';
-            pdfControls.style.display = 'flex';
+            // Mostrar mensagem de carregamento
+            pdfPagesContainer.innerHTML = `
+                <div style="display: flex; justify-content: center; align-items: center; height: 200px;">
+                    <div style="text-align: center;">
+                        <div style="margin-bottom: 10px;"><i data-feather="file-text" style="width: 48px; height: 48px;"></i></div>
+                        <div>Carregando PDF...</div>
+                    </div>
+                </div>
+            `;
+            pdfPagesContainer.style.display = 'block';
+            feather.replace();
 
             const proxyUrl = `/proxy/storage/${url.replace('https://storage.googleapis.com/', '')}`;
             const loadingTask = pdfjsLib.getDocument(proxyUrl);
 
-            // Remover o antigo evento de scroll para navegação entre páginas
             currentPdf = await loadingTask.promise;
             pdfTotalPages = currentPdf.numPages;
 
@@ -794,28 +801,25 @@ async function previewDocument(url, filename) {
             // Se houver mais de uma página, renderiza todas
             if (pdfTotalPages > 1) {
                 // Esconde o canvas único e mostra o container de múltiplas páginas
-                document.getElementById('pdfCanvas').style.display = 'none';
-                document.getElementById('pdfPagesContainer').style.display = 'block';
-
-                // Esconde os controles de navegação já que estamos mostrando todas as páginas
-                document.getElementById('pdfControls').style.display = 'none';
+                pdfCanvas.style.display = 'none';
+                pdfPagesContainer.style.display = 'block';
+                pdfControls.style.display = 'none';
 
                 // Renderiza todas as páginas
                 await renderAllPages();
             } else {
                 // Para documentos com uma única página, usa o método original
-                document.getElementById('pdfCanvas').style.display = 'block';
-                document.getElementById('pdfPagesContainer').style.display = 'none';
-                document.getElementById('pdfControls').style.display = 'flex';
+                pdfCanvas.style.display = 'block';
+                pdfPagesContainer.style.display = 'none';
+                pdfControls.style.display = 'flex';
 
-                currentPdfPage = 1;
                 // Atualiza a informação de páginas
-                document.getElementById('pdfPageInfo').textContent = `Página ${currentPdfPage} de ${pdfTotalPages}`;
-                // Habilita/desabilita botões de navegação
-                document.getElementById('prevPdfPage').disabled = currentPdfPage <= 1;
-                document.getElementById('nextPdfPage').disabled = currentPdfPage >= pdfTotalPages;
+                document.getElementById('pdfPageInfo').textContent = `Página 1 de 1`;
+                // Configura botões de navegação
+                document.getElementById('prevPdfPage').disabled = true;
+                document.getElementById('nextPdfPage').disabled = true;
 
-                await renderPage(currentPdfPage);
+                await renderPage(1);
             }
         } else if (['jpg', 'jpeg', 'png', 'gif'].includes(fileType)) {
             // Handle images
@@ -864,6 +868,7 @@ async function renderPage(pageNumber) {
 // Função para renderizar todas as páginas do PDF
 async function renderAllPages() {
     try {
+        console.log(`Renderizando todas as páginas com zoom: ${zoomLevel}x`);
         const pdfContainer = document.getElementById('pdfPagesContainer');
         pdfContainer.innerHTML = ''; // Limpa o container
         pdfContainer.style.display = 'flex';
@@ -947,8 +952,33 @@ function changePdfPage(pageNumber) {
 }
 
 function adjustZoom(delta) {
+    // Exibe uma mensagem temporária indicando que o zoom está sendo aplicado
+    const pdfContainer = document.getElementById('pdfPagesContainer');
+    if (pdfContainer.style.display === 'block') {
+        const loadingMsg = document.createElement('div');
+        loadingMsg.textContent = 'Aplicando zoom...';
+        loadingMsg.style.position = 'fixed';
+        loadingMsg.style.top = '50%';
+        loadingMsg.style.left = '50%';
+        loadingMsg.style.transform = 'translate(-50%, -50%)';
+        loadingMsg.style.padding = '10px 20px';
+        loadingMsg.style.background = 'rgba(0,0,0,0.7)';
+        loadingMsg.style.color = 'white';
+        loadingMsg.style.borderRadius = '5px';
+        loadingMsg.style.zIndex = '1000';
+        document.body.appendChild(loadingMsg);
+        
+        // Remove a mensagem após um curto período
+        setTimeout(() => {
+            document.body.removeChild(loadingMsg);
+        }, 3000);
+    }
+    
+    // Atualiza o nível de zoom
     zoomLevel += delta;
-    zoomLevel = Math.max(0.2, Math.min(3, zoomLevel)); // Limit zoom level
+    zoomLevel = Math.max(0.2, Math.min(3, zoomLevel)); // Limita o zoom entre 20% e 300%
+    
+    // Atualiza o texto mostrando o zoom atual
     const zoomLevelSpan = document.getElementById('zoomLevel');
     zoomLevelSpan.textContent = `${(zoomLevel * 100).toFixed(0)}%`;
 
@@ -956,13 +986,17 @@ function adjustZoom(delta) {
     const pdfPagesContainer = document.getElementById('pdfPagesContainer');
     const imagePreview = document.getElementById('imagePreview');
 
+    // Aplica o zoom apropriado com base no tipo de conteúdo sendo exibido
     if (pdfCanvas.style.display === 'block') {
-        // Modo de página única
+        // Modo de página única do PDF
         renderPage(currentPdfPage);
     } else if (pdfPagesContainer.style.display === 'block') {
-        // Modo de múltiplas páginas - recarrega todas com o novo zoom
-        renderAllPages();
+        // Modo de múltiplas páginas - usar setTimeout para permitir que a UI responda primeiro
+        setTimeout(() => {
+            renderAllPages();
+        }, 100);
     } else if (imagePreview.style.display === 'block') {
+        // Imagens (não PDF)
         imagePreview.style.transform = `scale(${zoomLevel})`;
         imagePreview.style.transformOrigin = 'center center';
     }
