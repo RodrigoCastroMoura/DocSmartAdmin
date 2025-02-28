@@ -645,6 +645,13 @@ function updatePaginationControls() {
     document.getElementById('pageInfo').textContent = `Page ${currentPage} of ${totalPages}`;
 }
 
+function changePage(page) {
+    if (page < 1 || page > totalPages) {
+        return;
+    }
+    loadDocuments(page);
+}
+
 async function searchUser() {
     try {
 
