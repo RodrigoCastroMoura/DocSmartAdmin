@@ -695,7 +695,7 @@ function showModal(modalId) {
 
 function hideModal(modalId) {
     document.getElementById(modalId).style.display = 'none';
-    
+
     // Remover evento de scroll se estiver fechando o modal de preview
     if (modalId === 'previewModal') {
         const previewContainer = document.querySelector('.preview-container');
@@ -783,24 +783,23 @@ async function previewDocument(url, filename) {
             pdfControls.style.display = 'flex';
 
             const proxyUrl = `/proxy/storage/${url.replace('https://storage.googleapis.com/', '')}`;
-            showNotification('Carregando PDF...', 'info');
             const loadingTask = pdfjsLib.getDocument(proxyUrl);
-            
+
             // Remover o antigo evento de scroll para navegação entre páginas
             currentPdf = await loadingTask.promise;
             pdfTotalPages = currentPdf.numPages;
-            
+
             console.log(`PDF carregado com ${pdfTotalPages} páginas`);
-            
+
             // Se houver mais de uma página, renderiza todas
             if (pdfTotalPages > 1) {
                 // Esconde o canvas único e mostra o container de múltiplas páginas
                 document.getElementById('pdfCanvas').style.display = 'none';
                 document.getElementById('pdfPagesContainer').style.display = 'block';
-                
+
                 // Esconde os controles de navegação já que estamos mostrando todas as páginas
                 document.getElementById('pdfControls').style.display = 'none';
-                
+
                 // Renderiza todas as páginas
                 await renderAllPages();
             } else {
@@ -808,14 +807,14 @@ async function previewDocument(url, filename) {
                 document.getElementById('pdfCanvas').style.display = 'block';
                 document.getElementById('pdfPagesContainer').style.display = 'none';
                 document.getElementById('pdfControls').style.display = 'flex';
-                
+
                 currentPdfPage = 1;
                 // Atualiza a informação de páginas
                 document.getElementById('pdfPageInfo').textContent = `Página ${currentPdfPage} de ${pdfTotalPages}`;
                 // Habilita/desabilita botões de navegação
                 document.getElementById('prevPdfPage').disabled = currentPdfPage <= 1;
                 document.getElementById('nextPdfPage').disabled = currentPdfPage >= pdfTotalPages;
-                
+
                 await renderPage(currentPdfPage);
             }
         } else if (['jpg', 'jpeg', 'png', 'gif'].includes(fileType)) {
@@ -871,9 +870,9 @@ async function renderAllPages() {
         pdfContainer.style.flexDirection = 'column';
         pdfContainer.style.alignItems = 'center';
         pdfContainer.style.gap = '20px';
-        
+
         const totalPages = currentPdf.numPages;
-        
+
         // Cria indicador de progresso
         const progressDiv = document.createElement('div');
         progressDiv.textContent = 'Carregando páginas...';
@@ -885,26 +884,26 @@ async function renderAllPages() {
         progressDiv.style.borderRadius = '5px';
         progressDiv.style.zIndex = '100';
         pdfContainer.appendChild(progressDiv);
-        
+
         // Renderiza cada página em um canvas separado
         for (let i = 1; i <= totalPages; i++) {
             const page = await currentPdf.getPage(i);
             const viewport = page.getViewport({ scale: zoomLevel });
-            
+
             const pageDiv = document.createElement('div');
             pageDiv.className = 'pdf-page';
             pageDiv.dataset.pageNumber = i;
             pageDiv.style.position = 'relative';
-            pageDiv.style.marginBottom = '20px';
-            
+            pageDiv.style.marginBottom = ''20px';
+
             const pageCanvas = document.createElement('canvas');
             pageCanvas.width = viewport.width;
             pageCanvas.height = viewport.height;
             pageCanvas.style.border = '1px solid #ddd';
             pageCanvas.style.boxShadow = '0 2px 5px rgba(0,0,0,0.2)';
-            
+
             pageDiv.appendChild(pageCanvas);
-            
+
             // Adiciona o número da página
             const pageNumber = document.createElement('div');
             pageNumber.textContent = `Página ${i}`;
@@ -915,22 +914,22 @@ async function renderAllPages() {
             pageNumber.style.fontSize = '14px';
             pageNumber.style.color = 'var(--text-secondary)';
             pageDiv.appendChild(pageNumber);
-            
+
             pdfContainer.appendChild(pageDiv);
-            
+
             const context = pageCanvas.getContext('2d');
             await page.render({
                 canvasContext: context,
                 viewport: viewport
             }).promise;
-            
+
             // Atualiza o progresso
             progressDiv.textContent = `Carregando páginas... ${i}/${totalPages}`;
         }
-        
+
         // Remove o indicador de progresso quando terminar
         pdfContainer.removeChild(progressDiv);
-        
+
     } catch (error) {
         console.error('Error rendering all PDF pages:', error);
         showNotification('Failed to render PDF pages', 'error');
@@ -952,11 +951,11 @@ function adjustZoom(delta) {
     zoomLevel = Math.max(0.2, Math.min(3, zoomLevel)); // Limit zoom level
     const zoomLevelSpan = document.getElementById('zoomLevel');
     zoomLevelSpan.textContent = `${(zoomLevel * 100).toFixed(0)}%`;
-    
+
     const pdfCanvas = document.getElementById('pdfCanvas');
     const pdfPagesContainer = document.getElementById('pdfPagesContainer');
     const imagePreview = document.getElementById('imagePreview');
-    
+
     if (pdfCanvas.style.display === 'block') {
         // Modo de página única
         renderPage(currentPdfPage);
@@ -1319,7 +1318,7 @@ gap: 1rem;
         border-top: 1px solid var(--border-color);
         background-color: var(--bg-secondary);
     }
-    
+
     #pdfPageInfo {
         font-weight: bold;
         padding: 0.5rem 1rem;
