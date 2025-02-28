@@ -959,9 +959,20 @@ function changePdfPage(pageNumber) {
 }
 
 function adjustZoom(delta) {
+    // Atualiza o nível de zoom
+    zoomLevel += delta;
+    zoomLevel = Math.max(0.2, Math.min(3, zoomLevel)); // Limita o zoom entre 20% e 300%
+    
+    // Atualiza o texto mostrando o zoom atual
+    const zoomLevelSpan = document.getElementById('zoomLevel');
+    zoomLevelSpan.textContent = `${(zoomLevel * 100).toFixed(0)}%`;
+
+    const pdfCanvas = document.getElementById('pdfCanvas');
+    const pdfPagesContainer = document.getElementById('pdfPagesContainer');
+    const imagePreview = document.getElementById('imagePreview');
+
     // Exibe uma mensagem temporária indicando que o zoom está sendo aplicado
-    const pdfContainer = document.getElementById('pdfPagesContainer');
-    if (pdfContainer.style.display === 'block') {
+    if (pdfPagesContainer.style.display === 'block') {
         const loadingMsg = document.createElement('div');
         loadingMsg.textContent = 'Aplicando zoom...';
         loadingMsg.style.position = 'fixed';
@@ -980,18 +991,6 @@ function adjustZoom(delta) {
             document.body.removeChild(loadingMsg);
         }, 3000);
     }
-    
-    // Atualiza o nível de zoom
-    zoomLevel += delta;
-    zoomLevel = Math.max(0.2, Math.min(3, zoomLevel)); // Limita o zoom entre 20% e 300%
-    
-    // Atualiza o texto mostrando o zoom atual
-    const zoomLevelSpan = document.getElementById('zoomLevel');
-    zoomLevelSpan.textContent = `${(zoomLevel * 100).toFixed(0)}%`;
-
-    const pdfCanvas = document.getElementById('pdfCanvas');
-    const pdfPagesContainer = document.getElementById('pdfPagesContainer');
-    const imagePreview = document.getElementById('imagePreview');
 
     // Aplica o zoom apropriado com base no tipo de conteúdo sendo exibido
     if (pdfCanvas.style.display === 'block') {
