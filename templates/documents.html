@@ -755,24 +755,6 @@ async function previewDocument(url, filename) {
     zoomLevelSpan.textContent = `${(zoomLevel * 100).toFixed(0)}%`;
     currentPdfPage = 1;
 
-    // Function to fetch document with proper headers
-    async function fetchDocument(url) {
-        try {
-            const response = await fetch(url, {
-                method: 'GET',
-                mode: 'cors',
-                headers: {
-                    'Accept': 'application/pdf',
-                },
-            });
-            const blob = await response.blob();
-            return URL.createObjectURL(blob);
-        } catch (error) {
-            console.error('Error fetching document:', error);
-            throw error;
-        }
-    }
-
     // Reset all preview elements
     pdfCanvas.style.display = 'none';
     pdfPagesContainer.style.display = 'none';
@@ -807,20 +789,14 @@ async function previewDocument(url, filename) {
 
             // Se houver mais de uma página, renderiza todas
             if (pdfTotalPages > 1) {
-                console.log(`Renderizando PDF com ${pdfTotalPages} páginas no modo multi-página`);
                 // Esconde o canvas único e mostra o container de múltiplas páginas
                 pdfCanvas.style.display = 'none';
                 pdfPagesContainer.style.display = 'block';
                 pdfControls.style.display = 'none';
 
-                // Ajusta o nível de zoom padrão
-                zoomLevel = 1.0;
-                zoomLevelSpan.textContent = `${(zoomLevel * 100).toFixed(0)}%`;
-
                 // Renderiza todas as páginas
                 await renderAllPages();
             } else {
-                console.log(`Renderizando PDF com uma única página no modo de página única`);
                 // Para documentos com uma única página, usa o método original
                 pdfCanvas.style.display = 'block';
                 pdfPagesContainer.style.display = 'none';
@@ -857,7 +833,6 @@ async function renderPage(pageNumber) {
             throw new Error('PDF não está carregado');
         }
         
-        // Verificar se o número da página é válido
         if (pageNumber > 0 && pageNumber <= pdfTotalPages) {
             const page = await currentPdf.getPage(pageNumber);
             const canvas = document.getElementById('pdfCanvas');
@@ -882,37 +857,33 @@ async function renderPage(pageNumber) {
     }
 }
 
-// Função para renderizar todas as páginas do PDF de forma assíncrona
+// Função para renderizar todas as páginas do PDF
 async function renderAllPages() {
     try {
-        console.log(`Renderizando todas as páginas com zoom: ${zoomLevel}x`);
+        // Limpa o container e ajusta o estilo
         const pdfContainer = document.getElementById('pdfPagesContainer');
-        pdfContainer.innerHTML = ''; // Limpa o container
+        pdfContainer.innerHTML = '';
         pdfContainer.style.display = 'flex';
         pdfContainer.style.flexDirection = 'column';
         pdfContainer.style.alignItems = 'center';
         pdfContainer.style.gap = '20px';
+        pdfContainer.style.paddingTop = '20px';
+        pdfContainer.style.paddingBottom = '20px';
 
-        if (!currentPdf) {
-            throw new Error('PDF não está carregado');
-        }
-
-        const totalPages = currentPdf.numPages;
-
-        // Cria indicador de progresso
+        // Indicador de progresso
         const progressDiv = document.createElement('div');
         progressDiv.textContent = 'Carregando páginas...';
         progressDiv.style.position = 'sticky';
         progressDiv.style.top = '10px';
-        progressDiv.style.padding = '5px 10px';
+        progressDiv.style.padding = '8px 15px';
         progressDiv.style.background = 'rgba(0,0,0,0.7)';
         progressDiv.style.color = 'white';
         progressDiv.style.borderRadius = '5px';
         progressDiv.style.zIndex = '100';
         pdfContainer.appendChild(progressDiv);
 
-        // Renderiza cada página em um canvas separado
-        for (let i = 1; i <= totalPages; i++) {
+        // Renderiza cada página
+        for (let i = 1; i <= pdfTotalPages; i++) {
             const page = await currentPdf.getPage(i);
             const viewport = page.getViewport({ scale: zoomLevel });
 
@@ -920,29 +891,30 @@ async function renderAllPages() {
             pageDiv.className = 'pdf-page';
             pageDiv.dataset.pageNumber = i;
             pageDiv.style.position = 'relative';
-            pageDiv.style.marginBottom = '20px';
+            pageDiv.style.marginBottom = '30px';
+            pageDiv.style.width = `${viewport.width}px`;
 
             const pageCanvas = document.createElement('canvas');
             pageCanvas.width = viewport.width;
             pageCanvas.height = viewport.height;
             pageCanvas.style.border = '1px solid #ddd';
             pageCanvas.style.boxShadow = '0 2px 5px rgba(0,0,0,0.2)';
-
             pageDiv.appendChild(pageCanvas);
 
-            // Adiciona o número da página
-            const pageNumber = document.createElement('div');
-            pageNumber.textContent = `Página ${i}`;
-            pageNumber.style.position = 'absolute';
-            pageNumber.style.bottom = '-20px';
-            pageNumber.style.width = '100%';
-            pageNumber.style.textAlign = 'center';
-            pageNumber.style.fontSize = '14px';
-            pageNumber.style.color = 'var(--text-secondary)';
-            pageDiv.appendChild(pageNumber);
+            // Número da página
+            const pageLabel = document.createElement('div');
+            pageLabel.textContent = `Página ${i}`;
+            pageLabel.style.position = 'absolute';
+            pageLabel.style.bottom = '-25px';
+            pageLabel.style.width = '100%';
+            pageLabel.style.textAlign = 'center';
+            pageLabel.style.fontSize = '14px';
+            pageLabel.style.color = 'var(--text-secondary)';
+            pageDiv.appendChild(pageLabel);
 
             pdfContainer.appendChild(pageDiv);
 
+            // Renderiza o conteúdo da página no canvas
             const context = pageCanvas.getContext('2d');
             await page.render({
                 canvasContext: context,
@@ -950,20 +922,24 @@ async function renderAllPages() {
             }).promise;
 
             // Atualiza o progresso
-            progressDiv.textContent = `Carregando páginas... ${i}/${totalPages}`;
+            progressDiv.textContent = `Carregando páginas... ${i}/${pdfTotalPages}`;
         }
 
-        // Remove o indicador de progresso quando terminar
+        // Remove o indicador de progresso
         pdfContainer.removeChild(progressDiv);
-
     } catch (error) {
         console.error('Erro ao renderizar páginas do PDF:', error);
-        showNotification('Falha ao renderizar páginas do PDF', 'error');
-        throw error; // Re-lança o erro para ser capturado pelo chamador
+        const pdfContainer = document.getElementById('pdfPagesContainer');
+        pdfContainer.innerHTML = `
+            <div style="padding: 20px; text-align: center; color: red;">
+                <i data-feather="alert-triangle" style="width: 48px; height: 48px;"></i>
+                <p>Erro ao renderizar o PDF</p>
+            </div>
+        `;
+        feather.replace();
+        showNotification('Falha ao renderizar o PDF', 'error');
     }
 }
-
-// Função removida pois agora usamos o scroll nativo para navegar entre páginas renderizadas
 
 function changePdfPage(pageNumber) {
     if (pageNumber < 1 || pageNumber > pdfTotalPages) {
@@ -975,49 +951,63 @@ function changePdfPage(pageNumber) {
 
 function adjustZoom(delta) {
     // Atualiza o nível de zoom
+    const oldZoom = zoomLevel;
     zoomLevel += delta;
     zoomLevel = Math.max(0.2, Math.min(3, zoomLevel)); // Limita o zoom entre 20% e 300%
     
-    // Atualiza o texto mostrando o zoom atual
-    const zoomLevelSpan = document.getElementById('zoomLevel');
-    zoomLevelSpan.textContent = `${(zoomLevel * 100).toFixed(0)}%`;
-
+    if (oldZoom === zoomLevel) return; // Não faz nada se o zoom não mudou
+    
+    // Atualiza o texto de zoom
+    document.getElementById('zoomLevel').textContent = `${(zoomLevel * 100).toFixed(0)}%`;
+    
     const pdfCanvas = document.getElementById('pdfCanvas');
     const pdfPagesContainer = document.getElementById('pdfPagesContainer');
     const imagePreview = document.getElementById('imagePreview');
-
-    // Exibe uma mensagem temporária indicando que o zoom está sendo aplicado
+    
+    // Para PDFs de múltiplas páginas
     if (pdfPagesContainer.style.display === 'block') {
-        const loadingMsg = document.createElement('div');
-        loadingMsg.textContent = 'Aplicando zoom...';
-        loadingMsg.style.position = 'fixed';
-        loadingMsg.style.top = '50%';
-        loadingMsg.style.left = '50%';
-        loadingMsg.style.transform = 'translate(-50%, -50%)';
-        loadingMsg.style.padding = '10px 20px';
-        loadingMsg.style.background = 'rgba(0,0,0,0.7)';
-        loadingMsg.style.color = 'white';
-        loadingMsg.style.borderRadius = '5px';
-        loadingMsg.style.zIndex = '1000';
-        document.body.appendChild(loadingMsg);
+        // Overlay para indicar que o zoom está sendo aplicado
+        const overlay = document.createElement('div');
+        overlay.style.position = 'fixed';
+        overlay.style.top = '0';
+        overlay.style.left = '0';
+        overlay.style.width = '100%';
+        overlay.style.height = '100%';
+        overlay.style.backgroundColor = 'rgba(0,0,0,0.5)';
+        overlay.style.display = 'flex';
+        overlay.style.justifyContent = 'center';
+        overlay.style.alignItems = 'center';
+        overlay.style.zIndex = '9999';
         
-        // Renderiza novamente todas as páginas com o novo zoom
-        renderAllPages().then(() => {
-            // Remove a mensagem após renderizar
-            document.body.removeChild(loadingMsg);
-        }).catch(error => {
-            console.error('Erro ao aplicar zoom:', error);
-            document.body.removeChild(loadingMsg);
-            showNotification('Erro ao aplicar zoom', 'error');
-        });
+        const message = document.createElement('div');
+        message.textContent = 'Aplicando zoom...';
+        message.style.backgroundColor = 'white';
+        message.style.padding = '15px 30px';
+        message.style.borderRadius = '5px';
+        message.style.boxShadow = '0 0 10px rgba(0,0,0,0.3)';
         
-        return; // Importante: retorna aqui para não executar o resto da função
-    }
-
-    // Para documentos de página única ou imagens
-    if (pdfCanvas.style.display === 'block') {
+        overlay.appendChild(message);
+        document.body.appendChild(overlay);
+        
+        // Pequeno atraso para garantir que a UI seja atualizada
+        setTimeout(() => {
+            renderAllPages()
+                .then(() => {
+                    document.body.removeChild(overlay);
+                })
+                .catch(error => {
+                    document.body.removeChild(overlay);
+                    console.error('Erro ao aplicar zoom:', error);
+                    showNotification('Erro ao aplicar zoom', 'error');
+                });
+        }, 100);
+    } 
+    // Para PDF de página única
+    else if (pdfCanvas.style.display === 'block') {
         renderPage(currentPdfPage);
-    } else if (imagePreview.style.display === 'block') {
+    } 
+    // Para imagens
+    else if (imagePreview.style.display === 'block') {
         imagePreview.style.transform = `scale(${zoomLevel})`;
         imagePreview.style.transformOrigin = 'center center';
     }
