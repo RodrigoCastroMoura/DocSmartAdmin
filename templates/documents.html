@@ -148,6 +148,7 @@
             </button>
         </div>
         <div class="preview-container">
+            <div id="pdfPagesContainer" style="width: 100%; height: 100%; overflow-y: auto;"></div>
             <canvas id="pdfCanvas"></canvas>
             <img id="imagePreview" alt="Image Preview">
             <iframe id="documentPreview" style="width: 100%; height: 100%; border: none;"></iframe>
@@ -785,21 +786,38 @@ async function previewDocument(url, filename) {
             showNotification('Carregando PDF...', 'info');
             const loadingTask = pdfjsLib.getDocument(proxyUrl);
             
-            // Adicionar evento de scroll para navegação entre páginas
-            const previewContainer = document.querySelector('.preview-container');
-            previewContainer.addEventListener('wheel', handlePdfScroll);
+            // Remover o antigo evento de scroll para navegação entre páginas
             currentPdf = await loadingTask.promise;
             pdfTotalPages = currentPdf.numPages;
-            currentPdfPage = 1;
             
             console.log(`PDF carregado com ${pdfTotalPages} páginas`);
-            // Atualiza a informação de páginas
-            document.getElementById('pdfPageInfo').textContent = `Página ${currentPdfPage} de ${pdfTotalPages}`;
-            // Habilita/desabilita botões de navegação
-            document.getElementById('prevPdfPage').disabled = currentPdfPage <= 1;
-            document.getElementById('nextPdfPage').disabled = currentPdfPage >= pdfTotalPages;
             
-            await renderPage(currentPdfPage);
+            // Se houver mais de uma página, renderiza todas
+            if (pdfTotalPages > 1) {
+                // Esconde o canvas único e mostra o container de múltiplas páginas
+                document.getElementById('pdfCanvas').style.display = 'none';
+                document.getElementById('pdfPagesContainer').style.display = 'block';
+                
+                // Esconde os controles de navegação já que estamos mostrando todas as páginas
+                document.getElementById('pdfControls').style.display = 'none';
+                
+                // Renderiza todas as páginas
+                await renderAllPages();
+            } else {
+                // Para documentos com uma única página, usa o método original
+                document.getElementById('pdfCanvas').style.display = 'block';
+                document.getElementById('pdfPagesContainer').style.display = 'none';
+                document.getElementById('pdfControls').style.display = 'flex';
+                
+                currentPdfPage = 1;
+                // Atualiza a informação de páginas
+                document.getElementById('pdfPageInfo').textContent = `Página ${currentPdfPage} de ${pdfTotalPages}`;
+                // Habilita/desabilita botões de navegação
+                document.getElementById('prevPdfPage').disabled = currentPdfPage <= 1;
+                document.getElementById('nextPdfPage').disabled = currentPdfPage >= pdfTotalPages;
+                
+                await renderPage(currentPdfPage);
+            }
         } else if (['jpg', 'jpeg', 'png', 'gif'].includes(fileType)) {
             // Handle images
             imagePreview.style.display = 'block';
@@ -819,47 +837,107 @@ async function previewDocument(url, filename) {
 
 async function renderPage(pageNumber) {
     try {
-        const page = await currentPdf.getPage(pageNumber);
-        const canvas = document.getElementById('pdfCanvas');
-        const context = canvas.getContext('2d');
+        // Se estamos renderizando apenas uma página
+        if (pageNumber > 0) {
+            const page = await currentPdf.getPage(pageNumber);
+            const canvas = document.getElementById('pdfCanvas');
+            const context = canvas.getContext('2d');
 
-        const viewport = page.getViewport({ scale: zoomLevel });
-        canvas.height = viewport.height;
-        canvas.width = viewport.width;
+            const viewport = page.getViewport({ scale: zoomLevel });
+            canvas.height = viewport.height;
+            canvas.width = viewport.width;
 
-        await page.render({
-            canvasContext: context,
-            viewport: viewport
-        }).promise;
+            await page.render({
+                canvasContext: context,
+                viewport: viewport
+            }).promise;
 
-        document.getElementById('pdfPageInfo').textContent = `Page ${pageNumber} of ${pdfTotalPages}`;
-        document.getElementById('prevPdfPage').disabled = pageNumber <= 1;
-        document.getElementById('nextPdfPage').disabled = pageNumber >= pdfTotalPages;
+            document.getElementById('pdfPageInfo').textContent = `Page ${pageNumber} of ${pdfTotalPages}`;
+            document.getElementById('prevPdfPage').disabled = pageNumber <= 1;
+            document.getElementById('nextPdfPage').disabled = pageNumber >= pdfTotalPages;
+        }
     } catch (error) {
         console.error('Error rendering PDF page:', error);
         showNotification('Failed to render PDF page', 'error');
     }
 }
 
-function handlePdfScroll(event) {
-    const now = Date.now();
-    // Verifica se passou tempo suficiente desde o último scroll
-    if (now - lastScrollTime < scrollCooldown) return;
-    
-    if (event.deltaY > 0 && currentPdfPage < pdfTotalPages) {
-        // Scroll para baixo, próxima página
-        event.preventDefault(); // Previne o comportamento padrão do scroll
-        changePdfPage(currentPdfPage + 1);
-        console.log(`Avançando para página ${currentPdfPage} de ${pdfTotalPages}`);
-    } else if (event.deltaY < 0 && currentPdfPage > 1) {
-        // Scroll para cima, página anterior
-        event.preventDefault(); // Previne o comportamento padrão do scroll
-        changePdfPage(currentPdfPage - 1);
-        console.log(`Voltando para página ${currentPdfPage} de ${pdfTotalPages}`);
+// Função para renderizar todas as páginas do PDF
+async function renderAllPages() {
+    try {
+        const pdfContainer = document.getElementById('pdfPagesContainer');
+        pdfContainer.innerHTML = ''; // Limpa o container
+        pdfContainer.style.display = 'flex';
+        pdfContainer.style.flexDirection = 'column';
+        pdfContainer.style.alignItems = 'center';
+        pdfContainer.style.gap = '20px';
+        
+        const totalPages = currentPdf.numPages;
+        
+        // Cria indicador de progresso
+        const progressDiv = document.createElement('div');
+        progressDiv.textContent = 'Carregando páginas...';
+        progressDiv.style.position = 'sticky';
+        progressDiv.style.top = '10px';
+        progressDiv.style.padding = '5px 10px';
+        progressDiv.style.background = 'rgba(0,0,0,0.7)';
+        progressDiv.style.color = 'white';
+        progressDiv.style.borderRadius = '5px';
+        progressDiv.style.zIndex = '100';
+        pdfContainer.appendChild(progressDiv);
+        
+        // Renderiza cada página em um canvas separado
+        for (let i = 1; i <= totalPages; i++) {
+            const page = await currentPdf.getPage(i);
+            const viewport = page.getViewport({ scale: zoomLevel });
+            
+            const pageDiv = document.createElement('div');
+            pageDiv.className = 'pdf-page';
+            pageDiv.dataset.pageNumber = i;
+            pageDiv.style.position = 'relative';
+            pageDiv.style.marginBottom = '20px';
+            
+            const pageCanvas = document.createElement('canvas');
+            pageCanvas.width = viewport.width;
+            pageCanvas.height = viewport.height;
+            pageCanvas.style.border = '1px solid #ddd';
+            pageCanvas.style.boxShadow = '0 2px 5px rgba(0,0,0,0.2)';
+            
+            pageDiv.appendChild(pageCanvas);
+            
+            // Adiciona o número da página
+            const pageNumber = document.createElement('div');
+            pageNumber.textContent = `Página ${i}`;
+            pageNumber.style.position = 'absolute';
+            pageNumber.style.bottom = '-20px';
+            pageNumber.style.width = '100%';
+            pageNumber.style.textAlign = 'center';
+            pageNumber.style.fontSize = '14px';
+            pageNumber.style.color = 'var(--text-secondary)';
+            pageDiv.appendChild(pageNumber);
+            
+            pdfContainer.appendChild(pageDiv);
+            
+            const context = pageCanvas.getContext('2d');
+            await page.render({
+                canvasContext: context,
+                viewport: viewport
+            }).promise;
+            
+            // Atualiza o progresso
+            progressDiv.textContent = `Carregando páginas... ${i}/${totalPages}`;
+        }
+        
+        // Remove o indicador de progresso quando terminar
+        pdfContainer.removeChild(progressDiv);
+        
+    } catch (error) {
+        console.error('Error rendering all PDF pages:', error);
+        showNotification('Failed to render PDF pages', 'error');
     }
-    
-    lastScrollTime = now;
 }
+
+// Função removida pois agora usamos o scroll nativo para navegar entre páginas renderizadas
 
 function changePdfPage(pageNumber) {
     if (pageNumber < 1 || pageNumber > pdfTotalPages) {
@@ -876,10 +954,15 @@ function adjustZoom(delta) {
     zoomLevelSpan.textContent = `${(zoomLevel * 100).toFixed(0)}%`;
     
     const pdfCanvas = document.getElementById('pdfCanvas');
+    const pdfPagesContainer = document.getElementById('pdfPagesContainer');
     const imagePreview = document.getElementById('imagePreview');
     
     if (pdfCanvas.style.display === 'block') {
+        // Modo de página única
         renderPage(currentPdfPage);
+    } else if (pdfPagesContainer.style.display === 'block') {
+        // Modo de múltiplas páginas - recarrega todas com o novo zoom
+        renderAllPages();
     } else if (imagePreview.style.display === 'block') {
         imagePreview.style.transform = `scale(${zoomLevel})`;
         imagePreview.style.transformOrigin = 'center center';
@@ -1247,6 +1330,14 @@ gap: 1rem;
     #pdfCanvas {
         max-width: 100%;
         height: auto;
+    }
+
+    #pdfPagesContainer {
+        padding: 20px;
+    }
+
+    .pdf-page {
+        margin-bottom: 30px;
     }
 
     #imagePreview {
