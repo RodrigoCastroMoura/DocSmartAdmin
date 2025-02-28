@@ -883,6 +883,10 @@ async function renderAllPages() {
         pdfContainer.style.alignItems = 'center';
         pdfContainer.style.gap = '20px';
 
+        if (!currentPdf) {
+            throw new Error('PDF não está carregado');
+        }
+
         const totalPages = currentPdf.numPages;
 
         // Cria indicador de progresso
@@ -943,8 +947,9 @@ async function renderAllPages() {
         pdfContainer.removeChild(progressDiv);
 
     } catch (error) {
-        console.error('Error rendering all PDF pages:', error);
-        showNotification('Failed to render PDF pages', 'error');
+        console.error('Erro ao renderizar páginas do PDF:', error);
+        showNotification('Falha ao renderizar páginas do PDF', 'error');
+        throw error; // Re-lança o erro para ser capturado pelo chamador
     }
 }
 
@@ -986,23 +991,23 @@ function adjustZoom(delta) {
         loadingMsg.style.zIndex = '1000';
         document.body.appendChild(loadingMsg);
         
-        // Remove a mensagem após um curto período
-        setTimeout(() => {
+        // Renderiza novamente todas as páginas com o novo zoom
+        renderAllPages().then(() => {
+            // Remove a mensagem após renderizar
             document.body.removeChild(loadingMsg);
-        }, 3000);
+        }).catch(error => {
+            console.error('Erro ao aplicar zoom:', error);
+            document.body.removeChild(loadingMsg);
+            showNotification('Erro ao aplicar zoom', 'error');
+        });
+        
+        return; // Importante: retorna aqui para não executar o resto da função
     }
 
-    // Aplica o zoom apropriado com base no tipo de conteúdo sendo exibido
+    // Para documentos de página única ou imagens
     if (pdfCanvas.style.display === 'block') {
-        // Modo de página única do PDF
         renderPage(currentPdfPage);
-    } else if (pdfPagesContainer.style.display === 'block') {
-        // Modo de múltiplas páginas - usar setTimeout para permitir que a UI responda primeiro
-        setTimeout(() => {
-            renderAllPages();
-        }, 100);
     } else if (imagePreview.style.display === 'block') {
-        // Imagens (não PDF)
         imagePreview.style.transform = `scale(${zoomLevel})`;
         imagePreview.style.transformOrigin = 'center center';
     }
