@@ -807,14 +807,20 @@ async function previewDocument(url, filename) {
 
             // Se houver mais de uma página, renderiza todas
             if (pdfTotalPages > 1) {
+                console.log(`Renderizando PDF com ${pdfTotalPages} páginas no modo multi-página`);
                 // Esconde o canvas único e mostra o container de múltiplas páginas
                 pdfCanvas.style.display = 'none';
                 pdfPagesContainer.style.display = 'block';
                 pdfControls.style.display = 'none';
 
+                // Ajusta o nível de zoom padrão
+                zoomLevel = 1.0;
+                zoomLevelSpan.textContent = `${(zoomLevel * 100).toFixed(0)}%`;
+
                 // Renderiza todas as páginas
                 await renderAllPages();
             } else {
+                console.log(`Renderizando PDF com uma única página no modo de página única`);
                 // Para documentos com uma única página, usa o método original
                 pdfCanvas.style.display = 'block';
                 pdfPagesContainer.style.display = 'none';
@@ -847,8 +853,12 @@ async function previewDocument(url, filename) {
 
 async function renderPage(pageNumber) {
     try {
-        // Se estamos renderizando apenas uma página
-        if (pageNumber > 0) {
+        if (!currentPdf) {
+            throw new Error('PDF não está carregado');
+        }
+        
+        // Verificar se o número da página é válido
+        if (pageNumber > 0 && pageNumber <= pdfTotalPages) {
             const page = await currentPdf.getPage(pageNumber);
             const canvas = document.getElementById('pdfCanvas');
             const context = canvas.getContext('2d');
@@ -862,17 +872,17 @@ async function renderPage(pageNumber) {
                 viewport: viewport
             }).promise;
 
-            document.getElementById('pdfPageInfo').textContent = `Page ${pageNumber} of ${pdfTotalPages}`;
+            document.getElementById('pdfPageInfo').textContent = `Página ${pageNumber} de ${pdfTotalPages}`;
             document.getElementById('prevPdfPage').disabled = pageNumber <= 1;
             document.getElementById('nextPdfPage').disabled = pageNumber >= pdfTotalPages;
         }
     } catch (error) {
-        console.error('Error rendering PDF page:', error);
-        showNotification('Failed to render PDF page', 'error');
+        console.error('Erro ao renderizar página PDF:', error);
+        showNotification('Falha ao renderizar página PDF', 'error');
     }
 }
 
-// Função para renderizar todas as páginas do PDF
+// Função para renderizar todas as páginas do PDF de forma assíncrona
 async function renderAllPages() {
     try {
         console.log(`Renderizando todas as páginas com zoom: ${zoomLevel}x`);
