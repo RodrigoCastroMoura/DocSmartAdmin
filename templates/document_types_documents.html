@@ -225,11 +225,8 @@ async function applyFilters() {
     
     // Ensure document_type_id is never empty
     if (!filters.document_type_id) {
-        console.error("Missing document_type_id, using default value");
         filters.document_type_id = '{{document_type.id}}';
     }
-    
-    console.log("Applying filters:", filters);
     
     // Store filters in URL params
     const params = new URLSearchParams(filters);
@@ -1081,8 +1078,6 @@ document.addEventListener('DOMContentLoaded', () => {
         document_type_id: '{{document_type.id}}',
     };
     
-    // Make sure the document type ID is properly applied
-    console.log("Initializing with document_type_id:", filters.document_type_id);
     loadDocuments(1, filters);
     feather.replace();
     
