@@ -737,11 +737,8 @@ async function downloadDocument(url) {
 const pdfjsLib = window['pdfjs-dist/build/pdf'];
 pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/pdf.worker.min.js';
 
-let currentPdf = null;
-let currentPdfPage = 1;
-let pdfTotalPages = 1;
-
 // Variáveis globais para PDF
+let currentPdf = null;
 let currentPdfPage = 1;
 let pdfTotalPages = 1;
 let pdfViewerMode = 'single';
