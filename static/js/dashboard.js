@@ -86,6 +86,8 @@ document.addEventListener('DOMContentLoaded', function() {
             const modal = document.getElementById(modalId);
             if (modal) {
                 modal.style.display = 'block';
+                document.body.style.overflow = 'hidden'; // Bloqueia rolagem da página de fundo
+                modal.style.overflow = 'auto'; // Permite rolagem dentro do modal
             } else {
                 console.error(`Modal with id ${modalId} not found`);
             }
@@ -99,6 +101,7 @@ document.addEventListener('DOMContentLoaded', function() {
             const modal = document.getElementById(modalId);
             if (modal) {
                 modal.style.display = 'none';
+                document.body.style.overflow = ''; // Restaura rolagem normal
             } else {
                 console.error(`Modal with id ${modalId} not found`);
             }
@@ -106,7 +109,7 @@ document.addEventListener('DOMContentLoaded', function() {
             console.error('Error hiding modal:', error);
         }
     }
-
+    
     // Close modals when clicking outside
     window.addEventListener('click', function(event) {
         if (event.target.classList.contains('modal')) {

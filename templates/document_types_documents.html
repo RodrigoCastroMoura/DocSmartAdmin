@@ -703,65 +703,76 @@ const pdfjsLib = window['pdfjs-dist/build/pdf'];
 pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/pdf.worker.min.js';
 
 let currentPdf = null;
-let currentPdfPage = 1;
-let pdfTotalPages = 1;
+let zoomLevel = 1.0;
 
 async function previewDocument(url, filename) {
     const previewTitle = document.getElementById('previewTitle');
-    const pdfCanvas = document.getElementById('pdfCanvas');
-    const imagePreview = document.getElementById('imagePreview');
-    const documentPreview = document.getElementById('documentPreview');
+    const previewContainer = document.querySelector('.preview-container');
     const zoomLevelSpan = document.getElementById('zoomLevel');
+    
+    // Reset zoom level
     zoomLevel = 1.0;
     zoomLevelSpan.textContent = `${(zoomLevel * 100).toFixed(0)}%`;
 
-
-    // Function to fetch document with proper headers
-    async function fetchDocument(url) {
-        try {
-            const response = await fetch(url, {
-                method: 'GET',
-                mode: 'cors',
-                headers: {
-                    'Accept': 'application/pdf',
-                },
-            });
-            const blob = await response.blob();
-            return URL.createObjectURL(blob);
-        } catch (error) {
-            console.error('Error fetching document:', error);
-            throw error;
-        }
+    // Clear previous content from preview container
+    while (previewContainer.firstChild) {
+        previewContainer.removeChild(previewContainer.firstChild);
     }
-
-    // Reset all preview elements
-    pdfCanvas.style.display = 'none';
-    imagePreview.style.display = 'none';
-    documentPreview.style.display = 'none';
-
-
+    
     previewTitle.textContent = filename;
     const fileType = filename.split('.').pop().toLowerCase();
 
     try {
         if (fileType === 'pdf') {
-            // Handle PDF files
-            pdfCanvas.style.display = 'block';
-
+            // Create PDF viewer container
+            const pdfViewerContainer = document.createElement('div');
+            pdfViewerContainer.className = 'pdf-viewer-container';
+            previewContainer.appendChild(pdfViewerContainer);
+            
+            // Show loading indicator
+            const loadingIndicator = document.createElement('div');
+            loadingIndicator.className = 'pdf-loading';
+            loadingIndicator.innerHTML = '<div class="loading-spinner"></div><p>Loading PDF...</p>';
+            pdfViewerContainer.appendChild(loadingIndicator);
+            
+            // Load the PDF
             const proxyUrl = `/proxy/storage/${url.replace('https://storage.googleapis.com/', '')}`;
             const loadingTask = pdfjsLib.getDocument(proxyUrl);
             currentPdf = await loadingTask.promise;
-            pdfTotalPages = currentPdf.numPages;
-            currentPdfPage = 1;
-            await renderPage(currentPdfPage);
+            
+            // Remove loading indicator
+            pdfViewerContainer.removeChild(loadingIndicator);
+            
+            // Render all pages in the viewer
+            await renderPdfPages(pdfViewerContainer);
+            
         } else if (['jpg', 'jpeg', 'png', 'gif'].includes(fileType)) {
-            // Handle images
-            imagePreview.style.display = 'block';
-            imagePreview.src = url;
+            // Create image container
+            const imgContainer = document.createElement('div');
+            imgContainer.className = 'image-container';
+            previewContainer.appendChild(imgContainer);
+            
+            // Create the image element
+            const imageElement = document.createElement('img');
+            imageElement.className = 'preview-image';
+            imageElement.alt = 'Image Preview';
+            imageElement.src = url;
+            imgContainer.appendChild(imageElement);
+            
+            // Add zoom support for images
+            imageElement.style.transform = `scale(${zoomLevel})`;
+            imageElement.style.transformOrigin = 'center center';
+            
         } else {
             // Handle other document types
-            documentPreview.style.display = 'block';
-            documentPreview.src = url;
+            const docContainer = document.createElement('div');
+            docContainer.className = 'document-container';
+            previewContainer.appendChild(docContainer);
+            
+            const iframeElement = document.createElement('iframe');
+            iframeElement.className = 'document-iframe';
+            iframeElement.src = url;
+            docContainer.appendChild(iframeElement);
         }
 
         showModal('previewModal');
@@ -771,46 +782,271 @@ async function previewDocument(url, filename) {
     }
 }
 
-async function renderPage(pageNumber) {
-    try {
-        const page = await currentPdf.getPage(pageNumber);
-        const canvas = document.getElementById('pdfCanvas');
-        const context = canvas.getContext('2d');
-
-        const viewport = page.getViewport({ scale: zoomLevel });
-        canvas.height = viewport.height;
-        canvas.width = viewport.width;
-
-        await page.render({
-            canvasContext: context,
-            viewport: viewport
-        }).promise;
-
-        // document.getElementById('pageInfo').textContent = `Page ${pageNumber} of ${pdfTotalPages}`;
-        // document.getElementById('prevPage').disabled = pageNumber <= 1;
-        // document.getElementById('nextPage').disabled = pageNumber >= pdfTotalPages;
-    } catch (error) {
-        console.error('Error rendering PDF page:', error);
-        showNotification('Failed to render PDF page', 'error');
+// FUNÇÃO QUE ESTAVA FALTANDO
+async function renderPdfPages(container) {
+    if (!currentPdf) return;
+    
+    const totalPages = currentPdf.numPages;
+    
+    // Create main pages container
+    const pagesContainer = document.createElement('div');
+    pagesContainer.className = 'pdf-pages-container';
+    container.appendChild(pagesContainer);
+    
+    // Render each page
+    for (let pageNum = 1; pageNum <= totalPages; pageNum++) {
+        // Create container for this page
+        const pageContainer = document.createElement('div');
+        pageContainer.className = 'pdf-page-wrapper';
+        pageContainer.dataset.pageNumber = pageNum;
+        pagesContainer.appendChild(pageContainer);
+        
+        // Create canvas for the page
+        const pageCanvas = document.createElement('canvas');
+        pageCanvas.className = 'pdf-page-canvas';
+        pageContainer.appendChild(pageCanvas);
+        
+        // Render the page content
+        await renderPdfPage(pageNum, pageCanvas);
     }
 }
 
-function adjustZoom(delta) {
+async function renderPdfPage(pageNumber, canvas) {
+    try {
+        const page = await currentPdf.getPage(pageNumber);
+        const context = canvas.getContext('2d');
+        
+        // Calculate viewport based on zoom level
+        const viewport = page.getViewport({ scale: zoomLevel });
+        
+        // Set canvas dimensions to match viewport
+        canvas.height = viewport.height;
+        canvas.width = viewport.width;
+        canvas.style.width = `${viewport.width}px`;
+        canvas.style.height = `${viewport.height}px`;
+        
+        // Render PDF page into canvas context
+        const renderContext = {
+            canvasContext: context,
+            viewport: viewport
+        };
+        
+        await page.render(renderContext).promise;
+        
+        // Add subtle page number indicator at the bottom
+        if (currentPdf.numPages > 1) {
+            const pageNumberIndicator = document.createElement('div');
+            pageNumberIndicator.className = 'pdf-page-number';
+            pageNumberIndicator.textContent = `${pageNumber} / ${currentPdf.numPages}`;
+            canvas.parentNode.appendChild(pageNumberIndicator);
+        }
+        
+    } catch (error) {
+        console.error(`Error rendering PDF page ${pageNumber}:`, error);
+        const errorMsg = document.createElement('div');
+        errorMsg.className = 'pdf-page-error';
+        errorMsg.textContent = `Error loading page ${pageNumber}`;
+        canvas.parentNode.appendChild(errorMsg);
+    }
+}
+
+async function adjustZoom(delta) {
+    const oldZoom = zoomLevel;
     zoomLevel += delta;
     zoomLevel = Math.max(0.2, Math.min(3, zoomLevel)); // Limit zoom level
+    
+    // If zoom didn't actually change, exit early
+    if (oldZoom === zoomLevel) return;
+    
+    // Update zoom display
     const zoomLevelSpan = document.getElementById('zoomLevel');
     zoomLevelSpan.textContent = `${(zoomLevel * 100).toFixed(0)}%`;
     
-    const pdfCanvas = document.getElementById('pdfCanvas');
-    const imagePreview = document.getElementById('imagePreview');
+    const previewContainer = document.querySelector('.preview-container');
+    const pdfContainer = document.querySelector('.pdf-viewer-container');
+    const imageElement = document.querySelector('.preview-image');
     
-    if (pdfCanvas.style.display === 'block') {
-        renderPage(currentPdfPage);
-    } else if (imagePreview.style.display === 'block') {
-        imagePreview.style.transform = `scale(${zoomLevel})`;
-        imagePreview.style.transformOrigin = 'center center';
+    if (pdfContainer && currentPdf) {
+        // Remember scroll position
+        const scrollContainer = document.querySelector('.pdf-pages-container');
+        const scrollRatio = scrollContainer.scrollTop / scrollContainer.scrollHeight;
+        
+        // First remove existing pages
+        const pagesContainer = document.querySelector('.pdf-pages-container');
+        if (pagesContainer) {
+            pdfContainer.removeChild(pagesContainer);
+        }
+        
+        // Render pages with new zoom
+        await renderPdfPages(pdfContainer);
+        
+        // Restore scroll position
+        const newScrollContainer = document.querySelector('.pdf-pages-container');
+        setTimeout(() => {
+            newScrollContainer.scrollTop = scrollRatio * newScrollContainer.scrollHeight;
+        }, 50);
+    } else if (imageElement) {
+        // Handle image zoom
+        imageElement.style.transform = `scale(${zoomLevel})`;
+        imageElement.style.transformOrigin = 'center center';
     }
 }
+
+// Add CSS for the improved viewer with image support
+document.addEventListener('DOMContentLoaded', () => {
+    const styleElement = document.createElement('style');
+    styleElement.textContent = `
+        /* Container styling */
+        .preview-container {
+            position: relative;
+            background-color: var(--bg-tertiary);
+            display: flex;
+            justify-content: center;
+            overflow: hidden;
+            width: 100%;
+            height: calc(100vh - 120px);
+        }
+        
+        /* PDF viewer styling */
+        .pdf-viewer-container {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+        
+        .pdf-pages-container {
+            width: 100%;
+            height: 100%;
+            overflow-y: auto;
+            overflow-x: auto;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 20px 0;
+        }
+        
+        .pdf-page-wrapper {
+            margin-bottom: 20px;
+            background-color: white;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+            position: relative;
+            display: flex;
+            justify-content: center;
+        }
+        
+        .pdf-page-canvas {
+            display: block;
+        }
+        
+        .pdf-page-number {
+            position: absolute;
+            bottom: -20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background-color: rgba(0, 0, 0, 0.5);
+            color: white;
+            padding: 2px 10px;
+            border-radius: 10px;
+            font-size: 12px;
+            opacity: 0.7;
+        }
+        
+        .pdf-page-error {
+            padding: 20px;
+            background-color: #ffeeee;
+            color: #cc0000;
+            text-align: center;
+            border: 1px solid #cc0000;
+            margin: 20px;
+        }
+        
+        /* Loading indicator */
+        .pdf-loading {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100%;
+            width: 100%;
+        }
+        
+        .loading-spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid var(--accent-color);
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin-bottom: 15px;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        /* Image container */
+        .image-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow: auto;
+            width: 100%;
+            height: 100%;
+            background-color: var(--bg-primary);
+        }
+        
+        .preview-image {
+            max-width: 90%;
+            max-height: 90%;
+            object-fit: contain;
+            transition: transform 0.2s ease;
+            transform-origin: center center;
+        }
+        
+        /* Document container */
+        .document-container {
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+        }
+        
+        .document-iframe {
+            width: 100%;
+            height: 100%;
+            border: none;
+        }
+    `;
+    
+    document.head.appendChild(styleElement);
+});
+
+// Update preview modal HTML structure if needed
+function updatePreviewModalStructure() {
+    const previewModal = document.getElementById('previewModal');
+    if (!previewModal) return;
+    
+    const previewContainer = previewModal.querySelector('.preview-container');
+    if (!previewContainer) return;
+}
+
+// Cleanup when closing the modal
+function hideModal(modalId) {
+    document.getElementById(modalId).style.display = 'none';
+    
+    // If this was the preview modal, clean up
+    if (modalId === 'previewModal') {
+        currentPdf = null;
+    }
+}
+
+// Initialize when the page loads
+document.addEventListener('DOMContentLoaded', () => {
+    updatePreviewModalStructure();
+});
+
 
 document.addEventListener('DOMContentLoaded', () => {
     loadDocuments();
@@ -1233,6 +1469,83 @@ document.addEventListener('DOMContentLoaded', () => {
     padding: 2rem;
 }
 
+/* Modal de visualização em tela cheia */
+#previewModal {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.9);
+    z-index: 2000;
+    overflow: hidden;
+}
+
+.preview-modal {
+    width: 100% !important;
+    height: 100vh !important;
+    max-width: 100% !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    border-radius: 0 !important;
+    display: flex;
+    flex-direction: column;
+}
+
+.preview-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1rem;
+    background-color: var(--bg-secondary);
+    border-bottom: 1px solid var(--border-color);
+    z-index: 2001;
+}
+
+.preview-container {
+    flex: 1;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    overflow: auto;
+    position: relative;
+    background-color: var(--bg-tertiary);
+}
+
+/* Controles de zoom e navegação */
+.zoom-controls {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    background-color: var(--bg-secondary);
+    padding: 0.5rem 1rem;
+    border-radius: 4px;
+}
+
+/* Estilos para canvas e imagens */
+#pdfCanvas {
+    max-height: 90vh;
+    box-shadow: 0 0 20px rgba(0, 0, 0, 0.3);
+}
+
+#imagePreview {
+    max-height: 90vh;
+    max-width: 90vw;
+    object-fit: contain;
+    transition: transform 0.3s ease;
+}
+
+/* Controles do PDF */
+.preview-controls {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 1rem;
+    padding: 1rem;
+    background-color: var(--bg-secondary);
+    border-top: 1px solid var(--border-color);
+}
 
 </style>
 {% endblock %}

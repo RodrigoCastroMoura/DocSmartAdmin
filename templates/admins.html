@@ -969,6 +969,16 @@ function formatPermissionName(permission) {
     return `${PERMISSION_ACTIONS[action]?.title || action} ${PERMISSION_GROUPS[resource]?.title || resource}`;
 }
 
+// Impedir que cliques dentro do modal fechem o modal
+document.addEventListener('DOMContentLoaded', function() {
+    const modalContents = document.querySelectorAll('.modal-content');
+    modalContents.forEach(content => {
+        content.addEventListener('click', function(event) {
+            event.stopPropagation();
+        });
+    });
+});
+
 // Initialize on page load
 document.addEventListener('DOMContentLoaded', async () => {
     loadAdmins();

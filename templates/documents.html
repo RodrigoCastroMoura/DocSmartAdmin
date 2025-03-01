@@ -343,13 +343,13 @@ async function applyFiltersCategory(categoryId) {
         }
         const data = await response.json();
 
-        if (!Array.isArray(data)) {
+        if (!Array.isArray(data.document_types)) {
             throw new Error('Invalid document types data format');
         }
 
         typeSelect.innerHTML = `
             <option value="">All Document Types</option>
-            ${data.map(type => 
+            ${data.document_types.map(type => 
                 `<option value="${type.id}">${type.name}</option>`
             ).join('')}`;
     } catch (error) {
@@ -410,13 +410,13 @@ async function loadDocumentTypes(categoryId) {
         }
         const data = await response.json();
 
-        if (!Array.isArray(data)) {
+        if (!Array.isArray(data.document_types)) {
             throw new Error('Invalid document types data format');
         }
 
         typeSelect.innerHTML = `
             <option value="">Select Document Type</option>
-            ${data.map(type => 
+            ${data.document_types.map(type => 
                 `<option value="${type.id}">${type.name}</option>`
             ).join('')}`;
     } catch (error) {
@@ -1080,6 +1080,16 @@ document.addEventListener('DOMContentLoaded', () => {
     updatePreviewModalStructure();
 });
 
+// Impedir que cliques dentro do modal fechem o modal
+document.addEventListener('DOMContentLoaded', function() {
+    const modalContents = document.querySelectorAll('.modal-content');
+    modalContents.forEach(content => {
+        content.addEventListener('click', function(event) {
+            event.stopPropagation();
+        });
+    });
+});
+
 document.addEventListener('DOMContentLoaded', () => {
     loadDocuments();
     feather.replace();
@@ -1531,5 +1541,82 @@ document.addEventListener('DOMContentLoaded', () => {
     .page-container {
         padding: 2rem;
     }
+    /* Modal de visualização em tela cheia */
+#previewModal {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.9);
+    z-index: 2000;
+    overflow: hidden;
+}
+
+.preview-modal {
+    width: 100% !important;
+    height: 100vh !important;
+    max-width: 100% !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    border-radius: 0 !important;
+    display: flex;
+    flex-direction: column;
+}
+
+.preview-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1rem;
+    background-color: var(--bg-secondary);
+    border-bottom: 1px solid var(--border-color);
+    z-index: 2001;
+}
+
+.preview-container {
+    flex: 1;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    overflow: auto;
+    position: relative;
+    background-color: var(--bg-tertiary);
+}
+
+/* Controles de zoom e navegação */
+.zoom-controls {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    background-color: var(--bg-secondary);
+    padding: 0.5rem 1rem;
+    border-radius: 4px;
+}
+
+/* Estilos para canvas e imagens */
+#pdfCanvas {
+    max-height: 90vh;
+    box-shadow: 0 0 20px rgba(0, 0, 0, 0.3);
+}
+
+#imagePreview {
+    max-height: 90vh;
+    max-width: 90vw;
+    object-fit: contain;
+    transition: transform 0.3s ease;
+}
+
+/* Controles do PDF */
+.preview-controls {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 1rem;
+    padding: 1rem;
+    background-color: var(--bg-secondary);
+    border-top: 1px solid var(--border-color);
+}
 </style>
 {% endblock %}

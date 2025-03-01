@@ -737,6 +737,16 @@ function changePage(newPage) {
     }
 }
 
+// Impedir que cliques dentro do modal fechem o modal
+document.addEventListener('DOMContentLoaded', function() {
+    const modalContents = document.querySelectorAll('.modal-content');
+    modalContents.forEach(content => {
+        content.addEventListener('click', function(event) {
+            event.stopPropagation();
+        });
+    });
+});
+
 // Initialize users list when page loads
 document.addEventListener('DOMContentLoaded', function() {
   loadUsers(1);
