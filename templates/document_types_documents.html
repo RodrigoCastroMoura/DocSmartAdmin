@@ -223,6 +223,14 @@ async function applyFilters() {
         user_cpf: document.getElementById('user-cpf-filter').value
     };
     
+    // Ensure document_type_id is never empty
+    if (!filters.document_type_id) {
+        console.error("Missing document_type_id, using default value");
+        filters.document_type_id = '{{document_type.id}}';
+    }
+    
+    console.log("Applying filters:", filters);
+    
     // Store filters in URL params
     const params = new URLSearchParams(filters);
        
@@ -506,6 +514,11 @@ async function loadDocuments(page = 1, filters = {}) {
     showLoading(contentDiv);
     
     try {
+        // Always include document_type_id in filters if not already present
+        if (!filters.document_type_id) {
+            filters.document_type_id = '{{document_type.id}}';
+        }
+        
         const params = new URLSearchParams({
             page: page,
             per_page: perPage,
@@ -660,9 +673,17 @@ function changePage(newPage) {
         const filters = {
             department_id: urlParams.get('department_id') || '',
             category_id: urlParams.get('category_id') || '',
-            document_type_id: urlParams.get('document_type_id') || '',
-            user_id: urlParams.get('user_id') || ''
+            document_type_id: '{{document_type.id}}', // Always use the current document_type_id
+            user_cpf: document.getElementById('user-cpf-filter').value || ''
         };
+        
+        // Clean empty filters
+        Object.keys(filters).forEach(key => {
+            if (filters[key] === '') {
+                delete filters[key];
+            }
+        });
+        
         loadDocuments(newPage, filters);
     }
 }
@@ -1059,8 +1080,18 @@ document.addEventListener('DOMContentLoaded', () => {
     const filters = {
         document_type_id: '{{document_type.id}}',
     };
-    loadDocuments(1,filters);
+    
+    // Make sure the document type ID is properly applied
+    console.log("Initializing with document_type_id:", filters.document_type_id);
+    loadDocuments(1, filters);
     feather.replace();
+    
+    // Set the user-cpf-filter to apply document_type_id filter when searching
+    document.getElementById('user-cpf-filter').addEventListener('keyup', function(event) {
+        if (event.key === 'Enter') {
+            applyFilters();
+        }
+    });
 });
 </script>
 
