@@ -737,422 +737,352 @@ async function downloadDocument(url) {
 const pdfjsLib = window['pdfjs-dist/build/pdf'];
 pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/pdf.worker.min.js';
 
-// Função para visualizar documento
+
 async function previewDocument(url, filename) {
-    if (!url) {
-        showNotification('Document URL is not available', 'error');
-        return;
-    }
-
-    try {
-        // Reset preview state
-        resetPreviewState();
-        
-        // Set document title
-        const previewTitle = document.getElementById('previewTitle');
-        previewTitle.textContent = filename || 'Document Preview';
-        
-        // Determine file type and handle appropriately
-        const fileExt = getFileExtension(filename);
-        
-        if (fileExt === 'pdf') {
-            await handlePdfPreview(url);
-        } else if (['jpg', 'jpeg', 'png', 'gif', 'bmp'].includes(fileExt)) {
-            handleImagePreview(url);
-        } else {
-            handleGenericPreview(url);
-        }
-        
-        // Show the preview modal
-        showModal('previewModal');
-        feather.replace();
-        
-    } catch (error) {
-        console.error('Error previewing document:', error);
-        showNotification('Failed to preview document: ' + error.message, 'error');
-    }
-}
-
-// Função auxiliar para obter a extensão do arquivo
-function getFileExtension(filename) {
-    if (!filename) return '';
-    return filename.split('.').pop().toLowerCase();
-}
-
-// Reset do estado de visualização
-function resetPreviewState() {
+    const previewTitle = document.getElementById('previewTitle');
+    const previewContainer = document.querySelector('.preview-container');
+    const zoomLevelSpan = document.getElementById('zoomLevel');
+    
     // Reset zoom level
     zoomLevel = 1.0;
-    document.getElementById('zoomLevel').textContent = '100%';
-    
-    // Reset PDF state
-    currentPdfPage = 1;
-    pdfTotalPages = 1;
-    currentPdf = null;
-    
-    // Reset display of preview elements
-    const pdfPagesContainer = document.getElementById('pdfPagesContainer');
-    const pdfCanvas = document.getElementById('pdfCanvas');
-    const imagePreview = document.getElementById('imagePreview');
-    const documentPreview = document.getElementById('documentPreview');
-    const pdfControls = document.getElementById('pdfControls');
-    
-    pdfPagesContainer.style.display = 'none';
-    pdfPagesContainer.innerHTML = '';
-    pdfCanvas.style.display = 'none';
-    imagePreview.style.display = 'none';
-    documentPreview.style.display = 'none';
-    pdfControls.style.display = 'none';
-}
+    zoomLevelSpan.textContent = `${(zoomLevel * 100).toFixed(0)}%`;
 
-// Manipular visualização de PDF
-async function handlePdfPreview(url) {
-    // Get proxy URL if needed
-    const proxyUrl = url.startsWith('https://storage.googleapis.com/') 
-        ? `/proxy/storage/${url.replace('https://storage.googleapis.com/', '')}` 
-        : url;
+    // Clear previous content from preview container
+    while (previewContainer.firstChild) {
+        previewContainer.removeChild(previewContainer.firstChild);
+    }
     
-    console.log('Loading PDF from:', proxyUrl);
-    
-    // Show loading indicator
-    const pdfPagesContainer = document.getElementById('pdfPagesContainer');
-    pdfPagesContainer.innerHTML = `
-        <div class="pdf-loading">
-            <div class="spinner"></div>
-            <p>Loading PDF...</p>
-        </div>
-    `;
-    pdfPagesContainer.style.display = 'block';
-    
+    previewTitle.textContent = filename;
+    const fileType = filename.split('.').pop().toLowerCase();
+
     try {
-        // Load the PDF document
-        const loadingTask = pdfjsLib.getDocument(proxyUrl);
-        currentPdf = await loadingTask.promise;
-        pdfTotalPages = currentPdf.numPages;
-        
-        console.log(`PDF loaded with ${pdfTotalPages} pages`);
-        
-        // Based on number of pages, choose rendering method
-        if (pdfTotalPages > 1) {
-            await renderMultiPagePdf(currentPdf);
+        if (fileType === 'pdf') {
+            // Create PDF viewer container
+            const pdfViewerContainer = document.createElement('div');
+            pdfViewerContainer.className = 'pdf-viewer-container';
+            previewContainer.appendChild(pdfViewerContainer);
+            
+            // Show loading indicator
+            const loadingIndicator = document.createElement('div');
+            loadingIndicator.className = 'pdf-loading';
+            loadingIndicator.innerHTML = '<div class="loading-spinner"></div><p>Loading PDF...</p>';
+            pdfViewerContainer.appendChild(loadingIndicator);
+            
+            // Load the PDF
+            const proxyUrl = `/proxy/storage/${url.replace('https://storage.googleapis.com/', '')}`;
+            const loadingTask = pdfjsLib.getDocument(proxyUrl);
+            currentPdf = await loadingTask.promise;
+            
+            // Remove loading indicator
+            pdfViewerContainer.removeChild(loadingIndicator);
+            
+            // Render all pages in the viewer
+            await renderPdfPages(pdfViewerContainer);
+            
+        } else if (['jpg', 'jpeg', 'png', 'gif'].includes(fileType)) {
+            // Create image container
+            const imgContainer = document.createElement('div');
+            imgContainer.className = 'image-container';
+            previewContainer.appendChild(imgContainer);
+            
+            // Create the image element
+            const imageElement = document.createElement('img');
+            imageElement.className = 'preview-image';
+            imageElement.alt = 'Image Preview';
+            imageElement.src = url;
+            imgContainer.appendChild(imageElement);
+            
+            // Add zoom support for images
+            imageElement.style.transform = `scale(${zoomLevel})`;
+            imageElement.style.transformOrigin = 'center center';
+            
         } else {
-            await renderSinglePagePdf(currentPdf);
+            // Handle other document types
+            const docContainer = document.createElement('div');
+            docContainer.className = 'document-container';
+            previewContainer.appendChild(docContainer);
+            
+            const iframeElement = document.createElement('iframe');
+            iframeElement.className = 'document-iframe';
+            iframeElement.src = url;
+            docContainer.appendChild(iframeElement);
         }
+
+        showModal('previewModal');
     } catch (error) {
-        console.error('Error loading PDF:', error);
-        pdfPagesContainer.innerHTML = `
-            <div class="pdf-error">
-                <i data-feather="alert-triangle"></i>
-                <p>Failed to load PDF: ${error.message}</p>
-            </div>
-        `;
-        feather.replace();
-        throw error;
+        console.error('Error previewing document:', error);
+        showNotification('Failed to preview document', 'error');
     }
 }
 
-// Renderizar PDF de página única
-async function renderSinglePagePdf(pdfDoc) {
-    const pdfCanvas = document.getElementById('pdfCanvas');
-    const pdfControls = document.getElementById('pdfControls');
-    const pdfPagesContainer = document.getElementById('pdfPagesContainer');
+// FUNÇÃO QUE ESTAVA FALTANDO
+async function renderPdfPages(container) {
+    if (!currentPdf) return;
     
-    // Hide multi-page container, show canvas
-    pdfPagesContainer.style.display = 'none';
-    pdfCanvas.style.display = 'block';
+    const totalPages = currentPdf.numPages;
     
-    // Update PDF controls
-    pdfControls.style.display = 'flex';
-    document.getElementById('prevPdfPage').disabled = true;
-    document.getElementById('nextPdfPage').disabled = true;
-    document.getElementById('pdfPageInfo').textContent = 'Page 1 of 1';
+    // Create main pages container
+    const pagesContainer = document.createElement('div');
+    pagesContainer.className = 'pdf-pages-container';
+    container.appendChild(pagesContainer);
     
-    // Render the page
+    // Render each page
+    for (let pageNum = 1; pageNum <= totalPages; pageNum++) {
+        // Create container for this page
+        const pageContainer = document.createElement('div');
+        pageContainer.className = 'pdf-page-wrapper';
+        pageContainer.dataset.pageNumber = pageNum;
+        pagesContainer.appendChild(pageContainer);
+        
+        // Create canvas for the page
+        const pageCanvas = document.createElement('canvas');
+        pageCanvas.className = 'pdf-page-canvas';
+        pageContainer.appendChild(pageCanvas);
+        
+        // Render the page content
+        await renderPdfPage(pageNum, pageCanvas);
+    }
+}
+
+async function renderPdfPage(pageNumber, canvas) {
     try {
-        const page = await pdfDoc.getPage(1);
+        const page = await currentPdf.getPage(pageNumber);
+        const context = canvas.getContext('2d');
+        
+        // Calculate viewport based on zoom level
         const viewport = page.getViewport({ scale: zoomLevel });
         
-        pdfCanvas.height = viewport.height;
-        pdfCanvas.width = viewport.width;
+        // Set canvas dimensions to match viewport
+        canvas.height = viewport.height;
+        canvas.width = viewport.width;
+        canvas.style.width = `${viewport.width}px`;
+        canvas.style.height = `${viewport.height}px`;
         
+        // Render PDF page into canvas context
         const renderContext = {
-            canvasContext: pdfCanvas.getContext('2d'),
+            canvasContext: context,
             viewport: viewport
         };
         
         await page.render(renderContext).promise;
-    } catch (error) {
-        console.error('Error rendering PDF page:', error);
-        throw error;
-    }
-}
-
-// Renderizar PDF de múltiplas páginas
-async function renderMultiPagePdf(pdfDoc) {
-    const pdfPagesContainer = document.getElementById('pdfPagesContainer');
-    const pdfControls = document.getElementById('pdfControls');
-    
-    // Hide canvas, show multi-page container
-    document.getElementById('pdfCanvas').style.display = 'none';
-    pdfPagesContainer.style.display = 'block';
-    pdfControls.style.display = 'none';
-    
-    // Clear container
-    pdfPagesContainer.innerHTML = '';
-    
-    // Create loading indicator
-    const loadingIndicator = document.createElement('div');
-    loadingIndicator.className = 'pdf-loading-indicator';
-    loadingIndicator.innerHTML = '<p>Rendering pages...</p>';
-    loadingIndicator.style.position = 'sticky';
-    loadingIndicator.style.top = '0';
-    loadingIndicator.style.padding = '10px';
-    loadingIndicator.style.backgroundColor = 'rgba(0, 0, 0, 0.7)';
-    loadingIndicator.style.color = 'white';
-    loadingIndicator.style.borderRadius = '4px';
-    loadingIndicator.style.textAlign = 'center';
-    loadingIndicator.style.margin = '10px auto';
-    loadingIndicator.style.zIndex = '10';
-    pdfPagesContainer.appendChild(loadingIndicator);
-    
-    try {
-        // Create container for all pages with proper styling
-        const pagesWrapper = document.createElement('div');
-        pagesWrapper.className = 'pdf-pages-wrapper';
-        pagesWrapper.style.display = 'flex';
-        pagesWrapper.style.flexDirection = 'column';
-        pagesWrapper.style.alignItems = 'center';
-        pagesWrapper.style.gap = '20px';
-        pagesWrapper.style.padding = '20px 0';
-        pdfPagesContainer.appendChild(pagesWrapper);
         
-        // Render each page
-        for (let pageNum = 1; pageNum <= pdfTotalPages; pageNum++) {
-            loadingIndicator.innerHTML = `<p>Rendering page ${pageNum} of ${pdfTotalPages}...</p>`;
-            
-            try {
-                // Create container for this page
-                const pageContainer = document.createElement('div');
-                pageContainer.className = 'pdf-page';
-                pageContainer.dataset.pageNum = pageNum;
-                pageContainer.style.boxShadow = '0 2px 10px rgba(0, 0, 0, 0.2)';
-                pageContainer.style.position = 'relative';
-                
-                // Add page number label
-                const pageLabel = document.createElement('div');
-                pageLabel.className = 'pdf-page-label';
-                pageLabel.textContent = `Page ${pageNum}`;
-                pageLabel.style.textAlign = 'center';
-                pageLabel.style.padding = '5px';
-                pageLabel.style.backgroundColor = 'rgba(0, 0, 0, 0.7)';
-                pageLabel.style.color = 'white';
-                pageLabel.style.position = 'absolute';
-                pageLabel.style.bottom = '0';
-                pageLabel.style.right = '0';
-                pageLabel.style.borderTopLeftRadius = '4px';
-                pageLabel.style.fontSize = '12px';
-                
-                // Create canvas for this page
-                const canvas = document.createElement('canvas');
-                canvas.className = 'pdf-page-canvas';
-                canvas.id = `pdf-page-${pageNum}`;
-                
-                // Append elements
-                pageContainer.appendChild(canvas);
-                pageContainer.appendChild(pageLabel);
-                pagesWrapper.appendChild(pageContainer);
-                
-                // Render the page
-                const page = await pdfDoc.getPage(pageNum);
-                const viewport = page.getViewport({ scale: zoomLevel });
-                
-                canvas.height = viewport.height;
-                canvas.width = viewport.width;
-                
-                const renderContext = {
-                    canvasContext: canvas.getContext('2d'),
-                    viewport: viewport
-                };
-                
-                await page.render(renderContext).promise;
-                
-            } catch (pageError) {
-                console.error(`Error rendering page ${pageNum}:`, pageError);
-                
-                // Create error indicator for this page
-                const errorContainer = document.createElement('div');
-                errorContainer.className = 'pdf-page-error';
-                errorContainer.innerHTML = `
-                    <div style="padding: 20px; border: 1px solid #f44336; color: #f44336; text-align: center;">
-                        <p>Error rendering page ${pageNum}</p>
-                    </div>
-                `;
-                pagesWrapper.appendChild(errorContainer);
-            }
+        // Add subtle page number indicator at the bottom
+        if (currentPdf.numPages > 1) {
+            const pageNumberIndicator = document.createElement('div');
+            pageNumberIndicator.className = 'pdf-page-number';
+            pageNumberIndicator.textContent = `${pageNumber} / ${currentPdf.numPages}`;
+            canvas.parentNode.appendChild(pageNumberIndicator);
         }
+        
     } catch (error) {
-        console.error('Error rendering multi-page PDF:', error);
-        throw error;
-    } finally {
-        // Remove loading indicator
-        if (loadingIndicator && loadingIndicator.parentNode) {
-            loadingIndicator.parentNode.removeChild(loadingIndicator);
-        }
+        console.error(`Error rendering PDF page ${pageNumber}:`, error);
+        const errorMsg = document.createElement('div');
+        errorMsg.className = 'pdf-page-error';
+        errorMsg.textContent = `Error loading page ${pageNumber}`;
+        canvas.parentNode.appendChild(errorMsg);
     }
 }
 
-// Manipular visualização de imagem
-function handleImagePreview(url) {
-    const imagePreview = document.getElementById('imagePreview');
-    imagePreview.src = url;
-    imagePreview.style.display = 'block';
-    imagePreview.style.maxWidth = '100%';
-    imagePreview.style.height = 'auto';
-    
-    // Apply initial zoom
-    applyImageZoom();
-}
-
-// Aplicar zoom à imagem
-function applyImageZoom() {
-    const imagePreview = document.getElementById('imagePreview');
-    imagePreview.style.transform = `scale(${zoomLevel})`;
-    imagePreview.style.transformOrigin = 'center top';
-}
-
-// Manipular visualização genérica (para outros tipos de arquivo)
-function handleGenericPreview(url) {
-    const documentPreview = document.getElementById('documentPreview');
-    documentPreview.src = url;
-    documentPreview.style.display = 'block';
-}
-
-// Ajustar nível de zoom
-function adjustZoom(delta) {
-    // Update zoom level within limits
+async function adjustZoom(delta) {
     const oldZoom = zoomLevel;
-    zoomLevel = Math.max(0.2, Math.min(3, zoomLevel + delta));
+    zoomLevel += delta;
+    zoomLevel = Math.max(0.2, Math.min(3, zoomLevel)); // Limit zoom level
     
-    // If no change, exit
+    // If zoom didn't actually change, exit early
     if (oldZoom === zoomLevel) return;
     
     // Update zoom display
-    document.getElementById('zoomLevel').textContent = `${Math.round(zoomLevel * 100)}%`;
+    const zoomLevelSpan = document.getElementById('zoomLevel');
+    zoomLevelSpan.textContent = `${(zoomLevel * 100).toFixed(0)}%`;
     
-    // Apply zoom based on content type
-    applyZoomToCurrentContent();
-}
-
-// Aplicar zoom ao conteúdo atual
-async function applyZoomToCurrentContent() {
-    // Show loading overlay
-    showZoomLoadingOverlay();
+    const previewContainer = document.querySelector('.preview-container');
+    const pdfContainer = document.querySelector('.pdf-viewer-container');
+    const imageElement = document.querySelector('.preview-image');
     
-    try {
-        // Determine which content is being displayed
-        const pdfCanvas = document.getElementById('pdfCanvas');
-        const pdfPagesContainer = document.getElementById('pdfPagesContainer');
-        const imagePreview = document.getElementById('imagePreview');
+    if (pdfContainer && currentPdf) {
+        // Remember scroll position
+        const scrollContainer = document.querySelector('.pdf-pages-container');
+        const scrollRatio = scrollContainer.scrollTop / scrollContainer.scrollHeight;
         
-        // Apply zoom based on content type
-        if (pdfCanvas.style.display === 'block') {
-            // Single page PDF
-            await renderSinglePagePdf(currentPdf);
-        } 
-        else if (pdfPagesContainer.style.display === 'block') {
-            // Multi-page PDF
-            await renderMultiPagePdf(currentPdf);
-        } 
-        else if (imagePreview.style.display === 'block') {
-            // Image
-            applyImageZoom();
+        // First remove existing pages
+        const pagesContainer = document.querySelector('.pdf-pages-container');
+        if (pagesContainer) {
+            pdfContainer.removeChild(pagesContainer);
         }
-    } catch (error) {
-        console.error('Error applying zoom:', error);
-        showNotification('Error applying zoom', 'error');
-    } finally {
-        // Hide loading overlay
-        hideZoomLoadingOverlay();
+        
+        // Render pages with new zoom
+        await renderPdfPages(pdfContainer);
+        
+        // Restore scroll position
+        const newScrollContainer = document.querySelector('.pdf-pages-container');
+        setTimeout(() => {
+            newScrollContainer.scrollTop = scrollRatio * newScrollContainer.scrollHeight;
+        }, 50);
+    } else if (imageElement) {
+        // Handle image zoom
+        imageElement.style.transform = `scale(${zoomLevel})`;
+        imageElement.style.transformOrigin = 'center center';
     }
 }
 
-// Mostrar overlay de carregamento do zoom
-function showZoomLoadingOverlay() {
-    // Check if overlay already exists
-    if (document.getElementById('zoomLoadingOverlay')) return;
+// Add CSS for the improved viewer with image support
+document.addEventListener('DOMContentLoaded', () => {
+    const styleElement = document.createElement('style');
+    styleElement.textContent = `
+        /* Container styling */
+        .preview-container {
+            position: relative;
+            background-color: var(--bg-tertiary);
+            display: flex;
+            justify-content: center;
+            overflow: hidden;
+            width: 100%;
+            height: calc(100vh - 120px);
+        }
+        
+        /* PDF viewer styling */
+        .pdf-viewer-container {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+        
+        .pdf-pages-container {
+            width: 100%;
+            height: 100%;
+            overflow-y: auto;
+            overflow-x: auto;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 20px 0;
+        }
+        
+        .pdf-page-wrapper {
+            margin-bottom: 20px;
+            background-color: white;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+            position: relative;
+            display: flex;
+            justify-content: center;
+        }
+        
+        .pdf-page-canvas {
+            display: block;
+        }
+        
+        .pdf-page-number {
+            position: absolute;
+            bottom: -20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background-color: rgba(0, 0, 0, 0.5);
+            color: white;
+            padding: 2px 10px;
+            border-radius: 10px;
+            font-size: 12px;
+            opacity: 0.7;
+        }
+        
+        .pdf-page-error {
+            padding: 20px;
+            background-color: #ffeeee;
+            color: #cc0000;
+            text-align: center;
+            border: 1px solid #cc0000;
+            margin: 20px;
+        }
+        
+        /* Loading indicator */
+        .pdf-loading {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100%;
+            width: 100%;
+        }
+        
+        .loading-spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid var(--accent-color);
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin-bottom: 15px;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        /* Image container */
+        .image-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow: auto;
+            width: 100%;
+            height: 100%;
+            background-color: var(--bg-primary);
+        }
+        
+        .preview-image {
+            max-width: 90%;
+            max-height: 90%;
+            object-fit: contain;
+            transition: transform 0.2s ease;
+            transform-origin: center center;
+        }
+        
+        /* Document container */
+        .document-container {
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+        }
+        
+        .document-iframe {
+            width: 100%;
+            height: 100%;
+            border: none;
+        }
+    `;
     
-    const overlay = document.createElement('div');
-    overlay.id = 'zoomLoadingOverlay';
-    overlay.style.position = 'fixed';
-    overlay.style.top = '0';
-    overlay.style.left = '0';
-    overlay.style.width = '100%';
-    overlay.style.height = '100%';
-    overlay.style.backgroundColor = 'rgba(0, 0, 0, 0.5)';
-    overlay.style.display = 'flex';
-    overlay.style.justifyContent = 'center';
-    overlay.style.alignItems = 'center';
-    overlay.style.zIndex = '9999';
+    document.head.appendChild(styleElement);
+});
+
+// Update preview modal HTML structure if needed
+function updatePreviewModalStructure() {
+    const previewModal = document.getElementById('previewModal');
+    if (!previewModal) return;
     
-    const message = document.createElement('div');
-    message.textContent = 'Applying zoom...';
-    message.style.backgroundColor = 'var(--bg-secondary)';
-    message.style.color = 'var(--text-primary)';
-    message.style.padding = '15px 30px';
-    message.style.borderRadius = '5px';
-    message.style.boxShadow = '0 0 10px rgba(0, 0, 0, 0.3)';
-    
-    overlay.appendChild(message);
-    document.body.appendChild(overlay);
+    const previewContainer = previewModal.querySelector('.preview-container');
+    if (!previewContainer) return;
 }
 
-// Esconder overlay de carregamento do zoom
-function hideZoomLoadingOverlay() {
-    const overlay = document.getElementById('zoomLoadingOverlay');
-    if (overlay && overlay.parentNode) {
-        overlay.parentNode.removeChild(overlay);
+// Cleanup when closing the modal
+function hideModal(modalId) {
+    document.getElementById(modalId).style.display = 'none';
+    
+    // If this was the preview modal, clean up
+    if (modalId === 'previewModal') {
+        currentPdf = null;
     }
 }
 
-// Mudar página no modo de página única
-async function changePdfPage(pageNum) {
-    if (!currentPdf || pageNum < 1 || pageNum > pdfTotalPages) return;
-    
-    try {
-        currentPdfPage = pageNum;
-        
-        const page = await currentPdf.getPage(pageNum);
-        const canvas = document.getElementById('pdfCanvas');
-        const context = canvas.getContext('2d');
-        
-        const viewport = page.getViewport({ scale: zoomLevel });
-        canvas.height = viewport.height;
-        canvas.width = viewport.width;
-        
-        await page.render({
-            canvasContext: context,
-            viewport: viewport
-        }).promise;
-        
-        // Update pagination info
-        document.getElementById('pdfPageInfo').textContent = `Page ${pageNum} of ${pdfTotalPages}`;
-        document.getElementById('prevPdfPage').disabled = pageNum <= 1;
-        document.getElementById('nextPdfPage').disabled = pageNum >= pdfTotalPages;
-    } catch (error) {
-        console.error('Error changing PDF page:', error);
-        showNotification('Error changing page', 'error');
-    }
-}
+// Initialize when the page loads
+document.addEventListener('DOMContentLoaded', () => {
+    updatePreviewModalStructure();
+});
 
 document.addEventListener('DOMContentLoaded', () => {
     loadDocuments();
     feather.replace();
-    
-    // Add listener for PDF container scroll to load pages as needed
-    const pdfPagesContainer = document.getElementById('pdfPagesContainer');
-    pdfPagesContainer.addEventListener('scroll', function() {
-        // Could implement lazy loading here if needed
-    });
 });
 </script>
 
