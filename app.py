@@ -29,7 +29,7 @@ app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 
 # API endpoints
-API_BASE_URL = "https://doc-smart-api-rodrigocastromo.replit.app//api"
+API_BASE_URL = "http://127.0.0.1:8000/api"
 LOGIN_URL = f"{API_BASE_URL}/auth/login"
 LOGOUT_URL = f"{API_BASE_URL}/auth/logout"
 REFRESH_URL = f"{API_BASE_URL}/auth/refresh"
@@ -1144,6 +1144,31 @@ def update_user_status(user_id):
     except Exception as e:
         print(f"Error updating user status: {e}")
         return jsonify({'error': 'An unexpected error occurred'}), 500
+
+
+@app.route('/api/admin/<admin_id>/status', methods=['POST'])
+@login_required
+def update_admin_status(admin_id):
+    headers = get_auth_headers()
+    try:
+        data = request.get_json()
+        status = data.get('status')
+
+        if not status:
+            return jsonify({'error': 'Status is required'}), 400
+
+        response = requests.post(f"{API_BASE_URL}/admin/{admin_id}/status",
+                                headers=headers,
+                                json={'status': status},
+                                timeout=REQUEST_TIMEOUT)
+        
+
+        return handle_api_response(
+            response, error_message='Failed to update user status')
+    except Exception as e:
+        print(f"Error updating user status: {e}")
+        return jsonify({'error': 'An unexpected error occurred'}), 500
+
 
 
 @app.route('/api/documents')

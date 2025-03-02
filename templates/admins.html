@@ -837,7 +837,8 @@ async function createAdmin(event) {
 
 async function toggleAdminStatus(adminId, newStatus) {
     try {
-        const response = await fetch(`/api/users/${adminId}/status`, {
+
+        const response = await fetch(`/api/admin/${adminId}/status`, {
             method: 'POST',
             headers: { 
                 'Content-Type': 'application/json',
