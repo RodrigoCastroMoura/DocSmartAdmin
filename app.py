@@ -1201,7 +1201,7 @@ def update_user_status(user_id):
         return jsonify({'error': 'An unexpected error occurred'}), 500
 
 
-@app.route('/api/admin/<admin_id>/status', methods=['POST'])
+@app.route('/api/admins/<admin_id>/status', methods=['POST'])
 @login_required
 def update_admin_status(admin_id):
     headers = get_auth_headers()
@@ -1217,7 +1217,6 @@ def update_admin_status(admin_id):
                                 json={'status': status},
                                 timeout=REQUEST_TIMEOUT)
         
-
         return handle_api_response(
             response, error_message='Failed to update user status')
     except Exception as e:
