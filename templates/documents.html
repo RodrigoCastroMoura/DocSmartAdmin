@@ -249,7 +249,7 @@ function resetFilters() {
     document.getElementById('filterCategory').value = '';
     document.getElementById('filterDocumentType').value = '';
     document.getElementById('filterUser').value = '';
-    applyFilters();
+    applyFilters(currentPage);
 }
 
 async function searchUser() {
@@ -261,11 +261,11 @@ async function searchUser() {
     }
 
     userSearchTimeout = setTimeout(() => {
-        applyFilters();
+        applyFilters(currentPage);
     }, 500);
 }
 
-async function applyFilters() {
+async function applyFilters(Page = 1) {
     const filters = {
         department_id: document.getElementById('filterDepartment').value,
         category_id: document.getElementById('filterCategory').value,
@@ -278,7 +278,7 @@ async function applyFilters() {
 
 
     // Reload documents with filters
-    await loadDocuments(1, filters);
+    await loadDocuments(Page, filters);
 }
 
 async function applyFiltersDepartment(departmentId) {
@@ -294,10 +294,10 @@ async function applyFiltersDepartment(departmentId) {
         if (!departmentId) {
             categorySelect.innerHTML = '<option value="">Categories</option>';
             typeSelect.innerHTML = '<option value="">Types</option>';
-            await applyFilters();
+            await applyFilters(currentPage);
             return;
         }
-        await applyFilters();
+        await applyFilters(currentPage);
         const response = await fetch(`/api/categories/departments/${departmentId}/categories`);
         if (!response.ok) {
             const errorData = await response.json();
@@ -332,11 +332,11 @@ async function applyFiltersCategory(categoryId) {
     try {
         if (!categoryId) {
             typeSelect.innerHTML = '<option value="">Types</option>';
-            await applyFilters();
+            await applyFilters(currentPage);
             return;
         }
-        await applyFilters();
-        const response = await fetch(`/categories/${categoryId}/document_types`);
+        await applyFilters(currentPage);
+        const response = await fetch(`/api/document_types/categories/${categoryId}/types`);
         if (!response.ok) {
             const errorData = await response.json();
             throw new Error(errorData.error || 'Failed to load document types');

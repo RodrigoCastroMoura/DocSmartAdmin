@@ -29,7 +29,7 @@ app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 
 # API endpoints
-API_BASE_URL = "https://doc-smart-api-rodrigocastromo.replit.app//api"
+API_BASE_URL = "http://localhost:8000/api"
 LOGIN_URL = f"{API_BASE_URL}/auth/login"
 LOGOUT_URL = f"{API_BASE_URL}/auth/logout"
 REFRESH_URL = f"{API_BASE_URL}/auth/refresh"
@@ -446,20 +446,7 @@ def categories_document_types(category_id):
     try:
         # Get department details
         logger.info(f"Fetching document types details for ID: {category_id}")
-        doc_response = requests.get(
-            f"{DOCUMENT_TYPES_URL}/categories/{category_id}/types",
-            headers=headers,
-            timeout=REQUEST_TIMEOUT)
-        if not doc_response.ok:
-            logger.error(
-                f"Failed to fetch document types: {doc_response.status_code}")
-            flash('Document types not found', 'error')
-            return redirect(url_for('categories'))
-
-        document_types = doc_response.json()
-
-        # Get categories for the department
-
+       
         categories_response = requests.get(f"{CATEGORIES_URL}/{category_id}",
                                            headers=headers,
                                            timeout=REQUEST_TIMEOUT)
@@ -478,7 +465,7 @@ def categories_document_types(category_id):
         category = categories_response.json()
 
         return render_template('category_document_types.html',
-                               document_types=document_types,
+                               
                                category=category)
     except requests.Timeout:
         logger.error("Request timed out while fetching department categories")
@@ -491,61 +478,6 @@ def categories_document_types(category_id):
         flash('An unexpected error occurred', 'error')
 
     return redirect(url_for('departments'))
-
-
-@app.route('/categories/<category_id>/document_types/pagination')
-@login_required
-def categories_document_types_pagination(category_id):
-    headers = get_auth_headers()
-    try:
-        # Get department details
-        logger.info(f"Fetching document types details for ID: {category_id}")
-        doc_response = requests.get(
-            f"{DOCUMENT_TYPES_URL}/categories/{category_id}/types/pagination",
-            headers=headers,
-            timeout=REQUEST_TIMEOUT)
-        if not doc_response.ok:
-            logger.error(
-                f"Failed to fetch document types: {doc_response.status_code}")
-            flash('Document types not found', 'error')
-            return redirect(url_for('categories'))
-
-        document_types = doc_response.json()
-
-        # Get categories for the department
-
-        categories_response = requests.get(f"{CATEGORIES_URL}/{category_id}",
-                                           headers=headers,
-                                           timeout=REQUEST_TIMEOUT)
-
-        if categories_response.ok:
-            logger.info(
-                f"Successfully fetched {len(categories_response.json())} categories"
-            )
-        else:
-            logger.error(
-                f"Failed to fetch categories: {categories_response.status_code}"
-            )
-            categories = []
-            flash('Error loading categories', 'error')
-
-        category = categories_response.json()
-
-        return render_template('category_document_types.html',
-                               document_types=document_types,
-                               category=category)
-    except requests.Timeout:
-        logger.error("Request timed out while fetching department categories")
-        flash('Request timed out', 'error')
-    except requests.ConnectionError:
-        logger.error("Connection error while fetching department categories")
-        flash('Failed to connect to server', 'error')
-    except Exception as e:
-        logger.error(f"Unexpected error in department_categories: {e}")
-        flash('An unexpected error occurred', 'error')
-
-    return redirect(url_for('departments'))
-
 
 
 @app.route('/document_type/<document_type_id>/documents')
@@ -756,9 +688,10 @@ def categories_id(category_id):
             timeout=REQUEST_TIMEOUT * 2  # Double timeout for file upload
         )
 
-        return handle_api_response(response,
-                                   success_code=204,
-                                   error_message='Failed to delete categories')
+        return handle_api_response(
+            response,
+            success_code=204,
+            error_message='Failed to delete categories')
 
 
 @app.route('/api/categories/departments/<department_id>/categories')
@@ -849,60 +782,62 @@ def document_types_users_api(id):
         if not company_id:
             return jsonify({'error': 'Company ID not found in session'}), 400
 
-        response = requests.get(f"{DOCUMENT_TYPES_URL}/{id}/allowed-users",
-                                headers=headers,
-                                timeout=REQUEST_TIMEOUT)
-
+        response = requests.get(
+            f"{DOCUMENT_TYPES_URL}/{id}/allowed-users",
+            headers=headers,
+            timeout=REQUEST_TIMEOUT)
+        
         return handle_api_response(
-            response, error_message='Failed to fetch document types')
+        response, error_message='Failed to fetch document types')
     except Exception as e:
         print(f"Error adding user access: {e}")
         return jsonify({'error': 'An unexpected error occurred'}), 500
 
-
-@app.route('/api/document_types/<document_types_id>/users/<user_id>/add',
-           methods=['POST'])
+    
+@app.route('/api/document_types/<document_types_id>/users/<user_id>/add', methods=['POST'])
 @login_required
 def add_user_to_document_type(document_types_id, user_id):
     headers = get_auth_headers()
 
     try:
-        # Build form data
-        params = {'user_id': user_id}
+         # Build form data
+        params = {
+            'user_id': user_id
+        }
 
         response = requests.post(
             f"{DOCUMENT_TYPES_URL}/{document_types_id}/allowed-users",
             headers=headers,
             params=params,
-            timeout=REQUEST_TIMEOUT)
-        return handle_api_response(response,
-                                   error_message='Failed to add user access')
+            timeout=REQUEST_TIMEOUT
+        )
+        return handle_api_response(response, error_message='Failed to add user access')
     except Exception as e:
         print(f"Error adding user access: {e}")
         return jsonify({'error': 'An unexpected error occurred'}), 500
 
 
-@app.route('/api/document_types/<document_types_id>/users/<user_ids>/remove',
-           methods=['POST'])
+@app.route('/api/document_types/<document_types_id>/users/<user_ids>/remove', methods=['POST'])
 @login_required
 def remove_user_from_document_type(document_types_id, user_ids):
     headers = get_auth_headers()
     try:
-        params = {'user_ids': user_ids}
+        params = {
+            'user_ids': user_ids
+        }
         response = requests.delete(
             f"{DOCUMENT_TYPES_URL}/{document_types_id}/allowed-users",
             headers=headers,
             params=params,
-            timeout=REQUEST_TIMEOUT)
-        return handle_api_response(
-            response, error_message='Failed to remove user access')
+            timeout=REQUEST_TIMEOUT
+        )
+        return handle_api_response(response, error_message='Failed to remove user access')
     except Exception as e:
         print(f"Error removing user access: {e}")
         return jsonify({'error': 'An unexpected error occurred'}), 500
 
 
-@app.route('/api/document_types/<document_types_id>',
-           methods=['PUT', 'DELETE'])
+@app.route('/api/document_types/<document_types_id>', methods=['PUT', 'DELETE'])
 @login_required
 def document_types_id(document_types_id):
     headers = get_auth_headers()
@@ -918,8 +853,7 @@ def document_types_id(document_types_id):
         description = data.get('description')
         department_id = data.get('department_id')
         category_id = data.get('category_id')
-        public = data.get(
-            'public')  # Adiciona a chave 'public' com o valor True ou False
+        public = data.get('public')  # Adiciona a chave 'public' com o valor True ou False
         # Build form data
         form_data = {
             "name": name,
@@ -953,7 +887,24 @@ def document_types_id(document_types_id):
 @login_required
 def category_document_types_api(category_id):
     headers = get_auth_headers()
+    try:
+        response = requests.get(
+            f"{DOCUMENT_TYPES_URL}/categories/{category_id}/types",
+            headers=headers,
+            timeout=REQUEST_TIMEOUT)      
+        return handle_api_response(response, error_message='Failed to fetch document types')
+    except requests.Timeout:
+        return jsonify({'error': 'Request timed out'}), 504
+    except requests.ConnectionError:
+        return jsonify({'error': 'Failed to connect to server'}), 503
+    except Exception as e:
+        print(f"Error fetching category document types: {e}")
+        return jsonify({'error': 'An unexpected error occurred'}), 500
 
+@app.route('/api/document_types/categories/<category_id>/types/pagination')
+@login_required
+def category_document_types_pagination_api(category_id):
+    headers = get_auth_headers()
     try:
         params = {
             'page': request.args.get('page', 1),
@@ -992,6 +943,7 @@ def admins_api():
             'per_page': request.args.get('per_page', 10),
             'company_id': company_id,
             'role': 'admin',
+
         }
         # Remove None values
         params = {k: v for k, v in params.items() if v is not None}
@@ -1009,7 +961,7 @@ def admins_api():
         form_data = {
             "name": data.get('name'),
             "email": data.get('email'),
-            "cpf": data.get('cpf'),
+            "cpf" : data.get('cpf'),
             "password": data.get('password'),
             "role": data.get('role', 'admin'),
             "permissions": data.get('permissions', []),
@@ -1031,12 +983,13 @@ def admins_api():
             # Convertendo a string JSON para umdicionário Python
             response_dict = json.loads(response_str)
 
-            form_data_permission = {"permissions": data.get('permissions')}
-            response_permision = requests.post(
-                f"{API_BASE_URL}/permissions/admin/{response_dict['id']}/permissions",
-                headers=headers,
-                json=form_data_permission,
-                timeout=REQUEST_TIMEOUT)
+            form_data_permission = {
+                "permissions": data.get('permissions')
+            }
+            response_permision = requests.post(f"{API_BASE_URL}/permissions/admin/{response_dict['id']}/permissions",
+                                               headers=headers,
+                                               json=form_data_permission,
+                                               timeout=REQUEST_TIMEOUT) 
         return handle_api_response(response,
                                    success_code=201,
                                    error_message='Failed to create user')
@@ -1068,12 +1021,13 @@ def admins_id(admin_id):
                                 timeout=REQUEST_TIMEOUT)
 
         if response.status_code == 200:
-            form_data_permission = {"permissions": data.get('permissions')}
-            response_permision = requests.post(
-                f"{API_BASE_URL}/permissions/admin/{admin_id}/permissions",
-                headers=headers,
-                json=form_data_permission,
-                timeout=REQUEST_TIMEOUT)
+            form_data_permission = {
+                "permissions": data.get('permissions')
+            }
+            response_permision = requests.post(f"{API_BASE_URL}/permissions/admin/{admin_id}/permissions",
+                                               headers=headers,
+                                               json=form_data_permission,
+                                               timeout=REQUEST_TIMEOUT)
 
         return handle_api_response(response,
                                    error_message='Failed to update user')
@@ -1085,6 +1039,31 @@ def admins_id(admin_id):
         return handle_api_response(response,
                                    success_code=204,
                                    error_message='Failed to delete user')
+
+
+@app.route('/api/admin/<user_id>/status', methods=['POST'])
+@login_required
+def update_admin_status(user_id):
+    headers = get_auth_headers()
+    try:
+        data = request.get_json()
+        status = data.get('status')
+
+        if not status:
+            return jsonify({'error': 'Status is required'}), 400
+
+        response = requests.post(
+            f"{API_BASE_URL}/admins/{user_id}/status",
+            headers=headers,
+            json={'status': status},
+            timeout=REQUEST_TIMEOUT
+        )
+
+        return handle_api_response(response, error_message='Failed to update user status')
+    except Exception as e:
+        print(f"Error updating user status: {e}")
+        return jsonify({'error': 'An unexpected error occurred'}), 500
+
 
 
 @app.route('/api/users', methods=['GET', 'POST'])
@@ -1122,9 +1101,9 @@ def users_api():
         form_data = {
             "name": data.get('name'),
             "email": data.get('email'),
-            "cpf": data.get('cpf'),
+            "cpf" : data.get('cpf'),
             "password": data.get('password'),
-            "phone": data.get('phone'),
+            "phone" :  data.get('phone'),
             "role": data.get('role', 'admin'),
             "permissions": data.get('permissions', []),
             'company_id': company_id
@@ -1155,7 +1134,7 @@ def users_id(user_id):
             "name": data.get('name'),
             "email": data.get('email'),
             "role": data.get('role', 'admin'),
-            "phone": data.get('phone'),
+            "phone" :  data.get('phone'),
             "permissions": data.get('permissions', []),
             "status": "active",
             'company_id': company_id
@@ -1165,6 +1144,7 @@ def users_id(user_id):
                                 headers=headers,
                                 json=form_data,
                                 timeout=REQUEST_TIMEOUT)
+
 
         return handle_api_response(response,
                                    error_message='Failed to update user')
@@ -1189,36 +1169,14 @@ def update_user_status(user_id):
         if not status:
             return jsonify({'error': 'Status is required'}), 400
 
-        response = requests.post(f"{API_BASE_URL}/users/{user_id}/status",
-                                 headers=headers,
-                                 json={'status': status},
-                                 timeout=REQUEST_TIMEOUT)
+        response = requests.post(
+            f"{API_BASE_URL}/users/{user_id}/status",
+            headers=headers,
+            json={'status': status},
+            timeout=REQUEST_TIMEOUT
+        )
 
-        return handle_api_response(
-            response, error_message='Failed to update user status')
-    except Exception as e:
-        print(f"Error updating user status: {e}")
-        return jsonify({'error': 'An unexpected error occurred'}), 500
-
-
-@app.route('/api/admins/<admin_id>/status', methods=['POST'])
-@login_required
-def update_admin_status(admin_id):
-    headers = get_auth_headers()
-    try:
-        data = request.get_json()
-        status = data.get('status')
-
-        if not status:
-            return jsonify({'error': 'Status is required'}), 400
-
-        response = requests.post(f"{API_BASE_URL}/admin/{admin_id}/status",
-                                headers=headers,
-                                json={'status': status},
-                                timeout=REQUEST_TIMEOUT)
-        
-        return handle_api_response(
-            response, error_message='Failed to update user status')
+        return handle_api_response(response, error_message='Failed to update user status')
     except Exception as e:
         print(f"Error updating user status: {e}")
         return jsonify({'error': 'An unexpected error occurred'}), 500
@@ -1260,7 +1218,6 @@ def documents_api():
     except Exception as e:
         print(f"Error fetching documents: {e}")
         return jsonify({'error': 'An unexpected error occurred'}), 500
-
 
 @app.route('/api/documents/simple')
 @login_required
@@ -1376,20 +1333,17 @@ def toggle_documents_status():
         document_ids = data.get('document_ids', [])
         user_id = data.get('user_id')
 
-        response = requests.post(f"{DOCUMENTS_URL}/toggle-status",
-                                 headers=headers,
-                                 json={
-                                     'document_ids': document_ids,
-                                     'user_id': user_id
-                                 },
-                                 timeout=REQUEST_TIMEOUT)
+        response = requests.post(
+            f"{DOCUMENTS_URL}/toggle-status",
+            headers=headers,
+            json={'document_ids': document_ids,'user_id':user_id},
+            timeout=REQUEST_TIMEOUT
+        )
 
-        return handle_api_response(
-            response, error_message='Failed to update documents status')
+        return handle_api_response(response, error_message='Failed to update documents status')
     except Exception as e:
         print(f"Error updating documents status: {e}")
         return jsonify({'error': 'An unexpected error occurred'}), 500
-
 
 @app.route('/api/documents/<document_id>', methods=['DELETE'])
 @login_required
@@ -1486,22 +1440,22 @@ def reset_password():
 def permissions():
     return render_template('permissions.html')
 
-
 @app.route('/proxy/storage/<path:url>')
 def proxy_storage(url):
     try:
         storage_url = f"https://storage.googleapis.com/{url}"
         response = requests.get(storage_url, stream=True)
-
+        
         proxy_response = Response(
             response.iter_content(chunk_size=8192),
-            content_type=response.headers['Content-Type'])
-
+            content_type=response.headers['Content-Type']
+        )
+        
         # Add CORS headers
         proxy_response.headers['Access-Control-Allow-Origin'] = '*'
         proxy_response.headers['Access-Control-Allow-Methods'] = 'GET, OPTIONS'
         proxy_response.headers['Access-Control-Allow-Headers'] = 'Content-Type'
-
+        
         return proxy_response
     except Exception as e:
         return jsonify({'error': str(e)}), 500
