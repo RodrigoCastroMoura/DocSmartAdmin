@@ -1,0 +1,997 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="page-container">
+    <div class="header-actions">
+        <h2><i data-feather="file"></i> Document Types</h2>
+        <button class="action-btn primary" onclick="showAddDocumentTypeModal()">
+            <i data-feather="plus"></i> Add Document Type
+        </button>
+    </div>
+    <div class="content-grid" id="documentTypesContent">
+        <div class="document-types-grid">
+            <div class="no-data">
+                <i data-feather="inbox"></i>
+                <p>Loading document types...</p>
+            </div>
+        </div>
+        <div class="pagination-controls">
+            <button class="action-btn" onclick="changePage(currentPage - 1)" id="prevPage" disabled>
+                <i data-feather="chevron-left"></i> Previous
+            </button>
+            <span id="pageInfo">Page 1</span>
+            <button class="action-btn" onclick="changePage(currentPage + 1)" id="nextPage" disabled>
+                Next <i data-feather="chevron-right"></i>
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- Add Document Type Modal -->
+<div id="addDocumentTypeModal" class="modal">
+    <div class="modal-content">
+        <h3>Add Document Type</h3>
+        <form id="addDocumentTypeForm" onsubmit="createDocumentType(event)">
+            <div class="form-group">
+                <label for="documentTypeName">Name</label>
+                <input type="text" id="documentTypeName" name="name" required>
+            </div>
+
+            <div class="form-group">
+                <label for="documentTypeDescription">Description</label>
+                <input type="text" id="documentTypeDescription" name="description">
+            </div>
+            <div class="form-group">
+                <label for="documentTypeDepartment">Department</label>
+                <select id="documentTypeDepartment" onchange="loadDepartmentCategories(this.value)">
+                    <option value="">Select Department</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="documentTypeCategory">Category</label>
+                <select id="documentTypeCategory" name="category_id" required>
+                    <option value="">Select Category</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <div class="radio-group">
+                    <label class="radio-label">
+                        <input type="radio" name="public" value="true" checked>
+                        Public
+                    </label>
+                    <label class="radio-label">
+                        <input type="radio" name="public" value="false">
+                        Private
+                    </label>
+                </div>
+            </div>
+            <div class="modal-actions">
+                <button type="button" class="action-btn" onclick="hideModal('addDocumentTypeModal')">Cancel</button>
+                <button type="submit" class="action-btn primary">Add</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Edit Document Type Modal -->
+<div id="editDocumentTypeModal" class="modal">
+    <div class="modal-content">
+        <h3>Edit Document Type</h3>
+        <form id="editDocumentTypeForm" onsubmit="updateDocumentType(event)">
+            <input type="hidden" id="editDocumentTypeId">
+            <div class="form-group">
+                <label for="editDocumentTypeName">Name</label>
+                <input type="text" id="editDocumentTypeName" name="name" required>
+            </div>
+            <div class="form-group">
+                <label for="editDocumentTypeDescription">Description</label>
+                <input type="text" id="editDocumentTypeDescription" name="description">
+            </div>
+            <div class="form-group">
+                <label for="editDocumentTypeDepartment">Department</label>
+                <select id="editDocumentTypeDepartment" onchange="loadDepartmentCategories(this.value, 'editDocumentTypeCategory')">
+                    <option value="">Select Department</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="editDocumentTypeCategory">Category</label>
+                <select id="editDocumentTypeCategory" name="category_id" required>
+                    <option value="">Select Category</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <div class="radio-group">
+                    <label class="radio-label">
+                        <input type="radio" name="public" value="true" id="editPublicTrue">
+                        Public
+                    </label>
+                    <label class="radio-label">
+                        <input type="radio" name="public" value="false" id="editPublicFalse">
+                        Private
+                    </label>
+                </div>
+            </div>
+            <div class="modal-actions">
+                <button type="button" class="action-btn" onclick="hideModal('editDocumentTypeModal')">Cancel</button>
+                <button type="submit" class="action-btn primary">Update</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- User Access Modal -->
+<div id="userAccessModal" class="modal">
+    <div class="modal-content">
+        <h3 id="userAccessTitle">Manage User Access</h3>
+        <div id="addUserSection" style="display: none;">
+            <div class="form-group">
+                <label for="userCpf">User CPF</label>
+                <div class="search-input">
+                    <input type="text" id="userCpf" placeholder="Enter user CPF">
+                    <button type="button" class="action-btn primary" onclick="searchUser()">
+                        <i data-feather="search"></i>
+                    </button>
+                </div>
+            </div>
+            <div class="form-group">
+                <label for="userName">User Name</label>
+                <input type="text" id="userName" disabled>
+                <input type="hidden" id="userId">
+            </div>
+        </div>
+        <div id="removeUserSection" style="display: none;">
+            <div class="form-group">
+                <label for="searchUser">Search Users (Multiple CPFs separated by comma)</label>
+                <div class="search-input">
+                    <input type="text" id="searchUser" placeholder="Enter CPFs (e.g. 123.456.789-00, 987.654.321-00)">
+                    <button type="button" class="action-btn primary" onclick="filterUsers()">
+                        <i data-feather="search"></i>
+                    </button>
+                </div>
+            </div>
+            <div class="users-list" id="usersList">
+                Loading users...
+            </div>
+        </div>
+        <input type="hidden" id="documentTypeId">
+        <input type="hidden" id="accessAction">
+        <div class="modal-actions">
+            <button type="button" class="action-btn" onclick="hideModal('userAccessModal')">Cancel</button>
+            <button type="button" class="action-btn primary" onclick="updateUserAccess()">Confirm</button>
+        </div>
+    </div>
+</div>
+
+<script>
+function getAccessToken() {
+    return "{{ session.get('access_token', '') }}";
+}
+
+setupFormValidation('addDocumentTypeForm', {
+    'documentTypeName': [
+        ValidationRules.required,
+        ValidationRules.minLength(3),
+        ValidationRules.maxLength(50)
+    ],
+    'documentTypeCategory': [
+        ValidationRules.required
+    ]
+});
+
+setupFormValidation('editDocumentTypeForm', {
+    'editDocumentTypeName': [
+        ValidationRules.required,
+        ValidationRules.minLength(3),
+        ValidationRules.maxLength(50)
+    ],
+    'editDocumentTypeCategory': [
+        ValidationRules.required
+    ]
+});
+
+async function loadDepartments() {
+    const departmentSelects = [
+        document.getElementById('documentTypeDepartment'),
+        document.getElementById('editDocumentTypeDepartment')
+    ];
+
+    try {
+        const response = await fetch('/api/departments');
+        if (!response.ok) throw new Error('Failed to load departments');
+        const data = await response.json();
+
+        const departmentsOptions = `
+            <option value="">Select Department</option>
+            ${data.map(dept => 
+                `<option value="${dept.id}">${dept.name}</option>`
+            ).join('')}`;
+
+        departmentSelects.forEach(select => {
+            if (select) select.innerHTML = departmentsOptions;
+        });
+    } catch (error) {
+        console.error('Error loading departments:', error);
+        departmentSelects.forEach(select => {
+            if (select) select.innerHTML = '<option value="">Error loading departments</option>';
+        });
+    }
+}
+
+async function loadDepartmentCategories(departmentId, targetId = 'documentTypeCategory') {
+    const categorySelect = document.getElementById(targetId);
+    categorySelect.innerHTML = '<option value="">Loading categories...</option>';
+    categorySelect.disabled = true;
+
+    try {
+        const response = await fetch(`/api/categories/departments/${departmentId}/categories`);
+        if (!response.ok) throw new Error('Failed to load categories');
+        const data = await response.json();
+
+        categorySelect.innerHTML = `
+            <option value="">Select Category</option>
+            ${data.categories.map(cat => 
+                `<option value="${cat.id}">${cat.name}</option>`
+            ).join('')}`;
+    } catch (error) {
+        console.error('Error loading categories:', error);
+        categorySelect.innerHTML = '<option value="">Error loading categories</option>';
+    } finally {
+        categorySelect.disabled = false;
+    }
+}
+
+let currentPage = 1;
+const perPage = 9;
+let totalPages = 1;
+
+async function loadDocumentTypes(page = 1) {
+    const contentDiv = document.getElementById('documentTypesContent');
+    showLoading(contentDiv);
+
+    try {
+        const params = new URLSearchParams({
+            page: page,
+            per_page: perPage
+        });
+
+        const response = await fetch(`/api/document_types?${params}`);
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+
+        const data = await response.json();
+        if (!data || !data.document_types) {
+            throw new Error('Invalid response format');
+        }
+
+        currentPage = page;
+        totalPages = data.total_pages || 1;
+
+        const gridHTML = generateDocumentTypesHTML(data.document_types);
+        contentDiv.innerHTML = `${gridHTML}
+            <div class="pagination-controls">
+                <button class="action-btn" onclick="changePage(currentPage - 1)" id="prevPage" ${currentPage <= 1 ? 'disabled' : ''}>
+                    <i data-feather="chevron-left"></i> Previous
+                </button>
+                <span id="pageInfo">Page ${currentPage} of ${totalPages}</span>
+                <button class="action-btn" onclick="changePage(currentPage + 1)" id="nextPage" ${currentPage >= totalPages ? 'disabled' : ''}>
+                    Next <i data-feather="chevron-right"></i>
+                </button>
+            </div>`;
+
+        feather.replace();
+        updatePaginationControls();
+    } catch (error) {
+        console.error('Error loading document types:', error);
+        contentDiv.innerHTML = `
+            <div class="document-types-grid">
+                <div class="no-data">
+                    <i data-feather="alert-circle"></i>
+                    <p>${error.message || 'Failed to load document types'}</p>
+                </div>
+            </div>`;
+        feather.replace();
+    } finally {
+        hideLoading(contentDiv);
+    }
+}
+
+function updatePaginationControls() {
+    document.getElementById('prevPage').disabled = currentPage <= 1;
+    document.getElementById('nextPage').disabled = currentPage >= totalPages;
+    document.getElementById('pageInfo').textContent = `Page ${currentPage} of ${totalPages}`;
+}
+
+function changePage(newPage) {
+    if (newPage >= 1 && newPage <= totalPages) {
+        loadDocumentTypes(newPage);
+    }
+}
+
+function generateDocumentTypesHTML(types) {
+    if (!Array.isArray(types) || types.length === 0) {
+        return `
+            <div class="document-types-grid">
+                <div class="no-data">
+                    <i data-feather="inbox"></i>
+                    <p>No document types found</p>
+                </div>
+            </div>`;
+    }
+
+    const typesHTML = types.map(type => `
+        <div class="document-type-card" data-id="${type.id}">
+            <div class="document-type-header">
+                <i data-feather="file"></i>
+                <a href="/document_type/${type.id}/documents" class="document-type-link">
+                    <h3>${type.name}</h3>
+                </a>   
+            </div>
+            <div class="document-type-info">
+                 <div class="department-badge">
+                    <i data-feather="briefcase"></i>
+                    <span>${type.department_name || 'No Department'}</span>
+                </div>
+                 <div class="department-badge">
+                    <i data-feather="grid"></i>
+                    <span>${ type.category_name||'No category'}</span>
+                </div>
+                <p class="description">${type.description || 'No description'}</p>
+                <p class="meta">
+                    <span>Documents: ${type.document_count || 0}</span>
+                    <span>Created: ${new Date(type.created_at).toLocaleDateString()}</span>
+                </p>
+            </div>
+            <div class="document-type-actions">
+                ${!type.public ? `
+                    <button class="action-btn success" onclick='showUserAccessModal("${type.id}", "add")'>
+                        <i data-feather="user-plus"></i>
+                    </button>
+                    <button class="action-btn warning" onclick='showUserAccessModal("${type.id}", "remove")'>
+                        <i data-feather="user-minus"></i>
+                    </button>
+                ` : ''}
+                <button class="action-btn" onclick='showEditDocumentTypeModal("${type.id}", ${JSON.stringify(type)})'>
+                    <i data-feather="edit-2"></i>
+                </button>
+                <button class="action-btn danger" onclick="deleteDocumentType('${type.id}')">
+                    <i data-feather="trash-2"></i>
+                </button>
+            </div>
+        </div>
+    `).join('');
+
+    return `<div class="document-types-grid">${typesHTML}</div>`;
+}
+
+async function createDocumentType(event) {
+    event.preventDefault();
+    const form = event.target;
+    const submitButton = form.querySelector('button[type="submit"]');
+
+    if (!validateForm(form)) {
+        return;
+    }
+
+    const formData = new FormData(form);
+    const data = Object.fromEntries(formData);
+    showLoading(submitButton);
+
+    try {
+        const response = await fetch('/api/document_types', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(data)
+        });
+
+        if (!response.ok) {
+            const errorData = await response.json();
+            throw new Error(errorData.error || 'Failed to create document type');
+        }
+
+        hideModal('addDocumentTypeModal');
+        form.reset();
+        await loadDocumentTypes(currentPage);
+        showNotification('Document type created successfully', 'success');
+    } catch (error) {
+        console.error('Error creating document type:', error);
+        showErrorMessage(error.message);
+    } finally {
+        hideLoading(submitButton);
+    }
+}
+
+async function updateDocumentType(event) {
+    event.preventDefault();
+    const form = event.target;
+    const submitButton = form.querySelector('button[type="submit"]');
+
+    if (!validateForm(form)) {
+        return;
+    }
+
+    const id = document.getElementById('editDocumentTypeId').value;
+    const formData = new FormData(form);
+    const data = Object.fromEntries(formData);
+    showLoading(submitButton);
+
+    try {
+        const response = await fetch(`/api/document_types/${id}`, {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(data)
+        });
+
+        if (!response.ok) {
+            const errorData = await response.json();
+            throw new Error(errorData.error || 'Failed to update document type');
+        }
+
+        hideModal('editDocumentTypeModal');
+        await loadDocumentTypes(currentPage);
+        showNotification('Document type updated successfully', 'success');
+    } catch (error) {
+        console.error('Error updating document type:', error);
+        showErrorMessage(error.message);
+    } finally {
+        hideLoading(submitButton);
+    }
+}
+
+let itemToDelete = null;
+
+async function confirmDelete() { 
+
+    if (!itemToDelete) return;
+
+    const id = itemToDelete;
+    hideModal('deleteConfirmModal');
+    const card = document.querySelector(`.document-type-card[data-id="${id}"]`);
+    showLoading(card);
+
+    try {
+        const response = await fetch(`/api/document_types/${id}`, {
+            method: 'DELETE'
+        });
+
+        if (!response.ok) {
+            const errorData = await response.json();
+            throw new Error(errorData.error || 'Failed to delete document type');
+        }
+
+        await loadDocumentTypes(currentPage);
+        showNotification('Document type deleted successfully', 'success');
+    } catch (error) {
+        console.error('Error deleting document type:', error);
+        showErrorMessage(error.message);
+    } finally {
+        hideLoading(card);
+    }
+}
+function deleteDocumentType(id) {
+    showDeleteConfirmation(id);
+}
+
+function showDeleteConfirmation(id) {
+    itemToDelete = id;
+    showModal('deleteConfirmModal');
+    feather.replace();
+}
+
+function showModal(modalId) {
+    document.getElementById(modalId).style.display = 'block';
+}
+
+function hideModal(modalId) {
+    document.getElementById(modalId).style.display = 'none';
+}
+
+function showAddDocumentTypeModal() {
+    document.getElementById('addDocumentTypeForm').reset();
+    loadDepartments();
+    showModal('addDocumentTypeModal');
+}
+
+async function showEditDocumentTypeModal(id, type) {
+    try {
+        document.getElementById('editDocumentTypeId').value = id;
+        document.getElementById('editDocumentTypeName').value = type.name;
+        document.getElementById('editDocumentTypeDescription').value = type.description || '';
+        document.getElementById('editPublicTrue').checked = type.public === true;
+        document.getElementById('editPublicFalse').checked = type.public === false;
+
+        // First load departments
+        await loadDepartments();
+
+        // Set department value
+        const deptSelect = document.getElementById('editDocumentTypeDepartment');
+        if (type.department_id) {
+            deptSelect.value = type.department_id;
+
+            // Then load categories for the selected department
+            await loadDepartmentCategories(type.department_id, 'editDocumentTypeCategory');
+
+            // Finally set category value after a brief delay to ensure categories are loaded
+            const catSelect = document.getElementById('editDocumentTypeCategory');
+            await new Promise(resolve => setTimeout(resolve, 500));
+            catSelect.value = type.category_id || '';
+        }
+
+        showModal('editDocumentTypeModal');
+    } catch (error) {
+        console.error('Error setting up edit modal:', error);
+        showNotification('Error loading edit form', 'error');
+    }
+}
+
+async function showUserAccessModal(documentTypeId, action) {
+    document.getElementById('userAccessTitle').textContent = action === 'add' ? 'Add User Access' : 'Remove User Access';
+    document.getElementById('documentTypeId').value = documentTypeId;
+    document.getElementById('accessAction').value = action;
+
+    const addSection = document.getElementById('addUserSection');
+    const removeSection = document.getElementById('removeUserSection');
+
+    if (action === 'add') {
+        addSection.style.display = 'block';
+        removeSection.style.display = 'none';
+        document.getElementById('userCpf').value = '';
+        document.getElementById('userName').value = '';
+        document.getElementById('userId').value = '';
+    } else {
+        addSection.style.display = 'none';
+        removeSection.style.display = 'block';
+        await loadDocumentTypeUsers(documentTypeId);
+    }
+
+    showModal('userAccessModal');
+    feather.replace();
+}
+
+let allUsers = [];
+
+async function filterUsers() {
+    const searchInput = document.getElementById('searchUser').value;
+    const documentTypeId = document.getElementById('documentTypeId').value;
+
+    if (!searchInput.trim()) {
+        await loadDocumentTypeUsers(documentTypeId);
+        return;
+    }
+
+    try {
+        const headers = {
+            'Authorization': `Bearer ${getAccessToken()}`,
+            'Content-Type': 'application/json'
+        };
+
+        // Clean and format CPF input
+        const cpfs = searchInput.split(',').map(cpf => cpf.replace(/[^\d]/g, '').trim()).filter(cpf => cpf);
+
+        const promises = cpfs.map(cpf => 
+            fetch(`/api/users?cpf=${encodeURIComponent(cpf)}`, { headers: headers })
+                .then(res => res.json())
+        );
+
+        const responses = await Promise.all(promises);
+        const allUsers = responses.flatMap(data => data.users || []);
+        const users = { allowed_users: allUsers };
+        displayUsers(users);
+    } catch (error) {
+        console.error('Error filtering users:', error);
+        showNotification('Failed to filter users', 'error');
+    }
+}
+
+function formatCPF(cpf) {
+    return cpf.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, '$1.$2.$3-$4');
+}
+
+function toggleSelectAll() {
+    const selectAllCheckbox = document.getElementById('selectAll');
+    const checkboxes = document.querySelectorAll('.user-checkbox');
+    checkboxes.forEach(checkbox => checkbox.checked = selectAllCheckbox.checked);
+}
+
+
+function displayUsers(users) {
+    const usersList = document.getElementById('usersList');
+    if (!users || !users.allowed_users || users.allowed_users.length === 0) {
+        usersList.innerHTML = `
+            <div class="no-data">
+                <i data-feather="users"></i>
+                <p>No users found</p>
+            </div>`;
+        feather.replace();
+        return;
+    }
+
+    usersList.innerHTML = `
+        <div class="users-table">
+            <table>
+                <thead>
+                    <tr>
+                        <th><input type="checkbox" id="selectAll" onchange="toggleSelectAll()"></th>
+                        <th>Name</th>
+                        <th>CPF</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    ${users.allowed_users.map(user => `
+                        <tr>
+                            <td>
+                                <input type="checkbox" value="${user.id}" class="user-checkbox">
+                            </td>
+                            <td>${user.name}</td>
+                            <td>${formatCPF(user.cpf)}</td>
+                        </tr>
+                    `).join('')}
+                </tbody>
+            </table>
+        </div>
+    `;
+    feather.replace();
+}
+
+async function loadDocumentTypeUsers(documentTypeId) {
+    const usersList = document.getElementById('usersList');
+    usersList.innerHTML = 'Loading users...';
+
+    try {
+        const response = await fetch(`/api/document_types/${documentTypeId}/users`);
+        const allUsers = await response.json(); 
+        displayUsers(allUsers);
+    } catch (error) {
+        console.error('Error loading users:', error);
+        usersList.innerHTML = '<p class="error">Failed to load users</p>';
+    }
+}
+
+async function searchUser() {
+    const cpf = document.getElementById('userCpf').value;
+    if (!cpf) {
+        showNotification('Please enter a CPF', 'error');
+        return;
+    }
+
+    try {
+        const response = await fetch(`/api/users?cpf=${cpf}`);
+        const data = await response.json();
+
+        if (!data.users || data.users.length === 0) {
+            showNotification('User not found', 'error');
+            document.getElementById('userName').value = '';
+            document.getElementById('userId').value = '';
+            return;
+        }
+
+        const user = data.users[0];
+        document.getElementById('userName').value = user.name;
+        document.getElementById('userId').value = user.id;
+    } catch (error) {
+        console.error('Error searching user:', error);
+        showNotification('Failed to search user', 'error');
+    }
+}
+
+async function updateUserAccess() {
+    const documentTypeId = document.getElementById('documentTypeId').value;
+    const action = document.getElementById('accessAction').value;
+
+    try {
+        if (action === 'add') {
+            const userId = document.getElementById('userId').value;
+            if (!userId) {
+                showNotification('Please select a valid user', 'error');
+                return;
+            }
+
+            const response = await fetch(`/api/document_types/${documentTypeId}/users/${userId}/add`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json'
+                }
+            });
+
+            if (!response.ok) {
+                const errorData = await response.json();
+                throw new Error(errorData.error || 'Failed to add user access');
+            }
+        } else if (action === 'remove') {
+            const selectedUsers = Array.from(document.querySelectorAll('.user-checkbox:checked'))
+                .map(checkbox => checkbox.value);
+
+            if (selectedUsers.length === 0) {
+                showNotification('Please select users to remove', 'error');
+                return;
+            }
+
+            const promises = selectedUsers.map(userId =>
+                fetch(`/api/document_types/${documentTypeId}/users/${userId}/remove`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                })
+            );
+
+            const results = await Promise.all(promises);
+            const failedResults = results.filter(r => !r.ok);
+
+            if (failedResults.length > 0) {
+                throw new Error('Failed to remove some users');
+            }
+        }
+
+        hideModal('userAccessModal');
+        showNotification(`User access ${action === 'add' ? 'granted' : 'removed'} successfully`, 'success');
+    } catch (error) {
+        console.error('Error updating user access:', error);
+        showNotification(error.message, 'error');
+    }
+}
+
+// Initialize document types list when page loads
+document.addEventListener('DOMContentLoaded', () => {
+    loadDocumentTypes(1);
+});
+</script>
+
+<style>
+.document-types-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 1rem;
+}
+
+.document-type-card {
+    background-color: var(--bg-tertiary);
+    border-radius: 8px;
+    padding: 1.5rem;
+    transition: transform 0.2s;
+}
+
+.document-type-card:hover {
+    transform: translateY(-2px);
+}
+
+.document-type-header {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    margin-bottom: 1rem;
+}
+
+.document-type-header i {
+    padding: 0.75rem;
+    background-color: var(--accent-color);
+    border-radius: 6px;
+}
+
+.document-type-info {
+    margin: 1rem 0;
+    color: var(--text-secondary);
+}
+
+.document-type-info .description {
+    margin-bottom: 0.5rem;
+    font-style: italic;
+}
+
+.document-type-info .meta {
+    display: flex;
+    gap: 1rem;
+    font-size: 0.875rem;
+}
+
+.document-type-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 0.5rem;
+    margin-top: 1rem;
+}
+
+.page-container {
+    padding: 2rem;
+}
+
+.header-actions {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 2rem;
+}
+
+.header-actions h2 {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.content-grid {
+    background-color: var(--bg-secondary);
+    border-radius: 8px;
+    padding: 1.5rem;
+}
+
+.no-data {
+    text-align: center;
+    padding: 2rem;
+    color: var(--text-secondary);
+}
+
+.no-data i {
+    font-size: 2rem;
+    margin-bottom: 0.5rem;
+    opacity: 0.5;
+}
+
+.radio-group {
+    display: flex;
+    gap: 1rem;
+    margin-top: 0.5rem;
+}
+
+.radio-label {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    cursor: pointer;
+}
+
+.radio-label input[type="radio"] {
+    cursor: pointer;
+}
+
+.search-input {
+    display: flex;
+    gap: 0.5rem;
+}
+
+.search-input input {
+    flex: 1;
+    padding: 0.5rem;
+    border: 1px solid var(--border-color);
+    border-radius: 4px;
+    background: var(--bg-tertiary);
+    color: var(--text-primary);
+}
+
+.action-btn.success {
+    background-color: var(--success-color);
+    color: white;
+}
+
+.action-btn.warning {
+    background-color: var(--warning-color);
+    color: white;
+}
+.document-type-link {
+    text-decoration: none;
+    color: var(--text-primary);
+}
+
+.document-type-link:hover h3 {
+    color: var(--accent-color);
+}
+
+.modal {
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+    overflow-y: auto;
+    padding: 20px;
+}
+
+.modal-content {
+    position: relative;
+    background-color: var(--bg-secondary);
+    margin: 20px auto;
+    padding: 2rem;
+    border-radius: 12px;
+    width: 100%;
+    max-width: 650px !important;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
+    animation: slideIn 0.3s ease;
+}
+
+.users-list {
+    max-height: 260px;
+    overflow-y: auto;
+    margin: 1rem 0;
+    position: relative;
+}
+
+.users-table {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0;
+}
+
+.users-table table {
+    width: 100%;
+}
+
+.users-table thead {
+    position: sticky;
+    top: 0;
+    background: var(--bg-tertiary);
+    z-index: 1;
+}
+
+.users-table th {
+    border-bottom: 2px solid var(--border-color);
+}
+
+
+.users-table th,
+.users-table td {
+    padding: 0.75rem;
+    text-align: left;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.users-table th {
+    background-color: var(--bg-tertiary);
+    font-weight: 500;
+}
+
+.user-checkbox {
+    width: 18px;
+    height: 18px;
+    cursor: pointer;
+}
+
+.no-data {
+    text-align: center;
+    padding: 1rem;
+    color: var(--text-secondary);
+}
+
+.error {
+    color: var(--danger-color);
+}
+
+.department-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.25rem 0.75rem;
+    background-color: var(--bg-secondary);
+    border-radius: 4px;
+    font-size: 0.875rem;
+    color: var(--text-secondary);
+    margin-bottom: 0.5rem;
+}
+
+.pagination-controls {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 1rem;
+    margin: 2rem auto;
+    width: 100%;
+    padding: 1rem 0;
+}
+
+.pagination-controls button {
+    min-width: 100px;
+}
+
+.pagination-controls span {
+    min-width: 120px;
+    text-align: center;
+}
+</style>
+{% endblock %}

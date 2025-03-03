@@ -1,0 +1,988 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="page-container">
+    <div class="header-actions">
+        <h2><i data-feather="shield"></i> Administrators</h2>
+        <button class="action-btn primary" onclick="showAddAdminModal()">
+            <i data-feather="plus"></i> Add Administrator
+        </button>
+    </div>
+    <div class="content-grid">
+        <div id="adminsContent">
+            <div class="table-container">
+                <table class="users-table">
+                    <thead>
+                        <tr>
+                            <th>Name</th>
+                            <th>Email</th>
+                            <th>Status</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="adminsTableBody">
+                        <!-- Table content will be loaded dynamically -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Add Admin Modal -->
+<div id="addAdminModal" class="modal">
+    <div class="modal-overlay"></div>
+    <div class="modal-container">
+        <div class="modal-header">
+            <h3><i data-feather="user-plus"></i> Add New Administrator</h3>
+            <button class="modal-close" onclick="hideModal('addAdminModal')">
+                <i data-feather="x"></i>
+            </button>
+        </div>
+        <div class="modal-body">
+            <form id="addAdminForm" onsubmit="createAdmin(event)">
+                <div class="form-section">
+                    <div class="section-title">
+                        <i data-feather="user"></i>
+                        <h4>Basic Information</h4>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="adminName">Name</label>
+                            <div class="input-wrapper">
+                                <i data-feather="user"></i>
+                                <input type="text" id="adminName" name="name" placeholder="Enter admin name" required>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label for="adminEmail">Email</label>
+                            <div class="input-wrapper">
+                                <i data-feather="mail"></i>
+                                <input type="email" id="adminEmail" name="email" placeholder="Enter admin email" required>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label for="adminCPF">CPF</label>
+                            <div class="input-wrapper">
+                                <i data-feather="hash"></i>
+                                <input type="text" id="adminCPF" name="cpf" placeholder="Enter CPF" required>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label for="adminPassword">Password</label>
+                            <div class="input-wrapper">
+                                <i data-feather="lock"></i>
+                                <input type="password" id="adminPassword" name="password" placeholder="Enter password" required>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-section">
+                    <div class="section-title">
+                        <i data-feather="shield"></i>
+                        <h4>Access Permissions</h4>
+                    </div>
+                    <div class="permissions-container">
+                        <div id="addPermissionsGrid" class="permissions-grid">
+                            <!-- Permissions will be loaded dynamically -->
+                        </div>
+                    </div>
+                </div>
+
+                <div class="modal-footer">
+                    <button type="button" class="btn secondary" onclick="hideModal('addAdminModal')">
+                        <i data-feather="x"></i>
+                        Cancel
+                    </button>
+                    <button type="submit" class="btn primary">
+                        <i data-feather="save"></i>
+                        Create Administrator
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Edit Admin Modal -->
+<div id="editAdminModal" class="modal">
+    <div class="modal-overlay"></div>
+    <div class="modal-container">
+        <div class="modal-header">
+            <h3><i data-feather="edit"></i> Edit Administrator</h3>
+            <button class="modal-close" onclick="hideModal('editAdminModal')">
+                <i data-feather="x"></i>
+            </button>
+        </div>
+        <div class="modal-body">
+            <form id="editAdminForm" onsubmit="updateAdmin(event)">
+                <input type="hidden" id="editAdminId">
+                <div class="form-section">
+                    <div class="section-title">
+                        <i data-feather="user"></i>
+                        <h4>Basic Information</h4>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="editAdminName">Name</label>
+                            <div class="input-wrapper">
+                                <i data-feather="user"></i>
+                                <input type="text" id="editAdminName" name="name" placeholder="Enter admin name" required>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label for="editAdminEmail">Email</label>
+                            <div class="input-wrapper">
+                                <i data-feather="mail"></i>
+                                <input type="email" id="editAdminEmail" name="email" placeholder="Enter admin email" required>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label for="editAdminCPF">CPF</label>
+                            <div class="input-wrapper">
+                                <i data-feather="hash"></i>
+                                <input type="text" id="editAdminCPF" name="cpf" placeholder="Enter CPF" required>
+                            </div>
+                        </div>
+                    </div>
+                    
+                </div>
+
+                <div class="form-section">
+                    <div class="section-title">
+                        <i data-feather="shield"></i>
+                        <h4>Access Permissions</h4>
+                    </div>
+                    <div class="permissions-container">
+                        <div id="editPermissionsGrid" class="permissions-grid">
+                            <!-- Permissions will be loaded dynamically -->
+                        </div>
+                    </div>
+                </div>
+
+                <div class="modal-footer">
+                    <button type="button" class="btn secondary" onclick="hideModal('editAdminModal')">
+                        <i data-feather="x"></i>
+                        Cancel
+                    </button>
+                    <button type="submit" class="btn primary">
+                        <i data-feather="save"></i>
+                        Update Administrator
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<style>
+.toggle-switch {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.toggle-switch input[type="checkbox"] {
+    height: 0;
+    width: 0;
+    visibility: hidden;
+}
+
+.toggle-switch label {
+    cursor: pointer;
+    width: 48px;
+    height: 24px;
+    background: var(--danger-color);
+    display: block;
+    border-radius: 24px;
+    position: relative;
+}
+
+.toggle-switch label:after {
+    content: '';
+    position: absolute;
+    top: 2px;
+    left: 2px;
+    width: 20px;
+    height: 20px;
+    background: #fff;
+    border-radius: 20px;
+    transition: 0.3s;
+}
+
+.toggle-switch input:checked + label {
+    background: var(--success-color);
+}
+
+.toggle-switch input:checked + label:after {
+    left: calc(100% - 2px);
+    transform: translateX(-100%);
+}
+
+.toggle-label {
+    font-size: 0.875rem;
+    color: var(--text-primary);
+}
+
+.status-toggle-label {
+    display: block;
+    margin-bottom: 0.5rem;
+    color: var(--text-secondary);
+    font-size: 0.875rem;
+}
+
+.table-container {
+    overflow-x: auto;
+}
+
+.users-table {
+    width: 100%;
+    border-collapse: collapse;
+    min-width: 800px;
+}
+
+.users-table th,
+.users-table td {
+    padding: 1rem;
+    text-align: left;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.users-table th {
+    font-weight: 500;
+    color: var(--text-secondary);
+    background-color: var(--bg-tertiary);
+    position: sticky;
+    top: 0;
+    z-index: 1;
+}
+
+.user-cell {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.user-avatar {
+    width: 32px;
+    height: 32px;
+    background-color: var(--accent-color);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.875rem;
+    color: white;
+}
+
+.status-badge {
+    padding: 0.25rem 0.75rem;
+    border-radius: 4px;
+    font-size: 0.875rem;
+    font-weight: 500;
+    display: inline-block;
+}
+
+.status-badge.active {
+    background-color: var(--success-color);
+    color: white;
+}
+
+.status-badge.inactive {
+    background-color: var(--danger-color);
+    color: white;
+}
+
+.table-actions {
+    display: flex;
+    gap: 0.5rem;
+}
+
+.no-data {
+    text-align: center;
+    padding: 2rem;
+    color: var(--text-secondary);
+}
+
+.no-data i {
+    font-size: 2rem;
+    margin-bottom: 0.5rem;
+    opacity: 0.5;
+}
+
+/* Modal Base Styles */
+.modal {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 1000;
+}
+
+.modal.active {
+    display: block;
+}
+
+.modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.5);
+    backdrop-filter: blur(4px);
+}
+
+.modal-container {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: var(--bg-primary);
+    z-index: 1001;
+    display: flex;
+    flex-direction: column;
+}
+
+.modal-header {
+    background: var(--bg-secondary);
+    padding: 1.5rem;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.modal-header h3 {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    margin: 0;
+    font-size: 1.25rem;
+    color: var(--text-primary);
+}
+
+.modal-header h3 i {
+    color: var(--accent-color);
+}
+
+.modal-close {
+    position: absolute;
+    top: 1.25rem;
+    right: 1.25rem;
+    background: none;
+    border: none;
+    padding: 0.5rem;
+    cursor: pointer;
+    color: var(--text-secondary);
+    transition: all 0.2s;
+}
+
+.modal-close:hover {
+    background: var(--bg-hover);
+    color: var(--text-primary);
+}
+
+.modal-body {
+    flex: 1;
+    padding: 2rem;
+    overflow-y: auto;
+}
+
+/* Form Styles */
+.form-section {
+    margin-bottom: 2rem;
+    max-width: 1400px;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+.section-title {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    margin-bottom: 1.5rem;
+}
+
+.section-title i {
+    color: var(--accent-color);
+}
+
+.section-title h4 {
+    margin: 0;
+    font-size: 1.1rem;
+    color: var(--text-primary);
+}
+
+.form-row {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1.5rem;
+}
+
+.form-group {
+    margin-bottom: 1.5rem;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 0.5rem;
+    color: var(--text-secondary);
+    font-size: 0.875rem;
+}
+
+.input-wrapper {
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+
+.input-wrapper i {
+    position: absolute;
+    left: 1rem;
+    color: var(--text-secondary);
+    width: 16px;
+    height: 16px;
+}
+
+.input-wrapper input {
+    width: 100%;
+    padding: 0.75rem 1rem 0.75rem 2.75rem;
+    border: 1px solid var(--border-color);
+    background: var(--bg-secondary);
+    color: var(--text-primary);
+    transition: all 0.2s;
+}
+
+.input-wrapper input:focus {
+    border-color: var(--accent-color);
+    box-shadow: 0 0 0 3px rgba(var(--accent-rgb), 0.1);
+    outline: none;
+}
+
+.input-wrapper input::placeholder {
+    color: var(--text-tertiary);
+}
+
+/* Permissions Styles */
+.permissions-container {
+    background: var(--bg-secondary);
+    padding: 1.5rem;
+    margin-bottom: 2rem;
+}
+
+.permissions-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 1.5rem;
+}
+
+.permission-group {
+    background: var(--bg-primary);
+    padding: 1.5rem;
+    border: 1px solid var(--border-color);
+    transition: transform 0.2s;
+}
+
+.permission-group:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+}
+
+.permission-group-title {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    margin-bottom: 1rem;
+    color: var(--text-primary);
+    font-weight: 500;
+}
+
+.permission-group-title i {
+    color: var(--accent-color);
+}
+
+.permission-items {
+    display: grid;
+    gap: 0.75rem;
+}
+
+.page-container {
+    padding: 2rem;
+}
+
+.header-actions {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 2rem;
+}
+
+.header-actions h2 {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.checkbox-container {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.5rem;
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+
+.checkbox-container:hover {
+    background: var(--bg-hover);
+}
+
+.checkbox-container input[type="checkbox"] {
+    width: 18px;
+    height: 18px;
+    margin: 0;
+    border: 2px solid var(--border-color);
+    transition: all 0.2s;
+}
+
+.checkbox-container input[type="checkbox"]:checked {
+    background-color: var(--accent-color);
+    border-color: var(--accent-color);
+}
+
+.checkbox-container span {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.875rem;
+    color: var(--text-primary);
+}
+
+/* Modal Footer */
+.modal-footer {
+    padding: 1.5rem;
+    background: var(--bg-secondary);
+    border-top: 1px solid var(--border-color);
+    display: flex;
+    justify-content: flex-end;
+    gap: 1rem;
+}
+
+.btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.75rem 1.5rem;
+    border: none;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.btn i {
+    width: 16px;
+    height: 16px;
+}
+
+.btn.primary {
+    background: var(--accent-color);
+    color: white;
+}
+
+.btn.primary:hover {
+    background: var(--accent-hover);
+}
+
+.btn.secondary {
+    background: var(--bg-hover);
+    color: var(--text-primary);
+}
+
+.btn.secondary:hover {
+    background: var(--bg-active);
+}
+
+/* Responsive Adjustments */
+@media (max-width: 1400px) {
+    .permissions-grid {
+        grid-template-columns: repeat(3, 1fr);
+    }
+}
+
+@media (max-width: 1024px) {
+    .permissions-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+@media (max-width: 768px) {
+    .modal-body {
+        padding: 1rem;
+    }
+
+    .permissions-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .form-row {
+        grid-template-columns: 1fr;
+    }
+}
+</style>
+
+<script>
+// Permission configuration remains the same
+const PERMISSION_GROUPS = {
+    document: { icon: 'file-text', title: 'Documents' },
+    category: { icon: 'grid', title: 'Categories' },
+    department: { icon: 'briefcase', title: 'Departments' },
+    user: { icon: 'users', title: 'Users' },
+    company: { icon: 'home', title: 'Company' },
+    documentType: { icon: 'file', title: 'Document Type' },
+    admin: { icon: 'shield', title: 'Administrator' }
+};
+
+const PERMISSION_ACTIONS = {
+    read: { icon: 'eye', title: 'View' },
+    write: { icon: 'plus-circle', title: 'Create' },
+    update: { icon: 'edit-2', title: 'Edit' },
+    delete: { icon: 'trash-2', title: 'Delete' }
+};
+
+async function loadPermissions() {
+    try {
+        const response = await fetch('/api/permissions');
+        if (!response.ok) throw new Error('Failed to fetch permissions');
+
+        const permissions = await response.json();
+        // Ensure permissions is an array and handle both string and object formats
+        return Array.isArray(permissions) ? permissions : [];
+    } catch (error) {
+        console.error('Error loading permissions:', error);
+        return [];
+    }
+}
+
+function generatePermissionsHTML(permissions, containerId, selectedPermissions = []) {
+    const container = document.getElementById(containerId);
+    if (!container) return;
+
+    // Group permissions by resource
+    const groupedPermissions = permissions.reduce((acc, permission) => {
+        // Handle both string and object permission formats
+        let resource, action;
+        if (typeof permission === 'string') {
+            [resource, action] = permission.split('_');
+        } else if (typeof permission === 'object' && permission.name) {
+            [resource, action] = permission.name.split('_');
+        } else {
+            return acc; // Skip invalid permissions
+        }
+
+        if (!acc[resource]) acc[resource] = [];
+        acc[resource].push(typeof permission === 'string' ? permission : permission.name);
+        return acc;
+    }, {});
+
+    container.innerHTML = Object.entries(groupedPermissions)
+        .map(([resource, perms]) => `
+            <div class="permission-group">
+                <div class="permission-group-title">
+                    <i data-feather="${PERMISSION_GROUPS[resource]?.icon || 'check'}"></i>
+                    <span>${PERMISSION_GROUPS[resource]?.title || resource}</span>
+                </div>
+                <div class="permission-items">
+                    ${perms.map(perm => {
+                        const permObj = typeof perm === 'object' ? perm : permissions.find(p => p.name === perm);
+                        const action = (permObj?.name || perm).split('_')[1];
+                        return `
+                            <label class="checkbox-container">
+                                <input type="checkbox" 
+                                       name="permissions" 
+                                       value="${permObj?.id || perm}"
+                                       ${selectedPermissions.includes(permObj?.id || perm) ? 'checked' : ''}>
+                                <span>
+                                    <i data-feather="${PERMISSION_ACTIONS[action]?.icon || 'check'}" class="w-4 h-4"></i>
+                                    ${PERMISSION_ACTIONS[action]?.title || action}
+                                </span>
+                            </label>
+                        `;
+                    }).join('')}
+                </div>
+            </div>
+        `).join('');
+
+    feather.replace();
+}
+
+async function loadAdmins() {
+    const contentDiv = document.getElementById('adminsContent');
+    const tableBody = document.getElementById('adminsTableBody');
+    showLoading(contentDiv);
+
+    try {
+        const response = await fetch('/api/admin?role=admin');
+        if (!response.ok) throw new Error('Failed to fetch administrators');
+
+        const data = await response.json();
+        if (!data || !data.admins) throw new Error('Invalid response format');
+
+        tableBody.innerHTML = generateAdminsHTML(data.admins);
+        feather.replace();
+    } catch (error) {
+        console.error('Error loading admins:', error);
+        tableBody.innerHTML = `
+            <tr>
+                <td colspan="5" class="no-data error">
+                    <i data-feather="alert-circle"></i>
+                    <p>${error.message || 'Failed to load administrators'}</p>
+                </td>
+            </tr>`;
+        feather.replace();
+    } finally {
+        hideLoading(contentDiv);
+    }
+}
+
+function generateAdminsHTML(admins) {
+    if (!admins || admins.length === 0) {
+        return `
+            <tr>
+                <td colspan="5" class="no-data">
+                    <i data-feather="inbox"></i>
+                    <p>No administrators found</p>
+                </td>
+            </tr>`;
+    }
+
+    return admins.map(admin => `
+        <tr data-id="${admin.id}">
+            <td>
+                <div class="user-cell">
+                    <div class="user-avatar">${admin.name.slice(0, 2).toUpperCase()}</div>
+                    <span>${admin.name}</span>
+                </div>
+            </td>
+            <td>${admin.email}</td>
+            <td>
+                <span class="status-badge ${admin.status === 'active' ? 'active' : 'inactive'}">
+                    <i data-feather="${admin.status === 'active' ? 'check-circle' : 'x-circle'}"></i>
+                    ${admin.status}
+                </span>
+            </td>
+            <td>
+                <div class="table-actions">
+                    
+                        <button class="action-btn ${admin.status === 'active' ? 'success' : 'danger'}" 
+                                onclick="toggleAdminStatus('${admin.id}', '${admin.status === 'active' ? 'inactive' : 'active'}')" 
+                                title="${admin.status === 'active' ? 'Deactivate' : 'Activate'}">
+                            <i data-feather="${admin.status === 'active' ? 'user-check' : 'user-x'}"></i>
+                        </button>
+                        <button class="action-btn" onclick='showEditAdminModal(${JSON.stringify(admin)})' title="Edit">
+                            <i data-feather="edit-2"></i>
+                        </button>
+                        <button class="action-btn danger" onclick="deleteAdmin('${admin.id}')" title="Delete">
+                            <i data-feather="trash-2"></i>
+                        </button>
+                 
+                </div>
+            </td>
+        </tr>
+    `).join('');
+}
+
+async function createAdmin(event) {
+    event.preventDefault();
+    const form = event.target;
+    const submitButton = form.querySelector('button[type="submit"]');
+    showLoading(submitButton);
+
+    const formData = new FormData(form);
+    const permissions = Array.from(form.querySelectorAll('input[name="permissions"]:checked'))
+        .map(input => input.value);
+
+    const data = {
+        name: formData.get('name'),
+        email: formData.get('email'),
+        password: formData.get('password'),
+        cpf: formData.get('cpf'), // Added CPF field
+        role: 'admin',
+        permissions: permissions
+    };
+
+    try {
+        const response = await fetch('/api/admin', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(data)
+        });
+
+        if (!response.ok) {
+            const errorData = await response.json();
+            throw new Error(errorData.error || 'Failed to create administrator');
+        }
+
+        hideModal('addAdminModal');
+        form.reset();
+        showNotification('Administrator created successfully', 'success');
+        loadAdmins();
+    } catch (error) {
+        console.error('Error creating administrator:', error);
+        showNotification(error.message, 'error');
+    } finally {
+        hideLoading(submitButton);
+    }
+}
+
+async function toggleAdminStatus(adminId, newStatus) {
+    try {
+
+        const response = await fetch(`/api/admin/${adminId}/status`, {
+            method: 'POST',
+            headers: { 
+                'Content-Type': 'application/json',
+                'Accept': 'application/json'
+            },
+            body: JSON.stringify({ status: newStatus })
+        });
+
+        let errorMessage = 'Failed to update status';
+        
+        if (!response.ok) {
+            try {
+                const errorData = await response.json();
+                errorMessage = errorData.error || errorMessage;
+            } catch (e) {
+                const text = await response.text();
+                console.error('Raw response:', text);
+                errorMessage = 'Invalid server response';
+            }
+            throw new Error(errorMessage);
+        }
+
+        showNotification(`Administrator ${newStatus === 'active' ? 'activated' : 'deactivated'} successfully`, 'success');
+        loadAdmins();
+    } catch (error) {
+        console.error('Error updating admin status:', error);
+        showNotification(error.message, 'error');
+    }
+}
+
+async function updateAdmin(event) {
+    event.preventDefault();
+    const form = event.target;
+    const submitButton = form.querySelector('button[type="submit"]');
+    const id = document.getElementById('editAdminId').value;
+    showLoading(submitButton);
+
+    const formData = new FormData(form);
+    const permissions = Array.from(form.querySelectorAll('input[name="permissions"]:checked'))
+        .map(input => input.value);
+
+    const data = {
+        name: formData.get('name'),
+        email: formData.get('email'),
+        cpf: formData.get('cpf'), // Added CPF field
+        permissions: permissions
+    };
+
+    try {
+        const response = await fetch(`/api/admin/${id}`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(data)
+        });
+
+        if (!response.ok) {
+            const errorData = await response.json();
+            throw new Error(errorData.error || 'Failed to update administrator');
+        }
+
+        hideModal('editAdminModal');
+        showNotification('Administrator updated successfully', 'success');
+        loadAdmins();
+    } catch (error) {
+        console.error('Error updating administrator:', error);
+        showNotification(error.message, 'error');
+    } finally {
+        hideLoading(submitButton);
+    }
+}
+
+function deleteAdmin(id) {
+    itemToDelete = id;
+    showModal('deleteConfirmModal');
+}
+
+async function confirmDelete() {
+    hideModal('deleteConfirmModal');
+    const row = document.querySelector(`tr[data-id="${itemToDelete}"]`);
+    showLoading(row);
+
+    try {
+        const response = await fetch(`/api/admin/${itemToDelete}`, {
+            method: 'DELETE'
+        });
+
+        if (!response.ok) throw new Error('Failed to delete administrator');
+
+        showNotification('Administrator deleted successfully', 'success');
+        loadAdmins();
+    } catch (error) {
+        console.error('Error deleting administrator:', error);
+        showNotification(error.message, 'error');
+    } finally {
+        hideLoading(row);
+    }
+}
+
+async function showAddAdminModal() {
+    const permissions = await loadPermissions();
+    generatePermissionsHTML(permissions, 'addPermissionsGrid');
+    document.getElementById('addAdminForm').reset();
+    showModal('addAdminModal');
+}
+
+async function showEditAdminModal(admin) {
+    const permissions = await loadPermissions();
+    const selectedPermissions = admin.permissions.map(p => p.id || p);
+    generatePermissionsHTML(permissions, 'editPermissionsGrid', selectedPermissions);
+
+    document.getElementById('editAdminId').value = admin.id;
+    document.getElementById('editAdminName').value = admin.name;
+    document.getElementById('editAdminEmail').value = admin.email;
+    document.getElementById('editAdminCPF').value = admin.cpf; // Added CPF field for edit modal
+   
+
+    showModal('editAdminModal');
+}
+
+function formatPermissionName(permission) {
+    let resource, action;
+    if (typeof permission === 'string') {
+        [resource, action] = permission.split('_');
+    } else if (typeof permission === 'object' && permission.name) {
+        [resource, action] = permission.name.split('_');
+    } else {
+        return ''; // Return empty string for invalid permissions
+    }
+    return `${PERMISSION_ACTIONS[action]?.title || action} ${PERMISSION_GROUPS[resource]?.title || resource}`;
+}
+
+// Impedir que cliques dentro do modal fechem o modal
+document.addEventListener('DOMContentLoaded', function() {
+    const modalContents = document.querySelectorAll('.modal-content');
+    modalContents.forEach(content => {
+        content.addEventListener('click', function(event) {
+            event.stopPropagation();
+        });
+    });
+});
+
+// Initialize on page load
+document.addEventListener('DOMContentLoaded', async () => {
+    loadAdmins();
+});
+</script>
+{% endblock %}

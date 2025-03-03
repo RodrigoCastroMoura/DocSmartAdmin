@@ -493,61 +493,6 @@ def categories_document_types(category_id):
     return redirect(url_for('departments'))
 
 
-@app.route('/categories/<category_id>/document_types/pagination')
-@login_required
-def categories_document_types_pagination(category_id):
-    headers = get_auth_headers()
-    try:
-        # Get department details
-        logger.info(f"Fetching document types details for ID: {category_id}")
-        doc_response = requests.get(
-            f"{DOCUMENT_TYPES_URL}/categories/{category_id}/types/pagination",
-            headers=headers,
-            timeout=REQUEST_TIMEOUT)
-        if not doc_response.ok:
-            logger.error(
-                f"Failed to fetch document types: {doc_response.status_code}")
-            flash('Document types not found', 'error')
-            return redirect(url_for('categories'))
-
-        document_types = doc_response.json()
-
-        # Get categories for the department
-
-        categories_response = requests.get(f"{CATEGORIES_URL}/{category_id}",
-                                           headers=headers,
-                                           timeout=REQUEST_TIMEOUT)
-
-        if categories_response.ok:
-            logger.info(
-                f"Successfully fetched {len(categories_response.json())} categories"
-            )
-        else:
-            logger.error(
-                f"Failed to fetch categories: {categories_response.status_code}"
-            )
-            categories = []
-            flash('Error loading categories', 'error')
-
-        category = categories_response.json()
-
-        return render_template('category_document_types.html',
-                               document_types=document_types,
-                               category=category)
-    except requests.Timeout:
-        logger.error("Request timed out while fetching department categories")
-        flash('Request timed out', 'error')
-    except requests.ConnectionError:
-        logger.error("Connection error while fetching department categories")
-        flash('Failed to connect to server', 'error')
-    except Exception as e:
-        logger.error(f"Unexpected error in department_categories: {e}")
-        flash('An unexpected error occurred', 'error')
-
-    return redirect(url_for('departments'))
-
-
-
 @app.route('/document_type/<document_type_id>/documents')
 @login_required
 def document_type_documents(document_type_id):
@@ -961,7 +906,7 @@ def category_document_types_api(category_id):
             'company_id': session.get('company_id')
         }
         response = requests.get(
-            f"{DOCUMENT_TYPES_URL}/categories/{category_id}/types/pagination",
+            f"{DOCUMENT_TYPES_URL}/categories/{category_id}/types",
             headers=headers,
             params=params,
             timeout=REQUEST_TIMEOUT)
@@ -1223,6 +1168,7 @@ def update_admin_status(admin_id):
     except Exception as e:
         print(f"Error updating user status: {e}")
         return jsonify({'error': 'An unexpected error occurred'}), 500
+
 
 
 @app.route('/api/documents')

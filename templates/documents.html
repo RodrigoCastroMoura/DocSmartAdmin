@@ -336,7 +336,7 @@ async function applyFiltersCategory(categoryId) {
             return;
         }
         await applyFilters();
-        const response = await fetch(`/api/document_types/categories/${categoryId}/types`);
+        const response = await fetch(`/categories/${categoryId}/document_types`);
         if (!response.ok) {
             const errorData = await response.json();
             throw new Error(errorData.error || 'Failed to load document types');
