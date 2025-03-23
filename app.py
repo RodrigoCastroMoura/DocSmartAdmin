@@ -1191,7 +1191,8 @@ def documents_api():
             'category_id': request.args.get('category_id'),
             'document_type_id': request.args.get('document_type_id'),
             'user_cpf': request.args.get('user_cpf'),
-            'company_id': company_id
+            'company_id': company_id,
+            'skip_invalid_refs': 'true'  # Add parameter to skip invalid references
         }
 
         # Remove None values
@@ -1201,6 +1202,11 @@ def documents_api():
                                 headers=headers,
                                 params=params,
                                 timeout=REQUEST_TIMEOUT)
+        
+        if response.status_code == 500:
+            logger.error(f"Documents API error: {response.text}")
+            return jsonify({'documents': [], 'total': 0, 'pages': 0}), 200
+            
         return handle_api_response(response,
                                    error_message='Failed to fetch documents')
     except requests.Timeout:
