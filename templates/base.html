@@ -102,10 +102,12 @@
                     <i data-feather="users"></i>
                     <span>Users</span>
                 </a>
+                {% if 'admin_read' in session.get('user', {}).get('permissions', []) %}
                 <a href="{{ url_for('admins') }}" class="nav-item {% if request.endpoint == 'admins' %}active{% endif %}">
                     <i data-feather="shield"></i>
                     <span>Administrators</span>
                 </a>
+                {% endif %}
             </nav>
         </aside>
 
