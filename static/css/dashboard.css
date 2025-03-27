@@ -58,7 +58,11 @@
 }
 
 .nav-item i {
-    margin-right: 1rem;
+    margin-right: 0.5rem;
+}
+
+.nav-item span {
+    margin-left: 0.5rem;
 }
 
 .sidebar.collapsed .nav-item {
