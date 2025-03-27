@@ -55,14 +55,15 @@
             <div class="form-group">
                 <div class="radio-group">
                     <label class="radio-label">
-                        <input type="radio" name="public" value="true" checked>
+                        <input type="radio" name="public" value="true" required>
                         Public
                     </label>
                     <label class="radio-label">
-                        <input type="radio" name="public" value="false">
+                        <input type="radio" name="public" value="false" required>
                         Private
                     </label>
                 </div>
+                <div class="error-message" id="publicError"></div>
             </div>
             <div class="modal-actions">
                 <button type="button" class="action-btn" onclick="hideModal('addDocumentTypeModal')">Cancel</button>
