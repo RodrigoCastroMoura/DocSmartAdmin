@@ -2,32 +2,19 @@
     display: grid;
     grid-template-columns: 250px 1fr;
     min-height: 100vh;
-    transition: grid-template-columns 0.3s ease;
+    transition: all 0.3s ease;
 }
 
 /* Sidebar Styles */
 .sidebar {
-    position: fixed;
-    height: 100vh;
-    width: 250px;
     background-color: var(--bg-secondary);
     padding: 1rem;
     border-right: 1px solid var(--border-color);
-    transition: width 0.3s ease;
-    overflow-x: hidden;
+    transition: all 0.3s ease;
 }
 
 .sidebar.collapsed {
     width: 70px;
-}
-
-.main-content {
-    margin-left: 250px;
-    transition: margin-left 0.3s ease;
-}
-
-.sidebar.collapsed + .main-content {
-    margin-left: 70px;
 }
 
 .sidebar-header {
