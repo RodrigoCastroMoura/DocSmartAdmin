@@ -1280,7 +1280,8 @@ def create_document():
             'department_id': request.form.get('department_id'),
             'category_id': request.form.get('category_id'),
             'document_type_id': request.form.get('document_type_id'),
-            'user_id': request.form.get('user_id')
+            'user_id': request.form.get('user_id'),
+            'flow': request.form.get('flow')
         }
 
         # Validate required fields
