@@ -315,8 +315,8 @@ setupFormValidation('addUserForm', {
                 return hint;
             })();
             
-            const isValid = value && value.length <= 6;
-            hint.style.color = isValid ? 'red' : 'green';
+            const isValid = value && value.length >= 6;
+            hint.style.color = isValid ? 'green' : 'red';
             document.getElementById('userPassword').classList.toggle('error', !isValid);
             return isValid;
         }
