@@ -142,7 +142,6 @@
     <div class="modal-content preview-modal">
         <div class="preview-header">
             <div class="preview-title">
-                <h3 id="previewTitle">Document Preview</h3>
                 <div class="zoom-controls">
                     <button class="action-btn" onclick="adjustZoom(-0.2)">
                         <i data-feather="zoom-out"></i>
@@ -761,7 +760,7 @@ async function previewDocument(url, filename) {
         previewContainer.removeChild(previewContainer.firstChild);
     }
     
-    previewTitle.textContent = filename;
+    // Removed filename from header
     const fileType = filename.split('.').pop().toLowerCase();
 
     try {
