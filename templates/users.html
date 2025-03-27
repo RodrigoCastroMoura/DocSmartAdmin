@@ -13,7 +13,7 @@
             <div class="filter-group">
                 <label for="searchCpf">Search by CPF</label>
                 <div class="filter-input-wrapper search-input">
-                    <input type="text" id="searchCpf" placeholder="Enter CPF..." oninput="maskCPF(this)" maxlength="14">
+                    <input type="text" id="searchCpf" placeholder="Enter CPF..." oninput="maskCPF(this)" maxlength="11" pattern="\d*">
                     <button class="action-btn primary" onclick="searchByCpf()">
                         <i data-feather="search"></i>
                     </button>
@@ -72,7 +72,7 @@
             <div class="form-grid">
                 <div class="form-group">
                     <label for="userCPF">CPF</label>
-                    <input type="text" id="userCPF" name="cpf" required oninput="maskCPF(this)" maxlength="14">
+                    <input type="text" id="userCPF" name="cpf" required oninput="maskCPF(this)" maxlength="11" pattern="\d*">
                 </div>
                 <div class="form-group">
                     <label for="userPhone">Phone</label>
@@ -377,12 +377,9 @@ setupFormValidation('editUserForm', {
 
 function maskCPF(input) {
     let value = input.value.replace(/\D/g, '');
-    if (value.length >= 11) {
+    if (value.length > 11) {
         value = value.substring(0, 11);
     }
-    value = value.replace(/(\d{3})(\d)/, '$1.$2');
-    value = value.replace(/(\d{3})(\d)/, '$1.$2');
-    value = value.replace(/(\d{3})(\d{1,2})$/, '$1-$2');
     input.value = value;
 }
 
