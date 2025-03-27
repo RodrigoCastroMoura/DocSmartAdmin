@@ -21,14 +21,6 @@
     width: 70px;
 }
 
-.sidebar.collapsed .nav-item span {
-    display: none;
-}
-
-.sidebar.collapsed .sidebar-header .logo {
-    display: none;
-}
-
 .main-content {
     margin-left: 250px;
     transition: margin-left 0.3s ease;
