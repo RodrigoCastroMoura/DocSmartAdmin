@@ -196,6 +196,18 @@ setupFormValidation('addDocumentTypeForm', {
         ValidationRules.required,
         ValidationRules.minLength(3),
         ValidationRules.maxLength(50)
+    ],
+    'documentTypeDescription': [
+        ValidationRules.maxLength(200)
+    ],
+    'addDocuments': [
+        ValidationRules.required
+    ],
+    'isdownload': [
+        ValidationRules.required
+    ],
+    'public': [
+        ValidationRules.required
     ]
 });
 
@@ -204,6 +216,18 @@ setupFormValidation('editDocumentTypeForm', {
         ValidationRules.required,
         ValidationRules.minLength(3),
         ValidationRules.maxLength(50)
+    ],
+    'editDocumentTypeDescription': [
+        ValidationRules.maxLength(200)
+    ],
+    'editAddDocuments': [
+        ValidationRules.required
+    ],
+    'editIsdownload': [
+        ValidationRules.required
+    ],
+    'public': [
+        ValidationRules.required
     ]
 });
 
