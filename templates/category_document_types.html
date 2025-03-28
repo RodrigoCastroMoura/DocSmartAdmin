@@ -120,7 +120,7 @@
             <div style="display: flex; gap: 1rem;">
                 <div class="form-group" style="flex: 1;">
                     <label for="addDocuments">Add Documento:</label>
-                    <select id="addDocuments" name="addDocuments" required>
+                    <select id="editAddDocuments" name="addDocuments" required>
                         <option>Select</option>
                         <option value="true">Yes</option>
                         <option value="false">No</option>
@@ -128,7 +128,7 @@
                 </div>
                 <div class="form-group" style="flex: 1;">
                     <label for="isdownload">Download:</label>
-                    <select id="isdownload" name="isdownload" required>
+                    <select id="editIsdownload" name="isdownload" required>
                         <option>Select</option>
                         <option value="true">Yes</option>
                         <option value="false">No</option>
@@ -376,20 +376,48 @@ function showAddDocumentTypeModal() {
 }
 
 function showEditDocumentTypeModal(id, type) {
-    document.getElementById('editDocumentTypeId').value = id;
-    document.getElementById('editDocumentTypeName').value = type.name;
-    document.getElementById('editDocumentTypeDescription').value = type.description || '';
-    
-    // Set radio buttons for public
-    const publicTrue = document.querySelector('input[name="public"][value="true"]');
-    const publicFalse = document.querySelector('input[name="public"][value="false"]');
-    if (publicTrue) publicTrue.checked = type.public === true;
-    if (publicFalse) publicFalse.checked = type.public === false;
+    try {
+        const editForm = document.getElementById('editDocumentTypeForm');
+        if (!editForm) {
+            throw new Error('Edit form not found');
+        }
 
-    // Set select values for addDocuments and isdownload
-    document.getElementById('editAddDocuments').value = type.addDocuments.toString();
-    document.getElementById('editIsdownload').value = type.isdownload.toString();
-    showModal('editDocumentTypeModal');
+        // Set basic fields
+        const fields = {
+            'editDocumentTypeId': id,
+            'editDocumentTypeName': type.name,
+            'editDocumentTypeDescription': type.description || ''
+        };
+
+        Object.entries(fields).forEach(([id, value]) => {
+            const element = document.getElementById(id);
+            if (element) {
+                element.value = value;
+            }
+        });
+
+        // Set radio buttons for public
+        const publicRadios = editForm.querySelectorAll('input[name="public"]');
+        publicRadios.forEach(radio => {
+            radio.checked = (radio.value === String(type.public));
+        });
+
+        // Set select values for addDocuments and isdownload
+        const addDocsSelect = document.getElementById('editAddDocuments');
+        const downloadSelect = document.getElementById('editIsdownload');
+
+        if (addDocsSelect) {
+            addDocsSelect.value = String(type.addDocuments);
+        }
+        if (downloadSelect) {
+            downloadSelect.value = String(type.isdownload);
+        }
+
+        showModal('editDocumentTypeModal');
+    } catch (error) {
+        console.error('Error setting up edit modal:', error);
+        showNotification('Error loading edit form', 'error');
+    }
 }
 
 async function createDocumentType(event) {
