@@ -754,7 +754,9 @@ def document_types_api():
             "department_id": department_id,
             "category_id": category_id,
             'company_id': company_id,
-            'public': public.lower() in ['true']
+            'public': public.lower() in ['true'],
+            'addDocuments': data.get('addDocuments', 'false').lower() in ['true'],
+            'isdownload': data.get('isdownload', 'false').lower() in ['true']
         }
         response = requests.post(
             DOCUMENT_TYPES_URL,
@@ -858,7 +860,9 @@ def document_types_id(document_types_id):
             "description": description,
             "category_id": category_id,
             'company_id': company_id,
-            'public': public.lower() in ['true']
+            'public': public.lower() in ['true'],
+            'addDocuments': data.get('addDocuments', 'false').lower() in ['true'],
+            'isdownload': data.get('isdownload', 'false').lower() in ['true']
         }
         response = requests.put(f"{DOCUMENT_TYPES_URL}/{document_types_id}",
                                 headers=headers,
