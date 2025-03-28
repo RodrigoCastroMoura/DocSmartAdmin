@@ -34,6 +34,13 @@
     border: none;
     color: var(--text-primary);
     cursor: pointer;
+    padding: 8px;
+    font-size: 1.5rem;
+}
+
+.sidebar-toggle svg {
+    width: 24px;
+    height: 24px;
 }
 
 .nav-item {
