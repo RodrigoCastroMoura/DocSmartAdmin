@@ -11,9 +11,9 @@
         </div>
         <div class="filter-grid">
             <div class="filter-group">
-                <label for="searchCpf">Search by CPF</label>
+                <label for="searchCpf">Search by Registro</label>
                 <div class="filter-input-wrapper search-input">
-                    <input type="text" id="searchCpf" placeholder="Enter CPF..." oninput="maskCPF(this)" maxlength="11" pattern="\d*">
+                    <input type="text" id="searchCpf" placeholder="Enter Registro..." oninput="maskCPF(this)" maxlength="11" pattern="\d*">
                     <button class="action-btn primary" onclick="searchByCpf()">
                         <i data-feather="search"></i>
                     </button>
@@ -29,7 +29,7 @@
                         <tr>
                             <th>Name</th>
                             <th>Email</th>
-                            <th>CPF</th>
+                            <th>Registro</th>
                             <th>Status</th>
                             <th>Actions</th>
                         </tr>
@@ -71,7 +71,7 @@
             </div>
             <div class="form-grid">
                 <div class="form-group">
-                    <label for="userCPF">CPF</label>
+                    <label for="userCPF">Registro</label>
                     <input type="text" id="userCPF" name="cpf" required oninput="maskCPF(this)" maxlength="11" pattern="\d*">
                 </div>
                 <div class="form-group">
