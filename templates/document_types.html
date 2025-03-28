@@ -67,28 +67,18 @@
                 <div class="error-message" id="publicError"></div>
             </div>
             <div class="form-group">
-                <div class="radio-group">
-                    <label class="radio-label">
-                        <input type="radio" name="addDocuments" value="true" required>
-                        Pode colocar Documento?
-                    </label>
-                    <label class="radio-label">
-                        <input type="radio" name="addDocuments" value="false" required>
-                        Não pode colocar Documento
-                    </label>
-                </div>
+                <label for="addDocuments">Add Documento:</label>
+                <select id="addDocuments" name="addDocuments" required>
+                    <option value="true">Yes</option>
+                    <option value="false">No</option>
+                </select>
             </div>
             <div class="form-group">
-                <div class="radio-group">
-                    <label class="radio-label">
-                        <input type="radio" name="isdownload" value="true" required>
-                        Pode fazer Download?
-                    </label>
-                    <label class="radio-label">
-                        <input type="radio" name="isdownload" value="false" required>
-                        Não pode fazer Download
-                    </label>
-                </div>
+                <label for="isdownload">Download:</label>
+                <select id="isdownload" name="isdownload" required>
+                    <option value="true">Yes</option>
+                    <option value="false">No</option>
+                </select>
             </div>
             <div class="modal-actions">
                 <button type="button" class="action-btn" onclick="hideModal('addDocumentTypeModal')">Cancel</button>
@@ -137,28 +127,18 @@
                 </div>
             </div>
             <div class="form-group">
-                <div class="radio-group">
-                    <label class="radio-label">
-                        <input type="radio" name="addDocuments" value="true" id="editAddDocumentsTrue">
-                        Pode colocar Documento?
-                    </label>
-                    <label class="radio-label">
-                        <input type="radio" name="addDocuments" value="false" id="editAddDocumentsFalse">
-                        Não pode colocar Documento
-                    </label>
-                </div>
+                <label for="editAddDocuments">Add Documento:</label>
+                <select id="editAddDocuments" name="addDocuments" required>
+                    <option value="true">Yes</option>
+                    <option value="false">No</option>
+                </select>
             </div>
             <div class="form-group">
-                <div class="radio-group">
-                    <label class="radio-label">
-                        <input type="radio" name="isdownload" value="true" id="editIsDownloadTrue">
-                        Pode fazer Download?
-                    </label>
-                    <label class="radio-label">
-                        <input type="radio" name="isdownload" value="false" id="editIsDownloadFalse">
-                        Não pode fazer Download
-                    </label>
-                </div>
+                <label for="editIsdownload">Download:</label>
+                <select id="editIsdownload" name="isdownload" required>
+                    <option value="true">Yes</option>
+                    <option value="false">No</option>
+                </select>
             </div>
             <div class="modal-actions">
                 <button type="button" class="action-btn" onclick="hideModal('editDocumentTypeModal')">Cancel</button>
