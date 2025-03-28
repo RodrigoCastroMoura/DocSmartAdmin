@@ -66,6 +66,30 @@
                 </div>
                 <div class="error-message" id="publicError"></div>
             </div>
+            <div class="form-group">
+                <div class="radio-group">
+                    <label class="radio-label">
+                        <input type="radio" name="addDocuments" value="true" id="addDocumentsTrue" required>
+                        Pode colocar Documento?
+                    </label>
+                    <label class="radio-label">
+                        <input type="radio" name="addDocuments" value="false" id="addDocumentsFalse" required>
+                        Não pode colocar Documento
+                    </label>
+                </div>
+            </div>
+            <div class="form-group">
+                <div class="radio-group">
+                    <label class="radio-label">
+                        <input type="radio" name="isdownload" value="true" id="isdownloadTrue" required>
+                        Pode fazer Download?
+                    </label>
+                    <label class="radio-label">
+                        <input type="radio" name="isdownload" value="false" id="isdownloadFalse" required>
+                        Não pode fazer Download
+                    </label>
+                </div>
+            </div>
             <div class="modal-actions">
                 <button type="button" class="action-btn" onclick="hideModal('addDocumentTypeModal')">Cancel</button>
                 <button type="submit" class="action-btn primary">Add</button>
@@ -109,6 +133,30 @@
                     <label class="radio-label">
                         <input type="radio" name="public" value="false" id="editPublicFalse">
                         Private
+                    </label>
+                </div>
+            </div>
+            <div class="form-group">
+                <div class="radio-group">
+                    <label class="radio-label">
+                        <input type="radio" name="addDocuments" value="true" id="editAddDocumentsTrue">
+                        Pode colocar Documento?
+                    </label>
+                    <label class="radio-label">
+                        <input type="radio" name="addDocuments" value="false" id="editAddDocumentsFalse">
+                        Não pode colocar Documento
+                    </label>
+                </div>
+            </div>
+            <div class="form-group">
+                <div class="radio-group">
+                    <label class="radio-label">
+                        <input type="radio" name="isdownload" value="true" id="editIsDownloadTrue">
+                        Pode fazer Download?
+                    </label>
+                    <label class="radio-label">
+                        <input type="radio" name="isdownload" value="false" id="editIsDownloadFalse">
+                        Não pode fazer Download
                     </label>
                 </div>
             </div>
