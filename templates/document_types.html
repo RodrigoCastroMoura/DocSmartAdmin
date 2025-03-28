@@ -573,19 +573,41 @@ function showAddDocumentTypeModal() {
 
 async function showEditDocumentTypeModal(id, type) {
     try {
-        document.getElementById('editDocumentTypeId').value = id;
-        document.getElementById('editDocumentTypeName').value = type.name;
-        document.getElementById('editDocumentTypeDescription').value = type.description || '';
-        
+        const editForm = document.getElementById('editDocumentTypeForm');
+        if (!editForm) {
+            throw new Error('Edit form not found');
+        }
+
+        // Set basic fields
+        const fields = {
+            'editDocumentTypeId': id,
+            'editDocumentTypeName': type.name,
+            'editDocumentTypeDescription': type.description || ''
+        };
+
+        Object.entries(fields).forEach(([id, value]) => {
+            const element = document.getElementById(id);
+            if (element) {
+                element.value = value;
+            }
+        });
+
         // Set radio buttons for public
-        const publicTrue = document.querySelector('input[name="public"][value="true"]');
-        const publicFalse = document.querySelector('input[name="public"][value="false"]');
-        if (publicTrue) publicTrue.checked = type.public === true;
-        if (publicFalse) publicFalse.checked = type.public === false;
+        const publicRadios = editForm.querySelectorAll('input[name="public"]');
+        publicRadios.forEach(radio => {
+            radio.checked = (radio.value === String(type.public));
+        });
 
         // Set select values for addDocuments and isdownload
-        document.getElementById('editAddDocuments').value = type.addDocuments.toString();
-        document.getElementById('editIsdownload').value = type.isdownload.toString();
+        const addDocsSelect = document.getElementById('editAddDocuments');
+        const downloadSelect = document.getElementById('editIsdownload');
+        
+        if (addDocsSelect) {
+            addDocsSelect.value = String(type.addDocuments);
+        }
+        if (downloadSelect) {
+            downloadSelect.value = String(type.isdownload);
+        }
 
         // First load departments
         await loadDepartments();
