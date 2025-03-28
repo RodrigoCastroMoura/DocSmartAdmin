@@ -69,11 +69,11 @@
             <div class="form-group">
                 <div class="radio-group">
                     <label class="radio-label">
-                        <input type="radio" name="addDocuments" value="true" id="addDocumentsTrue" required>
+                        <input type="radio" name="addDocuments" value="true" required>
                         Pode colocar Documento?
                     </label>
                     <label class="radio-label">
-                        <input type="radio" name="addDocuments" value="false" id="addDocumentsFalse" required>
+                        <input type="radio" name="addDocuments" value="false" required>
                         Não pode colocar Documento
                     </label>
                 </div>
@@ -81,11 +81,11 @@
             <div class="form-group">
                 <div class="radio-group">
                     <label class="radio-label">
-                        <input type="radio" name="isdownload" value="true" id="isdownloadTrue" required>
+                        <input type="radio" name="isdownload" value="true" required>
                         Pode fazer Download?
                     </label>
                     <label class="radio-label">
-                        <input type="radio" name="isdownload" value="false" id="isdownloadFalse" required>
+                        <input type="radio" name="isdownload" value="false" required>
                         Não pode fazer Download
                     </label>
                 </div>
@@ -552,6 +552,10 @@ async function showEditDocumentTypeModal(id, type) {
         document.getElementById('editDocumentTypeDescription').value = type.description || '';
         document.getElementById('editPublicTrue').checked = type.public === true;
         document.getElementById('editPublicFalse').checked = type.public === false;
+        document.getElementById('editAddDocumentsTrue').checked = type.addDocuments === true;
+        document.getElementById('editAddDocumentsFalse').checked = type.addDocuments === false;
+        document.getElementById('editIsDownloadTrue').checked = type.isdownload === true;
+        document.getElementById('editIsDownloadFalse').checked = type.isdownload === false;
 
         // First load departments
         await loadDepartments();
@@ -952,8 +956,7 @@ document.addEventListener('DOMContentLoaded', () => {
     width: 100%;
     max-width: 650px !important;
     box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
-    animation: slideIn 0.3s ease;
-}
+    animation: slideIn 0.3s ease;}
 
 .users-list {
     max-height: 260px;

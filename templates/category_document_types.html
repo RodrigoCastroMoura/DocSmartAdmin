@@ -1,4 +1,3 @@
-
 {% extends "base.html" %}
 
 {% block content %}
@@ -65,6 +64,30 @@
                 </div>
                 <div class="error-message" id="publicError"></div>
             </div>
+            <div class="form-group">
+                <div class="radio-group">
+                    <label class="radio-label">
+                        <input type="radio" name="addDocuments" value="true" required>
+                        Pode colocar Documento?
+                    </label>
+                    <label class="radio-label">
+                        <input type="radio" name="addDocuments" value="false" required>
+                        Não pode colocar Documento
+                    </label>
+                </div>
+            </div>
+            <div class="form-group">
+                <div class="radio-group">
+                    <label class="radio-label">
+                        <input type="radio" name="isdownload" value="true" required>
+                        Pode fazer Download?
+                    </label>
+                    <label class="radio-label">
+                        <input type="radio" name="isdownload" value="false" required>
+                        Não pode fazer Download
+                    </label>
+                </div>
+            </div>
             <div class="modal-actions">
                 <button type="button" class="action-btn" onclick="hideModal('addDocumentTypeModal')">Cancel</button>
                 <button type="submit" class="action-btn primary">Add</button>
@@ -97,6 +120,30 @@
                     <label class="radio-label">
                         <input type="radio" name="public" value="false" id="editPublicFalse">
                         Private
+                    </label>
+                </div>
+            </div>
+            <div class="form-group">
+                <div class="radio-group">
+                    <label class="radio-label">
+                        <input type="radio" name="addDocuments" value="true" id="editAddDocumentsTrue">
+                        Pode colocar Documento?
+                    </label>
+                    <label class="radio-label">
+                        <input type="radio" name="addDocuments" value="false" id="editAddDocumentsFalse">
+                        Não pode colocar Documento
+                    </label>
+                </div>
+            </div>
+            <div class="form-group">
+                <div class="radio-group">
+                    <label class="radio-label">
+                        <input type="radio" name="isdownload" value="true" id="editIsdownloadTrue">
+                        Pode fazer Download?
+                    </label>
+                    <label class="radio-label">
+                        <input type="radio" name="isdownload" value="false" id="editIsdownloadFalse">
+                        Não pode fazer Download
                     </label>
                 </div>
             </div>
@@ -310,6 +357,10 @@ function showEditDocumentTypeModal(id, type) {
     document.getElementById('editDocumentTypeDescription').value = type.description || '';
     document.getElementById('editPublicTrue').checked = type.public === true;
     document.getElementById('editPublicFalse').checked = type.public === false;
+    document.getElementById('editAddDocumentsTrue').checked = type.addDocuments === true;
+    document.getElementById('editAddDocumentsFalse').checked = type.addDocuments === false;
+    document.getElementById('editIsdownloadTrue').checked = type.isdownload === true;
+    document.getElementById('editIsdownloadFalse').checked = type.isdownload === false;
     showModal('editDocumentTypeModal');
 }
 
@@ -317,11 +368,11 @@ async function createDocumentType(event) {
     event.preventDefault();
     const form = event.target;
     const submitButton = form.querySelector('button[type="submit"]');
-    
+
     if (!validateForm(form)) {
         return;
     }
-    
+
     const formData = new FormData(form);
     const data = Object.fromEntries(formData);
     showLoading(submitButton);
@@ -356,11 +407,11 @@ async function updateDocumentType(event) {
     event.preventDefault();
     const form = event.target;
     const submitButton = form.querySelector('button[type="submit"]');
-    
+
     if (!validateForm(form)) {
         return;
     }
-    
+
     const id = document.getElementById('editDocumentTypeId').value;
     const formData = new FormData(form);
     const data = Object.fromEntries(formData);
