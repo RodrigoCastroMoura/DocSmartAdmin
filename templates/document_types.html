@@ -558,12 +558,16 @@ async function showEditDocumentTypeModal(id, type) {
         document.getElementById('editDocumentTypeId').value = id;
         document.getElementById('editDocumentTypeName').value = type.name;
         document.getElementById('editDocumentTypeDescription').value = type.description || '';
-        document.getElementById('editPublicTrue').checked = type.public === true;
-        document.getElementById('editPublicFalse').checked = type.public === false;
-        document.getElementById('editAddDocumentsTrue').checked = type.addDocuments === true;
-        document.getElementById('editAddDocumentsFalse').checked = type.addDocuments === false;
-        document.getElementById('editIsDownloadTrue').checked = type.isdownload === true;
-        document.getElementById('editIsDownloadFalse').checked = type.isdownload === false;
+        
+        // Set radio buttons for public
+        const publicTrue = document.querySelector('input[name="public"][value="true"]');
+        const publicFalse = document.querySelector('input[name="public"][value="false"]');
+        if (publicTrue) publicTrue.checked = type.public === true;
+        if (publicFalse) publicFalse.checked = type.public === false;
+
+        // Set select values for addDocuments and isdownload
+        document.getElementById('editAddDocuments').value = type.addDocuments.toString();
+        document.getElementById('editIsdownload').value = type.isdownload.toString();
 
         // First load departments
         await loadDepartments();
