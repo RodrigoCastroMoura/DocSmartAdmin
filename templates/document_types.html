@@ -107,16 +107,34 @@
                 <input type="text" id="editDocumentTypeDescription" name="description">
             </div>
             <div class="form-group">
-                <label for="editDocumentTypeDepartment">Department</label>
-                <select id="editDocumentTypeDepartment" onchange="loadDepartmentCategories(this.value, 'editDocumentTypeCategory')">
+                <label for="documentTypeDepartment">Department</label>
+                <select id="documentTypeDepartment" onchange="loadDepartmentCategories(this.value)">
                     <option value="">Select Department</option>
                 </select>
             </div>
             <div class="form-group">
-                <label for="editDocumentTypeCategory">Category</label>
-                <select id="editDocumentTypeCategory" name="category_id" required>
+                <label for="documentTypeCategory">Category</label>
+                <select id="documentTypeCategory" name="category_id" required>
                     <option value="">Select Category</option>
                 </select>
+            </div>
+            <div style="display: flex; gap: 1rem;">
+                <div class="form-group" style="flex: 1;">
+                    <label for="addDocuments">Add Documento:</label>
+                    <select id="addDocuments" name="addDocuments" required>
+                        <option>Select</option>
+                        <option value="true">Yes</option>
+                        <option value="false">No</option>
+                    </select>
+                </div>
+                <div class="form-group" style="flex: 1;">
+                    <label for="isdownload">Download:</label>
+                    <select id="isdownload" name="isdownload" required>
+                        <option>Select</option>
+                        <option value="true">Yes</option>
+                        <option value="false">No</option>
+                    </select>
+                </div>
             </div>
             <div class="form-group">
                 <div class="radio-group">

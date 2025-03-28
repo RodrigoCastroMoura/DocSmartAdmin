@@ -106,6 +106,36 @@
                 <input type="text" id="editDocumentTypeDescription" name="description">
             </div>
             <div class="form-group">
+                <label for="documentTypeDepartment">Department</label>
+                <select id="documentTypeDepartment" onchange="loadDepartmentCategories(this.value)">
+                    <option value="">Select Department</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="documentTypeCategory">Category</label>
+                <select id="documentTypeCategory" name="category_id" required>
+                    <option value="">Select Category</option>
+                </select>
+            </div>
+            <div style="display: flex; gap: 1rem;">
+                <div class="form-group" style="flex: 1;">
+                    <label for="addDocuments">Add Documento:</label>
+                    <select id="addDocuments" name="addDocuments" required>
+                        <option>Select</option>
+                        <option value="true">Yes</option>
+                        <option value="false">No</option>
+                    </select>
+                </div>
+                <div class="form-group" style="flex: 1;">
+                    <label for="isdownload">Download:</label>
+                    <select id="isdownload" name="isdownload" required>
+                        <option>Select</option>
+                        <option value="true">Yes</option>
+                        <option value="false">No</option>
+                    </select>
+                </div>
+            </div>
+            <div class="form-group">
                 <div class="radio-group">
                     <label class="radio-label">
                         <input type="radio" name="public" value="true" id="editPublicTrue">
@@ -116,20 +146,6 @@
                         Private
                     </label>
                 </div>
-            </div>
-            <div class="form-group">
-                <label for="editAddDocuments">Add Documento:</label>
-                <select id="editAddDocuments" name="addDocuments" required>
-                    <option value="true">Yes</option>
-                    <option value="false">No</option>
-                </select>
-            </div>
-            <div class="form-group">
-                <label for="editIsdownload">Download:</label>
-                <select id="editIsdownload" name="isdownload" required>
-                    <option value="true">Yes</option>
-                    <option value="false">No</option>
-                </select>
             </div>
             <div class="modal-actions">
                 <button type="button" class="action-btn" onclick="hideModal('editDocumentTypeModal')">Cancel</button>
