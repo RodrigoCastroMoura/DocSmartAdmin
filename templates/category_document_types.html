@@ -681,6 +681,14 @@ async function updateUserAccess() {
     }
 }
 
+window.addEventListener('click', function(event) {
+    if (event.target.classList.contains('modal')) {
+        const modalId = event.target.id;
+        hideModal(modalId);
+        event.stopPropagation();
+    }
+});
+
 document.addEventListener('DOMContentLoaded', () => {
     loadDocumentTypes(1);
     feather.replace();
