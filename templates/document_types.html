@@ -53,6 +53,24 @@
                     <option value="">Select Category</option>
                 </select>
             </div>
+            <div style="display: flex; gap: 1rem;">
+                <div class="form-group" style="flex: 1;">
+                    <label for="addDocuments">Add Documento:</label>
+                    <select id="addDocuments" name="addDocuments" required>
+                        <option>Select</option>
+                        <option value="true">Yes</option>
+                        <option value="false">No</option>
+                    </select>
+                </div>
+                <div class="form-group" style="flex: 1;">
+                    <label for="isdownload">Download:</label>
+                    <select id="isdownload" name="isdownload" required>
+                        <option>Select</option>
+                        <option value="true">Yes</option>
+                        <option value="false">No</option>
+                    </select>
+                </div>
+            </div>
             <div class="form-group">
                 <div class="radio-group">
                     <label class="radio-label">
@@ -65,22 +83,6 @@
                     </label>
                 </div>
                 <div class="error-message" id="publicError"></div>
-            </div>
-            <div style="display: flex; gap: 1rem;">
-                <div class="form-group" style="flex: 1;">
-                    <label for="addDocuments">Add Documento:</label>
-                    <select id="addDocuments" name="addDocuments" required>
-                        <option value="true">Yes</option>
-                        <option value="false">No</option>
-                    </select>
-                </div>
-                <div class="form-group" style="flex: 1;">
-                    <label for="isdownload">Download:</label>
-                    <select id="isdownload" name="isdownload" required>
-                        <option value="true">Yes</option>
-                        <option value="false">No</option>
-                    </select>
-                </div>
             </div>
             <div class="modal-actions">
                 <button type="button" class="action-btn" onclick="hideModal('addDocumentTypeModal')">Cancel</button>
