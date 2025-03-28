@@ -113,7 +113,11 @@ document.addEventListener('DOMContentLoaded', function() {
     // Close modals when clicking outside
     window.addEventListener('click', function(event) {
         if (event.target.classList.contains('modal')) {
-            event.target.style.display = 'none';
+            event.stopPropagation();
+            const modalContent = event.target.querySelector('.modal-content');
+            if (!modalContent || !modalContent.contains(event.target)) {
+                hideModal(event.target.id);
+            }
         }
     });
 
