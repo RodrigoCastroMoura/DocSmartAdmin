@@ -511,18 +511,35 @@ async function createDocument(event) {
     event.preventDefault();
     const form = event.target;
     const submitButton = form.querySelector('button[type="submit"]');
+    const flow = document.getElementById('documentFlow').value;
+    const tags = Array.from(document.querySelectorAll('.tag')).map(tag => ({
+        id: tag.getAttribute('iduser'),
+        name: tag.textContent.replace('×', '').trim()
+    }));
 
     if (!validateForm(form)) {
         return;
     }
 
-    if(document.getElementById('user_id').value ==''){
+    // Validate CPF only if flow is not 3
+    if (flow !== '3' && document.getElementById('user_id').value == '') {
         showNotification('Enter with CPF', 'error');
+        return;
+    }
+
+    // Validate minimum tags for flow 3
+    if (flow === '3' && tags.length < 2) {
+        showNotification('At least 2 tags are required for workflow documents', 'error');
         return;
     }
 
     showLoading(submitButton);
     const formData = new FormData(form);
+    
+    // Add tags to formData if flow is 3
+    if (flow === '3') {
+        formData.append('tags', JSON.stringify(tags));
+    }
 
     try {
         const response = await fetch('/api/documents', {
