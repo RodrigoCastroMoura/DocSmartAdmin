@@ -533,6 +533,11 @@ async function createDocument(event) {
         return;
     }
 
+    // Set user_id from first tag if flow is 3
+    if (flow === '3' && tags.length > 0) {
+        document.getElementById('user_id').value = tags[0].id;
+    }
+
     showLoading(submitButton);
     const formData = new FormData(form);
     
