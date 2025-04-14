@@ -102,6 +102,15 @@
                     </select>
                 </div>
                 <div class="form-group">
+                    <label for="documentFlow">Flow Type</label>
+                    <select id="documentFlow" name="flow" required>
+                        <option value="">Select Flow Type</option>
+                        <option value="1">Documentos</option>
+                        <option value="2">Assinatura</option>
+                        <option value="3">WorkFlow</option>
+                    </select>
+                </div>
+                <div class="form-group">
                     <label for="user_cpf">CPF</label>
                     <div class="filter-input-wrapper search-input">
                         <input type="text" id="user_cpf" placeholder="Search user..." required>
@@ -110,19 +119,19 @@
                         </button>
                     </div>
                 </div>
+                <div class="form-group">
+                    <label for="documentTitle">User Name</label>
+                    <div class="filter-input-wrapper search-input">
+                        <input type="text" id="name-user" name="name-user" disabled required>
+                        <button type="button" class="action-btn primary" id="add-user" style="display: none;">
+                           + 
+                        </button>
+                    </div>
+                    
+                </div>
             </div>
             <div class="form-group">
-                <label for="documentTitle">User Name</label>
-                <input type="text" id="name-user" name="name-user" disabled required>
-            </div>
-            <div class="form-group">
-                <label for="documentFlow">Flow Type</label>
-                <select id="documentFlow" name="flow" required>
-                    <option value="">Select Flow Type</option>
-                    <option value="1">Documentos</option>
-                    <option value="2">Assinatura</option>
-                    <option value="3">WorkFlow</option>
-                </select>
+                <div class="tag-container" id="tag-container" style="display: none;"></div>
             </div>
             <div class="form-group">
                 <label for="documentFile">File</label>
@@ -189,6 +198,48 @@ let currentPdfPage = 1;
 let pdfTotalPages = 1;
 let pdfViewerMode = 'single';
 
+const tagInput = document.getElementById('name-user');
+const tagAttr =  document.getElementById('user_id');
+const tagContainer = document.getElementById('tag-container');
+const addBtn = document.getElementById('add-user');
+const selectType = document.getElementById('documentFlow');
+
+function createTag(text, attr) {
+    const tag = document.createElement('div');
+    tag.className = 'tag';
+    tag.textContent = text;
+    tag.setAttribute('iduser', attr);
+    const closeBtn = document.createElement('button');
+    closeBtn.textContent = '×';
+    closeBtn.onclick = () => tagContainer.removeChild(tag);
+
+    tag.appendChild(closeBtn);
+    tagContainer.appendChild(tag);
+}
+
+// Evento do botão
+addBtn.addEventListener('click', function () {
+    const text = tagInput.value.trim();
+    const attr = tagAttr.value.trim();
+    if (text !== '' && attr !== '') {
+    createTag(text, attr);
+    tagInput.value = '';
+    tagAttr.value = '';
+    document.getElementById(`user_cpf`).value = '';
+    tagInput.focus();
+    }
+});
+
+selectType.addEventListener('change', function() {
+    if( this.value != "3"){
+        addBtn.style.setProperty('display', 'none', 'important');
+        tagContainer.style.setProperty('display', 'none', 'important');
+    }else{
+        addBtn.style.setProperty('display', 'flex', 'important'); 
+        tagContainer.style.setProperty('display', 'flex', 'important');
+    }
+});
+
 async function loadFilterOptions() {
     const contentDiv = document.getElementById('documentsContent');
     showLoading(contentDiv);
@@ -250,27 +301,6 @@ async function loadFilterOptions() {
         hideLoading(contentDiv);
         feather.replace();
     }
-}
-
-function resetFilters() {
-    document.getElementById('filterDepartment').value = '';
-    document.getElementById('filterCategory').value = '';
-    document.getElementById('filterDocumentType').value = '';
-    document.getElementById('filterUser').value = '';
-    applyFilters(currentPage);
-}
-
-async function searchUser() {
-    const searchInput = document.getElementById('filterUser');
-    const searchTerm = searchInput.value.trim();
-
-    if (userSearchTimeout) {
-        clearTimeout(userSearchTimeout);
-    }
-
-    userSearchTimeout = setTimeout(() => {
-        applyFilters(currentPage);
-    }, 500);
 }
 
 async function applyFilters(Page = 1) {
@@ -508,7 +538,7 @@ async function createDocument(event) {
         hideModal('addDocumentModal');
         form.reset();
         document.getElementById('user_id').value =''
-        await loadDocuments(currentPage);
+        await applyFilters(currentPage);
         showNotification('Document created successfully', 'success');
     } catch (error) {
         console.error('Error creating document:', error);
@@ -542,7 +572,7 @@ async function confirmDelete() {
             throw new Error(errorData.error || 'Failed to delete document');
         }
 
-        await loadDocuments(currentPage);
+        await applyFilters(currentPage);
         showNotification('Document deleted successfully', 'success');
     } catch (error) {
         console.error('Error deleting document:', error);
@@ -609,6 +639,7 @@ async function loadDocuments(page = 1, filters = {}) {
                                 <p><i data-feather="calendar"></i> ${new Date(doc.created_at).toLocaleDateString()}</p>
                                 <p><i data-feather="eye"></i> Views: ${doc.view_count || 0}</p>
                                 <p><i data-feather="download"></i> Downloads: ${doc.download_count || 0}</p>
+                            ${doc.flow > 1 ?`<p><i data-feather="edit"></i> Signature: ${doc.signature ? 'Yes' : 'No'}</p>` : ''}
                             </div>
                         </div>
                         <div class="document-actions">
@@ -1105,6 +1136,36 @@ document.addEventListener('DOMContentLoaded', () => {
 </script>
 
 <style>
+    .tag-container {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      padding: 10px;
+      border: 1px solid #ccc;
+      border-radius: 6px;
+      min-height: 50px;
+    }
+    .tag {
+      background-color: #007bff;
+      color: white;
+      padding: 6px 10px;
+      border-radius: 4px;
+      display: flex;
+      align-items: center;
+    }
+    .tag button {
+      background: none;
+      border: none;
+      color: white;
+      margin-left: 8px;
+      cursor: pointer;
+    }
+    #tag-input {
+      margin-top: 10px;
+      padding: 6px;
+      width: 200px;
+    }
+    
     .documents-grid {
         display: grid;
         grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
