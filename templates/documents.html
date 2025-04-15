@@ -113,7 +113,7 @@
                 <div class="form-group">
                     <label for="user_cpf">CPF</label>
                     <div class="filter-input-wrapper search-input">
-                        <input type="text" id="user_cpf" placeholder="Search user..." required>
+                        <input type="text" id="user_cpf" placeholder="Search user...">
                         <button type="button" class="action-btn primary" onclick="searchUser()">
                             <i data-feather="search"></i>
                         </button>
@@ -122,7 +122,7 @@
                 <div class="form-group">
                     <label for="documentTitle">User Name</label>
                     <div class="filter-input-wrapper search-input">
-                        <input type="text" id="name-user" name="name-user" disabled required>
+                        <input type="text" id="name-user" name="name-user" disabled>
                         <button type="button" class="action-btn primary" id="add-user" style="display: none;">
                            + 
                         </button>
@@ -512,9 +512,10 @@ async function createDocument(event) {
     const form = event.target;
     const submitButton = form.querySelector('button[type="submit"]');
     const flow = document.getElementById('documentFlow').value;
-    const tags = Array.from(document.querySelectorAll('.tag')).map(tag => ({
-        id: tag.getAttribute('iduser'),
-        name: tag.textContent.replace('×', '').trim()
+    const tags = Array.from(document.querySelectorAll('.tag')).map((tag, index) => ({
+        id: index + 1,
+        user_id: tag.getAttribute('iduser'),
+        signature: false
     }));
 
     if (!validateForm(form)) {
@@ -535,7 +536,7 @@ async function createDocument(event) {
 
     // Set user_id from first tag if flow is 3
     if (flow === '3' && tags.length > 0) {
-        document.getElementById('user_id').value = tags[0].id;
+        document.getElementById('user_id').value = tags[0].user_id;
     }
 
     showLoading(submitButton);
@@ -543,7 +544,7 @@ async function createDocument(event) {
     
     // Add tags to formData if flow is 3
     if (flow === '3') {
-        formData.append('tags', JSON.stringify(tags));
+        formData.append('flow_user', JSON.stringify(tags));
     }
 
     try {
