@@ -560,7 +560,8 @@ async function createDocument(event) {
 
         hideModal('addDocumentModal');
         form.reset();
-        document.getElementById('user_id').value =''
+        document.getElementById('user_id').value = '';
+        document.getElementById('tag-container').innerHTML = ''; // Clear tags
         await applyFilters(currentPage);
         showNotification('Document created successfully', 'success');
     } catch (error) {
