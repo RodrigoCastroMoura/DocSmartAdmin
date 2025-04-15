@@ -272,6 +272,7 @@ selectType.addEventListener('change', function() {
     if( this.value != "3"){
         addBtn.style.setProperty('display', 'none', 'important');
         tagContainer.style.setProperty('display', 'none', 'important');
+        document.getElementById('tag-container').innerHTML = ''; // Clear tags
     }else{
         addBtn.style.setProperty('display', 'flex', 'important'); 
         tagContainer.style.setProperty('display', 'flex', 'important');
