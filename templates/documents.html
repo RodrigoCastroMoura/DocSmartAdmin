@@ -209,12 +209,50 @@ function createTag(text, attr) {
     tag.className = 'tag';
     tag.textContent = text;
     tag.setAttribute('iduser', attr);
+    tag.draggable = true;
+    
+    tag.addEventListener('dragstart', handleDragStart);
+    tag.addEventListener('dragend', handleDragEnd);
+    tag.addEventListener('dragover', handleDragOver);
+    tag.addEventListener('drop', handleDrop);
+
     const closeBtn = document.createElement('button');
     closeBtn.textContent = '×';
     closeBtn.onclick = () => tagContainer.removeChild(tag);
 
     tag.appendChild(closeBtn);
     tagContainer.appendChild(tag);
+}
+
+function handleDragStart(e) {
+    e.target.classList.add('dragging');
+    e.dataTransfer.setData('text/plain', e.target.getAttribute('iduser'));
+}
+
+function handleDragEnd(e) {
+    e.target.classList.remove('dragging');
+}
+
+function handleDragOver(e) {
+    e.preventDefault();
+}
+
+function handleDrop(e) {
+    e.preventDefault();
+    const draggingTag = document.querySelector('.dragging');
+    const dropTarget = e.target.closest('.tag');
+    
+    if (draggingTag && dropTarget && draggingTag !== dropTarget) {
+        const allTags = [...tagContainer.querySelectorAll('.tag')];
+        const dragIndex = allTags.indexOf(draggingTag);
+        const dropIndex = allTags.indexOf(dropTarget);
+        
+        if (dragIndex < dropIndex) {
+            dropTarget.parentNode.insertBefore(draggingTag, dropTarget.nextSibling);
+        } else {
+            dropTarget.parentNode.insertBefore(draggingTag, dropTarget);
+        }
+    }
 }
 
 // Evento do botão
@@ -1176,6 +1214,11 @@ document.addEventListener('DOMContentLoaded', () => {
       border-radius: 4px;
       display: flex;
       align-items: center;
+      cursor: move;
+      user-select: none;
+    }
+    .tag.dragging {
+      opacity: 0.5;
     }
     .tag button {
       background: none;
