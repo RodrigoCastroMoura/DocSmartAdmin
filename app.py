@@ -40,7 +40,7 @@ CATEGORIES_URL = f"{API_BASE_URL}/categories"
 DOCUMENTS_URL = f"{API_BASE_URL}/documents"
 USERS_URL = f"{API_BASE_URL}/users"
 ADMIN_URL = f"{API_BASE_URL}/admins"
-DOCUMENT_TYPES_URL = f"{API_BASE_URL}/document_types"
+DOCUMENT_TYPES_URL = f"{API_BASE_URL}/document-types"
 
 # Request timeout in seconds
 REQUEST_TIMEOUT = 30  # Increased timeout for better reliability
