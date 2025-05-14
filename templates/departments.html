@@ -3,9 +3,9 @@
 {% block content %}
 <div class="page-container">
     <div class="header-actions">
-        <h2><i data-feather="briefcase"></i> Departments</h2>
+        <h2><i data-feather="folder"></i></i> Arquivos</h2>
         <button class="action-btn primary" onclick="showAddDepartmentModal()">
-            <i data-feather="plus"></i> Add Department
+            <i data-feather="plus"></i>  Arquivos
         </button>
     </div>
     <div class="content-grid" id="departmentsContent">
@@ -21,15 +21,15 @@
 <!-- Add Department Modal -->
 <div id="addDepartmentModal" class="modal">
     <div class="modal-content">
-        <h3>Add Department</h3>
+        <h3>Adicionar Arquivo</h3>
         <form id="addDepartmentForm" onsubmit="createDepartment(event)">
             <div class="form-group">
-                <label for="departmentName">Department Name</label>
+                <label for="departmentName">Nome do Arquivo:</label>
                 <input type="text" id="departmentName" name="name" required>
             </div>
             <div class="modal-actions">
-                <button type="button" class="action-btn" onclick="hideModal('addDepartmentModal')">Cancel</button>
-                <button type="submit" class="action-btn primary">Add</button>
+                <button type="button" class="action-btn" onclick="hideModal('addDepartmentModal')">Cancelar</button>
+                <button type="submit" class="action-btn primary">Adicionar</button>
             </div>
         </form>
     </div>
@@ -156,7 +156,7 @@ function generateDepartmentsHTML(departments) {
         ${departments.map(department => `
             <div class="department-card" data-id="${department.id}">
                 <div class="department-header">
-                    <i data-feather="briefcase"></i>
+                     <i data-feather="folder"></i>
                     <div class="department-title">
                         <a href="/departments/${department.id}/categories" class="department-link">
                             <h3>${department.name}</h3>

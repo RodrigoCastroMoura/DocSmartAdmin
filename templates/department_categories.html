@@ -23,7 +23,7 @@
                 {% for category in categories %}
                 <div class="category-card" data-id="{{ category.id }}">
                     <div class="category-header">
-                        <i data-feather="folder"></i>
+                        <i data-feather="grid"></i>
                         <div class="category-title">
                             <a href="{{ url_for('categories_document_types', category_id=category.id) }}" class="category-link">
                                 <h3>{{ category.name }}</h3>
@@ -32,7 +32,7 @@
                     </div>
                     <div class="category-info">
                         <div class="department-badge">
-                            <i data-feather="briefcase"></i>
+                            <i data-feather="folder"></i>
                             <span>{{category.department_name}}</span>
                         </div>
                         <p>{{ category.document_count|default(0) }} documents</p>

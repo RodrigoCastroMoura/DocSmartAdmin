@@ -1,6 +1,6 @@
 // Form validation utilities
 window.ValidationRules = window.ValidationRules || {
-    required: (value) => value && value.trim() !== '' ? '' : 'This field is required',
+    required: (value) => value && value.trim() !== '' ? '' : 'Campo obrigatório',
     email: (value) => {
         const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
         return emailRegex.test(value) ? '' : 'Please enter a valid email address';

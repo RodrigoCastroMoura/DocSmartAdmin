@@ -83,21 +83,21 @@
                     <span>Dashboard</span>
                 </a>
                 <a href="{{ url_for('departments') }}" class="nav-item {% if request.endpoint == 'departments' %}active{% endif %}">
-                    <i data-feather="briefcase"></i>
-                    <span>Departments</span>
+                    <i data-feather="folder"></i>
+                    <span>Arquivos</span>
                 </a>
-                <a href="{{ url_for('categories') }}" class="nav-item {% if request.endpoint == 'categories' %}active{% endif %}">
+                <!-- <a href="{{ url_for('categories') }}" class="nav-item {% if request.endpoint == 'categories' %}active{% endif %}">
                     <i data-feather="grid"></i>
                     <span>Categories</span>
-                </a>
+                </a> -->
                 <a href="{{ url_for('documents') }}" class="nav-item {% if request.endpoint == 'documents' %}active{% endif %}">
                     <i data-feather="file-text"></i>
                     <span>&nbsp;Documents</span>
                 </a>
-                <a href="{{ url_for('document_types') }}" class="nav-item {% if request.endpoint == 'document_types' %}active{% endif %}">
+                <!-- <a href="{{ url_for('document_types') }}" class="nav-item {% if request.endpoint == 'document_types' %}active{% endif %}">
                     <i data-feather="file"></i>
                     <span>&nbsp;Document Types</span>
-                </a>
+                </a> -->
                 <a href="{{ url_for('users') }}" class="nav-item {% if request.endpoint == 'users' %}active{% endif %}">
                     <i data-feather="users"></i>
                     <span>Users</span>
