@@ -198,10 +198,22 @@
     </div>
 </div>
 
+<div id="deleteConfirmationModal" class="modal">
+    <div class="modal-content">
+        <h3>Confirmar Exclusão</h3>
+        <p>Tem certeza que deseja excluir este tipo de documento?</p>
+        <div class="modal-actions">
+            <button type="button" class="action-btn" onclick="hideModal('deleteConfirmationModal')">Cancelar</button>
+            <button type="button" class="action-btn danger" id="confirmDeleteBtn">Excluir</button>
+        </div>
+    </div>
+</div>
+
 <script>
 let currentPage = 1;
 const perPage = 9;
 let totalPages = 1;
+let documentTypeIdToDelete = null;
 
 function getAccessToken() {
     return "{{ session.get('access_token', '') }}";
@@ -339,7 +351,7 @@ function generateDocumentTypesHTML(types) {
                 <button class="action-btn" onclick='showEditDocumentTypeModal("${type.id}", ${JSON.stringify(type)})'>
                     <i data-feather="edit-2"></i>
                 </button>
-                <button class="action-btn danger" onclick="deleteDocumentType('${type.id}')">
+                <button class="action-btn danger" onclick="showDeleteConfirmationModal('${type.id}')">
                     <i data-feather="trash-2"></i>
                 </button>
             </div>
@@ -375,12 +387,9 @@ function showAddDocumentTypeModal() {
     showModal('addDocumentTypeModal');
 }
 
-function showEditDocumentTypeModal(id, type) {
+async function showEditDocumentTypeModal(id, type) {
     try {
-        const editForm = document.getElementById('editDocumentTypeForm');
-        if (!editForm) {
-            throw new Error('Formulário de edição não encontrado');
-        }
+        document.getElementById('editDocumentTypeForm').reset();
 
         // Set basic fields
         const fields = {
@@ -397,10 +406,11 @@ function showEditDocumentTypeModal(id, type) {
         });
 
         // Set radio buttons for public
-        const publicRadios = editForm.querySelectorAll('input[name="public"]');
-        publicRadios.forEach(radio => {
-            radio.checked = (radio.value === String(type.public));
-        });
+        if (type.public) {
+            document.getElementById('editPublicTrue').checked = true;
+        } else {
+            document.getElementById('editPublicFalse').checked = true;
+        }
 
         // Set select values for addDocuments and isdownload
         const addDocsSelect = document.getElementById('editAddDocuments');
@@ -413,7 +423,22 @@ function showEditDocumentTypeModal(id, type) {
             downloadSelect.value = String(type.isdownload);
         }
 
+        // Set department and category if present
+        if (type.department_id) {
+            const deptSelect = document.getElementById('documentTypeDepartment');
+            deptSelect.value = type.department_id;
+            await loadDepartmentCategories(type.department_id);
+
+            setTimeout(() => {
+                const catSelect = document.getElementById('documentTypeCategory');
+                if (catSelect && type.category_id) {
+                    catSelect.value = type.category_id;
+                }
+            }, 500);
+        }
+
         showModal('editDocumentTypeModal');
+        feather.replace();
     } catch (error) {
         console.error('Erro ao configurar modal de edição:', error);
         showNotification('Erro ao carregar formulário de edição', 'error');
@@ -498,10 +523,14 @@ async function updateDocumentType(event) {
     }
 }
 
-async function deleteDocumentType(id) {
-    if (!confirm('Tem certeza que deseja excluir este tipo de documento?')) {
-        return;
-    }
+function showDeleteConfirmationModal(id) {
+    documentTypeIdToDelete = id;
+    showModal('deleteConfirmationModal');
+}
+
+async function deleteDocumentType() {
+    const id = documentTypeIdToDelete;
+    hideModal('deleteConfirmationModal');
 
     const card = document.querySelector(`.document-type-card[data-id="${id}"]`);
     showLoading(card);
@@ -523,8 +552,11 @@ async function deleteDocumentType(id) {
         showErrorMessage(error.message);
     } finally {
         hideLoading(card);
+        documentTypeIdToDelete = null;
     }
 }
+
+document.getElementById('confirmDeleteBtn').addEventListener('click', deleteDocumentType);
 
 async function showUserAccessModal(documentTypeId, action) {
     document.getElementById('userAccessTitle').textContent = action === 'add' ? 'Adicionar Acesso de Usuário' : 'Remover Acesso de Usuário';
@@ -947,8 +979,7 @@ document.addEventListener('DOMContentLoaded', () => {
 }
 
 .department-badge {
-    display: inline-flex;
-    align-items: center;
+    display: inline-flex;align-items: center;
     gap: 0.5rem;
     padding: 0.25rem 0.75rem;
     background-color: var(--bg-secondary);
