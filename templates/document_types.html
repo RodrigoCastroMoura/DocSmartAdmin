@@ -44,13 +44,13 @@
             <div class="form-group">
                 <label for="documentTypeDepartment">Department</label>
                 <select id="documentTypeDepartment" onchange="loadDepartmentCategories(this.value)">
-                    <option value="">Select Department</option>
+                    <option value="">Selecione o Departamento</option>
                 </select>
             </div>
             <div class="form-group">
                 <label for="documentTypeCategory">Category</label>
                 <select id="documentTypeCategory" name="category_id" required>
-                    <option value="">Select Category</option>
+                    <option value="">Selecione a Categoria</option>
                 </select>
             </div>
             <div style="display: flex; gap: 1rem;">
@@ -58,16 +58,16 @@
                     <label for="addDocuments">Add Documento:</label>
                     <select id="addDocuments" name="addDocuments" required>
                         <option>Select</option>
-                        <option value="true">Yes</option>
-                        <option value="false">No</option>
+                        <option value="true">Sim</option>
+                        <option value="false">Não</option>
                     </select>
                 </div>
                 <div class="form-group" style="flex: 1;">
                     <label for="isdownload">Download:</label>
                     <select id="isdownload" name="isdownload" required>
                         <option>Select</option>
-                        <option value="true">Yes</option>
-                        <option value="false">No</option>
+                        <option value="true">Sim</option>
+                        <option value="false">Não</option>
                     </select>
                 </div>
             </div>
@@ -109,13 +109,13 @@
             <div class="form-group">
                 <label for="editDocumentTypeDepartment">Department</label>
                 <select id="editDocumentTypeDepartment" onchange="loadDepartmentCategories(this.value, 'editDocumentTypeCategory')">
-                    <option value="">Select Department</option>
+                    <option value="">Selecione o Departamento</option>
                 </select>
             </div>
             <div class="form-group">
                 <label for="editDocumentTypeCategory">Category</label>
                 <select id="editDocumentTypeCategory" name="category_id" required>
-                    <option value="">Select Category</option>
+                    <option value="">Selecione a Categoria</option>
                 </select>
             </div>
             <div style="display: flex; gap: 1rem;">
@@ -123,16 +123,16 @@
                     <label for="editAddDocuments">Add Documento:</label>
                     <select id="editAddDocuments" name="addDocuments" required>
                         <option>Select</option>
-                        <option value="true">Yes</option>
-                        <option value="false">No</option>
+                        <option value="true">Sim</option>
+                        <option value="false">Não</option>
                     </select>
                 </div>
                 <div class="form-group" style="flex: 1;">
                     <label for="editIsdownload">Download:</label>
                     <select id="editIsdownload" name="isdownload" required>
                         <option>Select</option>
-                        <option value="true">Yes</option>
-                        <option value="false">No</option>
+                        <option value="true">Sim</option>
+                        <option value="false">Não</option>
                     </select>
                 </div>
             </div>
@@ -262,7 +262,7 @@ async function loadDepartments() {
         const data = await response.json();
 
         const departmentsOptions = `
-            <option value="">Select Department</option>
+            <option value="">Selecione o Departamento</option>
             ${data.map(dept => 
                 `<option value="${dept.id}">${dept.name}</option>`
             ).join('')}`;
@@ -289,7 +289,7 @@ async function loadDepartmentCategories(departmentId, targetId = 'documentTypeCa
         const data = await response.json();
 
         categorySelect.innerHTML = `
-            <option value="">Select Category</option>
+            <option value="">Selecione a Categoria</option>
             ${data.categories.map(cat => 
                 `<option value="${cat.id}">${cat.name}</option>`
             ).join('')}`;

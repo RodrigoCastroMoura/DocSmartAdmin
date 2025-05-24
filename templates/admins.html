@@ -44,7 +44,7 @@
                 <div class="form-section">
                     <div class="section-title">
                         <i data-feather="user"></i>
-                        <h4>Basic Information</h4>
+                        <h4>Informações Básicas</h4>
                     </div>
                     <div class="form-row">
                         <div class="form-group">
@@ -81,7 +81,7 @@
                 <div class="form-section">
                     <div class="section-title">
                         <i data-feather="shield"></i>
-                        <h4>Access Permissions</h4>
+                        <h4>Permissões de Acesso</h4>
                     </div>
                     <div class="permissions-container">
                         <div id="addPermissionsGrid" class="permissions-grid">
@@ -121,7 +121,7 @@
                 <div class="form-section">
                     <div class="section-title">
                         <i data-feather="user"></i>
-                        <h4>Basic Information</h4>
+                        <h4>Informações Básicas</h4>
                     </div>
                     <div class="form-row">
                         <div class="form-group">
@@ -146,13 +146,13 @@
                             </div>
                         </div>
                     </div>
-                    
+
                 </div>
 
                 <div class="form-section">
                     <div class="section-title">
                         <i data-feather="shield"></i>
-                        <h4>Access Permissions</h4>
+                        <h4>Permissões de Acesso</h4>
                     </div>
                     <div class="permissions-container">
                         <div id="editPermissionsGrid" class="permissions-grid">
@@ -773,7 +773,7 @@ function generateAdminsHTML(admins) {
             </td>
             <td>
                 <div class="table-actions">
-                    
+
                         <button class="action-btn ${admin.status === 'active' ? 'success' : 'danger'}" 
                                 onclick="toggleAdminStatus('${admin.id}', '${admin.status === 'active' ? 'inactive' : 'active'}')" 
                                 title="${admin.status === 'active' ? 'Deactivate' : 'Activate'}">
@@ -785,7 +785,7 @@ function generateAdminsHTML(admins) {
                         <button class="action-btn danger" onclick="deleteAdmin('${admin.id}')" title="Delete">
                             <i data-feather="trash-2"></i>
                         </button>
-                 
+
                 </div>
             </td>
         </tr>
@@ -848,7 +848,7 @@ async function toggleAdminStatus(adminId, newStatus) {
         });
 
         let errorMessage = 'Failed to update status';
-        
+
         if (!response.ok) {
             try {
                 const errorData = await response.json();
@@ -953,7 +953,7 @@ async function showEditAdminModal(admin) {
     document.getElementById('editAdminName').value = admin.name;
     document.getElementById('editAdminEmail').value = admin.email;
     document.getElementById('editAdminCPF').value = admin.cpf; // Added CPF field for edit modal
-   
+
 
     showModal('editAdminModal');
 }

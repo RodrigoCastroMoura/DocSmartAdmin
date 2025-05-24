@@ -80,7 +80,7 @@ function showDeleteConfirmation(id) {
 
 async function confirmDelete() {
     if (!itemToDelete) return;
-    
+
     const id = itemToDelete;
     hideModal('deleteConfirmModal');
     const card = document.querySelector(`.department-card[data-id="${id}"]`);
@@ -118,11 +118,11 @@ async function loadDepartments() {
         if (!response.ok) {
             throw new Error(data.error || `Failed to load departments (${response.status})`);
         }
-        
+
         if (!Array.isArray(data)) {
             throw new Error('Invalid response format: expected an array');
         }
-        
+
         contentDiv.innerHTML = generateDepartmentsHTML(data);
         feather.replace();
     } catch (error) {
@@ -195,11 +195,11 @@ async function createDepartment(event) {
     event.preventDefault();
     const form = event.target;
     const submitButton = form.querySelector('button[type="submit"]');
-    
+
     if (!validateForm(form)) {
         return;
     }
-    
+
     const name = form.name.value;
     showLoading(submitButton);
 
@@ -233,11 +233,11 @@ async function updateDepartment(event) {
     event.preventDefault();
     const form = event.target;
     const submitButton = form.querySelector('button[type="submit"]');
-    
+
     if (!validateForm(form)) {
         return;
     }
-    
+
     const id = document.getElementById('editDepartmentId').value;
     const name = document.getElementById('editDepartmentName').value;
     showLoading(submitButton);

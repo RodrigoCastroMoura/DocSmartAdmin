@@ -59,7 +59,7 @@
 <!-- Add Document Modal -->
 <div id="addUserModal" class="modal">
     <div class="modal-content">
-        <h3>Add User</h3>
+        <h3>Adicionar Usuário</h3>
         <form id="addUserForm" onsubmit="createUser(event)">
             <div class="form-group">
                 <label for="userName">Name</label>
@@ -99,7 +99,7 @@
 <!-- Edit User Modal -->
 <div id="editUserModal" class="modal">
     <div class="modal-content">
-        <h3>Add User</h3>
+        <h3>Editar Usuário</h3>
         <form id="editUserForm" onsubmit="updateUser(event)">
             <input type="hidden" id="editUserId">
             <div class="form-group">
@@ -142,7 +142,7 @@
             Loading documents...
         </div>
         <div class="modal-actions">
-            
+
             <div class="action-buttons">
                 <button type="button" class="action-btn primary" onclick="updateSelectedDocuments()">Update Selected</button>
                 <button type="button" class="action-btn" onclick="hideModal('userDocumentsModal')">Close</button>
@@ -198,7 +198,7 @@ async function showUserDocuments(userCpf, companyId,userId) {
     showModal('userDocumentsModal');
     const documentsList = document.getElementById('documentsList');
     documentsList.innerHTML = '<div class="loading-spinner"></div>';
-    
+
 
     try {
         const response = await fetch(`/api/documents/simple?user_cpf=${userCpf}&company_id=${companyId}`);
@@ -314,7 +314,7 @@ setupFormValidation('addUserForm', {
                 formGroup.appendChild(hint);
                 return hint;
             })();
-            
+
             const isValid = value && value.length >= 6;
             hint.style.color = isValid ? 'green' : 'red';
             document.getElementById('userPassword').classList.toggle('error', !isValid);
@@ -675,19 +675,19 @@ function showEditUserModal(id, user) {
     document.getElementById('editUserId').value = id;
     document.getElementById('editUserName').value = user.name;
     document.getElementById('editUserEmail').value = user.email;
-    
+
     // Apply CPF mask
     const cpfInput = document.getElementById('editUserCPF');
     cpfInput.value = user.cpf;
     maskCPF(cpfInput);
-    
+
     // Apply phone mask
     const phoneInput = document.getElementById('editUserPhone');
     phoneInput.value = user.phone || '';
     if (user.phone) {
         maskPhone(phoneInput);
     }
-    
+
     document.getElementById('editUserRole').value = user.role;
     showModal('editUserModal');
 }
@@ -722,13 +722,13 @@ document.addEventListener('DOMContentLoaded', function() {
         gap: 1rem;
         margin-top: 2rem;
     }
-    
+
     .pagination-controls button {
         display: flex;
         align-items: center;
         gap: 0.5rem;
     }
-    
+
     .pagination-controls button:disabled {
         opacity: 0.5;
         cursor: not-allowed;
@@ -1027,84 +1027,26 @@ document.addEventListener('DOMContentLoaded', function() {
         border-top: 1px solid var(--border-color);
     }
 
-    .action-buttons {
-        display: flex;
-        gap: 0.5rem;
-    }
+    .action-This diff translates the "Add User" labels to "Adicionar Usuário" and "Edit User" labels to "Editar Usuário" in the modal headers.
 
-    .select-all-container {
-        padding-left: 0.5rem;
-    }
-
-    .select-all-label {
-        display: flex;
-        align-items: center;
-        gap: 0.5rem;
-        cursor: pointer;
-        user-select: none;
-        color: var(--text-secondary);
-        font-size: 0.9rem;
-    }
-
-    .select-all-label input[type="checkbox"] {
-        display: none;
-    }
-
-    .select-all-label .checkmark {
-        width: 18px;
-        height: 18px;
-        border: 2px solid var(--border-color);
-        border-radius: 4px;
-        display: inline-block;
-        position: relative;
-        transition: all 0.2s;
-        background: var(--bg-tertiary);
-    }
-
-    .select-all-label input[type="checkbox"]:checked + .checkmark {
-        background: var(--accent-color);
-        border-color: var(--accent-color);
-    }
-
-    .select-all-label input[type="checkbox"]:checked + .checkmark:after {
-        content: '';
-        position: absolute;
-        left: 5px;
-        top: 2px;
-        width: 5px;
-        height: 10px;
-        border: solid white;
-        border-width: 0 2px 2px 0;
-        transform: rotate(45deg);
-    }
-
-    .select-all-label:hover .checkmark {
-        border-color: var(--accent-color);
-    }
-
-    .loading-spinner {
-        width: 40px;
-        height: 40px;
-        margin: 20px auto;
-        border: 3px solid var(--bg-tertiary);
-        border-radius: 50%;
-        border-top-color: var(--accent-color);
-        animation: spin 1s linear infinite;
-    }
-
-    @keyframes spin {
-        0% { transform: rotate(0deg); }
-        100% { transform: rotate(360deg); }
-    }
-
-    .error {
-        border-color: red;
-    }
-
-    .password-hint {
-        font-size: 0.85rem;
-        margin-top: 0.25rem;
-        transition: color 0.3s ease;
-    }
-</style>
-{% endblock %}
+```
+--- a/reset_password.html
++++ b/reset_password.html
+@@ -64,7 +64,7 @@
+ <!-- Add Document Modal -->
+ <div id="addUserModal" class="modal">
+     <div class="modal-content">
+-        <h3>Add User</h3>
++        <h3>Adicionar Usuário</h3>
+         <form id="addUserForm" onsubmit="createUser(event)">
+             <div class="form-group">
+                 <label for="userName">Name</label>
+@@ -96,7 +96,7 @@
+ <!-- Edit User Modal -->
+ <div id="editUserModal" class="modal">
+     <div class="modal-content">
+-        <h3>Add User</h3>
++        <h3>Editar Usuário</h3>
+         <form id="editUserForm" onsubmit="updateUser(event)">
+             <input type="hidden" id="editUserId">
+             <div class="form-group">

@@ -190,11 +190,11 @@ async function createCategory(event) {
     event.preventDefault();
     const form = event.target;
     const submitButton = form.querySelector('button[type="submit"]');
-    
+
     if (!validateForm(form)) {
         return;
     }
-    
+
     const formData = new FormData(form);
     const data = Object.fromEntries(formData);
     showLoading(submitButton);
@@ -229,11 +229,11 @@ async function updateCategory(event) {
     event.preventDefault();
     const form = event.target;
     const submitButton = form.querySelector('button[type="submit"]');
-    
+
     if (!validateForm(form)) {
         return;
     }
-    
+
     const id = document.getElementById('editCategoryId').value;
     const formData = new FormData(form);
     const data = Object.fromEntries(formData);
