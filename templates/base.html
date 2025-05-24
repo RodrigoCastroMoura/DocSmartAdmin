@@ -175,11 +175,11 @@
 
             if (type === 'success') {
                 header.classList.add('success');
-                title.textContent = 'Success';
+                title.textContent = 'Sucesso';
                 icon.setAttribute('data-feather', 'check-circle');
             } else {
                 header.classList.add('error');
-                title.textContent = 'Error';
+                title.textContent = 'Erro';
                 icon.setAttribute('data-feather', 'alert-circle');
             }
 
@@ -247,7 +247,7 @@
             const confirmPassword = form.confirmPassword.value;
 
             if (newPassword !== confirmPassword) {
-                showNotification('New passwords do not match', 'error');
+                showNotification('As novas senhas não coincidem', 'error');
                 return;
             }
 
@@ -264,16 +264,16 @@
                 });
 
                 if (response.ok) {
-                    showNotification('Password changed successfully', 'success');
+                    showNotification('Senha alterada com sucesso', 'success');
                     hidePasswordChangeModal();
                     // Reload page after successful password change
                     setTimeout(() => window.location.reload(), 1500);
                 } else {
                     const data = await response.json();
-                    showNotification(data.error || 'Failed to change password', 'error');
+                    showNotification(data.error || 'Falha ao alterar senha', 'error');
                 }
             } catch (error) {
-                showNotification('An error occurred while changing password', 'error');
+                showNotification('Ocorreu um erro ao alterar a senha', 'error');
             }
         }
     </script>

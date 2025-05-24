@@ -778,7 +778,7 @@ async function searchUser() {
         const response = await fetch(`/api/users?${params}`);
         if (!response.ok) {
             closePopup();
-            showNotification('User not found', 'error');
+            showNotification('Usuário não encontrado', 'error');
             document.getElementById('name-user').value = '';
             document.getElementById('user_id').value ='';
             return;
@@ -788,7 +788,7 @@ async function searchUser() {
 
         if(!usuario){
             closePopup();
-            showNotification('User not found', 'error');
+            showNotification('Usuário não encontrado', 'error');
             document.getElementById('name-user').value = '';
             document.getElementById('user_id').value ='';
             return;
@@ -890,6 +890,8 @@ async function previewDocument(url, filename) {
             // Create the image element
             const imageElement = document.createElement('img');
             imageElement.className = 'preview-image';
+            imageElement.alt = 'Image Preview';
+            imageElement.src= url;
             imageElement.alt = 'Image Preview';
             imageElement.src= url;
             imgContainer.appendChild(imageElement);

@@ -828,7 +828,7 @@ async function createAdmin(event) {
         showNotification('Administrador criado com sucesso', 'success');
         loadAdmins();
     } catch (error) {
-        console.error('Error creating administrator:', error);
+        console.error('Erro ao criar administrador:', error);
         showNotification(error.message, 'error');
     } finally {
         hideLoading(submitButton);
@@ -861,10 +861,10 @@ async function toggleAdminStatus(adminId, newStatus) {
             throw new Error(errorMessage);
         }
 
-        showNotification(`Administrator ${newStatus === 'active' ? 'activated' : 'deactivated'} successfully`, 'success');
+        showNotification(`Administrador ${newStatus === 'active' ? 'ativado' : 'desativado'} com sucesso`, 'success');
         loadAdmins();
     } catch (error) {
-        console.error('Error updating admin status:', error);
+        console.error('Erro ao atualizar status do administrador:', error);
         showNotification(error.message, 'error');
     }
 }
@@ -903,7 +903,7 @@ async function updateAdmin(event) {
         showNotification('Administrador atualizado com sucesso', 'success');
         loadAdmins();
     } catch (error) {
-        console.error('Error updating administrator:', error);
+        console.error('Erro ao atualizar administrador:', error);
         showNotification(error.message, 'error');
     } finally {
         hideLoading(submitButton);
@@ -930,7 +930,7 @@ async function confirmDelete() {
         showNotification('Administrador excluído com sucesso', 'success');
         loadAdmins();
     } catch (error) {
-        console.error('Error deleting administrator:', error);
+        console.error('Erro ao excluir administrador:', error);
         showNotification(error.message, 'error');
     } finally {
         hideLoading(row);

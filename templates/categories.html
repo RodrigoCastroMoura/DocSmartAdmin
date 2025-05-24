@@ -218,8 +218,8 @@ async function createCategory(event) {
         await loadCategories();
         showNotification('Categoria criada com sucesso', 'success');
     } catch (error) {
-        console.error('Error creating categories:', error);
-        showErrorMessage(error.message || 'Failed to create categories', 'error');
+        console.error('Erro ao criar categorias:', error);
+        showErrorMessage(error.message || 'Falha ao criar categorias', 'error');
     } finally {
         hideLoading(submitButton);
     }
@@ -257,8 +257,8 @@ async function updateCategory(event) {
         await loadCategories();
         showNotification('Categoria atualizada com sucesso', 'success');
     } catch (error) {
-        console.error('Error updating categories:', error);
-        showNotification(error.message || 'Failed to update categories', 'error');
+        console.error('Erro ao atualizar categorias:', error);
+        showNotification(error.message || 'Falha ao atualizar categorias', 'error');
     } finally {
         hideLoading(submitButton);
     }
@@ -286,11 +286,11 @@ async function confirmDelete() {
             }
 
             await loadCategories();
-            showNotification('Categories deleted successfully', 'success');
+            showNotification('Categoria excluída com sucesso', 'success');
     } 
     catch (error) {
-        console.error('Error deleting categories:', error);
-        showNotification(error.message || 'Failed to delete categories', 'error');
+        console.error('Erro ao excluir categorias:', error);
+        showNotification(error.message || 'Falha ao excluir categorias', 'error');
     } 
     finally {
         hideLoading(card);
