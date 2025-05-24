@@ -155,7 +155,7 @@ async function loadFilterOptions() {
         }
         populateFilterSelect('filterDepartment', departments);
         populateFilterSelect('documentDepartment', departments);
-        
+
         // Load users
         const userResponse = await fetch('/api/users');
         if (!userResponse.ok) {
@@ -178,7 +178,7 @@ async function loadFilterOptions() {
     } catch (error) {
         console.error('Error loading filter options:', error);
         showNotification(error.message || 'Failed to load filter options. Please try again.', 'error');
-        
+
         // Reset all filters to a safe state with error indication
         const filterIds = {
             'filterDepartment': 'Departments',
@@ -202,10 +202,10 @@ async function loadFilterOptions() {
 function populateFilterSelect(selectId, items) {
     const select = document.getElementById(selectId);
     if (!select || !Array.isArray(items)) return;
-    
+
     const currentValue = select.value;
     select.innerHTML = '';
-    
+
     // Add default option
     const defaultOption = document.createElement('option');
     defaultOption.value = '';
@@ -215,14 +215,14 @@ function populateFilterSelect(selectId, items) {
                                       selectId.includes('Category') ? 'Categories' : 
                                       'Types');
     select.appendChild(defaultOption);
-    
+
     items.forEach(item => {
         const option = document.createElement('option');
         option.value = item.id;
         option.textContent = item.name;
         select.appendChild(option);
     });
-    
+
     if (currentValue) select.value = currentValue;
 }
 
@@ -231,15 +231,15 @@ async function applyFilters() {
         document_type_id: '{{document_type.id}}',
         user_cpf: document.getElementById('user-cpf-filter').value
     };
-    
+
     // Ensure document_type_id is never empty
     if (!filters.document_type_id) {
         filters.document_type_id = '{{document_type.id}}';
     }
-    
+
     // Store filters in URL params
     const params = new URLSearchParams(filters);
-       
+
     // Reload documents with filters
     await loadDocuments(1, filters);
 }
@@ -247,7 +247,7 @@ async function applyFilters() {
 async function applyFiltersDepartment(departmentId) {
     const categorySelect = document.getElementById('filterCategory');
     const typeSelect = document.getElementById('filterDocumentType');
-    
+
     categorySelect.innerHTML = '<option value="">Loading categories...</option>';
     categorySelect.disabled = true;
     typeSelect.innerHTML = '<option value="">Types</option>';
@@ -267,7 +267,7 @@ async function applyFiltersDepartment(departmentId) {
             throw new Error(errorData.error || 'Failed to load categories');
         }
         const data = await response.json();
-        
+
         if (!data.categories || !Array.isArray(data.categories)) {
             throw new Error('Invalid categories data format');
         }
@@ -305,7 +305,7 @@ async function applyFiltersCategory(categoryId) {
             throw new Error(errorData.error || 'Failed to load document types');
         }
         const data = await response.json();
-        
+
         if (!Array.isArray(data)) {
             throw new Error('Invalid document types data format');
         }
@@ -326,7 +326,7 @@ async function applyFiltersCategory(categoryId) {
 
 function getFileIcon(filename) {
     if (!filename) return 'file';
-    
+
     const ext = filename.split('.').pop().toLowerCase();
     switch (ext) {
         case 'pdf': return 'file-text';
@@ -372,11 +372,11 @@ async function loadDocumentTypes(categoryId) {
             throw new Error(errorData.error || 'Failed to load document types');
         }
         const data = await response.json();
-        
+
         if (!Array.isArray(data)) {
             throw new Error('Invalid document types data format');
         }
-        
+
         typeSelect.innerHTML = `
             <option value="">Select Document Type</option>
             ${data.map(type => 
@@ -394,7 +394,7 @@ async function loadDocumentTypes(categoryId) {
 async function loadDepartmentCategories(departmentId) {
     const categorySelect = document.getElementById('documentCategory');
     const typeSelect = document.getElementById('documentType');
-    
+
     categorySelect.innerHTML = '<option value="">Loading categories...</option>';
     categorySelect.disabled = true;
     typeSelect.innerHTML = '<option value="">Select Document Type</option>';
@@ -412,11 +412,11 @@ async function loadDepartmentCategories(departmentId) {
             throw new Error(errorData.error || 'Failed to load categories');
         }
         const data = await response.json();
-        
+
         if (!data.categories || !Array.isArray(data.categories)) {
             throw new Error('Invalid categories data format');
         }
-        
+
         categorySelect.innerHTML = `
             <option value="">Select Category</option>
             ${data.categories.map(cat => `
@@ -436,7 +436,7 @@ async function createDocument(event) {
     event.preventDefault();
     const form = event.target;
     const submitButton = form.querySelector('button[type="submit"]');
-    
+
     if (!validateForm(form)) {
         return;
     }
@@ -445,7 +445,7 @@ async function createDocument(event) {
         showNotification('Enter with CPF', 'error');
         return;
     }
-    
+
     showLoading(submitButton);
     const formData = new FormData(form);
 
@@ -485,7 +485,7 @@ function showDeleteConfirmation(id) {
 
 async function confirmDelete() {
     if (!itemToDelete) return;
-    
+
     const id = itemToDelete;
     hideModal('deleteConfirmModal');
     const card = document.querySelector(`.document-card[data-id="${id}"]`);
@@ -518,19 +518,19 @@ async function confirmDelete() {
 async function loadDocuments(page = 1, filters = {}) {
     const contentDiv = document.getElementById('documentsContent');
     showLoading(contentDiv);
-    
+
     try {
         // Always include document_type_id in filters if not already present
         if (!filters.document_type_id) {
             filters.document_type_id = '{{document_type.id}}';
         }
-        
+
         const params = new URLSearchParams({
             page: page,
             per_page: perPage,
             ...filters
         });
-        
+
         const response = await fetch(`/api/documents?${params}`);
         if (!response.ok) {
             const errorData = await response.json();
@@ -541,15 +541,15 @@ async function loadDocuments(page = 1, filters = {}) {
         if (!data || !Array.isArray(data.documents)) {
             throw new Error('Invalid response format');
         }
-        
+
         currentPage = page;
         totalPages = data.total_pages || 1;
-        
+
         const gridHTML = data.documents.length === 0 ? `
             <div class="documents-grid">
                 <div class="no-data">
                     <i data-feather="inbox"></i>
-                    <p>No documents found</p>
+                    <p>Nenhum documento encontrado</p>
                 </div>
             </div>` : `
             <div class="documents-grid">
@@ -596,14 +596,14 @@ async function loadDocuments(page = 1, filters = {}) {
         contentDiv.innerHTML = gridHTML + `
             <div class="pagination-controls">
                 <button class="action-btn" onclick="changePage(currentPage - 1)" id="prevPage" ${currentPage <= 1 ? 'disabled' : ''}>
-                    <i data-feather="chevron-left"></i> Previous
+                    <i data-feather="chevron-left"></i> Anterior
                 </button>
-                <span id="pageInfo">Page ${currentPage} of ${totalPages}</span>
+                <span id="pageInfo">Página ${currentPage} de ${totalPages}</span>
                 <button class="action-btn" onclick="changePage(currentPage + 1)" id="nextPage" ${currentPage >= totalPages ? 'disabled' : ''}>
-                    Next <i data-feather="chevron-right"></i>
+                    Próximo <i data-feather="chevron-right"></i>
                 </button>
             </div>`;
-        
+
         feather.replace();
         updatePaginationControls();
     } catch (error) {
@@ -624,7 +624,7 @@ async function loadDocuments(page = 1, filters = {}) {
 
 async function searchUser() {
     try {
-        
+
         openPopup();
         if(document.getElementById(`user_cpf`).value == ''){
             closePopup();
@@ -635,7 +635,7 @@ async function searchUser() {
         const params = new URLSearchParams({
             cpf: document.getElementById(`user_cpf`).value,
         });
-        
+
         const response = await fetch(`/api/users?${params}`);
         if (!response.ok) {
             closePopup();
@@ -661,7 +661,7 @@ async function searchUser() {
     } catch (error) {
         console.error('Error loading documents:', error);
         showNotification(error.message || 'Failed to load users', 'error');
-       
+
     } finally {
         closePopup();
     }
@@ -670,7 +670,7 @@ async function searchUser() {
 function updatePaginationControls() {
     document.getElementById('prevPage').disabled = currentPage <= 1;
     document.getElementById('nextPage').disabled = currentPage >= totalPages;
-    document.getElementById('pageInfo').textContent = `Page ${currentPage} of ${totalPages}`;
+    document.getElementById('pageInfo').textContent = `Página ${currentPage} de ${totalPages}`;
 }
 
 function changePage(newPage) {
@@ -682,14 +682,14 @@ function changePage(newPage) {
             document_type_id: '{{document_type.id}}', // Always use the current document_type_id
             user_cpf: document.getElementById('user-cpf-filter').value || ''
         };
-        
+
         // Clean empty filters
         Object.keys(filters).forEach(key => {
             if (filters[key] === '') {
                 delete filters[key];
             }
         });
-        
+
         loadDocuments(newPage, filters);
     }
 }
@@ -716,7 +716,7 @@ async function downloadDocument(url) {
         showNotification('Document URL is not available', 'error');
         return;
     }
-    
+
     try {
         window.open(url, '_blank');
     } catch (error) {
@@ -736,7 +736,7 @@ async function previewDocument(url, filename) {
     const previewTitle = document.getElementById('previewTitle');
     const previewContainer = document.querySelector('.preview-container');
     const zoomLevelSpan = document.getElementById('zoomLevel');
-    
+
     // Reset zoom level
     zoomLevel = 1.0;
     zoomLevelSpan.textContent = `${(zoomLevel * 100).toFixed(0)}%`;
@@ -745,7 +745,7 @@ async function previewDocument(url, filename) {
     while (previewContainer.firstChild) {
         previewContainer.removeChild(previewContainer.firstChild);
     }
-    
+
     previewTitle.textContent = filename;
     const fileType = filename.split('.').pop().toLowerCase();
 
@@ -755,47 +755,47 @@ async function previewDocument(url, filename) {
             const pdfViewerContainer = document.createElement('div');
             pdfViewerContainer.className = 'pdf-viewer-container';
             previewContainer.appendChild(pdfViewerContainer);
-            
+
             // Show loading indicator
             const loadingIndicator = document.createElement('div');
             loadingIndicator.className = 'pdf-loading';
-            loadingIndicator.innerHTML = '<div class="loading-spinner"></div><p>Loading PDF...</p>';
+            loadingIndicator.innerHTML = '<div class="loading-spinner"></div><p>Carregando PDF...</p>';
             pdfViewerContainer.appendChild(loadingIndicator);
-            
+
             // Load the PDF
             const proxyUrl = `/proxy/storage/${url.replace('https://storage.googleapis.com/', '')}`;
             const loadingTask = pdfjsLib.getDocument(proxyUrl);
             currentPdf = await loadingTask.promise;
-            
+
             // Remove loading indicator
             pdfViewerContainer.removeChild(loadingIndicator);
-            
+
             // Render all pages in the viewer
             await renderPdfPages(pdfViewerContainer);
-            
+
         } else if (['jpg', 'jpeg', 'png', 'gif'].includes(fileType)) {
             // Create image container
             const imgContainer = document.createElement('div');
             imgContainer.className = 'image-container';
             previewContainer.appendChild(imgContainer);
-            
+
             // Create the image element
             const imageElement = document.createElement('img');
             imageElement.className = 'preview-image';
             imageElement.alt = 'Image Preview';
             imageElement.src = url;
             imgContainer.appendChild(imageElement);
-            
+
             // Add zoom support for images
             imageElement.style.transform = `scale(${zoomLevel})`;
             imageElement.style.transformOrigin = 'center center';
-            
+
         } else {
             // Handle other document types
             const docContainer = document.createElement('div');
             docContainer.className = 'document-container';
             previewContainer.appendChild(docContainer);
-            
+
             const iframeElement = document.createElement('iframe');
             iframeElement.className = 'document-iframe';
             iframeElement.src = url;
@@ -812,14 +812,14 @@ async function previewDocument(url, filename) {
 // FUNÇÃO QUE ESTAVA FALTANDO
 async function renderPdfPages(container) {
     if (!currentPdf) return;
-    
+
     const totalPages = currentPdf.numPages;
-    
+
     // Create main pages container
     const pagesContainer = document.createElement('div');
     pagesContainer.className = 'pdf-pages-container';
     container.appendChild(pagesContainer);
-    
+
     // Render each page
     for (let pageNum = 1; pageNum <= totalPages; pageNum++) {
         // Create container for this page
@@ -827,12 +827,12 @@ async function renderPdfPages(container) {
         pageContainer.className = 'pdf-page-wrapper';
         pageContainer.dataset.pageNumber = pageNum;
         pagesContainer.appendChild(pageContainer);
-        
+
         // Create canvas for the page
         const pageCanvas = document.createElement('canvas');
         pageCanvas.className = 'pdf-page-canvas';
         pageContainer.appendChild(pageCanvas);
-        
+
         // Render the page content
         await renderPdfPage(pageNum, pageCanvas);
     }
@@ -842,24 +842,24 @@ async function renderPdfPage(pageNumber, canvas) {
     try {
         const page = await currentPdf.getPage(pageNumber);
         const context = canvas.getContext('2d');
-        
+
         // Calculate viewport based on zoom level
         const viewport = page.getViewport({ scale: zoomLevel });
-        
+
         // Set canvas dimensions to match viewport
         canvas.height = viewport.height;
         canvas.width = viewport.width;
         canvas.style.width = `${viewport.width}px`;
         canvas.style.height = `${viewport.height}px`;
-        
+
         // Render PDF page into canvas context
         const renderContext = {
             canvasContext: context,
             viewport: viewport
         };
-        
+
         await page.render(renderContext).promise;
-        
+
         // Add subtle page number indicator at the bottom
         if (currentPdf.numPages > 1) {
             const pageNumberIndicator = document.createElement('div');
@@ -867,7 +867,7 @@ async function renderPdfPage(pageNumber, canvas) {
             pageNumberIndicator.textContent = `${pageNumber} / ${currentPdf.numPages}`;
             canvas.parentNode.appendChild(pageNumberIndicator);
         }
-        
+
     } catch (error) {
         console.error(`Error rendering PDF page ${pageNumber}:`, error);
         const errorMsg = document.createElement('div');
@@ -881,32 +881,32 @@ async function adjustZoom(delta) {
     const oldZoom = zoomLevel;
     zoomLevel += delta;
     zoomLevel = Math.max(0.2, Math.min(3, zoomLevel)); // Limit zoom level
-    
+
     // If zoom didn't actually change, exit early
     if (oldZoom === zoomLevel) return;
-    
+
     // Update zoom display
     const zoomLevelSpan = document.getElementById('zoomLevel');
     zoomLevelSpan.textContent = `${(zoomLevel * 100).toFixed(0)}%`;
-    
+
     const previewContainer = document.querySelector('.preview-container');
     const pdfContainer = document.querySelector('.pdf-viewer-container');
     const imageElement = document.querySelector('.preview-image');
-    
+
     if (pdfContainer && currentPdf) {
         // Remember scroll position
         const scrollContainer = document.querySelector('.pdf-pages-container');
         const scrollRatio = scrollContainer.scrollTop / scrollContainer.scrollHeight;
-        
+
         // First remove existing pages
         const pagesContainer = document.querySelector('.pdf-pages-container');
         if (pagesContainer) {
             pdfContainer.removeChild(pagesContainer);
         }
-        
+
         // Render pages with new zoom
         await renderPdfPages(pdfContainer);
-        
+
         // Restore scroll position
         const newScrollContainer = document.querySelector('.pdf-pages-container');
         setTimeout(() => {
@@ -933,7 +933,7 @@ document.addEventListener('DOMContentLoaded', () => {
             width: 100%;
             height: calc(100vh - 120px);
         }
-        
+
         /* PDF viewer styling */
         .pdf-viewer-container {
             width: 100%;
@@ -942,7 +942,7 @@ document.addEventListener('DOMContentLoaded', () => {
             flex-direction: column;
             overflow: hidden;
         }
-        
+
         .pdf-pages-container {
             width: 100%;
             height: 100%;
@@ -953,7 +953,7 @@ document.addEventListener('DOMContentLoaded', () => {
             align-items: center;
             padding: 20px 0;
         }
-        
+
         .pdf-page-wrapper {
             margin-bottom: 20px;
             background-color: white;
@@ -962,11 +962,11 @@ document.addEventListener('DOMContentLoaded', () => {
             display: flex;
             justify-content: center;
         }
-        
+
         .pdf-page-canvas {
             display: block;
         }
-        
+
         .pdf-page-number {
             position: absolute;
             bottom: -20px;
@@ -979,7 +979,7 @@ document.addEventListener('DOMContentLoaded', () => {
             font-size: 12px;
             opacity: 0.7;
         }
-        
+
         .pdf-page-error {
             padding: 20px;
             background-color: #ffeeee;
@@ -988,7 +988,7 @@ document.addEventListener('DOMContentLoaded', () => {
             border: 1px solid #cc0000;
             margin: 20px;
         }
-        
+
         /* Loading indicator */
         .pdf-loading {
             display: flex;
@@ -998,7 +998,7 @@ document.addEventListener('DOMContentLoaded', () => {
             height: 100%;
             width: 100%;
         }
-        
+
         .loading-spinner {
             border: 4px solid #f3f3f3;
             border-top: 4px solid var(--accent-color);
@@ -1008,12 +1008,12 @@ document.addEventListener('DOMContentLoaded', () => {
             animation: spin 1s linear infinite;
             margin-bottom: 15px;
         }
-        
+
         @keyframes spin {
             0% { transform: rotate(0deg); }
             100% { transform: rotate(360deg); }
         }
-        
+
         /* Image container */
         .image-container {
             display: flex;
@@ -1024,7 +1024,7 @@ document.addEventListener('DOMContentLoaded', () => {
             height: 100%;
             background-color: var(--bg-primary);
         }
-        
+
         .preview-image {
             max-width: 90%;
             max-height: 90%;
@@ -1032,21 +1032,21 @@ document.addEventListener('DOMContentLoaded', () => {
             transition: transform 0.2s ease;
             transform-origin: center center;
         }
-        
+
         /* Document container */
         .document-container {
             width: 100%;
             height: 100%;
             overflow: auto;
         }
-        
+
         .document-iframe {
             width: 100%;
             height: 100%;
             border: none;
         }
     `;
-    
+
     document.head.appendChild(styleElement);
 });
 
@@ -1054,7 +1054,7 @@ document.addEventListener('DOMContentLoaded', () => {
 function updatePreviewModalStructure() {
     const previewModal = document.getElementById('previewModal');
     if (!previewModal) return;
-    
+
     const previewContainer = previewModal.querySelector('.preview-container');
     if (!previewContainer) return;
 }
@@ -1062,7 +1062,7 @@ function updatePreviewModalStructure() {
 // Cleanup when closing the modal
 function hideModal(modalId) {
     document.getElementById(modalId).style.display = 'none';
-    
+
     // If this was the preview modal, clean up
     if (modalId === 'previewModal') {
         currentPdf = null;
@@ -1086,10 +1086,10 @@ document.addEventListener('DOMContentLoaded', () => {
     const filters = {
         document_type_id: '{{document_type.id}}',
     };
-    
+
     loadDocuments(1, filters);
     feather.replace();
-    
+
     // Set the user-cpf-filter to apply document_type_id filter when searching
     document.getElementById('user-cpf-filter').addEventListener('keyup', function(event) {
         if (event.key === 'Enter') {

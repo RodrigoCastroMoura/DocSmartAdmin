@@ -820,12 +820,12 @@ async function createAdmin(event) {
 
         if (!response.ok) {
             const errorData = await response.json();
-            throw new Error(errorData.error || 'Failed to create administrator');
+            throw new Error(errorData.error || 'Falha ao criar administrador');
         }
 
         hideModal('addAdminModal');
         form.reset();
-        showNotification('Administrator created successfully', 'success');
+        showNotification('Administrador criado com sucesso', 'success');
         loadAdmins();
     } catch (error) {
         console.error('Error creating administrator:', error);
@@ -896,11 +896,11 @@ async function updateAdmin(event) {
 
         if (!response.ok) {
             const errorData = await response.json();
-            throw new Error(errorData.error || 'Failed to update administrator');
+            throw new Error(errorData.error || 'Falha ao atualizar administrador');
         }
 
         hideModal('editAdminModal');
-        showNotification('Administrator updated successfully', 'success');
+        showNotification('Administrador atualizado com sucesso', 'success');
         loadAdmins();
     } catch (error) {
         console.error('Error updating administrator:', error);
@@ -927,7 +927,7 @@ async function confirmDelete() {
 
         if (!response.ok) throw new Error('Failed to delete administrator');
 
-        showNotification('Administrator deleted successfully', 'success');
+        showNotification('Administrador excluído com sucesso', 'success');
         loadAdmins();
     } catch (error) {
         console.error('Error deleting administrator:', error);

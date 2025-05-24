@@ -1,4 +1,3 @@
-
 {% extends "base.html" %}
 
 {% block content %}
@@ -259,7 +258,7 @@ async function loadDocumentTypes(page = 1) {
         });
 
         const response = await fetch(`/api/document_types/categories/{{ category.id }}/types/pagination?${params}`);
-        if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+        if (!response.ok) throw new Error(`Erro HTTP! status: ${response.status}`);
         const data = await response.json();
         if (!data || !data.document_types) {
             throw new Error('Formato de resposta inválido');

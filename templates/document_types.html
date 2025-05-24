@@ -449,7 +449,7 @@ async function createDocumentType(event) {
 
         if (!response.ok) {
             const errorData = await response.json();
-            throw new Error(errorData.error || 'Failed to create document type');
+            throw new Error(errorData.error || 'Falha ao criar tipo de documento');
         }
 
         hideModal('addDocumentTypeModal');

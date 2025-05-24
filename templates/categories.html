@@ -28,7 +28,7 @@
                         <button class="action-btn" onclick='showEditCategoryModal("{{ category.id }}", {{ category|tojson|safe }})'>
                             <i data-feather="edit-2"></i>
                         </button>
-                        <button class="action-btn danger" onclick="deleteCategory('{{ category.id }}')">
+                        <button class="action-btn danger" onclick="deleteCategory('{{ category.id }}')'>
                             <i data-feather="trash-2"></i>
                         </button>
                     </div>
@@ -210,13 +210,13 @@ async function createCategory(event) {
 
         const response_data = await response.json();
         if (!response.ok) {
-            throw new Error(response_data.error || 'Failed to create categories');
+            throw new Error(response_data.error || 'Falha ao criar categoria');
         }
 
         hideModal('addCategoryModal');
         form.reset();
         await loadCategories();
-        showNotification('Categories created successfully', 'success');
+        showNotification('Categoria criada com sucesso', 'success');
     } catch (error) {
         console.error('Error creating categories:', error);
         showErrorMessage(error.message || 'Failed to create categories', 'error');
@@ -255,7 +255,7 @@ async function updateCategory(event) {
 
         hideModal('editCategoryModal');
         await loadCategories();
-        showNotification('Categories updated successfully', 'success');
+        showNotification('Categoria atualizada com sucesso', 'success');
     } catch (error) {
         console.error('Error updating categories:', error);
         showNotification(error.message || 'Failed to update categories', 'error');
