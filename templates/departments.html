@@ -12,7 +12,7 @@
         <div class="departments-grid">
             <div class="no-data">
                 <i data-feather="inbox"></i>
-                <p>Loading departments...</p>
+                <p>Carregando departamentos...</p>
             </div>
         </div>
     </div>
@@ -38,16 +38,16 @@
 <!-- Edit Department Modal -->
 <div id="editDepartmentModal" class="modal">
     <div class="modal-content">
-        <h3>Edit Department</h3>
+        <h3>Editar Departamento</h3>
         <form id="editDepartmentForm" onsubmit="updateDepartment(event)">
             <input type="hidden" id="editDepartmentId">
             <div class="form-group">
-                <label for="editDepartmentName">Department Name</label>
+                <label for="editDepartmentName">Nome do Departamento</label>
                 <input type="text" id="editDepartmentName" name="name" required>
             </div>
             <div class="modal-actions">
-                <button type="button" class="action-btn" onclick="hideModal('editDepartmentModal')">Cancel</button>
-                <button type="submit" class="action-btn primary">Update</button>
+                <button type="button" class="action-btn" onclick="hideModal('editDepartmentModal')">Cancelar</button>
+                <button type="submit" class="action-btn primary">Atualizar</button>
             </div>
         </form>
     </div>
@@ -80,7 +80,7 @@ function showDeleteConfirmation(id) {
 
 async function confirmDelete() {
     if (!itemToDelete) return;
-    
+
     const id = itemToDelete;
     hideModal('deleteConfirmModal');
     const card = document.querySelector(`.department-card[data-id="${id}"]`);
@@ -118,11 +118,11 @@ async function loadDepartments() {
         if (!response.ok) {
             throw new Error(data.error || `Failed to load departments (${response.status})`);
         }
-        
+
         if (!Array.isArray(data)) {
             throw new Error('Invalid response format: expected an array');
         }
-        
+
         contentDiv.innerHTML = generateDepartmentsHTML(data);
         feather.replace();
     } catch (error) {
@@ -195,11 +195,11 @@ async function createDepartment(event) {
     event.preventDefault();
     const form = event.target;
     const submitButton = form.querySelector('button[type="submit"]');
-    
+
     if (!validateForm(form)) {
         return;
     }
-    
+
     const name = form.name.value;
     showLoading(submitButton);
 
@@ -233,11 +233,11 @@ async function updateDepartment(event) {
     event.preventDefault();
     const form = event.target;
     const submitButton = form.querySelector('button[type="submit"]');
-    
+
     if (!validateForm(form)) {
         return;
     }
-    
+
     const id = document.getElementById('editDepartmentId').value;
     const name = document.getElementById('editDepartmentName').value;
     showLoading(submitButton);

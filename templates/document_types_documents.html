@@ -6,21 +6,21 @@
         <div class="header-title">
             <a href="{{ url_for('categories_document_types', category_id=document_type.category_id) }}" class="back-link">
                 <i data-feather="arrow-left"></i>
-                Back to Document types
+                Voltar para Tipos de Documento
             </a>
         </div>
         <div class="filter-section">
             <div class="filter-header">
-                <h2><i data-feather="file-text"></i> Documents for {{ document_type.name if document_type else 'Unknown Document type' }}</h2>
+                <h2><i data-feather="file-text"></i> Documentos para {{ document_type.name if document_type else 'Tipo de Documento Desconhecido' }}</h2>
                 <button class="action-btn primary" onclick="showAddDocumentModal()">
-                    <i data-feather="plus"></i> Add Document
+                    <i data-feather="plus"></i> Adicionar Documento
                 </button>
             </div>
             <div class="filter-grid">
                 <div class="filter-group">
                     <label for="user-cpf-filter">User</label>
                     <div class="filter-input-wrapper search-input">
-                        <input type="text" id="user-cpf-filter" placeholder="Search user...">
+                        <input type="text" id="user-cpf-filter" placeholder="Buscar usuário...">
                         <button class="action-btn primary" onclick="applyFilters()">
                             <i data-feather="search"></i>
                         </button>
@@ -33,16 +33,16 @@
                 <div class="documents-grid">
                     <div class="no-data">
                         <i data-feather="inbox"></i>
-                        <p>Loading documents...</p>
+                        <p>Carregando documentos...</p>
                     </div>
                 </div>
                 <div class="pagination-controls">
                     <button class="action-btn" onclick="changePage(currentPage - 1)" id="prevPage" disabled>
-                        <i data-feather="chevron-left"></i> Previous
+                        <i data-feather="chevron-left"></i> Anterior
                     </button>
-                    <span id="pageInfo">Page 1</span>
+                    <span id="pageInfo">Página 1</span>
                     <button class="action-btn" onclick="changePage(currentPage + 1)" id="nextPage" disabled>
-                        Next <i data-feather="chevron-right"></i>
+                        Próximo <i data-feather="chevron-right"></i>
                     </button>
                 </div>
             </div>
@@ -52,17 +52,17 @@
 <!-- Add Document Modal -->
 <div id="addDocumentModal" class="modal">
     <div class="modal-content">
-        <h3>Add Document</h3>
+        <h3>Adicionar Documento</h3>
         <form id="addDocumentForm" onsubmit="createDocument(event)">
             <div class="form-group">
-                <label for="documentTitle">Document Title</label>
+                <label for="documentTitle">Título do Documento</label>
                 <input type="text" id="documentTitle" name="titulo" >
             </div>
             <div class="form-grid">
                 <div class="form-group">
                     <label for="user_cpf">CPF</label>
                     <div class="filter-input-wrapper search-input">
-                        <input type="text" id="user_cpf" placeholder="Search user..." required>
+                        <input type="text" id="user_cpf" placeholder="Buscar usuário..." required>
                         <button type="button" class="action-btn primary" onclick="searchUser()">
                             <i data-feather="search"></i>
                         </button>
@@ -70,25 +70,25 @@
                 </div>
             </div>
             <div class="form-group">
-                <label for="documentTitle">User Name</label>
+                <label for="documentTitle">Nome do Usuário</label>
                 <input type="text" id="name-user" name="name-user" disabled required>
             </div>
             <div class="form-group">
-                <label for="documentFlow">Flow Type</label>
+                <label for="documentFlow">Tipo de Fluxo</label>
                 <select id="documentFlow" name="flow" required>
-                    <option value="">Select Flow Type</option>
+                    <option value="">Selecione o Tipo de Fluxo</option>
                     <option value="1">Documentos</option>
                     <option value="2">Assinatura</option>
                     <option value="3">WorkFlow</option>
                 </select>
             </div>
             <div class="form-group">
-                <label for="documentFile">Upload File</label>
+                <label for="documentFile">Enviar Arquivo</label>
                 <input type="file" id="documentFile" name="file" required>
             </div>
             <div class="modal-actions">
-                <button type="button" class="action-btn" onclick="hideModal('addDocumentModal')">Cancel</button>
-                <button type="submit" class="action-btn primary">Upload</button>
+                <button type="button" class="action-btn" onclick="hideModal('addDocumentModal')">Cancelar</button>
+                <button type="submit" class="action-btn primary">Enviar</button>
                 <input type="hidden" name="department_id" id="department_id" value="{{category.department_id}}">
                 <input type="hidden" name="category_id" id="category_id" value="{{category.id}}">
                 <input type="hidden" name="document_type_id" id="document_type_id" value="{{document_type.id}}">
@@ -102,7 +102,7 @@
     <div class="modal-content preview-modal">
         <div class="preview-header">
             <div class="preview-title">
-                <h3 id="previewTitle">Document Preview</h3>
+                <h3 id="previewTitle">Visualização do Documento</h3>
                 <div class="zoom-controls">
                     <button class="action-btn" onclick="adjustZoom(-0.2)">
                         <i data-feather="zoom-out"></i>

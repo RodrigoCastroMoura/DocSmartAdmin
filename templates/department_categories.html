@@ -6,15 +6,15 @@
         <div class="header-title">
             <a href="{{ url_for('departments') }}" class="back-link">
                 <i data-feather="arrow-left"></i>
-                Back to Departments
+                Voltar para Departamentos
             </a>
             <h2>
                 <i data-feather="grid"></i>
-                Categories for {{ department.name if department else 'Unknown Department' }}
+                Categorias para {{ department.name if department else 'Departamento Desconhecido' }}
             </h2>
         </div>
         <button class="action-btn primary" onclick="showAddCategoryModal()">
-            <i data-feather="plus"></i> Add Category
+            <i data-feather="plus"></i> Adicionar Categoria
         </button>
     </div>
     <div class="content-grid">
@@ -60,16 +60,16 @@
 <!-- Add Category Modal -->
 <div id="addCategoryModal" class="modal">
     <div class="modal-content">
-        <h3>Add Category</h3>
+        <h3>Adicionar Categoria</h3>
         <form id="addCategoryForm" onsubmit="createCategory(event)">
             <input type="hidden" name="department_id" value="{{ department.id if department }}">
             <div class="form-group">
-                <label for="categoryName">Category Name</label>
+                <label for="categoryName">Nome da Categoria</label>
                 <input type="text" id="categoryName" name="name" required>
             </div>
             <div class="modal-actions">
-                <button type="button" class="action-btn" onclick="hideModal('addCategoryModal')">Cancel</button>
-                <button type="submit" class="action-btn primary">Add</button>
+                <button type="button" class="action-btn" onclick="hideModal('addCategoryModal')">Cancelar</button>
+                <button type="submit" class="action-btn primary">Adicionar</button>
             </div>
         </form>
     </div>
@@ -78,17 +78,17 @@
 <!-- Edit Category Modal -->
 <div id="editCategoryModal" class="modal">
     <div class="modal-content">
-        <h3>Edit Category</h3>
+        <h3>Editar Categoria</h3>
         <form id="editCategoryForm" onsubmit="updateCategory(event)">
             <input type="hidden" id="editCategoryId">
             <input type="hidden" name="department_id" value="{{ department.id if department }}">
             <div class="form-group">
-                <label for="editCategoryName">Category Name</label>
+                <label for="editCategoryName">Nome da Categoria</label>
                 <input type="text" id="editCategoryName" name="name" required>
             </div>
             <div class="modal-actions">
-                <button type="button" class="action-btn" onclick="hideModal('editCategoryModal')">Cancel</button>
-                <button type="submit" class="action-btn primary">Update</button>
+                <button type="button" class="action-btn" onclick="hideModal('editCategoryModal')">Cancelar</button>
+                <button type="submit" class="action-btn primary">Atualizar</button>
             </div>
         </form>
     </div>

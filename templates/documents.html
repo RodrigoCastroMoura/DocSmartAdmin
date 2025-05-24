@@ -1,20 +1,19 @@
-
 {% extends "base.html" %}
 
 {% block content %}
 <div class="page-container">
     <div class="filter-section">
         <div class="filter-header">
-            <h2><i data-feather="file-text"></i> Documents</h2>
+            <h2><i data-feather="file-text"></i> Documentos</h2>
             <button class="action-btn primary" onclick="showAddDocumentModal()">
-                <i data-feather="plus"></i> Add Document
+                <i data-feather="plus"></i> Adicionar Documento
             </button>
         </div>
         <div class="filter-grid">
             <div class="form-group">
-                <label for="filterDepartment">Department</label>
+                <label for="filterDepartment">Departamento</label>
                 <select id="filterDepartment" name="filterDepartment" onchange="applyFiltersDepartment(this.value)">
-                    <option value="">Select Department</option>
+                    <option value="">Selecione o Departamento</option>
                     {% if departments %}
                         {% for department in departments %}
                         <option value="{{department.id}}">{{department.name}}</option>
@@ -23,21 +22,21 @@
                 </select>
             </div>
             <div class="form-group">
-                <label for="filterCategory">Category</label>
+                <label for="filterCategory">Categoria</label>
                 <select id="filterCategory" name="filterCategory" onchange="applyFiltersCategory(this.value)">
-                    <option value="">Select Category</option>
+                    <option value="">Selecione a Categoria</option>
                 </select>
             </div>
             <div class="form-group">
-                <label for="filterDocumentType">Type</label>
+                <label for="filterDocumentType">Tipo</label>
                 <select id="filterDocumentType" name="filterDocumentType" onchange="applyFilters()">
-                    <option value="">Select Types</option>
+                    <option value="">Selecione o Tipo</option>
                 </select>
             </div>
             <div class="filter-group">
-                <label for="user-cpf-filter">User</label>
+                <label for="user-cpf-filter">Usuário</label>
                 <div class="filter-input-wrapper search-input">
-                    <input type="text" id="user-cpf-filter" placeholder="Search user...">
+                    <input type="text" id="user-cpf-filter" placeholder="Buscar usuário...">
                     <button class="action-btn primary" onclick="applyFilters()">
                         <i data-feather="search"></i>
                     </button>
@@ -51,16 +50,16 @@
             <div class="documents-grid">
                 <div class="no-data">
                     <i data-feather="inbox"></i>
-                    <p>Loading documents...</p>
+                    <p>Carregando documentos...</p>
                 </div>
             </div>
             <div class="pagination-controls">
                 <button class="action-btn" onclick="changePage(currentPage - 1)" id="prevPage" disabled>
-                    <i data-feather="chevron-left"></i> Previous
+                    <i data-feather="chevron-left"></i> Anterior
                 </button>
-                <span id="pageInfo">Page 1</span>
+                <span id="pageInfo">Página 1</span>
                 <button class="action-btn" onclick="changePage(currentPage + 1)" id="nextPage" disabled>
-                    Next <i data-feather="chevron-right"></i>
+                    Próximo <i data-feather="chevron-right"></i>
                 </button>
             </div>
         </div>
@@ -71,40 +70,40 @@
 <!-- Add Document Modal -->
 <div id="addDocumentModal" class="modal">
     <div class="modal-content">
-        <h3>Add Document</h3>
+        <h3>Adicionar Documento</h3>
         <form id="addDocumentForm" onsubmit="createDocument(event)">
             <div class="form-group">
-                <label for="documentTitle">Document Title</label>
+                <label for="documentTitle">Título do Documento</label>
                 <input type="text" id="documentTitle" name="titulo" >
             </div>
             <div class="form-grid">
                 <div class="form-group">
-                    <label for="documentDepartment">Select Department</label>
+                    <label for="documentDepartment">Selecione o Departamento</label>
                     <select id="documentDepartment" name="department_id" required onchange="loadDepartmentCategories(this.value)">
-                        <option value="">Select Department</option>
+                        <option value="">Selecione o Departamento</option>
                         {% if departments %}
                             {% for department in departments %}
                             <option value="{{department.id}}">{{department.name}}</option>
-                            {% endfor %}
-                        {% endif %}
+                        {% endfor %}
+                    {% endif %}
                     </select>
                 </div>
                 <div class="form-group">
-                    <label for="documentCategory">Select Category</label>
+                    <label for="documentCategory">Selecione a Categoria</label>
                     <select id="documentCategory" name="category_id" required onchange="loadDocumentTypes(this.value)">
-                        <option value="">Select Category</option>
+                        <option value="">Selecione a Categoria</option>
                     </select>
                 </div>
                 <div class="form-group">
-                    <label for="documentType">Document Type</label>
+                    <label for="documentType">Tipo de Documento</label>
                     <select id="documentType" name="document_type_id" required>
-                        <option value="">Select Document Type</option>
+                        <option value="">Selecione o Tipo de Documento</option>
                     </select>
                 </div>
                 <div class="form-group">
-                    <label for="documentFlow">Flow Type</label>
+                    <label for="documentFlow">Tipo de Fluxo</label>
                     <select id="documentFlow" name="flow" required>
-                        <option value="">Select Flow Type</option>
+                        <option value="">Selecione o Tipo de Fluxo</option>
                         <option value="1">Documentos</option>
                         <option value="2">Assinatura</option>
                         <option value="3">WorkFlow</option>
@@ -114,33 +113,33 @@
                 <div class="form-group">
                     <label for="user_cpf">CPF</label>
                     <div class="filter-input-wrapper search-input">
-                        <input type="text" id="user_cpf" placeholder="Search user...">
+                        <input type="text" id="user_cpf" placeholder="Buscar usuário...">
                         <button type="button" class="action-btn primary" onclick="searchUser()">
                             <i data-feather="search"></i>
                         </button>
                     </div>
                 </div>
                 <div class="form-group">
-                    <label for="documentTitle">User Name</label>
+                    <label for="documentTitle">Nome do Usuário</label>
                     <div class="filter-input-wrapper search-input">
                         <input type="text" id="name-user" name="name-user" disabled>
                         <button type="button" class="action-btn primary" id="add-user" style="display: none;">
                            + 
                         </button>
                     </div>
-                    
+
                 </div>
             </div>
             <div class="form-group">
                 <div class="tag-container" id="tag-container" style="display: none;"></div>
             </div>
             <div class="form-group">
-                <label for="documentFile">File</label>
+                <label for="documentFile">Arquivo</label>
                 <input type="file" id="documentFile" name="file" required>
             </div>
             <div class="modal-actions">
-                <button type="button" class="action-btn" onclick="hideModal('addDocumentModal')">Cancel</button>
-                <button type="submit" class="action-btn primary">Upload</button>
+                <button type="button" class="action-btn" onclick="hideModal('addDocumentModal')">Cancelar</button>
+                <button type="submit" class="action-btn primary">Enviar</button>
                 <input type="hidden" name="user_id" id="user_id">
             </div>
         </form>
@@ -211,7 +210,7 @@ function createTag(text, attr) {
     tag.textContent = text;
     tag.setAttribute('iduser', attr);
     tag.draggable = true;
-    
+
     tag.addEventListener('dragstart', handleDragStart);
     tag.addEventListener('dragend', handleDragEnd);
     tag.addEventListener('dragover', handleDragOver);
@@ -242,12 +241,12 @@ function handleDrop(e) {
     e.preventDefault();
     const draggingTag = document.querySelector('.dragging');
     const dropTarget = e.target.closest('.tag');
-    
+
     if (draggingTag && dropTarget && draggingTag !== dropTarget) {
         const allTags = [...tagContainer.querySelectorAll('.tag')];
         const dragIndex = allTags.indexOf(draggingTag);
         const dropIndex = allTags.indexOf(dropTarget);
-        
+
         if (dragIndex < dropIndex) {
             dropTarget.parentNode.insertBefore(draggingTag, dropTarget.nextSibling);
         } else {
@@ -404,12 +403,12 @@ async function applyFiltersDepartment(departmentId) {
 
 async function applyFiltersCategory(categoryId) {
     const typeSelect = document.getElementById('filterDocumentType');
-    typeSelect.innerHTML = '<option value="">Loading document types...</option>';
+    typeSelect.innerHTML = '<option value="">Carregando tipos de documento...</option>';
     typeSelect.disabled = true;
 
     try {
         if (!categoryId) {
-            typeSelect.innerHTML = '<option value="">Types</option>';
+            typeSelect.innerHTML = '<option value="">Tipos</option>';
             await applyFilters(currentPage);
             return;
         }
@@ -417,23 +416,23 @@ async function applyFiltersCategory(categoryId) {
         const response = await fetch(`/api/document_types/categories/${categoryId}/types`);
         if (!response.ok) {
             const errorData = await response.json();
-            throw new Error(errorData.error || 'Failed to load document types');
+            throw new Error(errorData.error || 'Falha ao carregar tipos de documento');
         }
         const data = await response.json();
 
         if (!Array.isArray(data.document_types)) {
-            throw new Error('Invalid document types data format');
+            throw new Error('Formato de dados de tipos de documento inválido');
         }
 
         typeSelect.innerHTML = `
-            <option value="">All Document Types</option>
+            <option value="">Todos os Tipos de Documento</option>
             ${data.document_types.map(type => 
                 `<option value="${type.id}">${type.name}</option>`
             ).join('')}`;
     } catch (error) {
-        console.error('Error loading document types:', error);
+        console.error('Erro ao carregar tipos de documento:', error);
         showNotification(error.message, 'error');
-        typeSelect.innerHTML = '<option value="">Error loading document types</option>';
+        typeSelect.innerHTML = '<option value="">Erro ao carregar tipos de documento</option>';
     } finally {
         typeSelect.disabled = false;
     }
@@ -472,7 +471,7 @@ setupFormValidation('addDocumentForm', {
 
 async function loadDocumentTypes(categoryId) {
     const typeSelect = document.getElementById('documentType');
-    typeSelect.innerHTML = '<option value="">Loading document types...</option>';
+    typeSelect.innerHTML = '<option value="">Carregando tipos de documento...</option>';
     typeSelect.disabled = true;
 
     try {
@@ -581,7 +580,7 @@ async function createDocument(event) {
 
     showLoading(submitButton);
     const formData = new FormData(form);
-    
+
     // Add tags to formData if flow is 3
     if (flow === '3') {
         formData.append('flow_user', JSON.stringify(tags));
@@ -845,7 +844,7 @@ async function previewDocument(url, filename) {
     const previewTitle = document.getElementById('previewTitle');
     const previewContainer = document.querySelector('.preview-container');
     const zoomLevelSpan = document.getElementById('zoomLevel');
-    
+
     // Reset zoom level
     zoomLevel = 1.0;
     zoomLevelSpan.textContent = `${(zoomLevel * 100).toFixed(0)}%`;
@@ -854,7 +853,7 @@ async function previewDocument(url, filename) {
     while (previewContainer.firstChild) {
         previewContainer.removeChild(previewContainer.firstChild);
     }
-    
+
     // Removed filename from header
     const fileType = filename.split('.').pop().toLowerCase();
 
@@ -864,47 +863,47 @@ async function previewDocument(url, filename) {
             const pdfViewerContainer = document.createElement('div');
             pdfViewerContainer.className = 'pdf-viewer-container';
             previewContainer.appendChild(pdfViewerContainer);
-            
+
             // Show loading indicator
             const loadingIndicator = document.createElement('div');
             loadingIndicator.className = 'pdf-loading';
             loadingIndicator.innerHTML = '<div class="loading-spinner"></div><p>Loading PDF...</p>';
             pdfViewerContainer.appendChild(loadingIndicator);
-            
+
             // Load the PDF
             const proxyUrl = `/proxy/storage/${url.replace('https://storage.googleapis.com/', '')}`;
             const loadingTask = pdfjsLib.getDocument(proxyUrl);
             currentPdf = await loadingTask.promise;
-            
+
             // Remove loading indicator
             pdfViewerContainer.removeChild(loadingIndicator);
-            
+
             // Render all pages in the viewer
             await renderPdfPages(pdfViewerContainer);
-            
+
         } else if (['jpg', 'jpeg', 'png', 'gif'].includes(fileType)) {
             // Create image container
             const imgContainer = document.createElement('div');
             imgContainer.className = 'image-container';
             previewContainer.appendChild(imgContainer);
-            
+
             // Create the image element
             const imageElement = document.createElement('img');
             imageElement.className = 'preview-image';
             imageElement.alt = 'Image Preview';
             imageElement.src = url;
             imgContainer.appendChild(imageElement);
-            
+
             // Add zoom support for images
             imageElement.style.transform = `scale(${zoomLevel})`;
             imageElement.style.transformOrigin = 'center center';
-            
+
         } else {
             // Handle other document types
             const docContainer = document.createElement('div');
             docContainer.className = 'document-container';
             previewContainer.appendChild(docContainer);
-            
+
             const iframeElement = document.createElement('iframe');
             iframeElement.className = 'document-iframe';
             iframeElement.src = url;
@@ -921,14 +920,14 @@ async function previewDocument(url, filename) {
 // FUNÇÃO QUE ESTAVA FALTANDO
 async function renderPdfPages(container) {
     if (!currentPdf) return;
-    
+
     const totalPages = currentPdf.numPages;
-    
+
     // Create main pages container
     const pagesContainer = document.createElement('div');
     pagesContainer.className = 'pdf-pages-container';
     container.appendChild(pagesContainer);
-    
+
     // Render each page
     for (let pageNum = 1; pageNum <= totalPages; pageNum++) {
         // Create container for this page
@@ -936,12 +935,12 @@ async function renderPdfPages(container) {
         pageContainer.className = 'pdf-page-wrapper';
         pageContainer.dataset.pageNumber = pageNum;
         pagesContainer.appendChild(pageContainer);
-        
+
         // Create canvas for the page
         const pageCanvas = document.createElement('canvas');
         pageCanvas.className = 'pdf-page-canvas';
         pageContainer.appendChild(pageCanvas);
-        
+
         // Render the page content
         await renderPdfPage(pageNum, pageCanvas);
     }
@@ -951,24 +950,24 @@ async function renderPdfPage(pageNumber, canvas) {
     try {
         const page = await currentPdf.getPage(pageNumber);
         const context = canvas.getContext('2d');
-        
+
         // Calculate viewport based on zoom level
         const viewport = page.getViewport({ scale: zoomLevel });
-        
+
         // Set canvas dimensions to match viewport
         canvas.height = viewport.height;
         canvas.width = viewport.width;
         canvas.style.width = `${viewport.width}px`;
         canvas.style.height = `${viewport.height}px`;
-        
+
         // Render PDF page into canvas context
         const renderContext = {
             canvasContext: context,
             viewport: viewport
         };
-        
+
         await page.render(renderContext).promise;
-        
+
         // Add subtle page number indicator at the bottom
         if (currentPdf.numPages > 1) {
             const pageNumberIndicator = document.createElement('div');
@@ -976,7 +975,7 @@ async function renderPdfPage(pageNumber, canvas) {
             pageNumberIndicator.textContent = `${pageNumber} / ${currentPdf.numPages}`;
             canvas.parentNode.appendChild(pageNumberIndicator);
         }
-        
+
     } catch (error) {
         console.error(`Error rendering PDF page ${pageNumber}:`, error);
         const errorMsg = document.createElement('div');
@@ -990,32 +989,32 @@ async function adjustZoom(delta) {
     const oldZoom = zoomLevel;
     zoomLevel += delta;
     zoomLevel = Math.max(0.2, Math.min(3, zoomLevel)); // Limit zoom level
-    
+
     // If zoom didn't actually change, exit early
     if (oldZoom === zoomLevel) return;
-    
+
     // Update zoom display
     const zoomLevelSpan = document.getElementById('zoomLevel');
     zoomLevelSpan.textContent = `${(zoomLevel * 100).toFixed(0)}%`;
-    
+
     const previewContainer = document.querySelector('.preview-container');
     const pdfContainer = document.querySelector('.pdf-viewer-container');
     const imageElement = document.querySelector('.preview-image');
-    
+
     if (pdfContainer && currentPdf) {
         // Remember scroll position
         const scrollContainer = document.querySelector('.pdf-pages-container');
         const scrollRatio = scrollContainer.scrollTop / scrollContainer.scrollHeight;
-        
+
         // First remove existing pages
         const pagesContainer = document.querySelector('.pdf-pages-container');
         if (pagesContainer) {
             pdfContainer.removeChild(pagesContainer);
         }
-        
+
         // Render pages with new zoom
         await renderPdfPages(pdfContainer);
-        
+
         // Restore scroll position
         const newScrollContainer = document.querySelector('.pdf-pages-container');
         setTimeout(() => {
@@ -1042,7 +1041,7 @@ document.addEventListener('DOMContentLoaded', () => {
             width: 100%;
             height: calc(100vh - 120px);
         }
-        
+
         /* PDF viewer styling */
         .pdf-viewer-container {
             width: 100%;
@@ -1051,7 +1050,7 @@ document.addEventListener('DOMContentLoaded', () => {
             flex-direction: column;
             overflow: hidden;
         }
-        
+
         .pdf-pages-container {
             width: 100%;
             height: 100%;
@@ -1062,7 +1061,7 @@ document.addEventListener('DOMContentLoaded', () => {
             align-items: center;
             padding: 20px 0;
         }
-        
+
         .pdf-page-wrapper {
             margin-bottom: 20px;
             background-color: white;
@@ -1071,11 +1070,11 @@ document.addEventListener('DOMContentLoaded', () => {
             display: flex;
             justify-content: center;
         }
-        
+
         .pdf-page-canvas {
             display: block;
         }
-        
+
         .pdf-page-number {
             position: absolute;
             bottom: -20px;
@@ -1088,7 +1087,7 @@ document.addEventListener('DOMContentLoaded', () => {
             font-size: 12px;
             opacity: 0.7;
         }
-        
+
         .pdf-page-error {
             padding: 20px;
             background-color: #ffeeee;
@@ -1097,7 +1096,7 @@ document.addEventListener('DOMContentLoaded', () => {
             border: 1px solid #cc0000;
             margin: 20px;
         }
-        
+
         /* Loading indicator */
         .pdf-loading {
             display: flex;
@@ -1107,7 +1106,7 @@ document.addEventListener('DOMContentLoaded', () => {
             height: 100%;
             width: 100%;
         }
-        
+
         .loading-spinner {
             border: 4px solid #f3f3f3;
             border-top: 4px solid var(--accent-color);
@@ -1117,12 +1116,12 @@ document.addEventListener('DOMContentLoaded', () => {
             animation: spin 1s linear infinite;
             margin-bottom: 15px;
         }
-        
+
         @keyframes spin {
             0% { transform: rotate(0deg); }
             100% { transform: rotate(360deg); }
         }
-        
+
         /* Image container */
         .image-container {
             display: flex;
@@ -1133,7 +1132,7 @@ document.addEventListener('DOMContentLoaded', () => {
             height: 100%;
             background-color: var(--bg-primary);
         }
-        
+
         .preview-image {
             max-width: 90%;
             max-height: 90%;
@@ -1141,21 +1140,21 @@ document.addEventListener('DOMContentLoaded', () => {
             transition: transform 0.2s ease;
             transform-origin: center center;
         }
-        
+
         /* Document container */
         .document-container {
             width: 100%;
             height: 100%;
             overflow: auto;
         }
-        
+
         .document-iframe {
             width: 100%;
             height: 100%;
             border: none;
         }
     `;
-    
+
     document.head.appendChild(styleElement);
 });
 
@@ -1163,7 +1162,7 @@ document.addEventListener('DOMContentLoaded', () => {
 function updatePreviewModalStructure() {
     const previewModal = document.getElementById('previewModal');
     if (!previewModal) return;
-    
+
     const previewContainer = previewModal.querySelector('.preview-container');
     if (!previewContainer) return;
 }
@@ -1171,7 +1170,7 @@ function updatePreviewModalStructure() {
 // Cleanup when closing the modal
 function hideModal(modalId) {
     document.getElementById(modalId).style.display = 'none';
-    
+
     // If this was the preview modal, clean up
     if (modalId === 'previewModal') {
         currentPdf = null;
@@ -1234,7 +1233,7 @@ document.addEventListener('DOMContentLoaded', () => {
       padding: 6px;
       width: 200px;
     }
-    
+
     .documents-grid {
         display: grid;
         grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));

@@ -3,9 +3,9 @@
 {% block content %}
 <div class="page-container">
     <div class="header-actions">
-        <h2><i data-feather="grid"></i> Categories</h2>
+        <h2><i data-feather="grid"></i> Categorias</h2>
         <button class="action-btn primary" onclick="showAddCategoryModal()">
-            <i data-feather="plus"></i> Add Category
+            <i data-feather="plus"></i> Adicionar Categoria
         </button>
     </div>
     <div class="content-grid" id="categoriesContent">
@@ -20,9 +20,9 @@
                     <div class="category-info">
                         <div class="department-badge">
                             <i data-feather="briefcase"></i>
-                            <span>{{ category.department_name|default('No Department') }}</span>
+                            <span>{{ category.department_name|default('Sem Departamento') }}</span>
                         </div>
-                        <p>{{ category.document_count|default(0) }} documents</p>
+                        <p>{{ category.document_count|default(0) }} documentos</p>
                     </div>
                     <div class="category-actions">
                         <button class="action-btn" onclick='showEditCategoryModal("{{ category.id }}", {{ category|tojson|safe }})'>
@@ -47,24 +47,24 @@
 <!-- Add Category Modal -->
 <div id="addCategoryModal" class="modal">
     <div class="modal-content">
-        <h3>Add Category</h3>
+        <h3>Adicionar Categoria</h3>
         <form id="addCategoryForm" onsubmit="createCategory(event)">
             <div class="form-group">
-                <label for="categoryName">Category Name</label>
+                <label for="categoryName">Nome da Categoria</label>
                 <input type="text" id="categoryName" name="name" required>
             </div>
             <div class="form-group">
-                <label for="categoryDepartment">Department</label>
+                <label for="categoryDepartment">Departamento</label>
                 <select id="categoryDepartment" name="department_id" required>
-                    <option value="">Select Department</option>
+                    <option value="">Selecione o Departamento</option>
                     {% for dept in departments %}
                     <option value="{{ dept.id }}">{{ dept.name }}</option>
                     {% endfor %}
                 </select>
             </div>
             <div class="modal-actions">
-                <button type="button" class="action-btn" onclick="hideModal('addCategoryModal')">Cancel</button>
-                <button type="submit" class="action-btn primary">Add</button>
+                <button type="button" class="action-btn" onclick="hideModal('addCategoryModal')">Cancelar</button>
+                <button type="submit" class="action-btn primary">Adicionar</button>
             </div>
         </form>
     </div>
@@ -73,25 +73,25 @@
 <!-- Edit Category Modal -->
 <div id="editCategoryModal" class="modal">
     <div class="modal-content">
-        <h3>Edit Category</h3>
+        <h3>Editar Categoria</h3>
         <form id="editCategoryForm" onsubmit="updateCategory(event)">
             <input type="hidden" id="editCategoryId">
             <div class="form-group">
-                <label for="editCategoryName">Category Name</label>
+                <label for="editCategoryName">Nome da Categoria</label>
                 <input type="text" id="editCategoryName" name="name" required>
             </div>
             <div class="form-group">
-                <label for="editCategoryDepartment">Department</label>
+                <label for="editCategoryDepartment">Departamento</label>
                 <select id="editCategoryDepartment" name="department_id" required>
-                    <option value="">Select Department</option>
+                    <option value="">Selecione o Departamento</option>
                     {% for dept in departments %}
                     <option value="{{ dept.id }}">{{ dept.name }}</option>
                     {% endfor %}
                 </select>
             </div>
             <div class="modal-actions">
-                <button type="button" class="action-btn" onclick="hideModal('editCategoryModal')">Cancel</button>
-                <button type="submit" class="action-btn primary">Update</button>
+                <button type="button" class="action-btn" onclick="hideModal('editCategoryModal')">Cancelar</button>
+                <button type="submit" class="action-btn primary">Atualizar</button>
             </div>
         </form>
     </div>
@@ -190,11 +190,11 @@ async function createCategory(event) {
     event.preventDefault();
     const form = event.target;
     const submitButton = form.querySelector('button[type="submit"]');
-    
+
     if (!validateForm(form)) {
         return;
     }
-    
+
     const formData = new FormData(form);
     const data = Object.fromEntries(formData);
     showLoading(submitButton);
@@ -229,11 +229,11 @@ async function updateCategory(event) {
     event.preventDefault();
     const form = event.target;
     const submitButton = form.querySelector('button[type="submit"]');
-    
+
     if (!validateForm(form)) {
         return;
     }
-    
+
     const id = document.getElementById('editCategoryId').value;
     const formData = new FormData(form);
     const data = Object.fromEntries(formData);
