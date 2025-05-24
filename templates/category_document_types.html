@@ -1,3 +1,4 @@
+
 {% extends "base.html" %}
 
 {% block content %}
@@ -21,16 +22,16 @@
         <div class="document-types-grid">
             <div class="no-data">
                 <i data-feather="inbox"></i>
-                <p>o document types found for this category</p>
+                <p>Nenhum tipo de documento encontrado para esta categoria</p>
             </div>
         </div>
         <div class="pagination-controls">
             <button class="action-btn" onclick="changePage(currentPage - 1)" id="prevPage" disabled>
-                <i data-feather="chevron-left"></i> Previous
+                <i data-feather="chevron-left"></i> Anterior
             </button>
-            <span id="pageInfo">Page 1</span>
+            <span id="pageInfo">Página 1</span>
             <button class="action-btn" onclick="changePage(currentPage + 1)" id="nextPage" disabled>
-                Next <i data-feather="chevron-right"></i>
+                Próximo <i data-feather="chevron-right"></i>
             </button>
         </div>
     </div>
@@ -40,32 +41,32 @@
 <!-- Add Document Type Modal -->
 <div id="addDocumentTypeModal" class="modal">
     <div class="modal-content">
-        <h3>Add Document Type</h3>
+        <h3>Adicionar Tipo de Documento</h3>
         <form id="addDocumentTypeForm" onsubmit="createDocumentType(event)">
             <div class="form-group">
-                <label for="documentTypeName">Name</label>
+                <label for="documentTypeName">Nome</label>
                 <input type="text" id="documentTypeName" name="name" required>
             </div>
             <div class="form-group">
-                <label for="documentTypeDescription">Description</label>
+                <label for="documentTypeDescription">Descrição</label>
                 <input type="text" id="documentTypeDescription" name="description">
             </div>
             <input type="hidden" name="category_id" value="{{ category.id }}">
             <div style="display: flex; gap: 1rem;">
                 <div class="form-group" style="flex: 1;">
-                    <label for="addDocuments">Add Documento:</label>
+                    <label for="addDocuments">Adicionar Documento:</label>
                     <select id="addDocuments" name="addDocuments" required>
-                        <option>Select</option>
-                        <option value="true">Yes</option>
-                        <option value="false">No</option>
+                        <option>Selecionar</option>
+                        <option value="true">Sim</option>
+                        <option value="false">Não</option>
                     </select>
                 </div>
                 <div class="form-group" style="flex: 1;">
                     <label for="isdownload">Download:</label>
                     <select id="isdownload" name="isdownload" required>
-                        <option>Select</option>
-                        <option value="true">Yes</option>
-                        <option value="false">No</option>
+                        <option>Selecionar</option>
+                        <option value="true">Sim</option>
+                        <option value="false">Não</option>
                     </select>
                 </div>
             </div>
@@ -73,18 +74,18 @@
                 <div class="radio-group">
                     <label class="radio-label">
                         <input type="radio" name="public" value="true" required>
-                        Public
+                        Público
                     </label>
                     <label class="radio-label">
                         <input type="radio" name="public" value="false" required>
-                        Private
+                        Privado
                     </label>
                 </div>
                 <div class="error-message" id="publicError"></div>
             </div>
             <div class="modal-actions">
-                <button type="button" class="action-btn" onclick="hideModal('addDocumentTypeModal')">Cancel</button>
-                <button type="submit" class="action-btn primary">Add</button>
+                <button type="button" class="action-btn" onclick="hideModal('addDocumentTypeModal')">Cancelar</button>
+                <button type="submit" class="action-btn primary">Adicionar</button>
             </div>
         </form>
     </div>
@@ -93,45 +94,45 @@
 <!-- Edit Document Type Modal -->
 <div id="editDocumentTypeModal" class="modal">
     <div class="modal-content">
-        <h3>Edit Document Type</h3>
+        <h3>Editar Tipo de Documento</h3>
         <form id="editDocumentTypeForm" onsubmit="updateDocumentType(event)">
             <input type="hidden" id="editDocumentTypeId">
             <input type="hidden" name="category_id" value="{{ category.id }}">
             <div class="form-group">
-                <label for="editDocumentTypeName">Name</label>
+                <label for="editDocumentTypeName">Nome</label>
                 <input type="text" id="editDocumentTypeName" name="name" required>
             </div>
             <div class="form-group">
-                <label for="editDocumentTypeDescription">Description</label>
+                <label for="editDocumentTypeDescription">Descrição</label>
                 <input type="text" id="editDocumentTypeDescription" name="description">
             </div>
             <div class="form-group">
-                <label for="documentTypeDepartment">Department</label>
+                <label for="documentTypeDepartment">Departamento</label>
                 <select id="documentTypeDepartment" onchange="loadDepartmentCategories(this.value)">
-                    <option value="">Select Department</option>
+                    <option value="">Selecionar Departamento</option>
                 </select>
             </div>
             <div class="form-group">
-                <label for="documentTypeCategory">Category</label>
+                <label for="documentTypeCategory">Categoria</label>
                 <select id="documentTypeCategory" name="category_id" required>
-                    <option value="">Select Category</option>
+                    <option value="">Selecionar Categoria</option>
                 </select>
             </div>
             <div style="display: flex; gap: 1rem;">
                 <div class="form-group" style="flex: 1;">
-                    <label for="addDocuments">Add Documento:</label>
+                    <label for="addDocuments">Adicionar Documento:</label>
                     <select id="editAddDocuments" name="addDocuments" required>
-                        <option>Select</option>
-                        <option value="true">Yes</option>
-                        <option value="false">No</option>
+                        <option>Selecionar</option>
+                        <option value="true">Sim</option>
+                        <option value="false">Não</option>
                     </select>
                 </div>
                 <div class="form-group" style="flex: 1;">
                     <label for="isdownload">Download:</label>
                     <select id="editIsdownload" name="isdownload" required>
-                        <option>Select</option>
-                        <option value="true">Yes</option>
-                        <option value="false">No</option>
+                        <option>Selecionar</option>
+                        <option value="true">Sim</option>
+                        <option value="false">Não</option>
                     </select>
                 </div>
             </div>
@@ -139,17 +140,17 @@
                 <div class="radio-group">
                     <label class="radio-label">
                         <input type="radio" name="public" value="true" id="editPublicTrue">
-                        Public
+                        Público
                     </label>
                     <label class="radio-label">
                         <input type="radio" name="public" value="false" id="editPublicFalse">
-                        Private
+                        Privado
                     </label>
                 </div>
             </div>
             <div class="modal-actions">
-                <button type="button" class="action-btn" onclick="hideModal('editDocumentTypeModal')">Cancel</button>
-                <button type="submit" class="action-btn primary">Update</button>
+                <button type="button" class="action-btn" onclick="hideModal('editDocumentTypeModal')">Cancelar</button>
+                <button type="submit" class="action-btn primary">Atualizar</button>
             </div>
         </form>
     </div>
@@ -158,42 +159,42 @@
 <!-- User Access Modal -->
 <div id="userAccessModal" class="modal">
     <div class="modal-content">
-        <h3 id="userAccessTitle">Manage User Access</h3>
+        <h3 id="userAccessTitle">Gerenciar Acesso de Usuário</h3>
         <div id="addUserSection" style="display: none;">
             <div class="form-group">
-                <label for="userCpf">User CPF</label>
+                <label for="userCpf">CPF do Usuário</label>
                 <div class="search-input">
-                    <input type="text" id="userCpf" placeholder="Enter user CPF">
+                    <input type="text" id="userCpf" placeholder="Digite o CPF do usuário">
                     <button type="button" class="action-btn primary" onclick="searchUser()">
                         <i data-feather="search"></i>
                     </button>
                 </div>
             </div>
             <div class="form-group">
-                <label for="userName">User Name</label>
+                <label for="userName">Nome do Usuário</label>
                 <input type="text" id="userName" disabled>
                 <input type="hidden" id="userId">
             </div>
         </div>
         <div id="removeUserSection" style="display: none;">
             <div class="form-group">
-                <label for="searchUser">Search Users (Multiple CPFs separated by comma)</label>
+                <label for="searchUser">Pesquisar Usuários (Múltiplos CPFs separados por vírgula)</label>
                 <div class="search-input">
-                    <input type="text" id="searchUser" placeholder="Enter CPFs (e.g. 123.456.789-00, 987.654.321-00)">
+                    <input type="text" id="searchUser" placeholder="Digite CPFs (ex. 123.456.789-00, 987.654.321-00)">
                     <button type="button" class="action-btn primary" onclick="filterUsers()">
                         <i data-feather="search"></i>
                     </button>
                 </div>
             </div>
             <div class="users-list" id="usersList">
-                Loading users...
+                Carregando usuários...
             </div>
         </div>
         <input type="hidden" id="documentTypeId">
         <input type="hidden" id="accessAction">
         <div class="modal-actions">
-            <button type="button" class="action-btn" onclick="hideModal('userAccessModal')">Cancel</button>
-            <button type="button" class="action-btn primary" onclick="updateUserAccess()">Confirm</button>
+            <button type="button" class="action-btn" onclick="hideModal('userAccessModal')">Cancelar</button>
+            <button type="button" class="action-btn primary" onclick="updateUserAccess()">Confirmar</button>
         </div>
     </div>
 </div>
@@ -261,7 +262,7 @@ async function loadDocumentTypes(page = 1) {
         if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
         const data = await response.json();
         if (!data || !data.document_types) {
-            throw new Error('Invalid response format');
+            throw new Error('Formato de resposta inválido');
         }
 
         currentPage = page;
@@ -270,22 +271,22 @@ async function loadDocumentTypes(page = 1) {
         contentDiv.innerHTML = `${gridHTML}
             <div class="pagination-controls">
                 <button class="action-btn" onclick="changePage(currentPage - 1)" id="prevPage" ${currentPage <= 1 ? 'disabled' : ''}>
-                    <i data-feather="chevron-left"></i> Previous
+                    <i data-feather="chevron-left"></i> Anterior
                 </button>
-                <span id="pageInfo">Page ${currentPage} of ${totalPages}</span>
+                <span id="pageInfo">Página ${currentPage} de ${totalPages}</span>
                 <button class="action-btn" onclick="changePage(currentPage + 1)" id="nextPage" ${currentPage >= totalPages ? 'disabled' : ''}>
-                    Next <i data-feather="chevron-right"></i>
+                    Próximo <i data-feather="chevron-right"></i>
                 </button>
             </div>`;
 
         feather.replace();
         updatePaginationControls();
     } catch (error) {
-        console.error('Error loading document types:', error);
+        console.error('Erro ao carregar tipos de documento:', error);
         contentDiv.innerHTML = `
             <div class="no-data">
                 <i data-feather="alert-circle"></i>
-                <p>${error.message || 'Failed to load document types'}</p>
+                <p>${error.message || 'Falha ao carregar tipos de documento'}</p>
             </div>`;
         feather.replace();
     } finally {
@@ -299,7 +300,7 @@ function generateDocumentTypesHTML(types) {
             <div class="document-types-grid">
                 <div class="no-data">
                     <i data-feather="inbox"></i>
-                    <p>No document types found</p>
+                    <p>Nenhum tipo de documento encontrado</p>
                 </div>
             </div>`;
     }
@@ -315,16 +316,16 @@ function generateDocumentTypesHTML(types) {
             <div class="document-type-info">
                  <div class="department-badge">
                     <i data-feather="briefcase"></i>
-                    <span>${type.department_name || 'No Department'}</span>
+                    <span>${type.department_name || 'Sem Departamento'}</span>
                 </div>
                  <div class="department-badge">
                     <i data-feather="grid"></i>
-                    <span>${ type.category_name||'No category'}</span>
+                    <span>${ type.category_name||'Sem categoria'}</span>
                 </div>
-                <p class="description">${type.description || 'No description'}</p>
+                <p class="description">${type.description || 'Sem descrição'}</p>
                 <p class="meta">
-                    <span>Documents: ${type.document_count || 0}</span>
-                    <span>Created: ${new Date(type.created_at).toLocaleDateString()}</span>
+                    <span>Documentos: ${type.document_count || 0}</span>
+                    <span>Criado em: ${new Date(type.created_at).toLocaleDateString()}</span>
                 </p>
             </div>
             <div class="document-type-actions">
@@ -353,7 +354,7 @@ function generateDocumentTypesHTML(types) {
 function updatePaginationControls() {
     document.getElementById('prevPage').disabled = currentPage <= 1;
     document.getElementById('nextPage').disabled = currentPage >= totalPages;
-    document.getElementById('pageInfo').textContent = `Page ${currentPage} of ${totalPages}`;
+    document.getElementById('pageInfo').textContent = `Página ${currentPage} de ${totalPages}`;
 }
 
 function changePage(newPage) {
@@ -379,7 +380,7 @@ function showEditDocumentTypeModal(id, type) {
     try {
         const editForm = document.getElementById('editDocumentTypeForm');
         if (!editForm) {
-            throw new Error('Edit form not found');
+            throw new Error('Formulário de edição não encontrado');
         }
 
         // Set basic fields
@@ -415,8 +416,8 @@ function showEditDocumentTypeModal(id, type) {
 
         showModal('editDocumentTypeModal');
     } catch (error) {
-        console.error('Error setting up edit modal:', error);
-        showNotification('Error loading edit form', 'error');
+        console.error('Erro ao configurar modal de edição:', error);
+        showNotification('Erro ao carregar formulário de edição', 'error');
     }
 }
 
@@ -444,15 +445,15 @@ async function createDocumentType(event) {
 
         if (!response.ok) {
             const errorData = await response.json();
-            throw new Error(errorData.error || 'Failed to create document type');
+            throw new Error(errorData.error || 'Falha ao criar tipo de documento');
         }
 
         hideModal('addDocumentTypeModal');
         form.reset();
         await loadDocumentTypes(currentPage);
-        showNotification('Document type created successfully', 'success');
+        showNotification('Tipo de documento criado com sucesso', 'success');
     } catch (error) {
-        console.error('Error creating document type:', error);
+        console.error('Erro ao criar tipo de documento:', error);
         showErrorMessage(error.message);
     } finally {
         hideLoading(submitButton);
@@ -484,14 +485,14 @@ async function updateDocumentType(event) {
 
         if (!response.ok) {
             const errorData = await response.json();
-            throw new Error(errorData.error || 'Failed to update document type');
+            throw new Error(errorData.error || 'Falha ao atualizar tipo de documento');
         }
 
         hideModal('editDocumentTypeModal');
         await loadDocumentTypes(currentPage);
-        showNotification('Document type updated successfully', 'success');
+        showNotification('Tipo de documento atualizado com sucesso', 'success');
     } catch (error) {
-        console.error('Error updating document type:', error);
+        console.error('Erro ao atualizar tipo de documento:', error);
         showErrorMessage(error.message);
     } finally {
         hideLoading(submitButton);
@@ -499,7 +500,7 @@ async function updateDocumentType(event) {
 }
 
 async function deleteDocumentType(id) {
-    if (!confirm('Are you sure you want to delete this document type?')) {
+    if (!confirm('Tem certeza que deseja excluir este tipo de documento?')) {
         return;
     }
 
@@ -513,13 +514,13 @@ async function deleteDocumentType(id) {
 
         if (!response.ok) {
             const errorData = await response.json();
-            throw new Error(errorData.error || 'Failed to delete document type');
+            throw new Error(errorData.error || 'Falha ao excluir tipo de documento');
         }
 
         await loadDocumentTypes(currentPage);
-        showNotification('Document type deleted successfully', 'success');
+        showNotification('Tipo de documento excluído com sucesso', 'success');
     } catch (error) {
-        console.error('Error deleting document type:', error);
+        console.error('Erro ao excluir tipo de documento:', error);
         showErrorMessage(error.message);
     } finally {
         hideLoading(card);
@@ -527,7 +528,7 @@ async function deleteDocumentType(id) {
 }
 
 async function showUserAccessModal(documentTypeId, action) {
-    document.getElementById('userAccessTitle').textContent = action === 'add' ? 'Add User Access' : 'Remove User Access';
+    document.getElementById('userAccessTitle').textContent = action === 'add' ? 'Adicionar Acesso de Usuário' : 'Remover Acesso de Usuário';
     document.getElementById('documentTypeId').value = documentTypeId;
     document.getElementById('accessAction').value = action;
 
@@ -552,15 +553,15 @@ async function showUserAccessModal(documentTypeId, action) {
 
 async function loadDocumentTypeUsers(documentTypeId) {
     const usersList = document.getElementById('usersList');
-    usersList.innerHTML = 'Loading users...';
+    usersList.innerHTML = 'Carregando usuários...';
 
     try {
         const response = await fetch(`/api/document_types/${documentTypeId}/users`);
         const data = await response.json();
         displayUsers(data);
     } catch (error) {
-        console.error('Error loading users:', error);
-        usersList.innerHTML = '<p class="error">Failed to load users</p>';
+        console.error('Erro ao carregar usuários:', error);
+        usersList.innerHTML = '<p class="error">Falha ao carregar usuários</p>';
     }
 }
 
@@ -570,7 +571,7 @@ function displayUsers(users) {
         usersList.innerHTML = `
             <div class="no-data">
                 <i data-feather="users"></i>
-                <p>No users found</p>
+                <p>Nenhum usuário encontrado</p>
             </div>`;
         feather.replace();
         return;
@@ -582,7 +583,7 @@ function displayUsers(users) {
                 <thead>
                     <tr>
                         <th><input type="checkbox" id="selectAll" onchange="toggleSelectAll()"></th>
-                        <th>Name</th>
+                        <th>Nome</th>
                         <th>CPF</th>
                     </tr>
                 </thead>
@@ -614,7 +615,7 @@ function toggleSelectAll() {
 async function searchUser() {
     const cpf = document.getElementById('userCpf').value;
     if (!cpf) {
-        showNotification('Please enter a CPF', 'error');
+        showNotification('Por favor, insira um CPF', 'error');
         return;
     }
 
@@ -623,7 +624,7 @@ async function searchUser() {
         const data = await response.json();
 
         if (!data.users || data.users.length === 0) {
-            showNotification('User not found', 'error');
+            showNotification('Usuário não encontrado', 'error');
             document.getElementById('userName').value = '';
             document.getElementById('userId').value = '';
             return;
@@ -633,8 +634,8 @@ async function searchUser() {
         document.getElementById('userName').value = user.name;
         document.getElementById('userId').value = user.id;
     } catch (error) {
-        console.error('Error searching user:', error);
-        showNotification('Failed to search user', 'error');
+        console.error('Erro ao pesquisar usuário:', error);
+        showNotification('Falha ao pesquisar usuário', 'error');
     }
 }
 
@@ -646,7 +647,7 @@ async function updateUserAccess() {
         if (action === 'add') {
             const userId = document.getElementById('userId').value;
             if (!userId) {
-                showNotification('Please select a valid user', 'error');
+                showNotification('Por favor, selecione um usuário válido', 'error');
                 return;
             }
 
@@ -655,13 +656,13 @@ async function updateUserAccess() {
                 headers: {'Content-Type': 'application/json'}
             });
 
-            if (!response.ok) throw new Error('Failed to add user access');
+            if (!response.ok) throw new Error('Falha ao adicionar acesso de usuário');
         } else {
             const selectedUsers = Array.from(document.querySelectorAll('.user-checkbox:checked'))
                 .map(checkbox => checkbox.value);
 
             if (selectedUsers.length === 0) {
-                showNotification('Please select users to remove', 'error');
+                showNotification('Por favor, selecione usuários para remover', 'error');
                 return;
             }
 
@@ -670,13 +671,13 @@ async function updateUserAccess() {
                 headers: {'Content-Type': 'application/json'}
             });
 
-            if (!response.ok) throw new Error('Failed to remove user access');
+            if (!response.ok) throw new Error('Falha ao remover acesso de usuário');
         }
 
         hideModal('userAccessModal');
-        showNotification(`User access ${action === 'add' ? 'granted' : 'removed'} successfully`, 'success');
+        showNotification(`Acesso de usuário ${action === 'add' ? 'concedido' : 'removido'} com sucesso`, 'success');
     } catch (error) {
-        console.error('Error updating user access:', error);
+        console.error('Erro ao atualizar acesso de usuário:', error);
         showNotification(error.message, 'error');
     }
 }
