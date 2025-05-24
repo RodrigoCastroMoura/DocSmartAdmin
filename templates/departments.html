@@ -3,16 +3,16 @@
 {% block content %}
 <div class="page-container">
     <div class="header-actions">
-        <h2><i data-feather="briefcase"></i> Departments</h2>
+        <h2><i data-feather="briefcase"></i> Departamentos</h2>
         <button class="action-btn primary" onclick="showAddDepartmentModal()">
-            <i data-feather="plus"></i> Add Department
+            <i data-feather="plus"></i> Adicionar Departamento
         </button>
     </div>
     <div class="content-grid" id="departmentsContent">
         <div class="departments-grid">
             <div class="no-data">
                 <i data-feather="inbox"></i>
-                <p>Loading departments...</p>
+                <p>Carregando departamentos...</p>
             </div>
         </div>
     </div>
@@ -21,15 +21,15 @@
 <!-- Add Department Modal -->
 <div id="addDepartmentModal" class="modal">
     <div class="modal-content">
-        <h3>Add Department</h3>
+        <h3>Adicionar Departamento</h3>
         <form id="addDepartmentForm" onsubmit="createDepartment(event)">
             <div class="form-group">
-                <label for="departmentName">Department Name</label>
+                <label for="departmentName">Nome do Departamento</label>
                 <input type="text" id="departmentName" name="name" required>
             </div>
             <div class="modal-actions">
-                <button type="button" class="action-btn" onclick="hideModal('addDepartmentModal')">Cancel</button>
-                <button type="submit" class="action-btn primary">Add</button>
+                <button type="button" class="action-btn" onclick="hideModal('addDepartmentModal')">Cancelar</button>
+                <button type="submit" class="action-btn primary">Adicionar</button>
             </div>
         </form>
     </div>
@@ -38,16 +38,16 @@
 <!-- Edit Department Modal -->
 <div id="editDepartmentModal" class="modal">
     <div class="modal-content">
-        <h3>Edit Department</h3>
+        <h3>Editar Departamento</h3>
         <form id="editDepartmentForm" onsubmit="updateDepartment(event)">
             <input type="hidden" id="editDepartmentId">
             <div class="form-group">
-                <label for="editDepartmentName">Department Name</label>
+                <label for="editDepartmentName">Nome do Departamento</label>
                 <input type="text" id="editDepartmentName" name="name" required>
             </div>
             <div class="modal-actions">
-                <button type="button" class="action-btn" onclick="hideModal('editDepartmentModal')">Cancel</button>
-                <button type="submit" class="action-btn primary">Update</button>
+                <button type="button" class="action-btn" onclick="hideModal('editDepartmentModal')">Cancelar</button>
+                <button type="submit" class="action-btn primary">Atualizar</button>
             </div>
         </form>
     </div>

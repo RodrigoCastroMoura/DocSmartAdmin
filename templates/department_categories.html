@@ -6,15 +6,15 @@
         <div class="header-title">
             <a href="{{ url_for('departments') }}" class="back-link">
                 <i data-feather="arrow-left"></i>
-                Back to Departments
+                Voltar para Departamentos
             </a>
             <h2>
                 <i data-feather="grid"></i>
-                Categories for {{ department.name if department else 'Unknown Department' }}
+                Categorias para {{ department.name if department else 'Departamento Desconhecido' }}
             </h2>
         </div>
         <button class="action-btn primary" onclick="showAddCategoryModal()">
-            <i data-feather="plus"></i> Add Category
+            <i data-feather="plus"></i> Adicionar Categoria
         </button>
     </div>
     <div class="content-grid">

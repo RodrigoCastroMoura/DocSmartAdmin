@@ -3,25 +3,25 @@
 {% block content %}
 <div class="page-container">
     <div class="header-actions">
-        <h2><i data-feather="file"></i> Document Types</h2>
+        <h2><i data-feather="file"></i> Tipos de Documento</h2>
         <button class="action-btn primary" onclick="showAddDocumentTypeModal()">
-            <i data-feather="plus"></i> Add Document Type
+            <i data-feather="plus"></i> Adicionar Tipo de Documento
         </button>
     </div>
     <div class="content-grid" id="documentTypesContent">
         <div class="document-types-grid">
             <div class="no-data">
                 <i data-feather="inbox"></i>
-                <p>Loading document types...</p>
+                <p>Carregando tipos de documento...</p>
             </div>
         </div>
         <div class="pagination-controls">
             <button class="action-btn" onclick="changePage(currentPage - 1)" id="prevPage" disabled>
-                <i data-feather="chevron-left"></i> Previous
+                <i data-feather="chevron-left"></i> Anterior
             </button>
-            <span id="pageInfo">Page 1</span>
+            <span id="pageInfo">Página 1</span>
             <button class="action-btn" onclick="changePage(currentPage + 1)" id="nextPage" disabled>
-                Next <i data-feather="chevron-right"></i>
+                Próximo <i data-feather="chevron-right"></i>
             </button>
         </div>
     </div>

@@ -84,28 +84,28 @@
                 </a>
                 <a href="{{ url_for('departments') }}" class="nav-item {% if request.endpoint == 'departments' %}active{% endif %}">
                     <i data-feather="briefcase"></i>
-                    <span>Departments</span>
+                    <span>Departamentos</span>
                 </a>
                 <a href="{{ url_for('categories') }}" class="nav-item {% if request.endpoint == 'categories' %}active{% endif %}">
                     <i data-feather="grid"></i>
-                    <span>Categories</span>
+                    <span>Categorias</span>
                 </a>
                 <a href="{{ url_for('documents') }}" class="nav-item {% if request.endpoint == 'documents' %}active{% endif %}">
                     <i data-feather="file-text"></i>
-                    <span>&nbsp;Documents</span>
+                    <span>&nbsp;Documentos</span>
                 </a>
                 <a href="{{ url_for('document_types') }}" class="nav-item {% if request.endpoint == 'document_types' %}active{% endif %}">
                     <i data-feather="file"></i>
-                    <span>&nbsp;Document Types</span>
+                    <span>&nbsp;Tipos de Documento</span>
                 </a>
                 <a href="{{ url_for('users') }}" class="nav-item {% if request.endpoint == 'users' %}active{% endif %}">
                     <i data-feather="users"></i>
-                    <span>Users</span>
+                    <span>Usuários</span>
                 </a>
                 {% if 'admin_read' in session.get('user', {}).get('permissions', []) %}
                 <a href="{{ url_for('admins') }}" class="nav-item {% if request.endpoint == 'admins' %}active{% endif %}">
                     <i data-feather="shield"></i>
-                    <span>Administrators</span>
+                    <span>Administradores</span>
                 </a>
                 {% endif %}
             </nav>
@@ -116,22 +116,22 @@
             <header class="top-bar">
                 <div class="search-bar">
                     <i data-feather="search"></i>
-                    <input type="text" placeholder="Search...">
+                    <input type="text" placeholder="Pesquisar...">
                 </div>
                 <div class="user-menu">
                     <button class="notifications">
                         <i data-feather="bell"></i>
                     </button>
-                    <button class="theme-toggle" onclick="toggleTheme()" title="Toggle theme">
+                    <button class="theme-toggle" onclick="toggleTheme()" title="Alternar tema">
                         <i data-feather="sun" id="themeIcon"></i>
                     </button>
                     <div class="user-profile" onclick="toggleDropdown()">
-                        <span>{{ session.get('user', {}).get('name', 'Admin User') }}</span>
+                        <span>{{ session.get('user', {}).get('name', 'Usuário Admin') }}</span>
                         <i data-feather="user"></i>
                         <div class="dropdown-menu">
                             <a href="{{ url_for('logout') }}" class="dropdown-item">
                                 <i data-feather="log-out"></i>
-                                <span>Logout</span>
+                                <span>Sair</span>
                             </a>
                         </div>
                     </div>
@@ -664,7 +664,7 @@
         <div class="modal-content notification-modal">
             <div class="notification-header">
                 <i data-feather="info" id="notificationIcon"></i>
-                <h3 id="notificationTitle">Notification</h3>
+                <h3 id="notificationTitle">Notificação</h3>
                 <button class="close-btn" onclick="hideNotificationModal()">
                     <i data-feather="x"></i>
                 </button>
@@ -673,7 +673,7 @@
                 <p id="notificationMessage"></p>
             </div>
             <div class="notification-actions">
-                <button class="action-btn" onclick="hideNotificationModal()">Close</button>
+                <button class="action-btn" onclick="hideNotificationModal()">Fechar</button>
             </div>
         </div>
     </div>
@@ -682,18 +682,18 @@
         <div class="modal-content notification-modal">
             <div class="notification-header">
                 <i data-feather="alert-triangle" style="color: var(--danger-color);"></i>
-                <h3>Confirm Delete</h3>
+                <h3>Confirmar Exclusão</h3>
                 <button class="close-btn" onclick="hideModal('deleteConfirmModal')">
                     <i data-feather="x"></i>
                 </button>
             </div>
             <div class="notification-body">
-                <p>Are you sure you want to delete this item?</p>
-                <p>This action cannot be undone.</p>
+                <p>Tem certeza que deseja excluir este item?</p>
+                <p>Esta ação não pode ser desfeita.</p>
             </div>
             <div class="notification-actions">
-                <button class="action-btn" onclick="hideModal('deleteConfirmModal')">Cancel</button>
-                <button class="action-btn danger" onclick="confirmDelete()">Delete</button>
+                <button class="action-btn" onclick="hideModal('deleteConfirmModal')">Cancelar</button>
+                <button class="action-btn danger" onclick="confirmDelete()">Excluir</button>
             </div>
         </div>
     </div>
@@ -709,25 +709,25 @@
         <div class="modal-content notification-modal">
             <div class="notification-header">
                 <i data-feather="key" style="color: var(--accent-color);"></i>
-                <h3>Change Password</h3>
+                <h3>Alterar Senha</h3>
             </div>
             <div class="notification-body">
                 <form id="passwordChangeForm" onsubmit="handlePasswordChange(event)">
                     <div class="form-group">
-                        <label for="currentPassword">Current Password</label>
+                        <label for="currentPassword">Senha Atual</label>
                         <input type="password" id="currentPassword" name="currentPassword" required>
                     </div>
                     <div class="form-group">
-                        <label for="newPassword">New Password</label>
+                        <label for="newPassword">Nova Senha</label>
                         <input type="password" id="newPassword" name="newPassword" required>
                     </div>
                     <div class="form-group">
-                        <label for="confirmPassword">Confirm New Password</label>
+                        <label for="confirmPassword">Confirmar Nova Senha</label>
                         <input type="password" id="confirmPassword" name="confirmPassword" required>
                     </div>
                     <div class="notification-actions">
-                        <button type="button" class="action-btn" onclick="hidePasswordChangeModal()">Cancel</button>
-                        <button type="submit" class="action-btn primary">Change Password</button>
+                        <button type="button" class="action-btn" onclick="hidePasswordChangeModal()">Cancelar</button>
+                        <button type="submit" class="action-btn primary">Alterar Senha</button>
                     </div>
                 </form>
             </div>

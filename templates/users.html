@@ -4,16 +4,16 @@
 <div class="page-container">
     <div class="filter-section">
         <div class="filter-header">
-            <h2><i data-feather="users"></i> Users</h2>
+            <h2><i data-feather="users"></i> Usuários</h2>
             <button class="action-btn primary" onclick="showAddUserModal()">
-                <i data-feather="plus"></i> Add User
+                <i data-feather="plus"></i> Adicionar Usuário
             </button>
         </div>
         <div class="filter-grid">
             <div class="filter-group">
-                <label for="searchCpf">Search by Registro</label>
+                <label for="searchCpf">Buscar por Registro</label>
                 <div class="filter-input-wrapper search-input">
-                    <input type="text" id="searchCpf" placeholder="Enter Registro..." oninput="maskCPF(this)" maxlength="11" pattern="\d*">
+                    <input type="text" id="searchCpf" placeholder="Digite o Registro..." oninput="maskCPF(this)" maxlength="11" pattern="\d*">
                     <button class="action-btn primary" onclick="searchByCpf()">
                         <i data-feather="search"></i>
                     </button>
@@ -27,18 +27,18 @@
                 <table class="users-table">
                     <thead>
                         <tr>
-                            <th>Name</th>
+                            <th>Nome</th>
                             <th>Email</th>
                             <th>Registro</th>
                             <th>Status</th>
-                            <th>Actions</th>
+                            <th>Ações</th>
                         </tr>
                     </thead>
                     <tbody id="usersTableBody">
                         <tr>
                             <td colspan="7" class="no-data">
                                 <i data-feather="inbox"></i>
-                                <p>Loading users...</p>
+                                <p>Carregando usuários...</p>
                             </td>
                         </tr>
                     </tbody>

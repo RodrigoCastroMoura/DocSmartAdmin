@@ -6,15 +6,15 @@
         <div class="header-title">
             <a href="{{ url_for('department_categories', department_id=category.department_id) }}" class="back-link">
                 <i data-feather="arrow-left"></i>
-                Back to Categories
+                Voltar para Categorias
             </a>
             <h2>
                 <i data-feather="file"></i> 
-                Document Types for {{ category.name if category else 'Unknown Category' }}
+                Tipos de Documento para {{ category.name if category else 'Categoria Desconhecida' }}
             </h2>
         </div>
         <button class="action-btn primary" onclick="showAddDocumentTypeModal()">
-            <i data-feather="plus"></i> Add Document Type
+            <i data-feather="plus"></i> Adicionar Tipo de Documento
         </button>
     </div>
     <div class="content-grid" id="documentTypesContent">

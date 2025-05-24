@@ -6,14 +6,14 @@
         <div class="header-title">
             <a href="{{ url_for('categories_document_types', category_id=document_type.category_id) }}" class="back-link">
                 <i data-feather="arrow-left"></i>
-                Back to Document types
+                Voltar para Tipos de Documento
             </a>
         </div>
         <div class="filter-section">
             <div class="filter-header">
-                <h2><i data-feather="file-text"></i> Documents for {{ document_type.name if document_type else 'Unknown Document type' }}</h2>
+                <h2><i data-feather="file-text"></i> Documentos para {{ document_type.name if document_type else 'Tipo de Documento Desconhecido' }}</h2>
                 <button class="action-btn primary" onclick="showAddDocumentModal()">
-                    <i data-feather="plus"></i> Add Document
+                    <i data-feather="plus"></i> Adicionar Documento
                 </button>
             </div>
             <div class="filter-grid">

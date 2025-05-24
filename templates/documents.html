@@ -5,16 +5,16 @@
 <div class="page-container">
     <div class="filter-section">
         <div class="filter-header">
-            <h2><i data-feather="file-text"></i> Documents</h2>
+            <h2><i data-feather="file-text"></i> Documentos</h2>
             <button class="action-btn primary" onclick="showAddDocumentModal()">
-                <i data-feather="plus"></i> Add Document
+                <i data-feather="plus"></i> Adicionar Documento
             </button>
         </div>
         <div class="filter-grid">
             <div class="form-group">
-                <label for="filterDepartment">Department</label>
+                <label for="filterDepartment">Departamento</label>
                 <select id="filterDepartment" name="filterDepartment" onchange="applyFiltersDepartment(this.value)">
-                    <option value="">Select Department</option>
+                    <option value="">Selecione o Departamento</option>
                     {% if departments %}
                         {% for department in departments %}
                         <option value="{{department.id}}">{{department.name}}</option>
@@ -23,21 +23,21 @@
                 </select>
             </div>
             <div class="form-group">
-                <label for="filterCategory">Category</label>
+                <label for="filterCategory">Categoria</label>
                 <select id="filterCategory" name="filterCategory" onchange="applyFiltersCategory(this.value)">
-                    <option value="">Select Category</option>
+                    <option value="">Selecione a Categoria</option>
                 </select>
             </div>
             <div class="form-group">
-                <label for="filterDocumentType">Type</label>
+                <label for="filterDocumentType">Tipo</label>
                 <select id="filterDocumentType" name="filterDocumentType" onchange="applyFilters()">
-                    <option value="">Select Types</option>
+                    <option value="">Selecione o Tipo</option>
                 </select>
             </div>
             <div class="filter-group">
-                <label for="user-cpf-filter">User</label>
+                <label for="user-cpf-filter">Usuário</label>
                 <div class="filter-input-wrapper search-input">
-                    <input type="text" id="user-cpf-filter" placeholder="Search user...">
+                    <input type="text" id="user-cpf-filter" placeholder="Buscar usuário...">
                     <button class="action-btn primary" onclick="applyFilters()">
                         <i data-feather="search"></i>
                     </button>
