@@ -55,11 +55,11 @@
             </div>
             <div class="pagination-controls">
                 <button class="action-btn" onclick="changePage(currentPage - 1)" id="prevPage" disabled>
-                    <i data-feather="chevron-left"></i> Previous
+                    <i data-feather="chevron-left"></i> Anterior
                 </button>
-                <span id="pageInfo">Page 1</span>
+                <span id="pageInfo">Página 1</span>
                 <button class="action-btn" onclick="changePage(currentPage + 1)" id="nextPage" disabled>
-                    Next <i data-feather="chevron-right"></i>
+                    Próximo <i data-feather="chevron-right"></i>
                 </button>
             </div>
         </div>
@@ -70,17 +70,17 @@
 <!-- Add Document Modal -->
 <div id="addDocumentModal" class="modal">
     <div class="modal-content">
-        <h3>Add Document</h3>
+        <h3>Adicionar Documento</h3>
         <form id="addDocumentForm" onsubmit="createDocument(event)">
             <div class="form-group">
-                <label for="documentTitle">Document Title</label>
+                <label for="documentTitle">Título do Documento</label>
                 <input type="text" id="documentTitle" name="titulo" >
             </div>
             <div class="form-grid">
                 <div class="form-group">
-                    <label for="documentDepartment">Select Department</label>
+                    <label for="documentDepartment">Selecione o Departamento</label>
                     <select id="documentDepartment" name="department_id" required onchange="loadDepartmentCategories(this.value)">
-                        <option value="">Select Department</option>
+                        <option value="">Selecione o Departamento</option>
                         {% if departments %}
                             {% for department in departments %}
                             <option value="{{department.id}}">{{department.name}}</option>
@@ -89,21 +89,21 @@
                     </select>
                 </div>
                 <div class="form-group">
-                    <label for="documentCategory">Select Category</label>
+                    <label for="documentCategory">Selecione a Categoria</label>
                     <select id="documentCategory" name="category_id" required onchange="loadDocumentTypes(this.value)">
-                        <option value="">Select Category</option>
+                        <option value="">Selecione a Categoria</option>
                     </select>
                 </div>
                 <div class="form-group">
-                    <label for="documentType">Document Type</label>
+                    <label for="documentType">Tipo de Documento</label>
                     <select id="documentType" name="document_type_id" required>
-                        <option value="">Select Document Type</option>
+                        <option value="">Selecione o Tipo de Documento</option>
                     </select>
                 </div>
                 <div class="form-group">
-                    <label for="documentFlow">Flow Type</label>
+                    <label for="documentFlow">Tipo de Fluxo</label>
                     <select id="documentFlow" name="flow" required>
-                        <option value="">Select Flow Type</option>
+                        <option value="">Selecione o Tipo de Fluxo</option>
                         <option value="1">Documentos</option>
                         <option value="2">Assinatura</option>
                         <option value="3">WorkFlow</option>
@@ -112,14 +112,14 @@
                 <div class="form-group">
                     <label for="user_cpf">CPF</label>
                     <div class="filter-input-wrapper search-input">
-                        <input type="text" id="user_cpf" placeholder="Search user...">
+                        <input type="text" id="user_cpf" placeholder="Buscar usuário...">
                         <button type="button" class="action-btn primary" onclick="searchUser()">
                             <i data-feather="search"></i>
                         </button>
                     </div>
                 </div>
                 <div class="form-group">
-                    <label for="documentTitle">User Name</label>
+                    <label for="documentTitle">Nome do Usuário</label>
                     <div class="filter-input-wrapper search-input">
                         <input type="text" id="name-user" name="name-user" disabled>
                         <button type="button" class="action-btn primary" id="add-user" style="display: none;">
@@ -133,12 +133,12 @@
                 <div class="tag-container" id="tag-container" style="display: none;"></div>
             </div>
             <div class="form-group">
-                <label for="documentFile">File</label>
+                <label for="documentFile">Arquivo</label>
                 <input type="file" id="documentFile" name="file" required>
             </div>
             <div class="modal-actions">
-                <button type="button" class="action-btn" onclick="hideModal('addDocumentModal')">Cancel</button>
-                <button type="submit" class="action-btn primary">Upload</button>
+                <button type="button" class="action-btn" onclick="hideModal('addDocumentModal')">Cancelar</button>
+                <button type="submit" class="action-btn primary">Enviar</button>
                 <input type="hidden" name="user_id" id="user_id">
             </div>
         </form>
