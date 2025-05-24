@@ -332,11 +332,11 @@ async function loadDocumentTypes(page = 1) {
         contentDiv.innerHTML = `${gridHTML}
             <div class="pagination-controls">
                 <button class="action-btn" onclick="changePage(currentPage - 1)" id="prevPage" ${currentPage <= 1 ? 'disabled' : ''}>
-                    <i data-feather="chevron-left"></i> Previous
+                    <i data-feather="chevron-left"></i> Anterior
                 </button>
-                <span id="pageInfo">Page ${currentPage} of ${totalPages}</span>
+                <span id="pageInfo">Página ${currentPage} de ${totalPages}</span>
                 <button class="action-btn" onclick="changePage(currentPage + 1)" id="nextPage" ${currentPage >= totalPages ? 'disabled' : ''}>
-                    Next <i data-feather="chevron-right"></i>
+                    Próximo <i data-feather="chevron-right"></i>
                 </button>
             </div>`;
 

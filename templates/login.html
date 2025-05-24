@@ -436,7 +436,7 @@
             showLoading(submitButton);
 
             if (newPassword !== confirmPassword) {
-                showNotification('New passwords do not match', 'error');
+                showNotification('As novas senhas não coincidem', 'error');
                 hideLoading(submitButton);
                 return;
             }
@@ -454,14 +454,14 @@
                 });
 
                 if (response.ok) {
-                    showNotification('Password changed successfully. Please login with your new password.', 'success');
+                    showNotification('Senha alterada com sucesso. Por favor, faça login com sua nova senha.', 'success');
                     window.location.href = '/login';
                 } else {
                     const data = await response.json();
-                    showNotification(data.error || 'Failed to change password', 'error');
+                    showNotification(data.error || 'Falha ao alterar senha', 'error');
                 }
             } catch (error) {
-                showNotification('An error occurred while changing password', 'error');
+                showNotification('Ocorreu um erro ao alterar a senha', 'error');
             }finally{
                 hideLoading(submitButton);
             }
@@ -502,14 +502,14 @@
                 });
 
                 if (response.ok) {
-                    showNotification('If the identifier exists in our system, you will receive instructions to reset your password.', 'success');
+                    showNotification('Se o identificador existir em nosso sistema, você receberá instruções para redefinir sua senha.', 'success');
                     hideForgotPasswordModal();
                 } else {
                     const data = await response.json();
-                    showNotification(data.error || 'Failed to process password reset request', 'error');
+                    showNotification(data.error || 'Falha ao processar solicitação de redefinição de senha', 'error');
                 }
             } catch (error) {
-                showNotification('An error occurred while processing your request', 'error');
+                showNotification('Ocorreu um erro ao processar sua solicitação', 'error');
             }finally{
                 hideLoading(submitButton);
             }
@@ -531,7 +531,7 @@
         loadingDiv.className = 'loading-indicator';
         loadingDiv.innerHTML = `
             <div class="spinner"></div>
-            <span>Loading...</span>
+            <span>Carregando...</span>
         `;
         element.classList.add('loading');
         element.appendChild(loadingDiv);
