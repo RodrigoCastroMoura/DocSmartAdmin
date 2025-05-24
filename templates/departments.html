@@ -5,14 +5,14 @@
     <div class="header-actions">
         <h2><i data-feather="folder"></i></i> Arquivos</h2>
         <button class="action-btn primary" onclick="showAddDepartmentModal()">
-            <i data-feather="plus"></i>  Arquivos
+            <i data-feather="plus"></i> Adicionar Arquivo
         </button>
     </div>
     <div class="content-grid" id="departmentsContent">
         <div class="departments-grid">
             <div class="no-data">
                 <i data-feather="inbox"></i>
-                <p>Carregando departamentos...</p>
+                <p>Carregando arquivos...</p>
             </div>
         </div>
     </div>
@@ -38,11 +38,11 @@
 <!-- Edit Department Modal -->
 <div id="editDepartmentModal" class="modal">
     <div class="modal-content">
-        <h3>Editar Departamento</h3>
+        <h3>Editar Arquivo</h3>
         <form id="editDepartmentForm" onsubmit="updateDepartment(event)">
             <input type="hidden" id="editDepartmentId">
             <div class="form-group">
-                <label for="editDepartmentName">Nome do Departamento</label>
+                <label for="editDepartmentName">Nome do Arquivo</label>
                 <input type="text" id="editDepartmentName" name="name" required>
             </div>
             <div class="modal-actions">
@@ -50,6 +50,18 @@
                 <button type="submit" class="action-btn primary">Atualizar</button>
             </div>
         </form>
+    </div>
+</div>
+
+<!-- Delete Confirmation Modal -->
+<div id="deleteConfirmModal" class="modal">
+    <div class="modal-content">
+        <h3>Confirmar Exclusão</h3>
+        <p>Tem certeza de que deseja excluir este arquivo?</p>
+        <div class="modal-actions">
+            <button type="button" class="action-btn" onclick="hideModal('deleteConfirmModal')">Cancelar</button>
+            <button type="button" class="action-btn danger" onclick="confirmDelete()">Excluir</button>
+        </div>
     </div>
 </div>
 
@@ -93,14 +105,14 @@ async function confirmDelete() {
 
         if (!response.ok) {
             const data = await response.json();
-            throw new Error(data.error || 'Failed to delete department');
+            throw new Error(data.error || 'Falha ao excluir o arquivo');
         }
 
         await loadDepartments();
-        showNotification('Department deleted successfully', 'success');
+        showNotification('Arquivo excluído com sucesso', 'success');
     } catch (error) {
-        console.error('Error deleting department:', error);
-        showNotification(error.message || 'Failed to delete department', 'error');
+        console.error('Erro ao excluir o arquivo:', error);
+        showNotification(error.message || 'Falha ao excluir o arquivo', 'error');
     } finally {
         hideLoading(card);
         itemToDelete = null;
@@ -116,26 +128,26 @@ async function loadDepartments() {
         const data = await response.json();
 
         if (!response.ok) {
-            throw new Error(data.error || `Failed to load departments (${response.status})`);
+            throw new Error(data.error || `Falha ao carregar arquivos (${response.status})`);
         }
 
         if (!Array.isArray(data)) {
-            throw new Error('Invalid response format: expected an array');
+            throw new Error('Formato de resposta inválido: esperado um array');
         }
 
         contentDiv.innerHTML = generateDepartmentsHTML(data);
         feather.replace();
     } catch (error) {
-        console.error('Error loading departments:', error);
+        console.error('Erro ao carregar arquivos:', error);
         contentDiv.innerHTML = `
             <div class="departments-grid">
                 <div class="no-data error">
                     <i data-feather="alert-circle"></i>
-                    <p>${error.message || 'Failed to load departments. Please try again.'}</p>
+                    <p>${error.message || 'Falha ao carregar arquivos. Por favor, tente novamente.'}</p>
                 </div>
             </div>`;
         feather.replace();
-        showNotification(error.message || 'Failed to load departments. Please try again.', 'error');
+        showNotification(error.message || 'Falha ao carregar arquivos. Por favor, tente novamente.', 'error');
     } finally {
         hideLoading(contentDiv);
     }
@@ -147,7 +159,7 @@ function generateDepartmentsHTML(departments) {
             <div class="departments-grid">
                 <div class="no-data">
                     <i data-feather="inbox"></i>
-                    <p>No departments found</p>
+                    <p>Nenhum arquivo encontrado</p>
                 </div>
             </div>`;
     }
@@ -167,14 +179,14 @@ function generateDepartmentsHTML(departments) {
                     <div class="stat">
                         <i data-feather="grid"></i>
                         <div class="stat-info">
-                            <span>Categories</span>
+                            <span>Categorias</span>
                             <p>${department.category_count || 0}</p>
                         </div>
                     </div>
                     <div class="stat">
                         <i data-feather="file-text"></i>
                         <div class="stat-info">
-                            <span>Documents</span>
+                            <span>Documentos</span>
                             <p>${department.document_count || 0}</p>
                         </div>
                     </div>
@@ -214,16 +226,16 @@ async function createDepartment(event) {
 
         const data = await response.json();
         if (!response.ok) {
-            throw new Error(data.error || 'Failed to create department');
+            throw new Error(data.error || 'Falha ao criar o arquivo');
         }
 
         hideModal('addDepartmentModal');
         form.reset();
         await loadDepartments();
-        showNotification('Department created successfully', 'success');
+        showNotification('Arquivo criado com sucesso', 'success');
     } catch (error) {
-        console.error('Error creating department:', error);
-        showNotification(error.message || 'Failed to create department', 'error');
+        console.error('Erro ao criar o arquivo:', error);
+        showNotification(error.message || 'Falha ao criar o arquivo', 'error');
     } finally {
         hideLoading(submitButton);
     }
@@ -253,15 +265,15 @@ async function updateDepartment(event) {
 
         const data = await response.json();
         if (!response.ok) {
-            throw new Error(data.error || 'Failed to update department');
+            throw new Error(data.error || 'Falha ao atualizar o arquivo');
         }
 
         hideModal('editDepartmentModal');
         await loadDepartments();
-        showNotification('Department updated successfully', 'success');
+        showNotification('Arquivo atualizado com sucesso', 'success');
     } catch (error) {
-        console.error('Error updating department:', error);
-        showNotification(error.message || 'Failed to update department', 'error');
+        console.error('Erro ao atualizar o arquivo:', error);
+        showNotification(error.message || 'Falha ao atualizar o arquivo', 'error');
     } finally {
         hideLoading(submitButton);
     }

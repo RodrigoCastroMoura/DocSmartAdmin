@@ -1,26 +1,27 @@
+
 // Form validation utilities
 window.ValidationRules = window.ValidationRules || {
     required: (value) => value && value.trim() !== '' ? '' : 'Campo obrigatório',
     email: (value) => {
         const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-        return emailRegex.test(value) ? '' : 'Please enter a valid email address';
+        return emailRegex.test(value) ? '' : 'Por favor, digite um endereço de e-mail válido';
     },
     minLength: (length) => (value) => 
-        value.length >= length ? '' : `Must be at least ${length} characters long`,
+        value.length >= length ? '' : `Deve ter pelo menos ${length} caracteres`,
     maxLength: (length) => (value) => 
-        value.length <= length ? '' : `Must not exceed ${length} characters`,
+        value.length <= length ? '' : `Não deve exceder ${length} caracteres`,
     match: (matchId, message) => (value) => {
         const matchElement = document.getElementById(matchId);
         return matchElement.value === value ? '' : message;
     },
     cpf: (value) => {
         const cpfRegex = /^\d{11}$/;
-        return cpfRegex.test(value) ? '' : 'Please enter a valid CPF (11 digits)';
+        return cpfRegex.test(value) ? '' : 'Por favor, digite um CPF válido (11 dígitos)';
     },
     phone: (value) => {
         if (!value) return ''; // Phone is optional
         const phoneRegex = /^\d{10,11}$/;
-        return phoneRegex.test(value) ? '' : 'Please enter a valid phone number';
+        return phoneRegex.test(value) ? '' : 'Por favor, digite um número de telefone válido';
     }
 };
 

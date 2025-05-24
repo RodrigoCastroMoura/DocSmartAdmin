@@ -420,7 +420,7 @@
             }).then(() => {
                 window.location.href = '/login';
             }).catch(error => {
-                console.error('Error:', error);
+                console.error('Erro:', error);
                 window.location.href = '/login';
             });
         }
@@ -550,11 +550,11 @@
 
             if (type === 'success') {
                 header.classList.add('success');
-                title.textContent = 'Success';
+                title.textContent = 'Sucesso';
                 icon.setAttribute('data-feather', 'check-circle');
             } else {
                 header.classList.add('error');
-                title.textContent = 'Error';
+                title.textContent = 'Erro';
                 icon.setAttribute('data-feather', 'alert-circle');
             }
 

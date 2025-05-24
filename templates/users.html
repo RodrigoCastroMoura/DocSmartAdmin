@@ -46,11 +46,11 @@
             </div>
             <div class="pagination-controls" id="pagination">
                 <button class="action-btn" onclick="changePage(currentPage - 1)" id="prevPage" disabled>
-                    <i data-feather="chevron-left"></i> Previous
+                    <i data-feather="chevron-left"></i> Anterior
                 </button>
-                <span id="pageInfo">Page 1</span>
+                <span id="pageInfo">Página 1</span>
                 <button class="action-btn" onclick="changePage(currentPage + 1)" id="nextPage" disabled>
-                    Next <i data-feather="chevron-right"></i>
+                    Próximo <i data-feather="chevron-right"></i>
                 </button>
             </div>
         </div>
@@ -62,7 +62,7 @@
         <h3>Adicionar Usuário</h3>
         <form id="addUserForm" onsubmit="createUser(event)">
             <div class="form-group">
-                <label for="userName">Name</label>
+                <label for="userName">Nome</label>
                 <input type="text" id="userName" name="name" required>
             </div>
             <div class="form-group">
@@ -75,23 +75,23 @@
                     <input type="text" id="userCPF" name="cpf" required oninput="maskCPF(this)" maxlength="11" pattern="\d*">
                 </div>
                 <div class="form-group">
-                    <label for="userPhone">Phone</label>
+                    <label for="userPhone">Telefone</label>
                     <input type="text" id="userPhone" name="phone" oninput="maskPhone(this)" maxlength="15">
                 </div>
                 <div class="form-group">
-                    <label for="userPassword">Password</label>
+                    <label for="userPassword">Senha</label>
                     <input type="password" id="userPassword" name="password" required>
                 </div>
                 <div class="form-group">
-                    <label for="userRole">Role</label>
+                    <label for="userRole">Perfil</label>
                     <select id="userRole" name="role" required>
-                        <option value="user">User</option>
+                        <option value="user">Usuário</option>
                     </select>
                 </div>
             </div>
             <div class="modal-actions">
-                <button type="button" class="action-btn" onclick="hideModal('addUserModal')">Cancel</button>
-                <button type="submit" class="action-btn primary">Add</button>
+                <button type="button" class="action-btn" onclick="hideModal('addUserModal')">Cancelar</button>
+                <button type="submit" class="action-btn primary">Adicionar</button>
             </div>
         </form>
     </div>
@@ -103,7 +103,7 @@
         <form id="editUserForm" onsubmit="updateUser(event)">
             <input type="hidden" id="editUserId">
             <div class="form-group">
-                <label for="editUserName">Name</label>
+                <label for="editUserName">Nome</label>
                 <input type="text" id="editUserName" name="name" required readonly>
             </div>
             <div class="form-group">
@@ -116,20 +116,20 @@
                     <input type="text" id="editUserCPF" name="cpf" required oninput="maskCPF(this)" readonly maxlength="14">
                 </div>
                 <div class="form-group">
-                    <label for="editUserPhone">Phone</label>
+                    <label for="editUserPhone">Telefone</label>
                     <input type="text" id="editUserPhone" name="phone" oninput="maskPhone(this)" maxlength="15">
                 </div>
                 <div class="form-group">
-                    <label for="editUserRole">Role</label>
+                    <label for="editUserRole">Perfil</label>
                     <select id="editUserRole" name="role" required>
-                        <option value="user">User</option>
+                        <option value="user">Usuário</option>
                     </select>
                 </div>
 
             </div>
             <div class="modal-actions">
-                <button type="button" class="action-btn" onclick="hideModal('editUserModal')">Cancel</button>
-                <button type="submit" class="action-btn primary">Update</button>
+                <button type="button" class="action-btn" onclick="hideModal('editUserModal')">Cancelar</button>
+                <button type="submit" class="action-btn primary">Atualizar</button>
             </div>
         </form>
     </div>
@@ -137,15 +137,15 @@
 <!-- User Documents Modal -->
 <div id="userDocumentsModal" class="modal">
     <div class="modal-content">
-        <h3>User Documents</h3>
+        <h3>Documentos do Usuário</h3>
         <div class="users-list" id="documentsList">
-            Loading documents...
+            Carregando documentos...
         </div>
         <div class="modal-actions">
 
             <div class="action-buttons">
-                <button type="button" class="action-btn primary" onclick="updateSelectedDocuments()">Update Selected</button>
-                <button type="button" class="action-btn" onclick="hideModal('userDocumentsModal')">Close</button>
+                <button type="button" class="action-btn primary" onclick="updateSelectedDocuments()">Atualizar Selecionados</button>
+                <button type="button" class="action-btn" onclick="hideModal('userDocumentsModal')">Fechar</button>
             </div>
         </div>
     </div>
@@ -182,14 +182,14 @@ async function updateSelectedDocuments() {
 
         if (!response.ok) {
             const data = await response.json();
-            throw new Error(data.error || 'Failed to update documents');
+            throw new Error(data.error || 'Falha ao atualizar documentos');
         }
 
-        showNotification('Documents updated successfully', 'success');
+        showNotification('Documentos atualizados com sucesso', 'success');
         hideModal('userDocumentsModal');
         await loadUsers(currentPage); // Refresh the users list
     } catch (error) {
-        console.error('Error updating documents:', error);
+        console.error('Erro ao atualizar documentos:', error);
         showNotification(error.message, 'error');
     }
 }
@@ -203,12 +203,12 @@ async function showUserDocuments(userCpf, companyId,userId) {
     try {
         const response = await fetch(`/api/documents/simple?user_cpf=${userCpf}&company_id=${companyId}`);
         if (!response.ok) {
-            throw new Error('Failed to fetch documents');
+            throw new Error('Falha ao buscar documentos');
         }
 
         const data = await response.json();
         if (!data.documents || data.documents.length === 0) {
-            documentsList.innerHTML = '<p>No documents found for this user.</p>';
+            documentsList.innerHTML = '<p>Nenhum documento encontrado para este usuário.</p>';
             return;
         }
 
@@ -218,7 +218,7 @@ async function showUserDocuments(userCpf, companyId,userId) {
                     <thead>
                         <tr>
                             <th><input type="checkbox" id="selectAll" onclick="toggleAllDocuments()"></th>
-                            <th>Document Name</th>
+                            <th>Nome do Documento</th>
                             <th>Status</th>
                         </tr>
                     </thead>
@@ -231,7 +231,7 @@ async function showUserDocuments(userCpf, companyId,userId) {
                                 <td>${doc.titulo}</td>
                                 <td>
                                     <span class="status-badge ${doc.visible ? 'active' : 'inactive'}">
-                                        ${doc.visible ? 'Visible' : 'Hidden'}
+                                        ${doc.visible ? 'Visível' : 'Oculto'}
                                     </span>
                                 </td>
                             </tr>
@@ -243,8 +243,8 @@ async function showUserDocuments(userCpf, companyId,userId) {
         `;
 
     } catch (error) {
-        console.error('Error fetching documents:', error);
-        documentsList.innerHTML = '<p class="error">Failed to load documents.</p>';
+        console.error('Erro ao buscar documentos:', error);
+        documentsList.innerHTML = '<p class="error">Falha ao carregar documentos.</p>';
     }
 }
 
@@ -310,7 +310,7 @@ setupFormValidation('addUserForm', {
             const hint = formGroup.querySelector('.password-hint') || (() => {
                 const hint = document.createElement('div');
                 hint.className = 'password-hint';
-                hint.textContent = 'Password must be at least 6 characters';
+                hint.textContent = 'A senha deve ter pelo menos 6 caracteres';
                 formGroup.appendChild(hint);
                 return hint;
             })();
@@ -369,7 +369,7 @@ async function searchByCpf() {
     const cpf = cpfInput.replace(/\D/g, '').trim();
     if (cpf) {        
         if (!validateCPF(cpf)) {
-            showNotification('Please enter a valid CPF', 'error');
+            showNotification('Por favor, insira um CPF válido', 'error');
             return;
         }
     }
@@ -395,24 +395,24 @@ async function loadUsers(page = 1) {
 
         const response = await fetch(`/api/users?${queryParams}`);
         if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status}`);
+            throw new Error(`Erro HTTP! status: ${response.status}`);
         }
 
         const data = await response.json();
         if (!data || !data.users) {
-            throw new Error('Invalid response format');
+            throw new Error('Formato de resposta inválido');
         }
 
         tableBody.innerHTML = generateUsersHTML(data.users);
         pagination.innerHTML = generatePaginationHTML(data,page);
         feather.replace();
     } catch (error) {
-        console.error('Error loading users:', error);
+        console.error('Erro ao carregar usuários:', error);
         tableBody.innerHTML = `
             <tr>
                 <td colspan="7" class="no-data">
                     <i data-feather="alert-circle"></i>
-                    <p>${error.message || 'Failed to load users'}</p>
+                    <p>${error.message || 'Falha ao carregar usuários'}</p>
                 </td>
             </tr>`;
         feather.replace();
@@ -433,7 +433,7 @@ function generateUsersHTML(users) {
             <tr>
                 <td colspan="7" class="no-data">
                     <i data-feather="inbox"></i>
-                    <p>No users found</p>
+                    <p>Nenhum usuário encontrado</p>
                 </td>
             </tr>`;
     }
@@ -450,14 +450,14 @@ function generateUsersHTML(users) {
             <td>${formatCPF(user.cpf)}</td>
             <td>
                 <span class="status-badge ${user.status === 'active' ? 'active' : 'inactive'}">
-                    ${user.status}
+                    ${user.status === 'active' ? 'ativo' : 'inativo'}
                 </span>
             </td>
             <td>
                 <div class="table-actions">
                      <button class="action-btn ${user.status === 'active' ? 'success' : 'danger'}" 
                                 onclick="toggleUserStatus('${user.id}', '${user.status === 'active' ? 'inactive' : 'active'}')"
-                                title="${user.status === 'active' ? 'Deactivate' : 'Activate'}">
+                                title="${user.status === 'active' ? 'Desativar' : 'Ativar'}">
                             <i data-feather="${user.status === 'active' ? 'user-check' : 'user-x'}"></i>
                         </button>
                     <button class="action-btn" onclick='showEditUserModal("${user.id}", ${JSON.stringify(user)})'>
@@ -482,11 +482,11 @@ function generatePaginationHTML(data,page){
 
     return  `<div class="pagination-controls">
                 <button class="action-btn" onclick="changePage(currentPage - 1)" id="prevPage" ${currentPage <= 1 ? 'disabled' : ''}>
-                    <i data-feather="chevron-left"></i> Previous
+                    <i data-feather="chevron-left"></i> Anterior
                 </button>
-                <span id="pageInfo">Page ${currentPage} of ${totalPages}</span>
+                <span id="pageInfo">Página ${currentPage} de ${totalPages}</span>
                 <button class="action-btn" onclick="changePage(currentPage + 1)" id="nextPage" ${currentPage >= totalPages ? 'disabled' : ''}>
-                    Next <i data-feather="chevron-right"></i>
+                    Próximo <i data-feather="chevron-right"></i>
                 </button>
             </div>`;
 }
@@ -500,7 +500,7 @@ async function createUser(event) {
     const cpf = cpfInput.replace(/\D/g, '');
 
     if (!validateCPF(cpf)) {
-        showNotification('Please enter a valid CPF', 'error');
+        showNotification('Por favor, insira um CPF válido', 'error');
         return;
     }
 
@@ -524,15 +524,15 @@ async function createUser(event) {
         const responseData = await response.json();
 
         if (!response.ok) {
-            throw new Error(responseData.error || 'Failed to create user');
+            throw new Error(responseData.error || 'Falha ao criar usuário');
         }
 
         hideModal('addUserModal');
         form.reset();
         await loadUsers(currentPage);
-        showNotification('User created successfully', 'success');
+        showNotification('Usuário criado com sucesso', 'success');
     } catch (error) {
-        console.error('Error creating user:', error);
+        console.error('Erro ao criar usuário:', error);
         showErrorMessage(error.message);
     } finally {
         hideLoading(submitButton);
@@ -548,7 +548,7 @@ async function updateUser(event) {
     const cpf = cpfInput.replace(/\D/g, '');
 
     if (!validateCPF(cpf)) {
-        showNotification('Please enter a valid CPF', 'error');
+        showNotification('Por favor, insira um CPF válido', 'error');
         return;
     }
 
@@ -573,14 +573,14 @@ async function updateUser(event) {
         const responseData = await response.json();
 
         if (!response.ok) {
-            throw new Error(responseData.error || 'Failed to update user');
+            throw new Error(responseData.error || 'Falha ao atualizar usuário');
         }
 
         hideModal('editUserModal');
         await loadUsers(currentPage);
-        showNotification('User updated successfully', 'success');
+        showNotification('Usuário atualizado com sucesso', 'success');
     } catch (error) {
-        console.error('Error updating user:', error);
+        console.error('Erro ao atualizar usuário:', error);
         showErrorMessage(error.message);
     } finally {
         hideLoading(submitButton);
@@ -602,13 +602,13 @@ async function confirmDelete() {
 
         if (!response.ok) {
             const errorData = await response.json();
-            throw new Error(errorData.error || 'Failed to delete user');
+            throw new Error(errorData.error || 'Falha ao excluir usuário');
         }
 
         await loadUsers(currentPage);
-        showNotification('User deleted successfully', 'success');
+        showNotification('Usuário excluído com sucesso', 'success');
     } catch (error) {
-        console.error('Error deleting user:', error);
+        console.error('Erro ao excluir usuário:', error);
         showErrorMessage(error.message);
     } finally {
         hideLoading(row);
@@ -626,7 +626,7 @@ async function toggleUserStatus(userId, newStatus) {
             body: JSON.stringify({ status: newStatus })
         });
 
-        let errorMessage = 'Failed to update status';
+        let errorMessage = 'Falha ao atualizar status';
 
         if (!response.ok) {
             try {
@@ -634,16 +634,16 @@ async function toggleUserStatus(userId, newStatus) {
                 errorMessage = errorData.error || errorMessage;
             } catch (e) {
                 const text = await response.text();
-                console.error('Raw response:', text);
-                errorMessage = 'Invalid server response';
+                console.error('Resposta bruta:', text);
+                errorMessage = 'Resposta inválida do servidor';
             }
             throw new Error(errorMessage);
         }
 
-        showNotification(`User ${newStatus === 'active' ? 'activated' : 'deactivated'} successfully`, 'success');
+        showNotification(`Usuário ${newStatus === 'active' ? 'ativado' : 'desativado'} com sucesso`, 'success');
         loadUsers(currentPage);
     } catch (error) {
-        console.error('Error updating user status:', error);
+        console.error('Erro ao atualizar status do usuário:', error);
         showNotification(error.message, 'error');
     }
 }
