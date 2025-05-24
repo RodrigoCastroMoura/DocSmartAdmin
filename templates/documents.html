@@ -810,6 +810,18 @@ function showModal(modalId) {
 
 function hideModal(modalId) {
     document.getElementById(modalId).style.display = 'none';
+    
+    // Clear form fields when closing the add document modal
+    if (modalId === 'addDocumentModal') {
+        document.getElementById('addDocumentForm').reset();
+        document.getElementById('user_id').value = '';
+        document.getElementById('name-user').value = '';
+        document.getElementById('tag-container').innerHTML = ''; // Clear tags
+        
+        // Reset category and document type dropdowns
+        document.getElementById('documentCategory').innerHTML = '<option value="">Selecione a Categoria</option>';
+        document.getElementById('documentType').innerHTML = '<option value="">Selecione o Tipo de Documento</option>';
+    }
 }
 
 function showAddDocumentModal() {
