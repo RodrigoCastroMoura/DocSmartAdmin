@@ -442,7 +442,7 @@ async function createDocument(event) {
     }
 
     if(document.getElementById('user_id').value ==''){
-        showNotification('Enter with CPF', 'error');
+        showNotification('Informe o CPF', 'error');
         return;
     }
 
@@ -468,7 +468,7 @@ async function createDocument(event) {
             user_cpf: document.getElementById('user-cpf-filter').value
         };
         await loadDocuments(currentPage,filters);
-        showNotification('Document created successfully', 'success');
+        showNotification('Documento criado com sucesso', 'success');
     } catch (error) {
         console.error('Error creating document:', error);
         showNotification(error.message, 'error');
@@ -628,7 +628,7 @@ async function searchUser() {
         openPopup();
         if(document.getElementById(`user_cpf`).value == ''){
             closePopup();
-            showNotification('Enter with CPF', 'error');
+            showNotification('Informe o CPF', 'error');
             return;
         } 
 
@@ -639,7 +639,7 @@ async function searchUser() {
         const response = await fetch(`/api/users?${params}`);
         if (!response.ok) {
             closePopup();
-            showNotification('User not found', 'error');
+            showNotification('Usuário não encontrado', 'error');
             document.getElementById('name-user').value = '';
             document.getElementById('user_id').value ='';
             return;
@@ -649,7 +649,7 @@ async function searchUser() {
 
         if(!usuario){
             closePopup();
-            showNotification('User not found', 'error');
+            showNotification('Usuário não encontrado', 'error');
             document.getElementById('name-user').value = '';
             document.getElementById('user_id').value ='';
             return;
@@ -909,8 +909,7 @@ async function adjustZoom(delta) {
 
         // Restore scroll position
         const newScrollContainer = document.querySelector('.pdf-pages-container');
-        setTimeout(() => {
-            newScrollContainer.scrollTop = scrollRatio * newScrollContainer.scrollHeight;
+        setTimeout(() => {            newScrollContainer.scrollTop = scrollRatio * newScrollContainer.scrollHeight;
         }, 50);
     } else if (imageElement) {
         // Handle image zoom
