@@ -825,16 +825,22 @@ function hideModal(modalId) {
         document.getElementById('name-user').value = '';
         document.getElementById('tag-container').innerHTML = ''; // Clear tags
         
-        // Reset flow and document UI elements
-        const addBtn = document.getElementById('add-user');
-        const tagContainer = document.getElementById('tag-container');
         addBtn.style.setProperty('display', 'none', 'important');
         tagContainer.style.setProperty('display', 'none', 'important');
+        document.getElementById('tag-container').innerHTML = ''; // Clear tags
     }
 }
 
 function showAddDocumentModal() {
+
     document.getElementById('addDocumentForm').reset();
+    document.getElementById('user_id').value = '';
+    document.getElementById('name-user').value = '';
+    document.getElementById('tag-container').innerHTML = ''; // Clear tags
+    
+    addBtn.style.setProperty('display', 'none', 'important');
+    tagContainer.style.setProperty('display', 'none', 'important');
+    document.getElementById('tag-container').innerHTML = ''; // Clear tags
     showModal('addDocumentModal');
 }
 

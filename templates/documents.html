@@ -816,6 +816,8 @@ function hideModal(modalId) {
         document.getElementById('addDocumentForm').reset();
         document.getElementById('user_id').value = '';
         document.getElementById('name-user').value = '';
+        addBtn.style.setProperty('display', 'none', 'important');
+        tagContainer.style.setProperty('display', 'none', 'important');
         document.getElementById('tag-container').innerHTML = ''; // Clear tags
         
         // Reset category and document type dropdowns
@@ -826,6 +828,13 @@ function hideModal(modalId) {
 
 function showAddDocumentModal() {
     document.getElementById('addDocumentForm').reset();
+    document.getElementById('user_id').value = '';
+    document.getElementById('name-user').value = '';
+    document.getElementById('tag-container').innerHTML = ''; // Clear tags
+        
+    addBtn.style.setProperty('display', 'none', 'important');
+    tagContainer.style.setProperty('display', 'none', 'important');
+    document.getElementById('tag-container').innerHTML = ''; // Clear tags
     showModal('addDocumentModal');
 }
 
