@@ -50,7 +50,7 @@
             {% else %}
                 <div class="no-data">
                     <i data-feather="inbox"></i>
-                    <p>No categories found for this department</p>
+                    <p>Nenhuma categoria encontrada para este departamento</p>
                 </div>
             {% endif %}
         </div>
@@ -132,7 +132,7 @@ async function loadCategories() {
         contentDiv.innerHTML = `
             <div class="no-data error">
                 <i data-feather="alert-circle"></i>
-                <p>${error.message || 'Failed to load categories. Please try again.'}</p>
+                <p>${error.message || 'Falha ao carregar categorias. Por favor, tente novamente.'}</p>
             </div>`;
         feather.replace();
         showErrorMessage(error.message || 'Failed to load categories');
@@ -174,13 +174,13 @@ async function createCategory(event) {
 
         if (!response.ok) {
             const errorData = await response.json();
-            throw new Error(errorData.error || 'Failed to create category');
+            throw new Error(errorData.error || 'Falha ao criar categoria');
         }
 
         hideModal('addCategoryModal');
         form.reset();
         await loadCategories(); // Reload to show new category
-        showNotification('Category created successfully', 'success');
+        showNotification('Categoria criada com sucesso', 'success');
     } catch (error) {
         console.error('Error creating category:', error);
         showErrorMessage(error.message);
@@ -214,12 +214,12 @@ async function updateCategory(event) {
 
         if (!response.ok) {
             const errorData = await response.json();
-            throw new Error(errorData.error || 'Failed to update category');
+            throw new Error(errorData.error || 'Falha ao atualizar categoria');
         }
 
         hideModal('editCategoryModal');
         await loadCategories(); // Reload to show updated category
-        showNotification('Category updated successfully', 'success');
+        showNotification('Categoria atualizada com sucesso', 'success');
     } catch (error) {
         console.error('Error updating category:', error);
         showErrorMessage(error.message);
@@ -245,10 +245,10 @@ async function confirmDelete() {
 
         if (!response.ok) {
             const errorData = await response.json();
-            throw new Error(errorData.error || 'Failed to delete category');
+            throw new Error(errorData.error || 'Falha ao excluir categoria');
         }
         await loadCategories();
-        showNotification('Category deleted successfully', 'success');
+        showNotification('Categoria excluída com sucesso', 'success');
     } catch (error) {
         console.error('Error deleting category:', error);
         showErrorMessage(error.message);
