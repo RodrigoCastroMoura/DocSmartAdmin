@@ -105,18 +105,6 @@
                 <label for="editDocumentTypeDescription">Descrição</label>
                 <input type="text" id="editDocumentTypeDescription" name="description">
             </div>
-            <div class="form-group">
-                <label for="documentTypeDepartment">Departamento</label>
-                <select id="documentTypeDepartment" onchange="loadDepartmentCategories(this.value)">
-                    <option value="">Selecionar Departamento</option>
-                </select>
-            </div>
-            <div class="form-group">
-                <label for="documentTypeCategory">Categoria</label>
-                <select id="documentTypeCategory" name="category_id" required>
-                    <option value="">Selecionar Categoria</option>
-                </select>
-            </div>
             <div style="display: flex; gap: 1rem;">
                 <div class="form-group" style="flex: 1;">
                     <label for="addDocuments">Adicionar Documento:</label>
@@ -423,20 +411,7 @@ async function showEditDocumentTypeModal(id, type) {
             downloadSelect.value = String(type.isdownload);
         }
 
-        // Set department and category if present
-        if (type.department_id) {
-            const deptSelect = document.getElementById('documentTypeDepartment');
-            deptSelect.value = type.department_id;
-            await loadDepartmentCategories(type.department_id);
-
-            setTimeout(() => {
-                const catSelect = document.getElementById('documentTypeCategory');
-                if (catSelect && type.category_id) {
-                    catSelect.value = type.category_id;
-                }
-            }, 500);
-        }
-
+        
         showModal('editDocumentTypeModal');
         feather.replace();
     } catch (error) {

@@ -265,8 +265,7 @@ def login():
 
             if response.status_code == 200:
                 data = response.json()
-                logger.info(f"Login response: {data}"
-                            )  # Log the entire response for debugging
+                # logger.info(f"Login response: {data}")  # Log the entire response for debugging
                 session.permanent = True
                 session['access_token'] = data['access_token']
                 session['refresh_token'] = data['refresh_token']
