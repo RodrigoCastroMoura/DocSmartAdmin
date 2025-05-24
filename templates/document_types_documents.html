@@ -622,7 +622,7 @@ async function confirmDelete() {
             user_cpf: document.getElementById('user-cpf-filter').value
         };
         await loadDocuments(currentPage,filters);
-        showNotification('Document deleted successfully', 'success');
+        showNotification('Documento deletado com sucesso', 'success');
     } catch (error) {
         console.error('Error deleting document:', error);
         showNotification(error.message, 'error');

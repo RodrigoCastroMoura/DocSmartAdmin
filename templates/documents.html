@@ -50,7 +50,7 @@
             <div class="documents-grid">
                 <div class="no-data">
                     <i data-feather="inbox"></i>
-                    <p>Carregando documentos...</p>
+                    <p>Nenhum documento encontrado</p>
                 </div>
             </div>
             <div class="pagination-controls">
@@ -371,7 +371,15 @@ async function applyFiltersDepartment(departmentId) {
         if (!departmentId) {
             categorySelect.innerHTML = '<option value="">Categories</option>';
             typeSelect.innerHTML = '<option value="">Types</option>';
-            await applyFilters(currentPage);
+            const contentDiv = document.getElementById('documentsContent');
+            contentDiv.innerHTML = `
+            <div class="documents-grid">
+                <div class="no-data">
+                    <i data-feather="inbox"></i>
+                    <p>Nenhum documento encontrado</p>
+                </div>
+            </div>`;
+            //await applyFilters(currentPage);
             return;
         }
         await applyFilters(currentPage);
@@ -675,7 +683,7 @@ async function loadDocuments(page = 1, filters = {}) {
             <div class="documents-grid">
                 <div class="no-data">
                     <i data-feather="inbox"></i>
-                    <p>No documents found</p>
+                    <p>Nenhum documento encontrado</p>
                 </div>
             </div>` : `
             <div class="documents-grid">
@@ -1216,7 +1224,7 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 
 document.addEventListener('DOMContentLoaded', () => {
-    loadDocuments();
+    
     feather.replace();
 });
 </script>
