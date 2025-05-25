@@ -342,7 +342,7 @@ async function loadFilterOptions() {
     }
 }
 
-async function applyFilters(Page = 1) {
+async function applyFilters() {
     const filters = {
         department_id: document.getElementById('filterDepartment').value,
         category_id: document.getElementById('filterCategory').value,
@@ -353,9 +353,11 @@ async function applyFilters(Page = 1) {
     // Store filters in URL params
     const params = new URLSearchParams(filters);
 
-
+    // Sempre que aplicar filtros, voltar para a página 1
+    currentPage = 1;
+    
     // Reload documents with filters
-    await loadDocuments(Page, filters);
+    await loadDocuments(1, filters);
 }
 
 async function applyFiltersDepartment(departmentId) {
@@ -371,18 +373,20 @@ async function applyFiltersDepartment(departmentId) {
         if (!departmentId) {
             categorySelect.innerHTML = '<option value="">Categories</option>';
             typeSelect.innerHTML = '<option value="">Types</option>';
-            const contentDiv = document.getElementById('documentsContent');
-            contentDiv.innerHTML = `
-            <div class="documents-grid">
-                <div class="no-data">
-                    <i data-feather="inbox"></i>
-                    <p>Nenhum documento encontrado</p>
-                </div>
-            </div>`;
-            //await applyFilters(currentPage);
+            await applyFilters(currentPage);
             return;
         }
-        await applyFilters(currentPage);
+        
+        // Aplicar filtro por departamento primeiro
+        const filters = {
+            department_id: departmentId,
+            category_id: '',
+            document_type_id: '',
+            user_cpf: document.getElementById('user-cpf-filter').value
+        };
+        
+        await loadDocuments(1, filters);
+        
         const response = await fetch(`/api/categories/departments/${departmentId}/categories`);
         if (!response.ok) {
             const errorData = await response.json();
@@ -417,10 +421,20 @@ async function applyFiltersCategory(categoryId) {
     try {
         if (!categoryId) {
             typeSelect.innerHTML = '<option value="">Tipos</option>';
-            await applyFilters(currentPage);
+            await applyFilters();
             return;
         }
-        await applyFilters(currentPage);
+        
+        // Aplicar filtro por categoria
+        const filters = {
+            department_id: document.getElementById('filterDepartment').value,
+            category_id: categoryId,
+            document_type_id: '',
+            user_cpf: document.getElementById('user-cpf-filter').value
+        };
+        
+        await loadDocuments(1, filters);
+        
         const response = await fetch(`/api/document_types/categories/${categoryId}/types`);
         if (!response.ok) {
             const errorData = await response.json();
@@ -767,7 +781,17 @@ function changePage(page) {
     if (page < 1 || page > totalPages) {
         return;
     }
-    loadDocuments(page);
+    
+    // Obter os filtros atuais
+    const filters = {
+        department_id: document.getElementById('filterDepartment').value,
+        category_id: document.getElementById('filterCategory').value,
+        document_type_id: document.getElementById('filterDocumentType').value,
+        user_cpf: document.getElementById('user-cpf-filter').value
+    };
+    
+    // Carregar documentos com a nova página mas mantendo os filtros
+    loadDocuments(page, filters);
 }
 
 async function searchUser() {
