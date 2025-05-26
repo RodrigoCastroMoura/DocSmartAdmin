@@ -337,12 +337,14 @@ function switchView(viewType) {
         cardsBtn.classList.add('active');
         tableBtn.classList.remove('active');
         documentsTable.style.display = 'none';
-        // Force reflow before showing cards
-        setTimeout(() => {
-            documentsGrid.style.display = 'block';
-            // Force grid recalculation
-            documentsGrid.style.gridTemplateColumns = 'repeat(auto-fill, minmax(350px, 1fr))';
-        }, 10);
+        
+        // Show cards with proper grid setup
+        documentsGrid.style.display = 'grid';
+        documentsGrid.style.gridTemplateColumns = 'repeat(auto-fill, minmax(350px, 1fr))';
+        documentsGrid.style.gap = '1.5rem';
+        
+        // Force browser to recalculate layout
+        documentsGrid.offsetHeight;
     } else {
         tableBtn.classList.add('active');
         cardsBtn.classList.remove('active');
@@ -1500,9 +1502,9 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     .documents-grid {
-        display: grid;
-        grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
-        gap: 1.5rem;
+        display: grid !important;
+        grid-template-columns: repeat(auto-fill, minmax(350px, 1fr)) !important;
+        gap: 1.5rem !important;
         margin-bottom: 2rem;
         width: 100%;
         clear: both;
@@ -1515,10 +1517,12 @@ document.addEventListener('DOMContentLoaded', () => {
         transition: transform 0.2s;
         position: relative;
         width: 100%;
+        max-width: 100%;
         box-sizing: border-box;
         display: flex;
         flex-direction: column;
         min-height: 280px;
+        grid-column: span 1;
     }
 
     .document-card:hover {
