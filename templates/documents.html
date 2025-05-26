@@ -53,13 +53,13 @@
                 </div>
             </div>
             <div class="form-group">
-                <label for="itemsPerPage">Itens por página</label>
-                <select id="itemsPerPage" name="itemsPerPage" onchange="changeItemsPerPage(this.value)">
-                    <option value="9">9 itens</option>
-                    <option value="18">18 itens</option>
-                    <option value="27">27 itens</option>
-                    <option value="36">36 itens</option>
-                    <option value="45">45 itens</option>
+                <label for="itemsPerPage">Por página</label>
+                <select id="itemsPerPage" name="itemsPerPage" onchange="changeItemsPerPage(this.value)" class="items-per-page-select">
+                    <option value="9">9</option>
+                    <option value="18">18</option>
+                    <option value="27">27</option>
+                    <option value="36">36</option>
+                    <option value="45">45</option>
                 </select>
             </div>
         </div>
@@ -2243,6 +2243,24 @@ document.addEventListener('DOMContentLoaded', () => {
         .documents-grid {
             grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
         }
+    }
+
+    /* Items per page select styling */
+    .items-per-page-select {
+        max-width: 80px !important;
+        min-width: 60px !important;
+        text-align: center;
+        padding: 0.5rem 0.25rem !important;
+    }
+
+    .filter-grid .form-group:has(.items-per-page-select) {
+        min-width: auto;
+        max-width: 100px;
+    }
+
+    .filter-grid .form-group:has(.items-per-page-select) label {
+        font-size: 0.8rem;
+        white-space: nowrap;
     }
     /* Modal de visualização em tela cheia */
 #previewModal {
