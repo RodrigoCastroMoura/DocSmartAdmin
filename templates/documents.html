@@ -336,8 +336,13 @@ function switchView(viewType) {
     if (viewType === 'cards') {
         cardsBtn.classList.add('active');
         tableBtn.classList.remove('active');
-        documentsGrid.style.display = 'block';
         documentsTable.style.display = 'none';
+        // Force reflow before showing cards
+        setTimeout(() => {
+            documentsGrid.style.display = 'block';
+            // Force grid recalculation
+            documentsGrid.style.gridTemplateColumns = 'repeat(auto-fill, minmax(350px, 1fr))';
+        }, 10);
     } else {
         tableBtn.classList.add('active');
         cardsBtn.classList.remove('active');
@@ -639,18 +644,7 @@ function getFileIcon(filename) {
     }
 }
 
-setupFormValidation('addDocumentForm', {
-    'documentTitle': [
-        ValidationRules.required,
-        ValidationRules.minLength(3),
-        ValidationRules.maxLength(100)
-    ],
-    'documentDepartment': [ValidationRules.required],
-    'documentCategory': [ValidationRules.required],
-    'documentType': [ValidationRules.required],
-    'documentUser': [ValidationRules.required],
-    'documentFile': [ValidationRules.required]
-});
+// Form validation will be handled inline in createDocument function
 
 async function loadDocumentTypes(categoryId) {
     const typeSelect = document.getElementById('documentType');
@@ -1510,6 +1504,8 @@ document.addEventListener('DOMContentLoaded', () => {
         grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
         gap: 1.5rem;
         margin-bottom: 2rem;
+        width: 100%;
+        clear: both;
     }
 
     .document-card {
@@ -1518,6 +1514,11 @@ document.addEventListener('DOMContentLoaded', () => {
         padding: 1.5rem;
         transition: transform 0.2s;
         position: relative;
+        width: 100%;
+        box-sizing: border-box;
+        display: flex;
+        flex-direction: column;
+        min-height: 280px;
     }
 
     .document-card:hover {
@@ -2178,6 +2179,27 @@ document.addEventListener('DOMContentLoaded', () => {
         .header-actions {
             flex-direction: column;
             align-items: stretch;
+        }
+
+        .documents-grid {
+            grid-template-columns: 1fr;
+            gap: 1rem;
+        }
+
+        .document-card {
+            min-height: auto;
+        }
+    }
+
+    @media (min-width: 769px) and (max-width: 1024px) {
+        .documents-grid {
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+        }
+    }
+
+    @media (min-width: 1025px) {
+        .documents-grid {
+            grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
         }
     }
     /* Modal de visualização em tela cheia */
