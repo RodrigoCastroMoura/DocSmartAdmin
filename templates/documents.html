@@ -52,6 +52,16 @@
                     </button>
                 </div>
             </div>
+            <div class="form-group">
+                <label for="itemsPerPage">Itens por página</label>
+                <select id="itemsPerPage" name="itemsPerPage" onchange="changeItemsPerPage(this.value)">
+                    <option value="9">9 itens</option>
+                    <option value="18">18 itens</option>
+                    <option value="27">27 itens</option>
+                    <option value="36">36 itens</option>
+                    <option value="45">45 itens</option>
+                </select>
+            </div>
         </div>
     </div>
 
@@ -228,7 +238,7 @@
 <script>
 // Variáveis globais para paginação e UI
 let currentPage = 1;
-const perPage = 9;
+let perPage = 9;
 let totalPages = 1;
 let itemToDelete = null;
 let userSearchTimeout = null;
@@ -1014,6 +1024,22 @@ function changePage(page) {
     
     // Carregar documentos com a nova página mas mantendo os filtros
     loadDocuments(page, filters);
+}
+
+function changeItemsPerPage(newPerPage) {
+    perPage = parseInt(newPerPage);
+    currentPage = 1; // Reset to first page when changing items per page
+    
+    // Obter os filtros atuais
+    const filters = {
+        department_id: document.getElementById('filterDepartment').value,
+        category_id: document.getElementById('filterCategory').value,
+        document_type_id: document.getElementById('filterDocumentType').value,
+        user_cpf: document.getElementById('user-cpf-filter').value
+    };
+    
+    // Recarregar documentos com nova quantidade por página
+    loadDocuments(1, filters);
 }
 
 async function searchUser() {
