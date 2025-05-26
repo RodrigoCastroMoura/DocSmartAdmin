@@ -7,11 +7,11 @@
             <h2><i data-feather="file-text"></i> Documentos</h2>
             <div class="header-actions">
                 <div class="view-toggle">
-                    <button class="view-btn active" onclick="switchView('cards')" id="cardsViewBtn">
-                        <i data-feather="grid"></i> Cards
-                    </button>
-                    <button class="view-btn" onclick="switchView('table')" id="tableViewBtn">
+                    <button class="view-btn active" onclick="switchView('table')" id="tableViewBtn">
                         <i data-feather="list"></i> Tabela
+                    </button>
+                    <button class="view-btn" onclick="switchView('cards')" id="cardsViewBtn">
+                        <i data-feather="grid"></i> Cards
                     </button>
                 </div>
                 <button class="action-btn primary" onclick="showAddDocumentModal()">
@@ -70,13 +70,13 @@
             </div>
         </div>
         <div id="documentsContent">
-            <div class="documents-grid" id="documentsGrid">
+            <div class="documents-grid" id="documentsGrid" style="display: none;">
                 <div class="no-data">
                     <i data-feather="inbox"></i>
                     <p>Nenhum documento encontrado</p>
                 </div>
             </div>
-            <div class="documents-table-container" id="documentsTable" style="display: none;">
+            <div class="documents-table-container" id="documentsTable">
                 <table class="documents-table">
                     <thead>
                         <tr>
@@ -232,7 +232,7 @@ const perPage = 9;
 let totalPages = 1;
 let itemToDelete = null;
 let userSearchTimeout = null;
-let currentView = 'cards';
+let currentView = 'table';
 let selectedDocuments = new Set();
 
 // Variáveis globais para visualização de documentos
