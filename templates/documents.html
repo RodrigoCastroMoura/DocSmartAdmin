@@ -70,8 +70,8 @@
             <div class="bulk-actions-content">
                 <span id="selectedCount">0 documentos selecionados</span>
                 <div class="bulk-buttons">
-                    <button class="action-btn danger" onclick="bulkDelete()">
-                        <i data-feather="trash-2"></i> Excluir Selecionados
+                    <button class="action-btn primary" onclick="bulkDownload()">
+                        <i data-feather="download"></i> Download Selecionados
                     </button>
                     <button class="action-btn" onclick="clearSelection()">
                         <i data-feather="x"></i> Cancelar
@@ -433,10 +433,10 @@ function clearSelection() {
     updateBulkActionsVisibility();
 }
 
-async function bulkDelete() {
+async function bulkDownload() {
     if (selectedDocuments.size === 0) return;
     
-    if (!confirm(`Tem certeza que deseja excluir ${selectedDocuments.size} documento${selectedDocuments.size > 1 ? 's' : ''}?`)) {
+    if (!confirm(`Tem certeza que deseja fazer download de ${selectedDocuments.size} documento${selectedDocuments.size > 1 ? 's' : ''}?`)) {
         return;
     }
     
@@ -444,23 +444,40 @@ async function bulkDelete() {
     showLoading(bulkActions);
     
     try {
-        const deletePromises = Array.from(selectedDocuments).map(docId => 
-            fetch(`/api/documents/${docId}`, { method: 'DELETE' })
-        );
+        const response = await fetch('/api/documents/bulk-download', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                document_ids: Array.from(selectedDocuments),
+                filename: `documentos_selecionados_${Date.now()}.pdf`
+            })
+        });
         
-        const results = await Promise.all(deletePromises);
-        const failedDeletes = results.filter(response => !response.ok);
-        
-        if (failedDeletes.length > 0) {
-            throw new Error(`Falha ao excluir ${failedDeletes.length} documento${failedDeletes.length > 1 ? 's' : ''}`);
+        if (!response.ok) {
+            const errorData = await response.json();
+            throw new Error(errorData.error || 'Falha ao fazer download dos documentos');
         }
         
+        // Get the blob from response
+        const blob = await response.blob();
+        
+        // Create download link
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.style.display = 'none';
+        a.href = url;
+        a.download = `documentos_selecionados_${Date.now()}.pdf`;
+        document.body.appendChild(a);
+        a.click();
+        window.URL.revokeObjectURL(url);
+        document.body.removeChild(a);
+        
         clearSelection();
-        const filters = getCurrentFilters();
-        await loadDocuments(currentPage, filters);
-        showNotification('Documentos excluídos com sucesso', 'success');
+        showNotification('Download dos documentos iniciado com sucesso', 'success');
     } catch (error) {
-        console.error('Error deleting documents:', error);
+        console.error('Error downloading documents:', error);
         showNotification(error.message, 'error');
     } finally {
         hideLoading(bulkActions);
@@ -2084,6 +2101,15 @@ document.addEventListener('DOMContentLoaded', () => {
 
     .bulk-buttons .action-btn:hover {
         background-color: rgba(255, 255, 255, 0.3);
+    }
+
+    .bulk-buttons .action-btn.primary {
+        background-color: rgba(255, 255, 255, 0.9);
+        color: var(--accent-color);
+    }
+
+    .bulk-buttons .action-btn.primary:hover {
+        background-color: white;
     }
 
     .documents-table-container {

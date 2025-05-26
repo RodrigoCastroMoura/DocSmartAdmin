@@ -1352,6 +1352,49 @@ def toggle_documents_status():
         return jsonify({'error': 'An unexpected error occurred'}), 500
 
 
+@app.route('/api/documents/bulk-download', methods=['POST'])
+@login_required
+def bulk_download_documents():
+    headers = get_auth_headers()
+    try:
+        data = request.get_json()
+        document_ids = data.get('document_ids', [])
+        filename = data.get('filename', 'combined_documents.pdf')
+
+        if not document_ids:
+            return jsonify({'error': 'No document IDs provided'}), 400
+
+        response = requests.post(f"{DOCUMENTS_URL}/bulk-download",
+                                 headers=headers,
+                                 json={
+                                     'document_ids': document_ids,
+                                     'filename': filename
+                                 },
+                                 timeout=REQUEST_TIMEOUT * 3)  # Longer timeout for bulk download
+
+        if response.ok:
+            # Return the PDF file as response
+            return Response(
+                response.content,
+                mimetype='application/pdf',
+                headers={
+                    'Content-Disposition': f'attachment; filename="{filename}"'
+                }
+            )
+        else:
+            error_data = response.json() if response.content else {}
+            error_msg = error_data.get('error', 'Failed to download documents')
+            return jsonify({'error': error_msg}), response.status_code
+
+    except requests.Timeout:
+        return jsonify({'error': 'Request timed out'}), 504
+    except requests.ConnectionError:
+        return jsonify({'error': 'Failed to connect to server'}), 503
+    except Exception as e:
+        print(f"Error bulk downloading documents: {e}")
+        return jsonify({'error': 'An unexpected error occurred'}), 500
+
+
 @app.route('/api/documents/<document_id>', methods=['DELETE'])
 @login_required
 def delete_document(document_id):
