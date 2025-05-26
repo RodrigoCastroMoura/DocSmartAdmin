@@ -336,10 +336,14 @@ function switchView(viewType) {
     if (viewType === 'cards') {
         cardsBtn.classList.add('active');
         tableBtn.classList.remove('active');
+        
+        // Hide table completely
         documentsTable.style.display = 'none';
+        documentsTable.style.visibility = 'hidden';
         
         // Show cards with proper grid setup
         documentsGrid.style.display = 'grid';
+        documentsGrid.style.visibility = 'visible';
         documentsGrid.style.gridTemplateColumns = 'repeat(auto-fill, minmax(350px, 1fr))';
         documentsGrid.style.gap = '1.5rem';
         
@@ -348,8 +352,14 @@ function switchView(viewType) {
     } else {
         tableBtn.classList.add('active');
         cardsBtn.classList.remove('active');
+        
+        // Hide cards completely
         documentsGrid.style.display = 'none';
+        documentsGrid.style.visibility = 'hidden';
+        
+        // Show table
         documentsTable.style.display = 'block';
+        documentsTable.style.visibility = 'visible';
     }
     
     // Reload current page data
@@ -1508,6 +1518,8 @@ document.addEventListener('DOMContentLoaded', () => {
         margin-bottom: 2rem;
         width: 100%;
         clear: both;
+        position: relative;
+        z-index: 2;
     }
 
     .document-card {
@@ -2039,6 +2051,8 @@ document.addEventListener('DOMContentLoaded', () => {
         border-radius: 8px;
         overflow: hidden;
         margin-bottom: 2rem;
+        position: relative;
+        z-index: 1;
     }
 
     .documents-table {
