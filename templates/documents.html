@@ -475,7 +475,7 @@ async function bulkDownload() {
         document.body.removeChild(a);
         
         clearSelection();
-        showNotification('Download dos documentos iniciado com sucesso', 'success');
+        showNotification('Download dos documentos concluído com sucesso', 'success');
     } catch (error) {
         console.error('Error downloading documents:', error);
         showNotification(error.message, 'error');
