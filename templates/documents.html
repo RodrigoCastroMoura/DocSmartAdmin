@@ -1679,8 +1679,23 @@ document.addEventListener('DOMContentLoaded', () => {
 
     .filter-grid {
         display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        grid-template-columns: 1fr 1fr 1fr 1fr 100px;
         gap: 1rem;
+        align-items: end;
+    }
+
+    @media (max-width: 768px) {
+        .filter-grid {
+            grid-template-columns: 1fr;
+            gap: 0.5rem;
+        }
+    }
+
+    @media (min-width: 769px) and (max-width: 1024px) {
+        .filter-grid {
+            grid-template-columns: 1fr 1fr 120px;
+            gap: 0.75rem;
+        }
     }
 
     .filter-group {
@@ -2247,20 +2262,25 @@ document.addEventListener('DOMContentLoaded', () => {
 
     /* Items per page select styling */
     .items-per-page-select {
-        max-width: 80px !important;
-        min-width: 60px !important;
+        width: 100% !important;
+        max-width: 90px !important;
+        min-width: 70px !important;
         text-align: center;
-        padding: 0.5rem 0.25rem !important;
+        padding: 0.5rem 0.5rem !important;
+        font-size: 0.9rem;
     }
 
     .filter-grid .form-group:has(.items-per-page-select) {
-        min-width: auto;
+        min-width: 90px;
         max-width: 100px;
+        justify-self: end;
     }
 
     .filter-grid .form-group:has(.items-per-page-select) label {
-        font-size: 0.8rem;
+        font-size: 0.85rem;
         white-space: nowrap;
+        text-align: center;
+        margin-bottom: 0.25rem;
     }
     /* Modal de visualização em tela cheia */
 #previewModal {
