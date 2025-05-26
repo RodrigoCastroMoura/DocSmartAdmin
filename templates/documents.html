@@ -198,6 +198,18 @@
     </div>
 </div>
 
+<!-- Download Confirmation Modal -->
+<div id="downloadConfirmModal" class="modal">
+    <div class="modal-content">
+        <h3>Confirmar Download</h3>
+        <p>Tem certeza que deseja fazer o download deste documento?</p>
+        <div class="modal-actions">
+            <button type="button" class="action-btn" onclick="hideModal('downloadConfirmModal')">Cancelar</button>
+            <button type="button" class="action-btn primary" onclick="confirmDownload()">Download</button>
+        </div>
+    </div>
+</div>
+
 <!-- Preview Modal -->
 <div id="previewModal" class="modal">
     <div class="modal-content preview-modal">
@@ -244,6 +256,7 @@ let itemToDelete = null;
 let userSearchTimeout = null;
 let currentView = 'table';
 let selectedDocuments = new Set();
+let documentToDownload = null;
 
 // Variáveis globais para visualização de documentos
 let zoomLevel = 1.0;
@@ -1139,17 +1152,30 @@ function deleteDocument(id) {
     showDeleteConfirmation(id);
 }
 
-async function downloadDocument(url) {
+function downloadDocument(url) {
     if (!url) {
         showNotification('Document URL is not available', 'error');
         return;
     }
+    
+    documentToDownload = url;
+    showModal('downloadConfirmModal');
+}
+
+async function confirmDownload() {
+    if (!documentToDownload) return;
+
+    const url = documentToDownload;
+    hideModal('downloadConfirmModal');
 
     try {
         window.open(url, '_blank');
+        showNotification('Download iniciado com sucesso', 'success');
     } catch (error) {
         console.error('Error downloading document:', error);
         showNotification('Failed to download document', 'error');
+    } finally {
+        documentToDownload = null;
     }
 }
 
