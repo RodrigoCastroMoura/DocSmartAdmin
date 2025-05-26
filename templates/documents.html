@@ -84,7 +84,6 @@
                             <th>Tipo</th>
                             <th>Título</th>
                             <th>Usuário</th>
-                            <th>Departamento</th>
                             <th>Data</th>
                             <th>Visualizações</th>
                             <th>Downloads</th>
@@ -911,7 +910,7 @@ async function loadDocuments(page = 1, filters = {}) {
             if (data.documents.length === 0) {
                 tableBody.innerHTML = `
                     <tr>
-                        <td colspan="10" class="no-data-table">
+                        <td colspan="9" class="no-data-table">
                             <i data-feather="inbox"></i>
                             <p>Nenhum documento encontrado</p>
                         </td>
@@ -923,9 +922,8 @@ async function loadDocuments(page = 1, filters = {}) {
                             <input type="checkbox" class="document-checkbox" value="${doc.id}" onchange="toggleDocumentSelection('${doc.id}', this.checked)">
                         </td>
                         <td>
-                            <div class="table-cell-with-icon">
-                                <i data-feather="${getFileIcon(doc.name)}"></i>
-                                ${doc.document_type_name || 'Unknown Type'}
+                            <div class="table-cell-icon-only">
+                                <i data-feather="${getFileIcon(doc.name)}" title="${doc.document_type_name || 'Unknown Type'}"></i>
                             </div>
                         </td>
                         <td class="document-title-cell">${doc.titulo || doc.name}</td>
@@ -935,7 +933,6 @@ async function loadDocuments(page = 1, filters = {}) {
                                 <div class="user-cpf">${doc.user_cpf || 'No CPF'}</div>
                             </div>
                         </td>
-                        <td>${doc.department_name || 'N/A'}</td>
                         <td>${new Date(doc.created_at).toLocaleDateString()}</td>
                         <td>${doc.view_count || 0}</td>
                         <td>${doc.download_count || 0}</td>
@@ -960,28 +957,29 @@ async function loadDocuments(page = 1, filters = {}) {
             }
         }
 
-        contentDiv.innerHTML = contentDiv.innerHTML + `
-            <div class="pagination-controls">
-                <button class="action-btn" onclick="changePage(currentPage - 1)" id="prevPage" ${currentPage <= 1 ? 'disabled' : ''}>
-                    <i data-feather="chevron-left"></i> Previous
-                </button>
-                <span id="pageInfo">Page ${currentPage} of ${totalPages}</span>
-                <button class="action-btn" onclick="changePage(currentPage + 1)" id="nextPage" ${currentPage >= totalPages ? 'disabled' : ''}>
-                    Next <i data-feather="chevron-right"></i>
-                </button>
-            </div>`;
+        
 
         feather.replace();
         updatePaginationControls();
     } catch (error) {
         console.error('Error loading documents:', error);
-        contentDiv.innerHTML = `
-            <div class="documents-grid">
+        
+        if (currentView === 'cards') {
+            document.getElementById('documentsGrid').innerHTML = `
                 <div class="no-data error">
                     <i data-feather="alert-circle"></i>
                     <p>${error.message || 'Error loading documents. Please try again.'}</p>
-                </div>
-            </div>`;
+                </div>`;
+        } else {
+            document.getElementById('documentsTableBody').innerHTML = `
+                <tr>
+                    <td colspan="9" class="no-data-table error">
+                        <i data-feather="alert-circle"></i>
+                        <p>${error.message || 'Error loading documents. Please try again.'}</p>
+                    </td>
+                </tr>`;
+        }
+        
         feather.replace();
         showNotification(error.message || 'Failed to load documents', 'error');
     } finally {
@@ -2072,6 +2070,18 @@ document.addEventListener('DOMContentLoaded', () => {
     .table-cell-with-icon i {
         width: 16px;
         height: 16px;
+        color: var(--accent-color);
+    }
+
+    .table-cell-icon-only {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .table-cell-icon-only i {
+        width: 20px;
+        height: 20px;
         color: var(--accent-color);
     }
 
