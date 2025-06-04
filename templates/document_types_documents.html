@@ -12,9 +12,19 @@
         <div class="filter-section">
             <div class="filter-header">
                 <h2><i data-feather="file-text"></i> Documentos para {{ document_type.name if document_type else 'Tipo de Documento Desconhecido' }}</h2>
-                <button class="action-btn primary" onclick="showAddDocumentModal()">
-                    <i data-feather="plus"></i> Adicionar Documento
-                </button>
+                <div class="header-actions">
+                    <div class="view-toggle">
+                        <button class="view-btn" onclick="switchView('cards')" id="cardsViewBtn">
+                            <i data-feather="grid"></i> Cards
+                        </button>
+                        <button class="view-btn active" onclick="switchView('table')" id="tableViewBtn">
+                            <i data-feather="list"></i> Tabela
+                        </button>
+                    </div>
+                    <button class="action-btn primary" onclick="showAddDocumentModal()">
+                        <i data-feather="plus"></i> Adicionar Documento
+                    </button>
+                </div>
             </div>
             <div class="filter-grid">
                 <div class="filter-group">
@@ -29,12 +39,44 @@
             </div>
         </div>
         <div class="content-grid">
+            <div class="bulk-actions" id="bulkActions" style="display: none;">
+                <div class="bulk-actions-content">
+                    <span id="selectedCount">0 documentos selecionados</span>
+                    <div class="bulk-buttons">
+                        <button class="action-btn primary" onclick="bulkDownload()">
+                            <i data-feather="download"></i> Download Selecionados
+                        </button>
+                        <button class="action-btn" onclick="clearSelection()">
+                            <i data-feather="x"></i> Cancelar
+                        </button>
+                    </div>
+                </div>
+            </div>
             <div id="documentsContent">
-                <div class="documents-grid">
+                <div class="documents-grid" id="documentsGrid" style="display: none;">
                     <div class="no-data">
                         <i data-feather="inbox"></i>
                         <p>Carregando documentos...</p>
                     </div>
+                </div>
+                <div class="documents-table-container" id="documentsTable">
+                    <table class="documents-table">
+                        <thead>
+                            <tr>
+                                <th><input type="checkbox" id="selectAllDocs" onchange="toggleSelectAll()"></th>
+                                <th>Tipo</th>
+                                <th>Título</th>
+                                <th>Usuário</th>
+                                <th>Data</th>
+                                <th>Visualizações</th>
+                                <th>Downloads</th>
+                                <th>Assinatura</th>
+                                <th>Ações</th>
+                            </tr>
+                        </thead>
+                        <tbody id="documentsTableBody">
+                        </tbody>
+                    </table>
                 </div>
                 <div class="pagination-controls">
                     <button class="action-btn" onclick="changePage(currentPage - 1)" id="prevPage" disabled>
@@ -141,6 +183,8 @@ let currentPage = 1;
 const perPage = 9;
 let totalPages = 1;
 let itemToDelete = null;
+let currentView = 'table';
+let selectedDocuments = new Set();
 
 const tagInput = document.getElementById('name-user');
 const tagAttr =  document.getElementById('user_id');
@@ -222,6 +266,151 @@ selectType.addEventListener('change', function() {
         tagContainer.style.setProperty('display', 'flex', 'important');
     }
 });
+
+function switchView(viewType) {
+    currentView = viewType;
+    const cardsBtn = document.getElementById('cardsViewBtn');
+    const tableBtn = document.getElementById('tableViewBtn');
+    const documentsGrid = document.getElementById('documentsGrid');
+    const documentsTable = document.getElementById('documentsTable');
+    
+    // Clear selection when switching views
+    clearSelection();
+    
+    if (viewType === 'cards') {
+        cardsBtn.classList.add('active');
+        tableBtn.classList.remove('active');
+        
+        // Show cards first
+        documentsGrid.style.display = 'grid';
+        documentsGrid.style.visibility = 'visible';
+        documentsGrid.style.gridTemplateColumns = 'repeat(auto-fill, minmax(350px, 1fr))';
+        documentsGrid.style.gap = '1.5rem';
+        
+        // Then hide table
+        documentsTable.style.display = 'none';
+        documentsTable.style.visibility = 'hidden';
+        
+        // Force browser to recalculate layout
+        documentsGrid.offsetHeight;
+    } else {
+        tableBtn.classList.add('active');
+        cardsBtn.classList.remove('active');
+        
+        // Show table first
+        documentsTable.style.display = 'block';
+        documentsTable.style.visibility = 'visible';
+        
+        // Then hide cards
+        documentsGrid.style.display = 'none';
+        documentsGrid.style.visibility = 'hidden';
+    }
+    
+    // Reload current page data
+    const filters = {
+        document_type_id: '{{document_type.id}}',
+        user_cpf: document.getElementById('user-cpf-filter').value
+    };
+    loadDocuments(currentPage, filters);
+}
+
+function toggleDocumentSelection(docId, isChecked) {
+    if (isChecked) {
+        selectedDocuments.add(docId);
+    } else {
+        selectedDocuments.delete(docId);
+    }
+    updateBulkActionsVisibility();
+}
+
+function toggleSelectAll() {
+    const selectAllCheckbox = document.getElementById('selectAllDocs');
+    const checkboxes = document.querySelectorAll('.document-checkbox');
+    
+    checkboxes.forEach(checkbox => {
+        checkbox.checked = selectAllCheckbox.checked;
+        toggleDocumentSelection(checkbox.value, checkbox.checked);
+    });
+}
+
+function updateBulkActionsVisibility() {
+    const bulkActions = document.getElementById('bulkActions');
+    const selectedCount = document.getElementById('selectedCount');
+    
+    if (selectedDocuments.size > 0) {
+        bulkActions.style.display = 'block';
+        selectedCount.textContent = `${selectedDocuments.size} documento${selectedDocuments.size > 1 ? 's' : ''} selecionado${selectedDocuments.size > 1 ? 's' : ''}`;
+    } else {
+        bulkActions.style.display = 'none';
+    }
+}
+
+function clearSelection() {
+    selectedDocuments.clear();
+    const checkboxes = document.querySelectorAll('.document-checkbox');
+    const selectAllCheckbox = document.getElementById('selectAllDocs');
+    
+    checkboxes.forEach(checkbox => {
+        checkbox.checked = false;
+    });
+    
+    if (selectAllCheckbox) {
+        selectAllCheckbox.checked = false;
+    }
+    
+    updateBulkActionsVisibility();
+}
+
+async function bulkDownload() {
+    if (selectedDocuments.size === 0) return;
+    
+    if (!confirm(`Tem certeza que deseja fazer download de ${selectedDocuments.size} documento${selectedDocuments.size > 1 ? 's' : ''}?`)) {
+        return;
+    }
+    
+    const bulkActions = document.getElementById('bulkActions');
+    showLoading(bulkActions);
+    
+    try {
+        const response = await fetch('/api/documents/bulk-download', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                document_ids: Array.from(selectedDocuments),
+                filename: `documentos_selecionados_${Date.now()}.pdf`
+            })
+        });
+        
+        if (!response.ok) {
+            const errorData = await response.json();
+            throw new Error(errorData.error || 'Falha ao fazer download dos documentos');
+        }
+        
+        // Get the blob from response
+        const blob = await response.blob();
+        
+        // Create download link
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.style.display = 'none';
+        a.href = url;
+        a.download = `documentos_selecionados_${Date.now()}.pdf`;
+        document.body.appendChild(a);
+        a.click();
+        window.URL.revokeObjectURL(url);
+        document.body.removeChild(a);
+        
+        clearSelection();
+        showNotification('Download dos documentos concluído com sucesso', 'success');
+    } catch (error) {
+        console.error('Error downloading documents:', error);
+        showNotification(error.message, 'error');
+    } finally {
+        hideLoading(bulkActions);
+    }
+}
 
 
 async function loadFilterOptions() {
@@ -662,16 +851,17 @@ async function loadDocuments(page = 1, filters = {}) {
         currentPage = page;
         totalPages = data.total_pages || 1;
 
-        const gridHTML = data.documents.length === 0 ? `
-            <div class="documents-grid">
+        if (currentView === 'cards') {
+            const gridHTML = data.documents.length === 0 ? `
                 <div class="no-data">
                     <i data-feather="inbox"></i>
                     <p>Nenhum documento encontrado</p>
-                </div>
-            </div>` : `
-            <div class="documents-grid">
+                </div>` : `
                 ${data.documents.map(doc => `
                     <div class="document-card" data-id="${doc.id}">
+                        <div class="document-checkbox-container">
+                            <input type="checkbox" class="document-checkbox" value="${doc.id}" onchange="toggleDocumentSelection('${doc.id}', this.checked)">
+                        </div>
                         <div class="document-header">
                             <i data-feather="${getFileIcon(doc.name)}"></i>
                             <div class="document-title">
@@ -693,6 +883,7 @@ async function loadDocuments(page = 1, filters = {}) {
                                 <p><i data-feather="calendar"></i> ${new Date(doc.created_at).toLocaleDateString()}</p>
                                 <p><i data-feather="eye"></i> Views: ${doc.view_count || 0}</p>
                                 <p><i data-feather="download"></i> Downloads: ${doc.download_count || 0}</p>
+                                ${doc.flow > 1 ?`<p><i data-feather="edit"></i> Signature: ${doc.signature ? 'Sim' : 'Não'}</p>` : ''}
                             </div>
                         </div>
                         <div class="document-actions">
@@ -707,10 +898,63 @@ async function loadDocuments(page = 1, filters = {}) {
                             </button>
                         </div>
                     </div>
-                `).join('')}
-            </div>`;
+                `).join('')}`;
 
-        contentDiv.innerHTML = gridHTML + `
+            document.getElementById('documentsGrid').innerHTML = gridHTML;
+        } else {
+            // Table view
+            const tableBody = document.getElementById('documentsTableBody');
+            if (data.documents.length === 0) {
+                tableBody.innerHTML = `
+                    <tr>
+                        <td colspan="9" class="no-data-table">
+                            <i data-feather="inbox"></i>
+                            <p>Nenhum documento encontrado</p>
+                        </td>
+                    </tr>`;
+            } else {
+                tableBody.innerHTML = data.documents.map(doc => `
+                    <tr data-id="${doc.id}">
+                        <td>
+                            <input type="checkbox" class="document-checkbox" value="${doc.id}" onchange="toggleDocumentSelection('${doc.id}', this.checked)">
+                        </td>
+                        <td>
+                            <div class="table-cell-icon-only">
+                                <i data-feather="${getFileIcon(doc.name)}" title="${doc.document_type_name || 'Unknown Type'}"></i>
+                            </div>
+                        </td>
+                        <td class="document-title-cell">${doc.titulo || doc.name}</td>
+                        <td>
+                            <div class="user-cell">
+                                <div class="user-name">${doc.user_name || 'Unknown User'}</div>
+                                <div class="user-cpf">${doc.user_cpf || 'No CPF'}</div>
+                            </div>
+                        </td>
+                        <td>${new Date(doc.created_at).toLocaleDateString()}</td>
+                        <td>${doc.view_count || 0}</td>
+                        <td>${doc.download_count || 0}</td>
+                        <td>
+                            ${doc.flow > 1 ? `<span class="signature-badge ${doc.signature ? 'signed' : 'unsigned'}">${doc.signature ? 'Sim' : 'Não'}</span>` : '-'}
+                        </td>
+                        <td>
+                            <div class="table-actions">
+                                <button class="action-btn small" onclick="previewDocument('${doc.url}', '${doc.name}')" title="Visualizar">
+                                    <i data-feather="eye"></i>
+                                </button>
+                                <button class="action-btn small" onclick="downloadDocument('${doc.url}')" title="Download">
+                                    <i data-feather="download"></i>
+                                </button>
+                                <button class="action-btn small danger" onclick="deleteDocument('${doc.id}')" title="Excluir">
+                                    <i data-feather="trash-2"></i>
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                `).join('');
+            }
+        }
+
+        contentDiv.innerHTML = contentDiv.innerHTML + `
             <div class="pagination-controls">
                 <button class="action-btn" onclick="changePage(currentPage - 1)" id="prevPage" ${currentPage <= 1 ? 'disabled' : ''}>
                     <i data-feather="chevron-left"></i> Anterior
@@ -725,13 +969,23 @@ async function loadDocuments(page = 1, filters = {}) {
         updatePaginationControls();
     } catch (error) {
         console.error('Error loading documents:', error);
-        contentDiv.innerHTML = `
-            <div class="documents-grid">
+        
+        if (currentView === 'cards') {
+            document.getElementById('documentsGrid').innerHTML = `
                 <div class="no-data error">
                     <i data-feather="alert-circle"></i>
                     <p>${error.message || 'Error loading documents. Please try again.'}</p>
-                </div>
-            </div>`;
+                </div>`;
+        } else {
+            document.getElementById('documentsTableBody').innerHTML = `
+                <tr>
+                    <td colspan="9" class="no-data-table error">
+                        <i data-feather="alert-circle"></i>
+                        <p>${error.message || 'Error loading documents. Please try again.'}</p>
+                    </td>
+                </tr>`;
+        }
+        
         feather.replace();
         showNotification(error.message || 'Failed to load documents', 'error');
     } finally {
@@ -1219,6 +1473,19 @@ document.addEventListener('DOMContentLoaded', () => {
 
 // Initialize the page
 document.addEventListener('DOMContentLoaded', () => {
+    // Initialize with table view
+    currentView = 'table';
+    const cardsBtn = document.getElementById('cardsViewBtn');
+    const tableBtn = document.getElementById('tableViewBtn');
+    const documentsGrid = document.getElementById('documentsGrid');
+    const documentsTable = document.getElementById('documentsTable');
+    
+    // Set initial view state
+    tableBtn.classList.add('active');
+    cardsBtn.classList.remove('active');
+    documentsTable.style.display = 'block';
+    documentsGrid.style.display = 'none';
+
     const filters = {
         document_type_id: '{{document_type.id}}',
     };
@@ -1673,6 +1940,252 @@ document.addEventListener('DOMContentLoaded', () => {
 
 .page-container {
     padding: 2rem;
+}
+
+.header-actions {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.view-toggle {
+    display: flex;
+    background-color: var(--bg-tertiary);
+    border-radius: 6px;
+    padding: 4px;
+}
+
+.view-btn {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.5rem 1rem;
+    background: none;
+    border: none;
+    color: var(--text-secondary);
+    cursor: pointer;
+    border-radius: 4px;
+    transition: all 0.2s ease;
+    font-size: 0.875rem;
+}
+
+.view-btn.active {
+    background-color: var(--accent-color);
+    color: white;
+}
+
+.view-btn:hover:not(.active) {
+    color: var(--text-primary);
+    background-color: var(--bg-secondary);
+}
+
+.document-checkbox-container {
+    position: absolute;
+    top: 1rem;
+    right: 1rem;
+    z-index: 10;
+}
+
+.document-checkbox {
+    width: 18px;
+    height: 18px;
+    cursor: pointer;
+}
+
+.bulk-actions {
+    background-color: var(--accent-color);
+    border-radius: 8px;
+    margin-bottom: 1rem;
+    color: white;
+}
+
+.bulk-actions-content {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1rem;
+}
+
+.bulk-buttons {
+    display: flex;
+    gap: 0.5rem;
+}
+
+.bulk-buttons .action-btn {
+    background-color: rgba(255, 255, 255, 0.2);
+    color: white;
+    border: 1px solid rgba(255, 255, 255, 0.3);
+}
+
+.bulk-buttons .action-btn:hover {
+    background-color: rgba(255, 255, 255, 0.3);
+}
+
+.bulk-buttons .action-btn.primary {
+    background-color: rgba(255, 255, 255, 0.9);
+    color: var(--accent-color);
+}
+
+.bulk-buttons .action-btn.primary:hover {
+    background-color: white;
+}
+
+.documents-table-container {
+    background-color: var(--bg-tertiary);
+    border-radius: 8px;
+    overflow: hidden;
+    margin-bottom: 2rem;
+    position: relative;
+}
+
+.documents-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.9rem;
+}
+
+.documents-table th {
+    background-color: var(--bg-secondary);
+    padding: 1rem;
+    text-align: left;
+    font-weight: 600;
+    border-bottom: 1px solid var(--border-color);
+    color: var(--text-primary);
+}
+
+.documents-table td {
+    padding: 1rem;
+    border-bottom: 1px solid var(--border-color);
+    vertical-align: middle;
+}
+
+.documents-table tbody tr:hover {
+    background-color: var(--bg-secondary);
+}
+
+.table-cell-icon-only {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.table-cell-icon-only i {
+    width: 20px;
+    height: 20px;
+    color: var(--accent-color);
+}
+
+.document-title-cell {
+    max-width: 200px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.user-cell {
+    min-width: 150px;
+}
+
+.user-name {
+    font-weight: 500;
+    margin-bottom: 0.25rem;
+}
+
+.user-cpf {
+    font-size: 0.8rem;
+    color: var(--text-secondary);
+}
+
+.signature-badge {
+    padding: 0.25rem 0.5rem;
+    border-radius: 4px;
+    font-size: 0.8rem;
+    font-weight: 500;
+}
+
+.signature-badge.signed {
+    background-color: #d4edda;
+    color: #155724;
+}
+
+.signature-badge.unsigned {
+    background-color: #f8d7da;
+    color: #721c24;
+}
+
+.table-actions {
+    display: flex;
+    gap: 0.25rem;
+}
+
+.action-btn.small {
+    padding: 0.5rem;
+    min-width: auto;
+}
+
+.action-btn.small i {
+    width: 14px;
+    height: 14px;
+}
+
+.no-data-table {
+    text-align: center;
+    padding: 3rem 1rem;
+    color: var(--text-secondary);
+}
+
+.no-data-table i {
+    font-size: 2rem;
+    margin-bottom: 0.5rem;
+    opacity: 0.5;
+}
+
+.no-data-table.error {
+    color: var(--danger-color);
+}
+
+.no-data-table.error i {
+    color: var(--danger-color);
+}
+
+@media (max-width: 1200px) {
+    .documents-table {
+        font-size: 0.8rem;
+    }
+
+    .documents-table th,
+    .documents-table td {
+        padding: 0.75rem;
+    }
+}
+
+@media (max-width: 768px) {
+    .documents-table-container {
+        overflow-x: auto;
+    }
+
+    .documents-table {
+        min-width: 800px;
+    }
+
+    .view-toggle {
+        order: -1;
+        margin-bottom: 1rem;
+    }
+
+    .header-actions {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .documents-grid {
+        grid-template-columns: 1fr;
+        gap: 1rem;
+    }
+
+    .document-card {
+        min-height: auto;
+    }
 }
 
 /* Modal de visualização em tela cheia */
