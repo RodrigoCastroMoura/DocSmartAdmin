@@ -954,17 +954,6 @@ async function loadDocuments(page = 1, filters = {}) {
             }
         }
 
-        contentDiv.innerHTML = contentDiv.innerHTML + `
-            <div class="pagination-controls">
-                <button class="action-btn" onclick="changePage(currentPage - 1)" id="prevPage" ${currentPage <= 1 ? 'disabled' : ''}>
-                    <i data-feather="chevron-left"></i> Anterior
-                </button>
-                <span id="pageInfo">Página ${currentPage} de ${totalPages}</span>
-                <button class="action-btn" onclick="changePage(currentPage + 1)" id="nextPage" ${currentPage >= totalPages ? 'disabled' : ''}>
-                    Próximo <i data-feather="chevron-right"></i>
-                </button>
-            </div>`;
-
         feather.replace();
         updatePaginationControls();
     } catch (error) {
