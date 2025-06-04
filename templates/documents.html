@@ -336,6 +336,9 @@ addBtn.addEventListener('click', function () {
 });
 
 selectType.addEventListener('change', function() {
+    const cpfGroup = document.querySelector('#addDocumentModal .form-group:has(#user_cpf)');
+    const nameGroup = document.querySelector('#addDocumentModal .form-group:has(#name-user)');
+    
     if( this.value != "3"){
         addBtn.style.setProperty('display', 'none', 'important');
         tagContainer.style.setProperty('display', 'none', 'important');
@@ -343,6 +346,20 @@ selectType.addEventListener('change', function() {
     }else{
         addBtn.style.setProperty('display', 'flex', 'important'); 
         tagContainer.style.setProperty('display', 'flex', 'important');
+    }
+    
+    if (this.value === "4") {
+        // Hide CPF and user name fields for Holerites
+        if (cpfGroup) cpfGroup.style.display = 'none';
+        if (nameGroup) nameGroup.style.display = 'none';
+        // Clear the values
+        document.getElementById('user_cpf').value = '';
+        document.getElementById('name-user').value = '';
+        document.getElementById('user_id').value = '';
+    } else {
+        // Show CPF and user name fields for other flow types
+        if (cpfGroup) cpfGroup.style.display = 'block';
+        if (nameGroup) nameGroup.style.display = 'block';
     }
 });
 
@@ -790,8 +807,8 @@ async function createDocument(event) {
         return;
     }
 
-    // Validate CPF only if flow is not 3
-    if (flow !== '3' && document.getElementById('user_id').value == '') {
+    // Validate CPF only if flow is not 3 and not 4 (Holerites)
+    if (flow !== '3' && flow !== '4' && document.getElementById('user_id').value == '') {
         showNotification('Enter with CPF', 'error');
         return;
     }
@@ -1138,6 +1155,12 @@ function hideModalDocuments(modalId) {
         tagContainer.style.setProperty('display', 'none', 'important');
         document.getElementById('tag-container').innerHTML = ''; // Clear tags
         
+        // Reset field visibility
+        const cpfGroup = document.querySelector('#addDocumentModal .form-group:has(#user_cpf)');
+        const nameGroup = document.querySelector('#addDocumentModal .form-group:has(#name-user)');
+        if (cpfGroup) cpfGroup.style.display = 'block';
+        if (nameGroup) nameGroup.style.display = 'block';
+        
         // Reset category and document type dropdowns
         document.getElementById('documentCategory').innerHTML = '<option value="">Selecione a Categoria</option>';
         document.getElementById('documentType').innerHTML = '<option value="">Selecione o Tipo de Documento</option>';
@@ -1153,6 +1176,13 @@ function showAddDocumentModal() {
     addBtn.style.setProperty('display', 'none', 'important');
     tagContainer.style.setProperty('display', 'none', 'important');
     document.getElementById('tag-container').innerHTML = ''; // Clear tags
+    
+    // Reset field visibility
+    const cpfGroup = document.querySelector('#addDocumentModal .form-group:has(#user_cpf)');
+    const nameGroup = document.querySelector('#addDocumentModal .form-group:has(#name-user)');
+    if (cpfGroup) cpfGroup.style.display = 'block';
+    if (nameGroup) nameGroup.style.display = 'block';
+    
     showModal('addDocumentModal');
 }
 
